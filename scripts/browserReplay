@@ -17,11 +17,11 @@
 
 rm -rf jalangi_tmp
 mkdir jalangi_tmp
-cd jalangi_tmp
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd jalangi_tmp
+echo $DIR
 
-node $DIR/../src/js/instrument/esnstrument.js $1.js
+node $DIR/../src/js/instrument/esnstrument.js $DIR/../$1.js
 touch inputs.js
 echo --------------- Recording execution of $JALANGI_HOME/$1.js ---------------
 export JALANGI_MODE=record

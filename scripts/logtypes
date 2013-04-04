@@ -1,0 +1,60 @@
+# Copyright 2013 Samsung Information Systems America, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Author: Koushik Sen
+
+
+echo -n "N_LOG_LOAD "
+grep ",0]" $1 | wc -l
+echo -n "N_LOG_FUN_CALL "
+grep ",1]" $1 | wc -l
+echo -n "N_LOG_METHOD_CALL "
+grep ",2]" $1 | wc -l
+echo -n "#3 "
+grep ",3]" $1 | wc -l
+echo -n "N_LOG_FUNCTION_ENTER "
+grep ",4]" $1 | wc -l
+echo -n "N_LOG_FUNCTION_RETURN "
+grep ",5]" $1 | wc -l
+echo -n "N_LOG_SCRIPT_ENTER "
+grep ",6]" $1 | wc -l
+echo -n "N_LOG_SCRIPT_EXIT "
+grep ",7]" $1 | wc -l
+echo -n "N_LOG_GETFIELD "
+grep ",8]" $1 | wc -l
+echo -n "N_LOG_GLOBAL "
+grep ",9]" $1 | wc -l
+echo -n "N_LOG_ARRAY_LIT "
+grep ",10]" $1 | wc -l
+echo -n "N_LOG_OBJECT_LIT "
+grep ",11]" $1 | wc -l
+echo -n "N_LOG_FUNCTION_LIT "
+grep ",12]" $1 | wc -l
+echo -n "N_LOG_RETURN "
+grep ",13]" $1 | wc -l
+echo -n "N_LOG_REGEXP_LIT "
+grep ",14]" $1 | wc -l
+echo -n "N_LOG_LOCAL "
+grep ",15]" $1 | wc -l
+echo -n "N_LOG_OBJECT_NEW "
+grep ",16]" $1 | wc -l
+echo -n "N_LOG_READ "
+grep ",17]" $1 | wc -l
+echo -n "N_LOG_FUNCTION_ENTER_NORMAL"
+grep ",18]" $1 | wc -l
+echo -n "N_LOG_HASH"
+grep ",19]" $1 | wc -l
+echo -n "N_LOG_SPECIAL"
+grep ",20]" $1 | wc -l
+

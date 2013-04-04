@@ -1,0 +1,92 @@
+# Copyright 2013 Samsung Information Systems America, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Author: Koushik Sen
+
+
+rm -rf jalangi_tmp
+mkdir jalangi_tmp
+mkdir jalangi_tmp/out
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export JALANGI_HOME=$DIR/..
+cd jalangi_tmp
+
+echo $USE_NODE_COVER
+
+if [ "$USE_NODE_COVER" == "true" ]
+then
+    if [ "$USE_TIME" == "true" ]
+    then
+        export CMD='time cover run '
+    else
+        export CMD='cover run '
+    fi
+    cp ../.coverignore .
+    mv ../.coverage_data .
+else
+    if [ "$USE_TIME" == "true" ]
+    then
+        export CMD='time node '
+    else
+        export CMD='node '
+    fi
+fi
+
+echo --------------- Instrumenting $1.js --------------
+$CMD $JALANGI_HOME/src/js/instrument/esnstrument.js $JALANGI_HOME/$1.js
+echo "*************** run $JALANGI_HOME/$1.js ****************" >> jalangi_test_results
+
+i=0
+iter=1
+
+
+
+while [[ $i -le $iter &&  $i -le $2 ]]
+do
+
+    rm inputs.js 2> /dev/null
+    cp jalangi_inputs$i inputs.js 2> /dev/null
+    if [ ! -f inputs.js ];
+    then
+        touch inputs.js
+    fi
+
+    echo "*********************************************************************************"
+    echo "******************************** Input $i ************************************"
+    echo "*********************************************************************************"
+
+    rm jalangi_trace 2> /dev/null
+    export JALANGI_MODE=analysis
+    export JALANGI_ANALYSIS=analyses/concolic/SymbolicEngine
+    $CMD $JALANGI_HOME/$1_jalangi_.js
+
+    declare -i iter=$(sed -n 1p jalangi_tail 2>/dev/null)
+    i=$((i+1))
+
+done
+
+iter=$((iter+1))
+
+if [ $iter -eq $2 ]
+then
+    echo "$1.js passed" >> $JALANGI_HOME/jalangi_sym_test_results
+else
+    echo "***************** $1.js Failed!!!" >> $JALANGI_HOME/jalangi_sym_test_results
+fi
+
+if [ "$USE_NODE_COVER" == "true" ]
+then
+    mv .coverage_data ..
+fi
+

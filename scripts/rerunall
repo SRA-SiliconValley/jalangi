@@ -1,0 +1,52 @@
+# Copyright 2013 Samsung Information Systems America, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Author: Koushik Sen
+
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export JALANGI_HOME=$DIR/..
+cd jalangi_tmp
+
+if [ "$USE_NODE_COVER" == "true" ]
+then
+    export CMD='cover run '
+    cp ../.coverignore .
+    mv ../.coverage_data .
+else
+    export CMD='node '
+fi
+
+rm -rf .coverage_data
+rm inputs.js
+touch inputs.js
+echo "***************** Running tests/$1.js on jalangi_inputs0 ********************"
+$CMD $JALANGI_HOME/$1.js
+
+for i in jalangi_inputs*
+do
+    echo "***************** Running tests/$1.js on $i ********************"
+    cp $i inputs.js
+    $CMD $JALANGI_HOME/$1.js
+done
+
+if $USE_NODE_COVER
+then
+    sleep 2
+    cover combine
+    cover report
+    cover report html
+    echo "test results ..."
+    open cover_html/index.html
+fi

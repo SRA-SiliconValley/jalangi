@@ -1,0 +1,110 @@
+# Copyright 2013 Samsung Information Systems America, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Author: Koushik Sen
+
+
+rm -f jalangi_test_results 2>/dev/null
+rm -f jalangi_symtest_results 2>/dev/null
+rm -rf .coverage_data
+rm -rf cover_html
+rm -rf .coverage_data_old
+
+export USE_NODE_COVER=false
+export USE_TIME=false
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export ANALYSIS_SCRIPT=$DIR/concolic
+
+$ANALYSIS_SCRIPT tests/unit/bool_symbolic 3
+$ANALYSIS_SCRIPT tests/unit/or 3
+$ANALYSIS_SCRIPT tests/unit/and 3
+$ANALYSIS_SCRIPT tests/unit/path_inputs 4
+$ANALYSIS_SCRIPT tests/unit/integer1 5
+$ANALYSIS_SCRIPT tests/unit/integer2 2
+$ANALYSIS_SCRIPT tests/unit/integer3 3
+$ANALYSIS_SCRIPT tests/unit/integer4 3
+$ANALYSIS_SCRIPT tests/unit/integer5 3
+$ANALYSIS_SCRIPT tests/unit/integer6 3
+$ANALYSIS_SCRIPT tests/unit/integer7 2
+$ANALYSIS_SCRIPT tests/unit/object_symbolic 75
+$ANALYSIS_SCRIPT tests/unit/objects 9
+$ANALYSIS_SCRIPT tests/unit/function_symbolic 4
+$ANALYSIS_SCRIPT tests/unit/function_symbolic2 6
+$ANALYSIS_SCRIPT tests/unit/null_symbolic 6
+$ANALYSIS_SCRIPT tests/unit/type_symbolic 12
+$ANALYSIS_SCRIPT tests/unit/string1 2
+$ANALYSIS_SCRIPT tests/unit/string2 3
+$ANALYSIS_SCRIPT tests/unit/string3 2
+$ANALYSIS_SCRIPT tests/unit/string4 2
+$ANALYSIS_SCRIPT tests/unit/string5 2
+$ANALYSIS_SCRIPT tests/unit/string6 2
+$ANALYSIS_SCRIPT tests/unit/string7 2
+$ANALYSIS_SCRIPT tests/unit/regex1 2
+$ANALYSIS_SCRIPT tests/unit/regex2 2
+$ANALYSIS_SCRIPT tests/unit/regex3 2
+$ANALYSIS_SCRIPT tests/unit/regex4 2
+$ANALYSIS_SCRIPT tests/unit/regex5 8
+$ANALYSIS_SCRIPT tests/unit/regex6 3
+$ANALYSIS_SCRIPT tests/unit/regex7 3
+$ANALYSIS_SCRIPT tests/unit/regex9 2
+$ANALYSIS_SCRIPT tests/unit/switchs1 5
+$ANALYSIS_SCRIPT tests/unit/qsort 24
+
+$ANALYSIS_SCRIPT-norr tests/unit/bool_symbolic 3
+$ANALYSIS_SCRIPT-norr tests/unit/or 3
+$ANALYSIS_SCRIPT-norr tests/unit/and 3
+$ANALYSIS_SCRIPT-norr tests/unit/path_inputs 4
+$ANALYSIS_SCRIPT-norr tests/unit/integer1 5
+$ANALYSIS_SCRIPT-norr tests/unit/integer2 2
+$ANALYSIS_SCRIPT-norr tests/unit/integer3 3
+$ANALYSIS_SCRIPT-norr tests/unit/integer4 3
+$ANALYSIS_SCRIPT-norr tests/unit/integer5 3
+$ANALYSIS_SCRIPT-norr tests/unit/integer6 3
+$ANALYSIS_SCRIPT-norr tests/unit/integer7 2
+$ANALYSIS_SCRIPT-norr tests/unit/object_symbolic 75
+$ANALYSIS_SCRIPT-norr tests/unit/objects 9
+$ANALYSIS_SCRIPT-norr tests/unit/function_symbolic 4
+$ANALYSIS_SCRIPT-norr tests/unit/function_symbolic2 6
+$ANALYSIS_SCRIPT-norr tests/unit/null_symbolic 6
+$ANALYSIS_SCRIPT-norr tests/unit/type_symbolic 12
+$ANALYSIS_SCRIPT-norr tests/unit/string1 2
+$ANALYSIS_SCRIPT-norr tests/unit/string2 3
+$ANALYSIS_SCRIPT-norr tests/unit/string3 2
+$ANALYSIS_SCRIPT-norr tests/unit/string4 2
+$ANALYSIS_SCRIPT-norr tests/unit/string5 2
+$ANALYSIS_SCRIPT-norr tests/unit/string6 2
+$ANALYSIS_SCRIPT-norr tests/unit/string7 2
+$ANALYSIS_SCRIPT-norr tests/unit/regex1 2
+$ANALYSIS_SCRIPT-norr tests/unit/regex2 2
+$ANALYSIS_SCRIPT-norr tests/unit/regex3 2
+$ANALYSIS_SCRIPT-norr tests/unit/regex4 2
+$ANALYSIS_SCRIPT-norr tests/unit/regex5 8
+$ANALYSIS_SCRIPT-norr tests/unit/regex6 3
+$ANALYSIS_SCRIPT-norr tests/unit/regex7 3
+$ANALYSIS_SCRIPT-norr tests/unit/regex9 2
+$ANALYSIS_SCRIPT-norr tests/unit/switchs1 5
+$ANALYSIS_SCRIPT-norr tests/unit/qsort 24
+
+cat jalangi_symtest_results
+
+if $USE_NODE_COVER
+then
+    sleep 2
+    cp -R .coverage_data .coverage_data_old
+    cover combine
+    cover report
+    cover report html
+    echo "test results ..."
+    open cover_html/index.html
+fi

@@ -1,0 +1,44 @@
+# Copyright 2013 Samsung Information Systems America, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Author: Koushik Sen
+
+
+cd ~
+rm -rf ~/jalangi
+cp -R Dropbox/jalangi jalangi
+rm jalangi/.DS_Store
+rm -rf jalangi/.idea
+rm -rf jalangi/thirdparty/
+rm -rf jalangi/jalangijava/.idea
+rm -rf jalangi/jalangijava/out
+rm -rf jalangi/jalangijava/lib
+rm -rf jalangi/node_modules
+rm -rf jalangi/.git
+rm -rf jalangi/tests/sunspider1
+rm -rf jalangi/tests/tizen
+rm jalangi/tests/unit/calculator.*
+rm jalangi/tests/unit/clock.*
+rm jalangi/tests/unit/dsp*
+rm jalangi/tests/unit/linked-list.js
+rm jalangi/tests/unit/qsort*
+rm jalangi/tests/unit/quicksort.js
+rm jalangi/tests/unit/regex4.js
+rm jalangi/tests/unit/regex5.js
+rm jalangi/tests/unit/regex8.js
+rm jalangi/tests/unit/regex9.js
+rm jalangi/tests/scartch.js
+rm -f jalangi.tar*
+tar cvf jalangi.tar jalangi
+gzip jalangi.tar

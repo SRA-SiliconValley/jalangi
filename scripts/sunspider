@@ -1,0 +1,44 @@
+# Copyright 2013 Samsung Information Systems America, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Author: Koushik Sen
+
+
+$ANALYSIS_SCRIPT tests/sunspider1/3d-cube 1
+$ANALYSIS_SCRIPT tests/sunspider1/3d-morph 1
+$ANALYSIS_SCRIPT tests/sunspider1/3d-raytrace 1
+$ANALYSIS_SCRIPT tests/sunspider1/access-binary-trees 1
+$ANALYSIS_SCRIPT tests/sunspider1/access-fannkuch 1
+$ANALYSIS_SCRIPT tests/sunspider1/access-nbody 1
+$ANALYSIS_SCRIPT tests/sunspider1/access-nsieve 1
+$ANALYSIS_SCRIPT tests/sunspider1/bitops-3bit-bits-in-byte 1
+$ANALYSIS_SCRIPT tests/sunspider1/bitops-bits-in-byte 1
+$ANALYSIS_SCRIPT tests/sunspider1/bitops-bitwise-and 1
+$ANALYSIS_SCRIPT tests/sunspider1/controlflow-recursive 1
+$ANALYSIS_SCRIPT tests/sunspider1/crypto-md5 1
+$ANALYSIS_SCRIPT tests/sunspider1/crypto-sha1 1
+$ANALYSIS_SCRIPT tests/sunspider1/date-format-tofte 1
+$ANALYSIS_SCRIPT tests/sunspider1/date-format-xparb 1
+$ANALYSIS_SCRIPT tests/sunspider1/math-cordic 1
+$ANALYSIS_SCRIPT tests/sunspider1/math-partial-sums 1
+$ANALYSIS_SCRIPT tests/sunspider1/math-spectral-norm 1
+$ANALYSIS_SCRIPT tests/sunspider1/regexp-dna 1
+$ANALYSIS_SCRIPT tests/sunspider1/string-fasta 1
+$ANALYSIS_SCRIPT tests/sunspider1/string-tagcloud 1
+$ANALYSIS_SCRIPT tests/sunspider1/string-unpack-code 1
+$ANALYSIS_SCRIPT tests/sunspider1/bitops-nsieve-bits 1
+$ANALYSIS_SCRIPT tests/sunspider1/crypto-aes 1
+
+$ANALYSIS_SCRIPT tests/sunspider1/string-validate-input 1
+$ANALYSIS_SCRIPT tests/sunspider1/string-base64 1

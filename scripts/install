@@ -1,0 +1,87 @@
+# Copyright 2013 Samsung Information Systems America, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Author: Koushik Sen
+
+
+npm install uglify-js@1
+npm install node-ffi
+npm install cover
+npm install websocket
+npm install source-map
+npm install esprima
+npm install estraverse
+npm install escodegen
+npm install dryice
+
+
+rm -rf thirdparty
+mkdir thirdparty
+git clone --recursive git://github.com/Trenker/Browser-UglifyJS.git thirdparty/browser-uglifyjs
+cd thirdparty/browser-uglifyjs/lib
+rm -rf UglifyJS
+git clone git://github.com/mishoo/UglifyJS.git
+cd UglifyJS
+rm -rf .git
+cd ..
+cd ..
+rm -rf .git
+node build.js
+mv build/uglifyjs.1.2.5.js ../
+cd ..
+
+rm -rf esprima
+git clone git://github.com/ariya/esprima.git
+cd esprima
+rm -rf .git
+cd ..
+
+rm -rf escodegen
+git clone git://github.com/Constellation/escodegen.git
+cd escodegen
+rm -rf .git
+cd ..
+
+rm -rf estraverse
+git clone git://github.com/Constellation/estraverse.git
+cd estraverse
+rm -rf .git
+cd ..
+
+rm -rf source-map
+git clone git://github.com/mozilla/source-map.git
+cd source-map/
+npm install amdefine
+node Makefile.dryice.js
+rm -rf .git
+cd ..
+
+
+
+echo "Install automaton.jar"
+
+cd thirdparty
+curl -O http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/macosx/cvc3-2.4.1-macosx-optimized-static.tar.gz
+tar zvxf cvc3-2.4.1-macosx-optimized-static.tar.gz
+mv cvc3-2.4.1-macosx-optimized-static cvc3
+
+mkdir javalib
+cd javalib
+curl -O http://www.brics.dk/automaton/automaton.jar
+cd ../..
+
+ant -f jalangijava.xml
+
+
+

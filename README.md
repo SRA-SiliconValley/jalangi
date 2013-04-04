@@ -14,3 +14,8 @@ Installation
 
 ./scripts/install
 
+Run Tests
+=========
+
+./scripts/testsym
+

@@ -96,7 +96,7 @@ $ANALYSIS_SCRIPT-norr tests/unit/regex9 2
 $ANALYSIS_SCRIPT-norr tests/unit/switchs1 5
 $ANALYSIS_SCRIPT-norr tests/unit/qsort 24
 
-cat jalangi_symtest_results
+cat jalangi_sym_test_results
 
 if $USE_NODE_COVER
 then

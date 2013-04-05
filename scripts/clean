@@ -23,6 +23,8 @@ rm -rf .coverage_data
 rm -rf .coverage_data_old
 
 rm jalangi_test_results
-rm jalangi_symtest_results
+rm jalangi_sym_test_results
 rm -rf jalangi_tmp
+rm jalangi_*
+
 

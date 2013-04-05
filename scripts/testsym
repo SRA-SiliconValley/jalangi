@@ -16,7 +16,7 @@
 
 
 rm -f jalangi_test_results 2>/dev/null
-rm -f jalangi_symtest_results 2>/dev/null
+rm -f jalangi_sym_test_results 2>/dev/null
 rm -rf .coverage_data
 rm -rf cover_html
 rm -rf .coverage_data_old

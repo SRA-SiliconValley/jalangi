@@ -22,6 +22,7 @@ We tested Jalangi on Mac OS X 10.8
 
   * Latest version of Node.js available at http://nodejs.org/.  We have tested Jalangi with Node v0.8.22 and v0.10.3.
   * Java 1.6 or higher.  We have tested Jalangi with Java 1.6.0_43.
+  * Apache ant (http://ant.apache.org/) and curl (http://curl.haxx.se/) are required for commandline installation.
   * Concolic testing uses cvc3 and automaton.jar for constraint solving.  After installation run
       ./thirdparty/cvc3/bin/cvc3
   to make sure that cvc3 runs properly on you machine.  You should not see any exception or error when cvc3 is invoked.

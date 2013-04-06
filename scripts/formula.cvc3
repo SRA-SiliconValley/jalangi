@@ -1,0 +1,7 @@
+y3 : INT;
+x2 : INT;
+ASSERT y3*(1) >= 0;
+ASSERT y3*(1)+(-30) <= 0;
+ASSERT x2*(1)+(-10) > 0;
+ASSERT (NOT ((y3 = 0) AND (x2 = 100)));
+CHECKSAT x2*(1) > 50;

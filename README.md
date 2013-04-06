@@ -18,14 +18,12 @@ tools, such as PIN and Valgrind for x86 binaries.
 
 ### Requirements
 
-We tested Jalangi on Mac OS X 10.8
+We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS 10.7 and higher and Ubuntu 11.0 and higher.
 
   * Latest version of Node.js available at http://nodejs.org/.  We have tested Jalangi with Node v0.8.22 and v0.10.3.
   * Sun's JDK 1.6 or higher.  We have tested Jalangi with Java 1.6.0_43.
   * Apache ant (http://ant.apache.org/) and curl (http://curl.haxx.se/) are required for commandline installation.
-  * Concolic testing uses cvc3 and automaton.jar for constraint solving.  After installation run
-      ./thirdparty/cvc3/bin/cvc3
-  to make sure that cvc3 runs properly on you machine.  You should not see any exception or error when cvc3 is invoked.
+  * Concolic testing uses cvc3 and automaton.jar for constraint solving. The installation script checks if cvc3 and automaton.jar are installed properly.
 
 ### Installation
 

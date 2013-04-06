@@ -14,53 +14,61 @@
 
 # Author: Koushik Sen
 
+lowercase(){
+    echo "$1" | sed "y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/"
+}
 
-npm install uglify-js@1
-npm install node-ffi
-npm install cover
-npm install websocket
-npm install source-map
-npm install esprima
-npm install estraverse
-npm install escodegen
-npm install dryice
+OS=`lowercase \`uname\``
+
+echo $OS
+
+
+npm install uglify-js@1 || { echo "npm install uglify-js@1 failed!"; exit 1; }
+npm install node-ffi || { echo "npm install node-ffi failed!"; exit 1; }
+npm install cover || { echo "npm install cover failed!"; exit 1; }
+npm install websocket || { echo "npm install websocket failed!"; exit 1; }
+npm install source-map || { echo "npm install source-map failed!"; exit 1; }
+npm install esprima || { echo "npm install esprima failed!"; exit 1; }
+npm install estraverse || { echo "npm install estraverse failed!"; exit 1; }
+npm install escodegen || { echo "npm install escodegen failed!"; exit 1; }
+npm install dryice || { echo "npm install dryice failed!"; exit 1; }
 
 
 rm -rf thirdparty
 mkdir thirdparty
-git clone --recursive git://github.com/Trenker/Browser-UglifyJS.git thirdparty/browser-uglifyjs
+git clone --recursive git://github.com/Trenker/Browser-UglifyJS.git thirdparty/browser-uglifyjs || { echo "git clone --recursive git://github.com/Trenker/Browser-UglifyJS.git thirdparty/browser-uglifyjs failed!"; exit 1; }
 cd thirdparty/browser-uglifyjs/lib
 rm -rf UglifyJS
-git clone git://github.com/mishoo/UglifyJS.git
+git clone git://github.com/mishoo/UglifyJS.git || { echo "git clone git://github.com/mishoo/UglifyJS.git failed!"; exit 1; }
 cd UglifyJS
 rm -rf .git
 cd ..
 cd ..
 rm -rf .git
-node build.js
+node build.js || { echo "node build.js for browserify of UglifyJs1 failed!"; exit 1; }
 mv build/uglifyjs.1.2.5.js ../
 cd ..
 
 rm -rf esprima
-git clone git://github.com/ariya/esprima.git
+git clone git://github.com/ariya/esprima.git || { echo "git clone git://github.com/ariya/esprima.git failed!"; exit 1; }
 cd esprima
 rm -rf .git
 cd ..
 
 rm -rf escodegen
-git clone git://github.com/Constellation/escodegen.git
+git clone git://github.com/Constellation/escodegen.git || { echo "git clone git://github.com/Constellation/escodegen.git failed!"; exit 1; }
 cd escodegen
 rm -rf .git
 cd ..
 
 rm -rf estraverse
-git clone git://github.com/Constellation/estraverse.git
+git clone git://github.com/Constellation/estraverse.git || { echo "git clone git://github.com/Constellation/estraverse.git failed!"; exit 1; }
 cd estraverse
 rm -rf .git
 cd ..
 
 rm -rf source-map
-git clone git://github.com/mozilla/source-map.git
+git clone git://github.com/mozilla/source-map.git || { echo "git clone git://github.com/mozilla/source-map.git failed!"; exit 1; }
 cd source-map/
 npm install amdefine
 node Makefile.dryice.js
@@ -72,16 +80,35 @@ cd ..
 echo "Install automaton.jar"
 
 cd thirdparty
-curl -O http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/macosx/cvc3-2.4.1-macosx-optimized-static.tar.gz
-tar zvxf cvc3-2.4.1-macosx-optimized-static.tar.gz
-mv cvc3-2.4.1-macosx-optimized-static cvc3
+
+if [ "${OS}" == "darwin" ]
+then
+    curl -O http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/macosx/cvc3-2.4.1-macosx-optimized-static.tar.gz || { echo "curl -O http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/macosx/cvc3-2.4.1-macosx-optimized-static.tar.gz failed!"; exit 1; }
+    tar zvxf cvc3-2.4.1-macosx-optimized-static.tar.gz  || { echo "tar zvxf cvc3-2.4.1-macosx-optimized-static.tar.gz failed!"; exit 1; }
+    mv cvc3-2.4.1-macosx-optimized-static cvc3
+elif [ "${OS}" == "linux" ]
+then
+    curl -O http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/linux64/cvc3-2.4.1-optimized-static.tar.gz || { echo "curl -O http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/linux64/cvc3-2.4.1-optimized-static.tar.gz failed!"; exit 1; }
+    tar zvxf cvc3-2.4.1-macosx-optimized-static.tar.gz  || { echo "tar zvxf cvc3-2.4.1-optimized-static.tar.gz failed!"; exit 1; }
+    mv cvc3-2.4.1-optimized-static cvc3
+else
+    echo "You need Mac OS X or Linux to run Jalangi"
+    exit 1;
+fi
+
+./cvc3/bin/cvc3 < ../scripts/formula.cvc3 || { echo "cvc3 installation failed!"; exit 1; }
 
 mkdir javalib
 cd javalib
-curl -O http://www.brics.dk/automaton/automaton.jar
+curl -O http://www.brics.dk/automaton/automaton.jar || { echo "curl -O http://www.brics.dk/automaton/automaton.jar failed!"; exit 1; }
 cd ../..
 
-ant -f jalangijava.xml
+ant -f jalangijava.xml || { echo "ant -f jalangijava.xml failed!"; exit 1; }
+java -cp ./jout/production/jalangijava/:./thirdparty/javalib/automaton.jar RegexpEncoder length ".*www\..*" y38 false || { echo "Installation of Java part of Jalangi failed!  Make sure that you have Sun's JDK 1.6 or higher."; exit 1; }
+
+echo "Installation successful.  Please run ./scripts/testsym to make sure that all tests pass."
+
+
 
 
 

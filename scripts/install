@@ -77,18 +77,14 @@ cd ..
 
 
 
-echo "Install automaton.jar"
-
-cd thirdparty
-
 if [ "${OS}" == "darwin" ]
 then
-    curl -O http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/macosx/cvc3-2.4.1-macosx-optimized-static.tar.gz || { echo "curl -O http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/macosx/cvc3-2.4.1-macosx-optimized-static.tar.gz failed!"; exit 1; }
+    node ../src/js/commands/curl.js cvc3-2.4.1-macosx-optimized-static.tar.gz http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/macosx/cvc3-2.4.1-macosx-optimized-static.tar.gz || { echo "node ../src/js/commands/curl.js cvc3-2.4.1-macosx-optimized-static.tar.gz http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/macosx/cvc3-2.4.1-macosx-optimized-static.tar.gz failed!"; exit 1; }
     tar zvxf cvc3-2.4.1-macosx-optimized-static.tar.gz  || { echo "tar zvxf cvc3-2.4.1-macosx-optimized-static.tar.gz failed!"; exit 1; }
     mv cvc3-2.4.1-macosx-optimized-static cvc3
 elif [ "${OS}" == "linux" ]
 then
-    curl -O http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/linux64/cvc3-2.4.1-optimized-static.tar.gz || { echo "curl -O http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/linux64/cvc3-2.4.1-optimized-static.tar.gz failed!"; exit 1; }
+    node ../src/js/commands/curl.js cvc3-2.4.1-macosx-optimized-static.tar.gz http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/linux64/cvc3-2.4.1-optimized-static.tar.gz || { echo "node ../src/js/commands/curl.js cvc3-2.4.1-macosx-optimized-static.tar.gz http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/linux64/cvc3-2.4.1-optimized-static.tar.gz failed!"; exit 1; }
     tar zvxf cvc3-2.4.1-macosx-optimized-static.tar.gz  || { echo "tar zvxf cvc3-2.4.1-optimized-static.tar.gz failed!"; exit 1; }
     mv cvc3-2.4.1-optimized-static cvc3
 else
@@ -100,13 +96,16 @@ fi
 
 mkdir javalib
 cd javalib
-curl -O http://www.brics.dk/automaton/automaton.jar || { echo "curl -O http://www.brics.dk/automaton/automaton.jar failed!"; exit 1; }
+node ../../src/js/commands/curl.js automaton.jar http://www.brics.dk/automaton/automaton.jar || { echo "node ../../src/js/commands/curl.js automaton.jar http://www.brics.dk/automaton/automaton.jar failed!"; exit 1; }
 cd ../..
 
-ant -f jalangijava.xml || { echo "ant -f jalangijava.xml failed!"; exit 1; }
+#ant -f jalangijava.xml || { echo "ant -f jalangijava.xml failed!"; exit 1; }
 java -cp ./jout/production/jalangijava/:./thirdparty/javalib/automaton.jar RegexpEncoder length ".*www\..*" y38 false || { echo "Installation of Java part of Jalangi failed!  Make sure that you have Sun's JDK 1.6 or higher."; exit 1; }
 
-echo "Installation successful.  Please run ./scripts/testsym to make sure that all tests pass."
+echo "****************************"
+echo "Installation successful."
+echo "Run ./scripts/testsym to make sure that all tests pass."
+echo "****************************"
 
 
 

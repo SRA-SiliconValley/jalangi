@@ -84,8 +84,8 @@ then
     mv cvc3-2.4.1-macosx-optimized-static cvc3
 elif [ "${OS}" == "linux" ]
 then
-    node ../src/js/commands/curl.js cvc3-2.4.1-macosx-optimized-static.tar.gz http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/linux64/cvc3-2.4.1-optimized-static.tar.gz || { echo "node ../src/js/commands/curl.js cvc3-2.4.1-macosx-optimized-static.tar.gz http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/linux64/cvc3-2.4.1-optimized-static.tar.gz failed!"; exit 1; }
-    tar zvxf cvc3-2.4.1-macosx-optimized-static.tar.gz  || { echo "tar zvxf cvc3-2.4.1-optimized-static.tar.gz failed!"; exit 1; }
+    node ../src/js/commands/curl.js cvc3-2.4.1-optimized-static.tar.gz http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/linux32/cvc3-2.4.1-optimized-static.tar.gz || { echo "node ../src/js/commands/curl.js cvc3-2.4.1-optimized-static.tar.gz http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/linux64/cvc3-2.4.1-optimized-static.tar.gz failed!"; exit 1; }
+    tar zvxf cvc3-2.4.1-optimized-static.tar.gz  || { echo "tar zvxf cvc3-2.4.1-optimized-static.tar.gz failed!"; exit 1; }
     mv cvc3-2.4.1-optimized-static cvc3
 else
     echo "You need Mac OS X or Linux to run Jalangi"

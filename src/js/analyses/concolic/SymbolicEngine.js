@@ -166,11 +166,10 @@
             return $7.B(0, "regexin", newSym, this);
         }
 
-        function string_indexOf(str) {
-            var result, first, tmp1, tmp2;
+        function string_indexOf(result, str) {
+            var first, tmp1, tmp2;
             str = $7.getConcrete(str);
             first = $7.getConcrete(this);
-            result =  first.indexOf(str);
 
             if (this !== first) {
                 var reg = new RegExp(".*"+regex_escape(str)+".*");
@@ -197,10 +196,9 @@
             return result;
         }
 
-        function string_substring(start, end) {
-            var result, first, tmp1, tmp2;
+        function string_substring(result, start, end) {
+            var first, tmp1, tmp2;
             first = $7.getConcrete(this);
-            result =  first.substring($7.getConcrete(start), $7.getConcrete(end));
 
             // assuming start >= 0 and end >= start and end === undefined or end <= this.length
 
@@ -232,11 +230,10 @@
         }
 
 
-        function string_lastIndexOf(str) {
-            var result, first, tmp1, tmp2;
+        function string_lastIndexOf(result, str) {
+            var first, tmp1, tmp2;
             str = $7.getConcrete(str);
             first = $7.getConcrete(this);
-            result =  first.lastIndexOf(str);
 
             if (this !== first) {
                 var reg = new RegExp(".*"+regex_escape(str)+".*");
@@ -263,16 +260,20 @@
             return result;
         }
 
+        function concat(val, a) {
+            return [val].concat(Array.prototype.slice.call(a, 0));
+        };
+
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
             f = getConcrete(f);
             if (f === RegExp.prototype.test) {
                 return regexp_test.apply(base, args);
             } else if (f === String.prototype.indexOf) {
-                return string_indexOf.apply(base, args);
+                return string_indexOf.apply(base, concat(val, args));
             } else if (f === String.prototype.lastIndexOf) {
-                return string_lastIndexOf.apply(base, args);
+                return string_lastIndexOf.apply(base, concat(val, args));
             }  else if (f === String.prototype.substring) {
-                return string_substring.apply(base, args);
+                return string_substring.apply(base, concat(val, args));
             }
             return val;
         }
@@ -591,6 +592,22 @@
 
             if (s) {
                 pathConstraint.push([null, s]);
+            }
+            if (c === "begin") {
+                pathConstraint.push("begin");
+            } else if (c === "and" || c === "or") {
+                c = (c==='and')?"&&":"||";
+                var c1 = pathConstraint.pop();
+                if (c1 === 'begin') {
+                    return;
+                }
+                c1 = c1[1];
+                var c2;
+                while((c2 = pathConstraint.pop()) !== "begin") {
+                    c2 = c2[1];
+                    c1 = new SymbolicBool(c, c1, c2);
+                }
+                pathConstraint.push([null, c1]);
             }
         }
 

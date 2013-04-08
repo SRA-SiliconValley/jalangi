@@ -111,4 +111,7 @@ if (typeof $7 === 'undefined') {
     sandbox.setInput = setInput;
     sandbox.getSolutionPoint = getSolutionPoint;
     sandbox.readInput = readInput;
+    if (sandbox.addAxiom === undefined) {
+        sandbox.addAxiom = function() {};
+    }
 }($7));

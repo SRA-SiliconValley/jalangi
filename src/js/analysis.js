@@ -162,6 +162,7 @@ $7 = {};
             f === Number ||
             f === Boolean ||
             f === RegExp ||
+            f === $7.addAxiom ||
             f === $7.readInput) {
             return [f, true];
         } else if (f === Function.prototype.apply ||
@@ -407,12 +408,15 @@ $7 = {};
     var isInstrumentedCaller = false;
 
     function invokeFun(iid, base, f, args, isConstructor) {
-        var g, invoke, val, ic;
+        var g, invoke, val, ic, tmp_rrEngine;
 
         var f_c = getConcrete(f);
 
         if (sEngine && sEngine.invokeFunPre) {
+            tmp_rrEngine = rrEngine;
+            rrEngine = null;
             sEngine.invokeFunPre(iid, f, base, args, isConstructor);
+            rrEngine = tmp_rrEngine;
         }
 
         executionIndex.executionIndexInc(iid);
@@ -453,7 +457,10 @@ $7 = {};
             }
         }
         if (sEngine && sEngine.invokeFun) {
+            tmp_rrEngine = rrEngine;
+            rrEngine = null;
             val = sEngine.invokeFun(iid, f, base, args, val, isConstructor);
+            rrEngine = tmp_rrEngine;
         }
         printValueForTesting(2, iid,val);
         return val;

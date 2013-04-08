@@ -76,7 +76,7 @@ rm -rf .git
 cd ..
 
 
-
+echo "Downloading cvc3 ...."
 if [ "${OS}" == "darwin" ]
 then
     node ../src/js/commands/curl.js cvc3-2.4.1-macosx-optimized-static.tar.gz http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/macosx/cvc3-2.4.1-macosx-optimized-static.tar.gz || { echo "node ../src/js/commands/curl.js cvc3-2.4.1-macosx-optimized-static.tar.gz http://www.cs.nyu.edu/acsys/cvc3/releases/2.4.1/macosx/cvc3-2.4.1-macosx-optimized-static.tar.gz failed!"; exit 1; }
@@ -96,10 +96,17 @@ fi
 
 mkdir javalib
 cd javalib
+echo "Downloading http://www.brics.dk/automaton/automaton.jar ...."
 node ../../src/js/commands/curl.js automaton.jar http://www.brics.dk/automaton/automaton.jar || { echo "node ../../src/js/commands/curl.js automaton.jar http://www.brics.dk/automaton/automaton.jar failed!"; exit 1; }
 cd ../..
 
 #ant -f jalangijava.xml || { echo "ant -f jalangijava.xml failed!"; exit 1; }
+rm -rf jout
+mkdir jout
+mkdir jout/production
+mkdir jout/production/jalangijava
+
+javac -cp ./thirdparty/javalib/automaton.jar -d jout/production/jalangijava src/java/RegexpEncoder.java || { echo "javac -cp ./thirdparty/javalib/automaton.jar src/java/RegexpEncoder.java."; exit 1; }
 java -cp ./jout/production/jalangijava/:./thirdparty/javalib/automaton.jar RegexpEncoder length ".*www\..*" y38 false || { echo "Installation of Java part of Jalangi failed!  Make sure that you have Sun's JDK 1.6 or higher."; exit 1; }
 
 echo "****************************"

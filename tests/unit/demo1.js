@@ -17,7 +17,7 @@
 // Author: Koushik Sen
 
 
-global.foo = function foo(x, y) {
+function foo(x, y) {
     console.log("Running foo with x "+x+" y "+y);
     var z = 20;
     if (2*x == y) {

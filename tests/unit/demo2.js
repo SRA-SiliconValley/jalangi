@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-global.isValidQuery = function isValidQuery (str)
+function isValidQuery (str)
 {
 
     console.log(str);

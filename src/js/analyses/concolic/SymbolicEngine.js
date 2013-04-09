@@ -31,6 +31,7 @@
         var SymbolicLinear = require('./SymbolicLinear');
         var SymbolicStringExpression = require('./SymbolicStringExpression');
         var SymbolicStringPredicate = require('./SymbolicStringPredicate');
+        var ToStringPredicate = require('./ToStringPredicate');
         var SymbolicType = require('./SymbolicType');
         var SymbolicObject = require('./SymbolicObject');
         var SymbolicUndefined = require('./SymbolicUndefined');
@@ -166,6 +167,19 @@
             return $7.B(0, "regexin", newSym, this);
         }
 
+        function number_parseInt(result, str) {
+            var concrete = $7.getConcrete(str);
+            var newSym;
+
+            if (str !== concrete) {
+                newSym = $7.readInput(result, true);
+                installAxiom(new ConcolicValue(true,new ToStringPredicate(getSymbolic(newSym), getSymbolic(str))));
+                return newSym;
+            } else {
+                return result;
+            }
+        }
+
         function string_indexOf(result, str) {
             var first, tmp1, tmp2;
             str = $7.getConcrete(str);
@@ -273,6 +287,9 @@
             }
             if (f === RegExp.prototype.test) {
                 return regexp_test.apply(base, args);
+            } else if (f === parseInt) {
+                return number_parseInt.apply(base, concat(val, args));
+//                return string_indexOf.apply(base, concat(val, args));
             } else if (f === String.prototype.indexOf) {
                 return sfuns.string_indexOf.apply(base, concat(val, args));
 //                return string_indexOf.apply(base, concat(val, args));

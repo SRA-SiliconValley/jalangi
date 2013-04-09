@@ -410,18 +410,22 @@
                 if (type==='string') {
                     if (isSymbolicString(left_s) && isSymbolicString(right_s)) {
                         ret = left_s.concat(right_s);
-                    } else if (left_s && left_s instanceof SymbolicStringExpression) {
+                    } else if (isSymbolicString(left_s)) {
                         ret = left_s.concatStr(right_c);
-                    } else if (right_s && right_s instanceof SymbolicStringExpression) {
+                    } else if (isSymbolicString(right_s)) {
                         ret = right_s.concatToStr(left_c);
                     }
                 } else if (type === 'number') {
                     if (isSymbolicNumber(left_s) && isSymbolicNumber(right_s)) {
                         ret = left_s.add(right_s);
                     } else if (isSymbolicNumber(left_s)) {
-                        ret = left_s.addLong(right_c);
+                        right_c = right_c + 0;
+                        if (right_c == right_c)
+                            ret = left_s.addLong(right_c);
                     } else if (isSymbolicNumber(right_s)) {
-                        ret = right_s.addLong(left_c);
+                        left_c = left_c + 0;
+                        if (left_c == left_c)
+                            ret = right_s.addLong(left_c);
                     }
                 }
             } else if (op === "-") {
@@ -429,9 +433,13 @@
                     if (isSymbolicNumber(left_s) && isSymbolicNumber(right_s)) {
                         ret = left_s.subtract(right_s);
                     } else if (isSymbolicNumber(left_s)) {
-                        ret = left_s.subtractLong(right_c);
+                        right_c = right_c + 0;
+                        if (right_c == right_c)
+                            ret = left_s.subtractLong(right_c);
                     } else if (isSymbolicNumber(right_s)) {
-                        ret = right_s.subtractFrom(left_c);
+                        left_c = left_c + 0;
+                        if (left_c == left_c)
+                            ret = right_s.subtractFrom(left_c);
                     }
                 }
             } else if (op === "<" || op === ">" || op === "<=" || op === ">="  || op === "==" || op === "!="  || op === "==="  || op === "!==") {
@@ -442,9 +450,9 @@
                     if (isSymbolicString(left_s) && isSymbolicString(right_s)) {
                         ret = new SymbolicStringPredicate(op,left_s,right_s);
                     } else if (isSymbolicString(left_s)) {
-                        ret = new SymbolicStringPredicate(op,left_s,right_c);
+                        ret = new SymbolicStringPredicate(op,left_s,right_c+"");
                     } else if (isSymbolicString(right_s)) {
-                        ret = new SymbolicStringPredicate(op,left_c,right_s);
+                        ret = new SymbolicStringPredicate(op,left_c+"",right_s);
                     }
                     if (isSymbolicType(left_s)) {
                         left_s.addType(right_c+"");
@@ -491,9 +499,9 @@
             } else if(op === "*" && type === 'number') {
                 if (isSymbolicNumber(left_s) && isSymbolicNumber(right_s)) {
                     ret = right_s.multiply(left_c);
-                } else if (isSymbolicNumber(left_s)) {
+                } else if (isSymbolicNumber(left_s) && typeof right_c === 'number') {
                     ret = left_s.multiply(right_c);
-                } else if (isSymbolicNumber(right_s)) {
+                } else if (isSymbolicNumber(right_s) && typeof left_c === 'number') {
                     ret = right_s.multiply(left_c);
                 }
             } else if (op === "&&" || op === "||") {
@@ -517,6 +525,12 @@
             } else if (op === "regexin") {
                 if (isSymbolicString(left_s)) {
                     ret = new SymbolicStringPredicate("regexin",left_s,right_c);
+                }
+            } else if (op === '|') {
+                if (isSymbolicNumber(left_s) && typeof right_c === 'number' && right_c === 0) {
+                    ret = left_s;
+                } else if (isSymbolicNumber(right_s) && typeof left_c === 'number' && left_c === 0) {
+                    ret = right_s;
                 }
             }
             //var ret = (left_s?left_s:left_c) + " " + op + " " + (right_s?right_s:right_c);
@@ -632,6 +646,8 @@
                 }
                 pathConstraint.splice(start-1,len - start+1);
                 pathConstraint.push([null, c1]);
+            } else if (c === 'ignore') {
+                pathConstraint.pop();
             }
         }
 

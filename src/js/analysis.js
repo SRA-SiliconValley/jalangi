@@ -162,7 +162,6 @@ $7 = {};
             f === Number ||
             f === Boolean ||
             f === RegExp ||
-            f === $7.getConcrete ||
             f === $7.addAxiom ||
             f === $7.readInput) {
             return [f, true];

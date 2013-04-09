@@ -109,6 +109,8 @@ mkdir jout/production/jalangijava
 javac -cp ./thirdparty/javalib/automaton.jar -d jout/production/jalangijava src/java/RegexpEncoder.java || { echo "javac -cp ./thirdparty/javalib/automaton.jar src/java/RegexpEncoder.java."; exit 1; }
 java -cp ./jout/production/jalangijava/:./thirdparty/javalib/automaton.jar RegexpEncoder length ".*www\..*" y38 false || { echo "Installation of Java part of Jalangi failed!  Make sure that you have Sun's JDK 1.6 or higher."; exit 1; }
 
+node src/js/instrument/esnstrument.js src/js/analyses/concolic/SymbolicFunctions.js
+
 echo "****************************"
 echo "Installation successful."
 echo "Run ./scripts/testsym to make sure that all tests pass."

@@ -162,6 +162,7 @@ $7 = {};
             f === Number ||
             f === Boolean ||
             f === RegExp ||
+            f === $7.getConcrete ||
             f === $7.addAxiom ||
             f === $7.readInput) {
             return [f, true];
@@ -173,6 +174,7 @@ $7 = {};
             f === String.prototype.lastIndexOf ||
             f === String.prototype.substring ||
             f === String.prototype.charCodeAt ||
+            f === String.prototype.replace ||
             f === Math.abs ||
             f === Math.acos ||
             f === Math.asin ||

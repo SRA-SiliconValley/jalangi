@@ -264,16 +264,24 @@
             return [val].concat(Array.prototype.slice.call(a, 0));
         };
 
+
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
             f = getConcrete(f);
+            var sfuns;
+            if (!sfuns) {
+                sfuns = require('./SymbolicFunctions_jalangi_');
+            }
             if (f === RegExp.prototype.test) {
                 return regexp_test.apply(base, args);
             } else if (f === String.prototype.indexOf) {
-                return string_indexOf.apply(base, concat(val, args));
+                return sfuns.string_indexOf.apply(base, concat(val, args));
+//                return string_indexOf.apply(base, concat(val, args));
             } else if (f === String.prototype.lastIndexOf) {
-                return string_lastIndexOf.apply(base, concat(val, args));
+                return sfuns.string_lastIndexOf.apply(base, concat(val, args));
+//                return string_lastIndexOf.apply(base, concat(val, args));
             }  else if (f === String.prototype.substring) {
-                return string_substring.apply(base, concat(val, args));
+                return sfuns.string_substring.apply(base, concat(val, args));
+//                return string_substring.apply(base, concat(val, args));
             }
             return val;
         }
@@ -459,7 +467,7 @@
                     } else {
                         ret = left_s.subtract(right_s);
                     }
-                } else if (isSymbolicNumber(left_s)) {
+                } else if (isSymbolicNumber(left_s) && typeof right_c === 'number') {
                     if (left_s.op !== SymbolicLinear.UN)
                         if (right_c)
                             ret = left_s;
@@ -467,7 +475,7 @@
                             ret = left_s.not();
                     else
                         ret = left_s.subtractLong(right_c);
-                } else if (isSymbolicNumber(right_s)) {
+                } else if (isSymbolicNumber(right_s) && typeof left_c === 'number') {
                     if (right_s.op !== SymbolicLinear.UN)
                         if (left_c)
                             ret = right_s;
@@ -597,16 +605,32 @@
                 pathConstraint.push("begin");
             } else if (c === "and" || c === "or") {
                 c = (c==='and')?"&&":"||";
-                var c1 = pathConstraint.pop();
-                if (c1 === 'begin') {
+                var ret, i, start = -1, len;
+                len = pathConstraint.length;
+                for(i = len-1; i>=0; i--) {
+                    if (pathConstraint[i] === "begin") {
+                        start = i+1;
+                        break;
+                    }
+                }
+                if (start === -1) {
+                    throw new Error("$7.addAxiom('begin') not found");
+                }
+                if (start === len) {
                     return;
                 }
+
+                i = start;
+                var c1 = pathConstraint[i];
                 c1 = c1[1];
                 var c2;
-                while((c2 = pathConstraint.pop()) !== "begin") {
+                while(i < len-1) {
+                    i++;
+                    c2 = pathConstraint[i];
                     c2 = c2[1];
                     c1 = new SymbolicBool(c, c1, c2);
                 }
+                pathConstraint.splice(start-1,len - start+1);
                 pathConstraint.push([null, c1]);
             }
         }

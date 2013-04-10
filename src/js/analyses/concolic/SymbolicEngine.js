@@ -32,6 +32,7 @@
         var SymbolicStringExpression = require('./SymbolicStringExpression');
         var SymbolicStringPredicate = require('./SymbolicStringPredicate');
         var ToStringPredicate = require('./ToStringPredicate');
+        var FromCharCodePredicate = require('./FromCharCodePredicate');
         var SymbolicType = require('./SymbolicType');
         var SymbolicObject = require('./SymbolicObject');
         var SymbolicUndefined = require('./SymbolicUndefined');
@@ -170,6 +171,26 @@
             return $7.B(0, "regexin", newSym, this);
         }
 
+        function string_fromCharCode (result) {
+            var ints = [];
+            var i, len=arguments.length, flag = false;;
+            for (i=1; i < len; i++) {
+                if (getSymbolic(arguments[i]) instanceof SymbolicLinear) {
+                    flag = true;
+                    ints[i-1] = getSymbolic(arguments[i]);
+                } else {
+                    ints[i-1] = getConcrete(arguments[i]);
+                }
+            }
+            if (!flag) {
+                return result;
+            }
+            var newSym = $7.readInput(getConcrete(result), true);
+            $7.addAxiom(new ConcolicValue(true, new FromCharCodePredicate(ints, newSym)));
+            return newSym;
+        }
+
+
 //        function number_parseInt(result, str) {
 //            var concrete = $7.getConcrete(str);
 //            var newSym;
@@ -290,10 +311,8 @@
             }
             if (f === RegExp.prototype.test) {
                 return regexp_test.apply(base, args);
-//            }
-//            else if (f === parseInt) {
-//                return number_parseInt.apply(base, concat(val, args));
-//                return string_indexOf.apply(base, concat(val, args));
+            } else if (f === String.prototype.fromCharCode) {
+                return string_fromCharCode.apply(base, concat(val, args));
             } else if (f === String.prototype.indexOf) {
                 return sfuns.string_indexOf.apply(base, concat(val, args));
 //                return string_indexOf.apply(base, concat(val, args));

@@ -52,7 +52,10 @@
             } else if (left_s instanceof SymbolicStringExpression) {
                 ret = new SymbolicStringPredicate("!=",left_s,"");
                 return ret;
-            } else if (left_s instanceof SymbolicStringPredicate  || left_s instanceof SymbolicBool || left_s instanceof SymbolicType) {
+            } else if (left_s instanceof SymbolicStringPredicate  ||
+                left_s instanceof SymbolicBool ||
+                left_s instanceof SymbolicType ||
+                left_s instanceof ToStringPredicate) {
                 return ret;
             }
             return undefined;
@@ -167,18 +170,18 @@
             return $7.B(0, "regexin", newSym, this);
         }
 
-        function number_parseInt(result, str) {
-            var concrete = $7.getConcrete(str);
-            var newSym;
-
-            if (str !== concrete) {
-                newSym = $7.readInput(result, true);
-                installAxiom(new ConcolicValue(true,new ToStringPredicate(getSymbolic(newSym), getSymbolic(str))));
-                return newSym;
-            } else {
-                return result;
-            }
-        }
+//        function number_parseInt(result, str) {
+//            var concrete = $7.getConcrete(str);
+//            var newSym;
+//
+//            if (str !== concrete) {
+//                newSym = $7.readInput(result, true);
+//                installAxiom(new ConcolicValue(true,new ToStringPredicate(getSymbolic(newSym), getSymbolic(str))));
+//                return newSym;
+//            } else {
+//                return result;
+//            }
+//        }
 
         function string_indexOf(result, str) {
             var first, tmp1, tmp2;
@@ -287,8 +290,9 @@
             }
             if (f === RegExp.prototype.test) {
                 return regexp_test.apply(base, args);
-            } else if (f === parseInt) {
-                return number_parseInt.apply(base, concat(val, args));
+//            }
+//            else if (f === parseInt) {
+//                return number_parseInt.apply(base, concat(val, args));
 //                return string_indexOf.apply(base, concat(val, args));
             } else if (f === String.prototype.indexOf) {
                 return sfuns.string_indexOf.apply(base, concat(val, args));
@@ -343,6 +347,22 @@
         function isSymbolicUndefined(s) {
             return s && s instanceof SymbolicUndefined;
         }
+
+        function symbolicIntToString(num) {
+            var concrete = getConcrete(num);
+            var newSym = $7.readInput(""+concrete, true);
+            installAxiom(new ConcolicValue(true,new ToStringPredicate(getSymbolic(num), getSymbolic(newSym))));
+            return newSym;
+        }
+
+        function symbolicStringToInt(str) {
+            var concrete = getConcrete(str);
+            var newSym = $7.readInput(+concrete, true);
+            installAxiom(new ConcolicValue(true,new ToStringPredicate(getSymbolic(newSym), getSymbolic(str))));
+            return newSym;
+        }
+
+
 
         this.binary = function (iid, op, left, right, result_c) {
             // needs to be changed based on analysis
@@ -425,6 +445,16 @@
 
             if (op === "+") {
                 if (type==='string') {
+                    if (isSymbolicNumber(left_s)) {
+                        left = symbolicIntToString(left);
+                        left_s = getSymbolic(left);
+                        left_c = getConcrete(left);
+                    }
+                    if (isSymbolicNumber(right_s)) {
+                        right = symbolicIntToString(right);
+                        right_s = getSymbolic(right);
+                        right_c = getConcrete(right);
+                    }
                     if (isSymbolicString(left_s) && isSymbolicString(right_s)) {
                         ret = left_s.concat(right_s);
                     } else if (isSymbolicString(left_s)) {
@@ -433,6 +463,16 @@
                         ret = right_s.concatToStr(left_c);
                     }
                 } else if (type === 'number') {
+                    if (isSymbolicString(left_s)) {
+                        left = symbolicStringToInt(left);
+                        left_s = getSymbolic(left);
+                        left_c = getConcrete(left);
+                    }
+                    if (isSymbolicString(right_s)) {
+                        right = symbolicStringToInt(right);
+                        right_s = getSymbolic(right);
+                        right_c = getConcrete(right);
+                    }
                     if (isSymbolicNumber(left_s) && isSymbolicNumber(right_s)) {
                         ret = left_s.add(right_s);
                     } else if (isSymbolicNumber(left_s)) {
@@ -447,6 +487,16 @@
                 }
             } else if (op === "-") {
                 if (type === 'number') {
+                    if (isSymbolicString(left_s)) {
+                        left = symbolicStringToInt(left);
+                        left_s = getSymbolic(left);
+                        left_c = getConcrete(left);
+                    }
+                    if (isSymbolicString(right_s)) {
+                        right = symbolicStringToInt(right);
+                        right_s = getSymbolic(right);
+                        right_c = getConcrete(right);
+                    }
                     if (isSymbolicNumber(left_s) && isSymbolicNumber(right_s)) {
                         ret = left_s.subtract(right_s);
                     } else if (isSymbolicNumber(left_s)) {
@@ -514,6 +564,16 @@
                 }
 
             } else if(op === "*" && type === 'number') {
+                if (isSymbolicString(left_s)) {
+                    left = symbolicStringToInt(left);
+                    left_s = getSymbolic(left);
+                    left_c = getConcrete(left);
+                }
+                if (isSymbolicString(right_s)) {
+                    right = symbolicStringToInt(right);
+                    right_s = getSymbolic(right);
+                    right_c = getConcrete(right);
+                }
                 if (isSymbolicNumber(left_s) && isSymbolicNumber(right_s)) {
                     ret = right_s.multiply(left_c);
                 } else if (isSymbolicNumber(left_s) && typeof right_c === 'number') {
@@ -544,6 +604,16 @@
                     ret = new SymbolicStringPredicate("regexin",left_s,right_c);
                 }
             } else if (op === '|') {
+                if (isSymbolicString(left_s)) {
+                    left = symbolicStringToInt(left);
+                    left_s = getSymbolic(left);
+                    left_c = getConcrete(left);
+                }
+                if (isSymbolicString(right_s)) {
+                    right = symbolicStringToInt(right);
+                    right_s = getSymbolic(right);
+                    right_c = getConcrete(right);
+                }
                 if (isSymbolicNumber(left_s) && typeof right_c === 'number' && right_c === 0) {
                     ret = left_s;
                 } else if (isSymbolicNumber(right_s) && typeof left_c === 'number' && left_c === 0) {
@@ -584,10 +654,20 @@
 
 
                 if (op === "-") {
+                    if (isSymbolicString(left_s)) {
+                        left = symbolicStringToInt(left);
+                        left_s = getSymbolic(left);
+                        left_c = getConcrete(left);
+                    }
                     ret = left_s.negate();
                 } else if (op === "!") {
                     ret = makePredicate(left_s).not();
                 } else if (op === "+") {
+                    if (isSymbolicString(left_s)) {
+                        left = symbolicStringToInt(left);
+                        left_s = getSymbolic(left);
+                        left_c = getConcrete(left);
+                    }
                     ret = left_s;
                 } else if (op === "typeof") {
                     if (left_s && left_s.stype) {

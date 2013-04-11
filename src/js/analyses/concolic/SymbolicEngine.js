@@ -56,6 +56,7 @@
             } else if (left_s instanceof SymbolicStringPredicate  ||
                 left_s instanceof SymbolicBool ||
                 left_s instanceof SymbolicType ||
+                left_s instanceof FromCharCodePredicate ||
                 left_s instanceof ToStringPredicate) {
                 return ret;
             }
@@ -311,7 +312,7 @@
             }
             if (f === RegExp.prototype.test) {
                 return regexp_test.apply(base, args);
-            } else if (f === String.prototype.fromCharCode) {
+            } else if (f === String.fromCharCode) {
                 return string_fromCharCode.apply(base, concat(val, args));
             } else if (f === String.prototype.indexOf) {
                 return sfuns.string_indexOf.apply(base, concat(val, args));

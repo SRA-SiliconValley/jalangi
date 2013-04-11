@@ -68,7 +68,7 @@
 
 
         toString: function() {
-            return "("+this.stringPart + ") = String.charCodeAt("+this.intParts+")";
+            return "("+this.stringPart + ") = String.fromCharCode("+this.intParts+")";
         }
     };
 

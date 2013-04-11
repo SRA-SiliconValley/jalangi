@@ -20,6 +20,7 @@
 
 
     var SymbolicStringPredicate = require("./SymbolicStringPredicate");
+    var SymbolicLinear = require("./SymbolicLinear");
 
     function ToStringPredicate(intPart, stringPart) {
         if (!(this instanceof ToStringPredicate)) {
@@ -47,11 +48,17 @@
             if (typeof tmp !== 'number') {
                 return this;
             }
-            return new SymbolicStringPredicate("==", tmp+"", this.stringPart);
+            var sym = this.stringPart.getField("length").symbolic.toString();
+            var int_to_s = tmp+"";
+            assignments[sym] = int_to_s.length;
+            return new SymbolicStringPredicate("==", int_to_s, this.stringPart);
         },
 
         getFormulaString : function(freeVars, mode, assignments) {
             if (mode === 'integer') {
+                    if (this.intPart instanceof SymbolicLinear) {
+                        this.intPart.getFreeVars(freeVars);
+                    }
                 return "(TRUE)";
             } else {
                 throw new Error("Cannot get formula for ToStringPredicate in string mode");

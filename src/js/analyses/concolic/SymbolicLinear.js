@@ -343,6 +343,14 @@
             return sb;
         },
 
+        getFreeVars: function(freeVars) {
+            for (var key in this.linear) {
+                if (HOP(this.linear,key)) {
+                    freeVars[key] = 1;
+                }
+            }
+        },
+
         getFormulaString: function(freeVars, mode, assignments) {
 //        if (mode==="integer") {
             var c = this;

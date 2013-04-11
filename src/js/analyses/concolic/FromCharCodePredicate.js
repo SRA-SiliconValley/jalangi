@@ -53,11 +53,20 @@
                 }
                 s += String.fromCharCode(tmp);
             }
+            var sym = this.stringPart.getField("length").symbolic.toString();
+            assignments[sym] = s.length;
+
             return new SymbolicStringPredicate("==", s, this.stringPart);
         },
 
         getFormulaString : function(freeVars, mode, assignments) {
             if (mode === 'integer') {
+                var i, len = this.intParts.length;
+                for (i=0; i<len; i++) {
+                    if (this.intParts[i] instanceof SymbolicLinear) {
+                        this.intParts[i].getFreeVars(freeVars);
+                    }
+                }
                 return "(TRUE)";
             } else {
                 throw new Error("Cannot get formula for FromCharCodePredicate in string mode");

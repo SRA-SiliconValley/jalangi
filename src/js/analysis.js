@@ -174,6 +174,7 @@ $7 = {};
             f === String.prototype.substring ||
             f === String.prototype.charCodeAt ||
             f === String.prototype.replace ||
+            f === String.fromCharCode ||
             f === Math.abs ||
             f === Math.acos ||
             f === Math.asin ||

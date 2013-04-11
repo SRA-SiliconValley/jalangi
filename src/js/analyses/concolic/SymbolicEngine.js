@@ -187,7 +187,7 @@
                 return result;
             }
             var newSym = $7.readInput(getConcrete(result), true);
-            $7.addAxiom(new ConcolicValue(true, new FromCharCodePredicate(ints, newSym)));
+            $7.addAxiom(new ConcolicValue(true, new FromCharCodePredicate(ints, getSymbolic(newSym))));
             return newSym;
         }
 
@@ -316,6 +316,9 @@
                 return string_fromCharCode.apply(base, concat(val, args));
             } else if (f === String.prototype.indexOf) {
                 return sfuns.string_indexOf.apply(base, concat(val, args));
+//                return string_indexOf.apply(base, concat(val, args));
+            } else if (f === String.prototype.charCodeAt) {
+                return sfuns.string_charCodeAt.apply(base, concat(val, args));
 //                return string_indexOf.apply(base, concat(val, args));
             } else if (f === String.prototype.lastIndexOf) {
                 return sfuns.string_lastIndexOf.apply(base, concat(val, args));

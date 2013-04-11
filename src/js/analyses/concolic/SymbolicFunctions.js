@@ -28,6 +28,17 @@
         return ret;
     }
 
+    sandbox.string_charCodeAt = function(result, idx) {
+        var ret = $7.readInput(result,true);
+
+        $7.addAxiom("begin");
+        $7.addAxiom(this.substring(idx, idx + 1) === String.fromCharCode(ret));
+        $7.addAxiom("and");
+
+        return ret;
+
+    }
+
     sandbox.string_substring = function(result, start, end) {
         // assuming start >= 0 and end >= start and end === undefined or end <= this.length
 

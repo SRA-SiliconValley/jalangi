@@ -173,6 +173,7 @@ $7 = {};
             f === String.prototype.lastIndexOf ||
             f === String.prototype.substring ||
             f === String.prototype.charCodeAt ||
+            f === String.prototype.charAt ||
             f === String.prototype.replace ||
             f === String.fromCharCode ||
             f === Math.abs ||

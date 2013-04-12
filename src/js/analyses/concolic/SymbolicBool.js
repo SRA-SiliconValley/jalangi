@@ -27,12 +27,37 @@
         this.right = right;
         switch(op) {
             case "!":
+                if (left.op === SymbolicBool.TRUE) {
+                    return SymbolicBool.false;
+                } else if (left.op === SymbolicBool.FALSE) {
+                    return SymbolicBool.true;
+                }
                 this.op = SymbolicBool.NOT;
                 break;
             case "&&":
+                if (left.op === SymbolicBool.TRUE) {
+                    return right;
+                } else if (left.op === SymbolicBool.FALSE) {
+                    return SymbolicBool.false;
+                }
+                if (right.op === SymbolicBool.TRUE) {
+                    return left;
+                } else if (right.op === SymbolicBool.FALSE) {
+                    return SymbolicBool.false;
+                }
                 this.op = SymbolicBool.AND;
                 break;
             case "||":
+                if (left.op === SymbolicBool.TRUE) {
+                    return SymbolicBool.true;
+                } else if (left.op === SymbolicBool.FALSE) {
+                    return right;
+                }
+                if (right.op === SymbolicBool.TRUE) {
+                    return SymbolicBool.true;
+                } else if (right.op === SymbolicBool.FALSE) {
+                    return left;
+                }
                 this.op = SymbolicBool.OR;
                 break;
             case "true":

@@ -41,6 +41,7 @@
 
 
         var pathConstraint = [];
+        pathConstraint.count = 0;
         var fs = require('fs');
 
         function makePredicate(left_s) {
@@ -86,7 +87,7 @@
                 ret = makeConcolicUndefined(idx, concrete, stype);
             }
             ret.pathConstraintSize = pathConstraint.length;
-            installConstraint(ret.symbolic.stype, true);
+            installConstraint(ret.symbolic.stype, true, true);
             return ret;
         }
 
@@ -319,6 +320,9 @@
 //                return string_indexOf.apply(base, concat(val, args));
             } else if (f === String.prototype.charCodeAt) {
                 return sfuns.string_charCodeAt.apply(base, concat(val, args));
+//                return string_indexOf.apply(base, concat(val, args));
+            } else if (f === String.prototype.charAt) {
+                return sfuns.string_charAt.apply(base, concat(val, args));
 //                return string_indexOf.apply(base, concat(val, args));
             } else if (f === String.prototype.lastIndexOf) {
                 return sfuns.string_lastIndexOf.apply(base, concat(val, args));
@@ -727,19 +731,13 @@
         }
 
         function installAxiom(c) {
-            var s = getSymbolic(c);
-            if (s) {
-                s = makePredicate(s);
-            }
-
-            if (s) {
-                pathConstraint.push([null, s]);
-            }
             if (c === "begin") {
                 pathConstraint.push("begin");
+                pathConstraint.count ++;
             } else if (c === "and" || c === "or") {
                 c = (c==='and')?"&&":"||";
                 var ret, i, start = -1, len;
+                pathConstraint.count--;
                 len = pathConstraint.length;
                 for(i = len-1; i>=0; i--) {
                     if (pathConstraint[i] === "begin") {
@@ -768,12 +766,29 @@
                 pathConstraint.push([null, c1]);
             } else if (c === 'ignore') {
                 pathConstraint.pop();
+            } else {
+                var s = getSymbolic(c);
+                if (s) {
+                    s = makePredicate(s);
+                }
+
+                if (s) {
+                    pathConstraint.push([null, s]);
+                } else if (pathConstraint.count > 0) {
+                    if (getConcrete(c)) {
+                        pathConstraint.push([null, SymbolicBool.true]);
+                    } else {
+                        pathConstraint.push([null, SymbolicBool.false]);
+                    }
+                }
             }
         }
 
         this.installAxiom = installAxiom;
 
-        function installConstraint(c, result) {
+        function installConstraint(c, result, doAdd) {
+            if (pathConstraint.count > 0 && !doAdd)
+                return;
             var s = getSymbolic(c);
             if (s) {
                 s = makePredicate(s);

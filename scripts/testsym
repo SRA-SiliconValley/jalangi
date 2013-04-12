@@ -42,6 +42,7 @@ $ANALYSIS_SCRIPT tests/unit/str_to_int 3
 $ANALYSIS_SCRIPT tests/unit/int_to_str 3
 $ANALYSIS_SCRIPT tests/unit/from_char_code 3
 $ANALYSIS_SCRIPT tests/unit/char_code_at 3
+$ANALYSIS_SCRIPT tests/unit/char_at 3
 $ANALYSIS_SCRIPT tests/unit/object_symbolic 75
 $ANALYSIS_SCRIPT tests/unit/objects 9
 $ANALYSIS_SCRIPT tests/unit/function_symbolic 4
@@ -82,6 +83,7 @@ $ANALYSIS_SCRIPT-norr tests/unit/str_to_int 3
 $ANALYSIS_SCRIPT-norr tests/unit/int_to_str 3
 $ANALYSIS_SCRIPT-norr tests/unit/from_char_code 3
 $ANALYSIS_SCRIPT-norr tests/unit/char_code_at 3
+$ANALYSIS_SCRIPT-norr tests/unit/char_at 3
 $ANALYSIS_SCRIPT-norr tests/unit/object_symbolic 75
 $ANALYSIS_SCRIPT-norr tests/unit/objects 9
 $ANALYSIS_SCRIPT-norr tests/unit/function_symbolic 4

@@ -330,6 +330,10 @@
             }  else if (f === String.prototype.substring) {
                 return sfuns.string_substring.apply(base, concat(val, args));
 //                return string_substring.apply(base, concat(val, args));
+            } else if (f === String.prototype.substr) {
+                return sfuns.string_substr.apply(base, concat(val, args));
+            } else if (f === parseInt) {
+                return sfuns.builtin_parseInt.apply(base, concat(val, args));
             }
             return val;
         }

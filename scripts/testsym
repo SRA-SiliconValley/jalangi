@@ -43,6 +43,7 @@ $ANALYSIS_SCRIPT tests/unit/int_to_str 3
 $ANALYSIS_SCRIPT tests/unit/from_char_code 3
 $ANALYSIS_SCRIPT tests/unit/char_code_at 3
 $ANALYSIS_SCRIPT tests/unit/char_at 3
+$ANALYSIS_SCRIPT tests/unit/parse_int 3
 $ANALYSIS_SCRIPT tests/unit/object_symbolic 75
 $ANALYSIS_SCRIPT tests/unit/objects 9
 $ANALYSIS_SCRIPT tests/unit/function_symbolic 4
@@ -56,6 +57,8 @@ $ANALYSIS_SCRIPT tests/unit/string4 2
 $ANALYSIS_SCRIPT tests/unit/string5 2
 $ANALYSIS_SCRIPT tests/unit/string6 2
 $ANALYSIS_SCRIPT tests/unit/string7 2
+$ANALYSIS_SCRIPT tests/unit/substr1 2
+$ANALYSIS_SCRIPT tests/unit/substr2 2
 $ANALYSIS_SCRIPT tests/unit/regex1 2
 $ANALYSIS_SCRIPT tests/unit/regex2 2
 $ANALYSIS_SCRIPT tests/unit/regex3 2
@@ -84,6 +87,7 @@ $ANALYSIS_SCRIPT-norr tests/unit/int_to_str 3
 $ANALYSIS_SCRIPT-norr tests/unit/from_char_code 3
 $ANALYSIS_SCRIPT-norr tests/unit/char_code_at 3
 $ANALYSIS_SCRIPT-norr tests/unit/char_at 3
+$ANALYSIS_SCRIPT-norr tests/unit/parse_int 3
 $ANALYSIS_SCRIPT-norr tests/unit/object_symbolic 75
 $ANALYSIS_SCRIPT-norr tests/unit/objects 9
 $ANALYSIS_SCRIPT-norr tests/unit/function_symbolic 4
@@ -97,6 +101,8 @@ $ANALYSIS_SCRIPT-norr tests/unit/string4 2
 $ANALYSIS_SCRIPT-norr tests/unit/string5 2
 $ANALYSIS_SCRIPT-norr tests/unit/string6 2
 $ANALYSIS_SCRIPT-norr tests/unit/string7 2
+$ANALYSIS_SCRIPT-norr tests/unit/substr1 2
+$ANALYSIS_SCRIPT-norr tests/unit/substr2 2
 $ANALYSIS_SCRIPT-norr tests/unit/regex1 2
 $ANALYSIS_SCRIPT-norr tests/unit/regex2 2
 $ANALYSIS_SCRIPT-norr tests/unit/regex3 2

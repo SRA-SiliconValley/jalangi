@@ -205,16 +205,6 @@
         $7.addAxiom("begin");
 
         $7.addAxiom("begin");
-        $7.addAxiom(start < 0);
-        $7.addAxiom(ret === "");
-        $7.addAxiom("and");
-
-        $7.addAxiom("begin");
-        $7.addAxiom(start >= this.length);
-        $7.addAxiom(ret === "");
-        $7.addAxiom("and");
-
-        $7.addAxiom("begin");
         var S1 = $7.readInput("",true);
         var S2 = $7.readInput("",true);
 
@@ -224,6 +214,17 @@
         $7.addAxiom(start === S1.length);
         $7.addAxiom(ret.length === 1);
         $7.addAxiom("and");
+
+        $7.addAxiom("begin");
+        $7.addAxiom(start < 0);
+        $7.addAxiom(ret === "");
+        $7.addAxiom("and");
+
+        $7.addAxiom("begin");
+        $7.addAxiom(start >= this.length);
+        $7.addAxiom(ret === "");
+        $7.addAxiom("and");
+
 
         $7.addAxiom("or");
 

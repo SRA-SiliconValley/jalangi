@@ -607,7 +607,10 @@ $7 = {};
             val = rrEngine.RR_G(iid, base, offset, val);
         }
         if (sEngine && sEngine.getField) {
+            var tmp_rrEngine = rrEngine;
+            rrEngine = null;
             val = sEngine.getField(iid, base, offset, val);
+            rrEngine = tmp_rrEngine;
         }
         printValueForTesting(1, iid,val);
         return val;

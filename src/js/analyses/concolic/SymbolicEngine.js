@@ -140,6 +140,11 @@
                 ret = $7.readInput(undefined, false, base_s.getSymbolForField(offset));
                 base_c[offset] = ret;
                 return ret;
+            } else if (getSymbolic(offset)) {
+                if (!sfuns) {
+                    sfuns = require('./SymbolicFunctions_jalangi_');
+                }
+                ret = sfuns.object_getField.apply(undefined, [result_c, base, offset]);
             }
             if (ret !== undefined) {
                 return new ConcolicValue(result_c,ret.symbolic);
@@ -305,9 +310,9 @@
         };
 
 
+        var sfuns;
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
             f = getConcrete(f);
-            var sfuns;
             if (!sfuns) {
                 sfuns = require('./SymbolicFunctions_jalangi_');
             }

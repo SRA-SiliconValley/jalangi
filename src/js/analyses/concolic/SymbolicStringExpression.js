@@ -63,6 +63,9 @@
         },
 
         concatStr : function(str) {
+            if (str === "") {
+                return this;
+            }
             var ret = new SymbolicStringExpression(this);
             var last = ret.list[ret.list.length-1];
             if (typeof last === 'string') {
@@ -91,6 +94,9 @@
         },
 
         concatToStr : function(str) {
+            if (str === "") {
+                return this;
+            }
             var ret = new SymbolicStringExpression(this);
             var first = ret.list[0];
             if (typeof first === 'string') {

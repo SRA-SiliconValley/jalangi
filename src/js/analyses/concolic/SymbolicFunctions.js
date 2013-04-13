@@ -312,6 +312,22 @@
         return ret;
     }
 
+    sandbox.object_getField = function(result, base, offset) {
+        var ret = $7.readInput(0,true);
+
+        $7.addAxiom("begin");
+        for (var i in base) {
+            $7.addAxiom("begin");
+            $7.addAxiom(i === offset+"");
+            $7.addAxiom(ret === base[i]);
+            $7.addAxiom("and");
+        }
+        $7.addAxiom("or");
+
+        return ret;
+
+    }
+
 
 
 

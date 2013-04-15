@@ -36,9 +36,9 @@ We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS 10.7 and high
 ### Other Scripts
 
     ./scripts/testunits
-    ./script/testsp
-    ./script/testsp_likelytype
-    ./script/testsp_tracknull
+    ./scripts/testsp
+    ./scripts/testsp_likelytype
+    ./scripts/testsp_tracknull
     ./scripts/funtest tests/unit/demo1 4
     ./scripts/funtest tests/unit/demo2 10
     ./scripts/browserReplay tests/unit/qsort; open jalangi_trace.html

@@ -316,6 +316,20 @@
             if (!sfuns) {
                 sfuns = require('./SymbolicFunctions_jalangi_');
             }
+            var isSymbolic = false;
+            if (getSymbolic(base)) {
+                isSymbolic = true;
+            }
+            var i, len = args.length;
+            for (i =0 ; i < len; ++i) {
+                if (getSymbolic(args[i])) {
+                    isSymbolic = true;
+                    break;
+                }
+            }
+            if (!isSymbolic) {
+                return val;
+            }
             if (f === RegExp.prototype.test) {
                 return regexp_test.apply(base, args);
             } else if (f === String.fromCharCode) {

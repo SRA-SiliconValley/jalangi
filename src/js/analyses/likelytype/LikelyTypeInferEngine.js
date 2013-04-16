@@ -226,33 +226,38 @@
             return str;
         }
 
-        function analyze(map) {
+        function analyze(map, table) {
+            var done = {};
             for (var oloc in map) {
                 if (HOP(map, oloc)) {
-                    var fieldMap = map[oloc];
-                    for (var field in fieldMap) {
-                        if (HOP(fieldMap, field)) {
-                            if (field == "undefined") {
-                                console.log("Potential Bug: undefined field found in "+typeInfoWithLocation(oloc)+
-                                    ":\n"+ getTypeInfo(typeMap));
+                    oloc = getRoot(table, oloc);
+                    if (!HOP(done, oloc)) {
+                        done[oloc] = true;
+                        var fieldMap = map[oloc];
+                        for (var field in fieldMap) {
+                            if (HOP(fieldMap, field)) {
+                                if (field == "undefined") {
+                                    console.log("Potential Bug: undefined field found in "+typeInfoWithLocation(oloc)+
+                                        ":\n"+ getTypeInfo(typeMap));
+                                }
                             }
                         }
-                    }
-                    for (var field in fieldMap) {
-                        if (HOP(fieldMap, field)) {
-                            var typeMap = fieldMap[field];
-                            if (sizeOfMap(typeMap)>1) {
-                                lbl1: for (var type1 in typeMap) {
-                                    if (HOP(typeMap, type1)) {
-                                        for (var type2 in typeMap) {
-                                            if (HOP(typeMap, type2)) {
-                                                if (type1+"" < type2+"" && !areSameType(type1, type2)) {
-                                                    console.log("Warning: "+field+" of "+typeInfoWithLocation(oloc)+
-                                                        " has multiple types:");
-                                                    for (var type3 in typeMap) {
-                                                        console.log("    "+typeInfoWithLocation(type3)+"\n"+getLocationsInfo(typeMap[type3]));
+                        for (var field in fieldMap) {
+                            if (HOP(fieldMap, field)) {
+                                var typeMap = fieldMap[field];
+                                if (sizeOfMap(typeMap)>1) {
+                                    lbl1: for (var type1 in typeMap) {
+                                        if (HOP(typeMap, type1)) {
+                                            for (var type2 in typeMap) {
+                                                if (HOP(typeMap, type2)) {
+                                                    if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
+                                                        console.log("Warning: "+field+" of "+typeInfoWithLocation(oloc)+
+                                                            " has multiple types:");
+                                                        for (var type3 in typeMap) {
+                                                            console.log("    "+typeInfoWithLocation(type3)+"\n"+getLocationsInfo(typeMap[type3]));
+                                                        }
+                                                        break lbl1;
                                                     }
-                                                    break lbl1;
                                                 }
                                             }
                                         }
@@ -266,25 +271,41 @@
 
         }
 
+        function getRoot(table, oloc) {
+            var ret = table[oloc];
+
+            while(ret !== oloc) {
+                oloc = ret;
+                ret = table[oloc];
+            }
+            return ret;
+        }
+
         function equiv(map) {
             var table = {};
+            var roots = {}
             for (var oloc in map) {
                 if (HOP(map, oloc)) {
-                    table[oloc] = {};
-                    table[oloc][oloc] = oloc;
+                    table[oloc] = oloc;
+                    roots[oloc] = true;
                 }
             }
+            table['number'] = 'number';
+            table['boolean'] = 'boolean';
+            table['string'] = 'string';
+            table['undefined'] = 'undefined';
+            table['object(null)'] = 'object(null)';
 
 
 
-            var changed = false;
+            var changed = true, root1, root2;
             while(changed) {
                 changed = false;
-                for (var oloc in map) {
-                    if (HOP(map, oloc)) {
+                for (var oloc in roots) {
+                    if (HOP(roots, oloc)) {
 
-                        loop2: for (var oloc2 in map) {
-                            if (HOP(map, oloc2) && oloc < oloc2 && table[oloc][oloc2] === undefined) {
+                        loop2: for (var oloc2 in roots) {
+                            if (HOP(roots, oloc2) && oloc < oloc2 && (root1 = getRoot(table, oloc)) !== (root2 = getRoot(table, oloc2))) {
                                 var fieldMap1 = map[oloc];
                                 var fieldMap2 = map[oloc2];
                                 if (sizeOfMap(fieldMap1) !== sizeOfMap(fieldMap2)) {
@@ -303,7 +324,7 @@
                                                 if (HOP(typeMap2, type2)) {
                                                     if (type1 === type2) {
                                                         found = true;
-                                                    } else if (table[type1][type2] !== undefined) {
+                                                    } else if (getRoot(table, type1) === getRoot(table, type2)) {
                                                         found = true;
                                                     }
                                                 }
@@ -315,7 +336,13 @@
                                     }
 
                                 }
-                                table[oloc][oloc2] = table[oloc2][oloc] = oloc;
+                                if (root1 < root2) {
+                                    table[root2] = root1;
+                                    delete roots[root2];
+                                } else {
+                                    table[root1] = root2;
+                                    delete roots[root1];
+                                }
                                 changed = true;
                             }
                         }
@@ -326,8 +353,9 @@
         }
 
         this.endExecution = function() {
-            analyze(iidToFieldTypes);
-            analyze(iidToSignature);
+            var table = equiv(iidToFieldTypes);
+            analyze(iidToFieldTypes, table);
+            analyze(iidToSignature, table);
             //console.log(JSON.stringify(iidToFieldTypes, null, '\t'));
         }
 

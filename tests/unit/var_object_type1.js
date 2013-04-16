@@ -20,7 +20,7 @@ var o = {x: 1, y:2};
 
 o.x = 3;
 
-o.x = null;
+//o.x = null;
 
 var o1 = {x: 4, y:5};
 
@@ -35,6 +35,10 @@ var o4 = {};
 
 o4.f1 = o1;
 o4.f1 = o2;
+
+var o5 = {};
+
+o5.f = {x:2, y:3};
 
 
 var o5 = {};

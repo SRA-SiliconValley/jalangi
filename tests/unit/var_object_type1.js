@@ -49,5 +49,9 @@ var o6 = {};
 o6.g1 = o1;
 o6.g1 = [];
 
-var o7 = {x:1};
-o7.x = 8;
+function foo() {
+    console.log("Nothing");
+}
+
+var o7 = {fun1:1, fun2: function(x, y) { return x + y}};
+o7.fun1 = foo;

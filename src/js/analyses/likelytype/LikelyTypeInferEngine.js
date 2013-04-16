@@ -27,8 +27,9 @@
             return new LikelyTypeInferEngine(executionIndex);
         }
 
-        var iidToFieldTypes = {};
-        var iidToSignature = {};
+        // iid or type could be object(iid) | array(iid) | function(iid) | object(null) | number | string | undefined | boolean
+        var iidToFieldTypes = {}; // type -> (field -> type -> iid -> true)
+        var iidToSignature = {};  // type -> ({"this", "return", "arg1", ...} -> type -> iid -> true)
 
         function HOP(obj, prop) {
             return Object.prototype.hasOwnProperty.call(obj, prop);
@@ -263,6 +264,65 @@
                 }
             }
 
+        }
+
+        function equiv(map) {
+            var table = {};
+            for (var oloc in map) {
+                if (HOP(map, oloc)) {
+                    table[oloc] = {};
+                    table[oloc][oloc] = oloc;
+                }
+            }
+
+
+
+            var changed = false;
+            while(changed) {
+                changed = false;
+                for (var oloc in map) {
+                    if (HOP(map, oloc)) {
+
+                        loop2: for (var oloc2 in map) {
+                            if (HOP(map, oloc2) && oloc < oloc2 && table[oloc][oloc2] === undefined) {
+                                var fieldMap1 = map[oloc];
+                                var fieldMap2 = map[oloc2];
+                                if (sizeOfMap(fieldMap1) !== sizeOfMap(fieldMap2)) {
+                                    continue loop2;
+                                }
+                                for (var field1 in fieldMap1) {
+                                    if (HOP(fieldMap1, field1) && !HOP(fieldMap2, field1)) {
+                                        continue loop2;
+                                    }
+                                    var typeMap1 = fieldMap1[field1];
+                                    var typeMap2 = fieldMap2[field1];
+                                    for (var type1 in typeMap1) {
+                                        if (HOP(typeMap1, type1)) {
+                                            var found = false;
+                                            for (var type2 in typeMap2) {
+                                                if (HOP(typeMap2, type2)) {
+                                                    if (type1 === type2) {
+                                                        found = true;
+                                                    } else if (table[type1][type2] !== undefined) {
+                                                        found = true;
+                                                    }
+                                                }
+                                            }
+                                            if (!found) {
+                                                continue loop2;
+                                            }
+                                        }
+                                    }
+
+                                }
+                                table[oloc][oloc2] = table[oloc2][oloc] = oloc;
+                                changed = true;
+                            }
+                        }
+                    }
+                }
+            }
+            return table;
         }
 
         this.endExecution = function() {

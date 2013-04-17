@@ -30,6 +30,8 @@
         // iid or type could be object(iid) | array(iid) | function(iid) | object(null) | number | string | undefined | boolean
         var iidToFieldTypes = {}; // type -> (field -> type -> iid -> true)
         var iidToSignature = {};  // type -> ({"this", "return", "arg1", ...} -> type -> iid -> true)
+        var typeNames = {};
+        var functionNames = {};
 
         function HOP(obj, prop) {
             return Object.prototype.hasOwnProperty.call(obj, prop);
@@ -42,6 +44,22 @@
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
         var getSymbolic = this.getSymbolic = ConcolicValue.getSymbolic;
 
+
+        function getSetFields(map, key, obj, func) {
+            var tval;
+
+            if (!HOP(map, key)) {
+                if (obj) {
+                    typeNames[key] = obj.constructor?obj.constructor.name:"";
+                }
+                if (func) {
+                    functionNames[key] = func.name?func.name:"";
+                }
+                return map[key] = {};
+            }
+            return map[key];
+        }
+
         function updateType(base, offset, value, updateLocation, creationLocationOptional) {
             var iid , tval, type, s;
             if (!creationLocationOptional) {
@@ -50,9 +68,7 @@
                 iid = creationLocationOptional;
             }
             if (iid) {
-                if (!(tval = iidToFieldTypes[iid])) {
-                    tval = iidToFieldTypes[iid] = {};
-                }
+                tval = getSetFields(iidToFieldTypes, iid, getConcrete(base));
                 type = typeof value;
                 s = getSymbolic(value);
                 if (s) {
@@ -66,13 +82,9 @@
                     }
                 }
 
-                if (!tval[offset]) {
-                    tval[offset] = {};
-                }
-                if (!tval[offset][type]) {
-                    tval[offset][type] = {};
-                }
-                tval[offset][type][updateLocation] = true;
+                var tmap = getSetFields(tval, offset);
+                var tmp = getSetFields(tmap, type);
+                tmp[updateLocation] = true;
 
             }
         }
@@ -87,9 +99,7 @@
                     }
                     s = type+"("+creationLocation+")";
                     ret = new ConcolicValue(obj, s);
-                    if (!iidToFieldTypes[s]) {
-                        iidToFieldTypes[s] = {};
-                    }
+                    getSetFields(iidToFieldTypes,s, obj);
                     for (i in obj) {
                         if (HOP(obj, i) && i !== "*$7*" && i !== "*$7I*" && i !== "*$7C*") {
                             updateType(ret, i, obj[i], creationLocation, s);
@@ -109,13 +119,9 @@
             } else if (value === null) {
                 type = "object(null)";
             }
-            if (!tval[offset]) {
-                tval[offset] = {};
-            }
-            if (!tval[offset][type]) {
-                tval[offset][type] = {};
-            }
-            tval[offset][type][callLocation] = true;
+            var tmap = getSetFields(tval, offset);
+            var tmp = getSetFields(tmap, type);
+            tmp[callLocation] = true;
 
         }
 
@@ -123,9 +129,7 @@
             var iid , tval;
             iid = getSymbolic(f);
             if (iid) {
-                if (!(tval = iidToSignature[iid])) {
-                    tval = iidToSignature[iid] = {};
-                }
+                tval = getSetFields(iidToSignature, iid, null, getConcrete(f));
                 setTypeInFunSignature(value, tval, "return", callLocation);
                 setTypeInFunSignature(base, tval, "this", callLocation);
                 var len = args.length;
@@ -155,9 +159,9 @@
             return annotateObject(iid, val);
         }
 
-        this.read = function(iid, name, val) {
-            return annotateObject(iid, val);
-        }
+//        this.read = function(iid, name, val) {
+//            return annotateObject(iid, val);
+//        }
 
 
         function sizeOfMap(obj) {
@@ -456,11 +460,14 @@
 
             var i, len;
 
-            dot += '    node [shape = record, fillcolor=yellow, style=filled];\n';
+            dot += '    subgraph cluster_notes {\n';
+            dot += '        node [shape = record, fillcolor=yellow, style=filled];\n';
             len = srcNodes.length;
             for (i=0; i<len; i++) {
-                dot = dot + srcNodes[i] + ';\n';
+                dot = dot + "    "+srcNodes[i] + ';\n';
             }
+            dot += '    }\n';
+
 
             dot += '    node [shape = Mrecord, fillcolor=lightpink, style=filled];\n';
             len = badNodes.length
@@ -485,6 +492,16 @@
             return dot;
         }
 
+        function getName(key) {
+            if (HOP(functionNames,key)) {
+                return functionNames[key];
+            } else if (HOP(typeNames,key)) {
+                return typeNames[key];
+            } else {
+                return "";
+            }
+        }
+
         function generateDOT(table, roots, types, functions) {
             var nodes = [];
             var badNodes = [];
@@ -499,7 +516,7 @@
             for (var node in roots) {
                 if (HOP(roots, node)) {
                     var tmp = escapeNode(node);
-                    var nodeStr = "    "+tmp + " [label = \"<"+tmp+">"+node.substring(0,node.indexOf("("));
+                    var nodeStr = "    "+tmp + " [label = \"<"+tmp+">"+node.substring(0,node.indexOf("("))+"\\ "+getName(node);
 
                     nodeStr = visitFieldsForDOT(table, functions, node, nodeStr, edges);
                     nodeStr = visitFieldsForDOT(table, types, node, nodeStr, edges);

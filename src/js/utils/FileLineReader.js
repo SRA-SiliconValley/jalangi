@@ -32,7 +32,7 @@
 
         var fillBuffer = function(position) {
 
-            var res = fs.readSync(fd, bufferSize, position, "ascii");
+            var res = fs.readSync(fd, bufferSize, position, "utf8");
 
             buffer += res[0];
             if (res[1] == 0) {

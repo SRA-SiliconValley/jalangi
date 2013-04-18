@@ -27,7 +27,7 @@
             return new LikelyTypeInferEngine(executionIndex);
         }
 
-        // iid or type could be object(iid) | array(iid) | function(iid) | object(null) | number | string | undefined | boolean
+        // iid or type could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
         var iidToFieldTypes = {}; // type -> (field -> type -> iid -> true)
         var iidToSignature = {};  // type -> ({"this", "return", "arg1", ...} -> type -> iid -> true)
         var typeNames = {};
@@ -147,7 +147,12 @@
         }
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
-            var ret = annotateObject(iid, val);
+            var ret;
+            if (isConstructor) {
+                ret = annotateObject(iid, val);
+            } else {
+                ret = val;
+            }
             updateSignature(f, base, args, ret, iid);
             return ret ;
         }

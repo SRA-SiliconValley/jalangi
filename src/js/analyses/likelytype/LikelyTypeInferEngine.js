@@ -30,6 +30,8 @@
         // iid or type could be object(iid) | array(iid) | function(iid) | object(null) | number | string | undefined | boolean
         var iidToFieldTypes = {}; // type -> (field -> type -> iid -> true)
         var iidToSignature = {};  // type -> ({"this", "return", "arg1", ...} -> type -> iid -> true)
+        var typeNames = {};
+        var functionNames = {};
 
         function HOP(obj, prop) {
             return Object.prototype.hasOwnProperty.call(obj, prop);
@@ -42,6 +44,21 @@
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
         var getSymbolic = this.getSymbolic = ConcolicValue.getSymbolic;
 
+
+        function getSetFields(map, key, obj) {
+            if (!HOP(map, key)) {
+                if (obj) {
+                    if (key.indexOf("function") === 0) {
+                        functionNames[key] = obj.name?obj.name:"";
+                    } else {
+                        typeNames[key] = obj.constructor?obj.constructor.name:"";
+                    }
+                }
+                return map[key] = {};
+            }
+            return map[key];
+        }
+
         function updateType(base, offset, value, updateLocation, creationLocationOptional) {
             var iid , tval, type, s;
             if (!creationLocationOptional) {
@@ -50,9 +67,7 @@
                 iid = creationLocationOptional;
             }
             if (iid) {
-                if (!(tval = iidToFieldTypes[iid])) {
-                    tval = iidToFieldTypes[iid] = {};
-                }
+                tval = getSetFields(iidToFieldTypes, iid, getConcrete(base));
                 type = typeof value;
                 s = getSymbolic(value);
                 if (s) {
@@ -66,13 +81,9 @@
                     }
                 }
 
-                if (!tval[offset]) {
-                    tval[offset] = {};
-                }
-                if (!tval[offset][type]) {
-                    tval[offset][type] = {};
-                }
-                tval[offset][type][updateLocation] = true;
+                var tmap = getSetFields(tval, offset);
+                var tmp = getSetFields(tmap, type);
+                tmp[updateLocation] = true;
 
             }
         }
@@ -80,12 +91,14 @@
         function annotateObject(creationLocation, obj) {
             var type, ret = obj, i, s;
             if (!getSymbolic(obj)){
-                if (((type = typeof obj)==="object" || type === "function") && obj !== null && obj.name !== "eval") {
+                type = typeof obj;
+                if ((type ==="object" || type === "function") && obj !== null && obj.name !== "eval") {
                     if (isArr(obj)) {
                         type = "array";
                     }
                     s = type+"("+creationLocation+")";
                     ret = new ConcolicValue(obj, s);
+                    getSetFields(iidToFieldTypes,s, obj);
                     for (i in obj) {
                         if (HOP(obj, i) && i !== "*$7*" && i !== "*$7I*" && i !== "*$7C*") {
                             updateType(ret, i, obj[i], creationLocation, s);
@@ -105,13 +118,9 @@
             } else if (value === null) {
                 type = "object(null)";
             }
-            if (!tval[offset]) {
-                tval[offset] = {};
-            }
-            if (!tval[offset][type]) {
-                tval[offset][type] = {};
-            }
-            tval[offset][type][callLocation] = true;
+            var tmap = getSetFields(tval, offset);
+            var tmp = getSetFields(tmap, type);
+            tmp[callLocation] = true;
 
         }
 
@@ -119,9 +128,7 @@
             var iid , tval;
             iid = getSymbolic(f);
             if (iid) {
-                if (!(tval = iidToSignature[iid])) {
-                    tval = iidToSignature[iid] = {};
-                }
+                tval = getSetFields(iidToSignature, iid, getConcrete(f));
                 setTypeInFunSignature(value, tval, "return", callLocation);
                 setTypeInFunSignature(base, tval, "this", callLocation);
                 var len = args.length;
@@ -140,20 +147,23 @@
         }
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
-            updateSignature(f, base, args, val, iid);
-            return annotateObject(iid, val);
+            var ret = annotateObject(iid, val);
+            updateSignature(f, base, args, ret, iid);
+            return ret ;
         }
 
         this.getField = function(iid, base, offset, val) {
+            //var ret = annotateObject(iid, val);
             if (getConcrete(val) !== undefined) {
                 updateType(base, offset, val, iid);
             }
-            return annotateObject(iid, val);
+            //getConcrete(base)[getConcrete(offset)] = ret;
+            return val;
         }
 
-        this.read = function(iid, name, val) {
-            return annotateObject(iid, val);
-        }
+//        this.read = function(iid, name, val) {
+//            return annotateObject(iid, val);
+//        }
 
 
         function sizeOfMap(obj) {
@@ -180,30 +190,19 @@
             }
         }
 
-        function areSameType(obj1, obj2) {
-            var type1, type2, iid1, iid2, f;
-            type1 = obj1.indexOf("(")>0?obj1.substring(0, obj1.indexOf("(")):obj1;
-            type2 = obj2.indexOf("(")>0?obj2.substring(0, obj2.indexOf("(")):obj2;
-            if (type1 !== type2){
-                return false;
-            }
-            //return true;
 
-            if (type1 === "object") {
-                obj1 = iidToFieldTypes[obj1];
-                obj2 = iidToFieldTypes[obj2];
-                if (sizeOfMap(obj1) !== sizeOfMap(obj2)) {
-                    return false;
+        function infoWithLocation(type) {
+            if (type.indexOf("(")>0) {
+                var type1 = type.substring(0, type.indexOf("("));
+                var iid = type.substring(type.indexOf("(")+1, type.indexOf(")"));
+                if (iid === "null") {
+                    return " null";
+                } else {
+                    return "originated at "+getIIDInfo(iid);
                 }
-                for (f in obj1) {
-                    if (HOP(obj1, f)) {
-                        if (!HOP(obj2, f)) {
-                            return false;
-                        }
-                    }
-                }
+            } else {
+                return type;
             }
-            return true;
         }
 
         function getLocationsInfo(map) {
@@ -226,33 +225,38 @@
             return str;
         }
 
-        function analyze(map) {
+        function analyze(map, table) {
+            var done = {};
             for (var oloc in map) {
                 if (HOP(map, oloc)) {
-                    var fieldMap = map[oloc];
-                    for (var field in fieldMap) {
-                        if (HOP(fieldMap, field)) {
-                            if (field == "undefined") {
-                                console.log("Potential Bug: undefined field found in "+typeInfoWithLocation(oloc)+
-                                    ":\n"+ getTypeInfo(typeMap));
+                    oloc = getRoot(table, oloc);
+                    if (!HOP(done, oloc)) {
+                        done[oloc] = true;
+                        var fieldMap = map[oloc];
+                        for (var field in fieldMap) {
+                            if (HOP(fieldMap, field)) {
+                                if (field == "undefined") {
+                                    console.log("Potential Bug: undefined field found in "+typeInfoWithLocation(oloc)+
+                                        ":\n"+ getTypeInfo(typeMap));
+                                }
                             }
                         }
-                    }
-                    for (var field in fieldMap) {
-                        if (HOP(fieldMap, field)) {
-                            var typeMap = fieldMap[field];
-                            if (sizeOfMap(typeMap)>1) {
-                                lbl1: for (var type1 in typeMap) {
-                                    if (HOP(typeMap, type1)) {
-                                        for (var type2 in typeMap) {
-                                            if (HOP(typeMap, type2)) {
-                                                if (type1+"" < type2+"" && !areSameType(type1, type2)) {
-                                                    console.log("Warning: "+field+" of "+typeInfoWithLocation(oloc)+
-                                                        " has multiple types:");
-                                                    for (var type3 in typeMap) {
-                                                        console.log("    "+typeInfoWithLocation(type3)+"\n"+getLocationsInfo(typeMap[type3]));
+                        for (var field in fieldMap) {
+                            if (HOP(fieldMap, field)) {
+                                var typeMap = fieldMap[field];
+                                if (sizeOfMap(typeMap)>1) {
+                                    lbl1: for (var type1 in typeMap) {
+                                        if (HOP(typeMap, type1)) {
+                                            for (var type2 in typeMap) {
+                                                if (HOP(typeMap, type2)) {
+                                                    if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
+                                                        console.log("Warning: "+field+" of "+typeInfoWithLocation(oloc)+
+                                                            " has multiple types:");
+                                                        for (var type3 in typeMap) {
+                                                            console.log("    "+typeInfoWithLocation(type3)+"\n"+getLocationsInfo(typeMap[type3]));
+                                                        }
+                                                        break lbl1;
                                                     }
-                                                    break lbl1;
                                                 }
                                             }
                                         }
@@ -266,25 +270,82 @@
 
         }
 
-        function equiv(map) {
-            var table = {};
-            for (var oloc in map) {
-                if (HOP(map, oloc)) {
-                    table[oloc] = {};
-                    table[oloc][oloc] = oloc;
+        function isGoodType(map, table, oloc) {
+            var done = {};
+            oloc = getRoot(table, oloc);
+            if (!HOP(done, oloc)) {
+                done[oloc] = true;
+                var fieldMap = map[oloc];
+                for (var field in fieldMap) {
+                    if (HOP(fieldMap, field)) {
+                        if (field == "undefined") {
+                            return false;
+                        }
+                    }
+                }
+                for (var field in fieldMap) {
+                    if (HOP(fieldMap, field)) {
+                        var typeMap = fieldMap[field];
+                        if (sizeOfMap(typeMap)>1) {
+                            lbl1: for (var type1 in typeMap) {
+                                if (HOP(typeMap, type1)) {
+                                    for (var type2 in typeMap) {
+                                        if (HOP(typeMap, type2)) {
+                                            if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
+                                                return false;
+                                                break lbl1;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            return true;
+        }
+
+
+        function getRoot(table, oloc) {
+            var ret = table[oloc];
+
+            while(ret !== oloc) {
+                oloc = ret;
+                ret = table[oloc];
+            }
+            return ret;
+        }
+
+        function equiv(map) {
+            var table = {};
+            var roots = {}
+            for (var oloc in map) {
+                if (HOP(map, oloc)) {
+                    table[oloc] = oloc;
+                    roots[oloc] = true;
+                }
+            }
+            table['number'] = 'number';
+            table['boolean'] = 'boolean';
+            table['string'] = 'string';
+            table['undefined'] = 'undefined';
+            table['object(null)'] = 'object(null)';
 
 
 
-            var changed = false;
+            var changed = true, root1, root2;
             while(changed) {
                 changed = false;
-                for (var oloc in map) {
-                    if (HOP(map, oloc)) {
+                for (var oloc in roots) {
+                    if (HOP(roots, oloc)) {
 
-                        loop2: for (var oloc2 in map) {
-                            if (HOP(map, oloc2) && oloc < oloc2 && table[oloc][oloc2] === undefined) {
+                        loop2: for (var oloc2 in roots) {
+                            if (HOP(roots, oloc2) &&
+                                oloc < oloc2 &&
+                                (root1 = getRoot(table, oloc)) !== (root2 = getRoot(table, oloc2)) &&
+                                oloc.indexOf("function") !== 0 &&
+                                oloc2.indexOf("function") !== 0) {
                                 var fieldMap1 = map[oloc];
                                 var fieldMap2 = map[oloc2];
                                 if (sizeOfMap(fieldMap1) !== sizeOfMap(fieldMap2)) {
@@ -303,7 +364,7 @@
                                                 if (HOP(typeMap2, type2)) {
                                                     if (type1 === type2) {
                                                         found = true;
-                                                    } else if (table[type1][type2] !== undefined) {
+                                                    } else if (getRoot(table, type1) === getRoot(table, type2)) {
                                                         found = true;
                                                     }
                                                 }
@@ -315,19 +376,172 @@
                                     }
 
                                 }
-                                table[oloc][oloc2] = table[oloc2][oloc] = oloc;
+                                if (root1 < root2) {
+                                    table[root2] = root1;
+                                    delete roots[root2];
+                                } else {
+                                    table[root1] = root2;
+                                    delete roots[root1];
+                                }
                                 changed = true;
                             }
                         }
                     }
                 }
             }
-            return table;
+            return [table, roots];
+        }
+
+        function visitFieldsForDOT(table, types, node, nodeStr, edges) {
+            var fieldMap = types[node], tmp;
+            for (var field in fieldMap) {
+                if (HOP(fieldMap,field)) {
+                    tmp = escapeNode(field);
+                    nodeStr = nodeStr + "|<"+tmp+">"+tmp;
+                }
+                var typeMap = fieldMap[field];
+                for (var type in typeMap) {
+                    if (HOP(typeMap, type)) {
+                        type = getRoot(table, type);
+                        var tmp2 = escapeNode(type);
+                        var edgeStr = "    "+escapeNode(node)+":"+tmp+ " -> "+tmp2+":"+tmp2;
+                        edges[edgeStr] = true;
+                    }
+                }
+            }
+            return nodeStr;
+        }
+
+        function createLocationNodes(table, edges, srcNodes) {
+            var locs = {};
+
+            for (var node in table) {
+                if (HOP(table, node) && node.indexOf("(")>0 && node !== "object(null)") {
+                    var loc, root = table[node];
+                    loc = locs[root];
+                    if (loc === undefined) {
+                        loc = locs[root] = {};
+                    }
+                    loc[infoWithLocation(node)] = true;
+                }
+            }
+
+
+            for (loc in locs) {
+                if (HOP(locs,loc)) {
+                    var lines = locs[loc];
+                    var tmp = escapeNode(loc);
+                    var nodeStr = "    "+ tmp + "_loc [label = \"";
+                    var first = true;
+                    for (var line in lines) {
+                        var tmp2 = escapeNode(line);
+                        if (first) {
+                            first = false;
+                            nodeStr = nodeStr + tmp2;
+                        } else {
+                            nodeStr = nodeStr + "|" + tmp2;
+                        }
+                    }
+                    nodeStr = nodeStr+"\"]";
+                    srcNodes.push(nodeStr);
+                    var edgeStr = "    "+tmp+":"+tmp+ " -> "+tmp+"_loc";
+                    edges[edgeStr] = true;
+
+                }
+            }
+
+        }
+
+        function escapeNode(node) {
+            return node.replace(/([\(\)\$])/g, "_").replace(/[Ee]dge/g,"Eedge").replace(/[Nn]ode/g,"Nnode");
+        }
+
+        function writeDOTFile(nodes, edges, srcNodes, badNodes) {
+            var dot = 'digraph LikelyTypes {\n    rankdir = "LR"\n    node [fontname=Sans]\n\n'
+
+
+            var i, len;
+
+            dot += '    subgraph cluster_notes {\n';
+            dot += '        node [shape = record, fillcolor=yellow, style=filled];\n';
+            len = srcNodes.length;
+            for (i=0; i<len; i++) {
+                dot = dot + "    "+srcNodes[i] + ';\n';
+            }
+            dot += '    }\n';
+
+
+            dot += '    node [shape = Mrecord, fillcolor=lightpink, style=filled];\n';
+            len = badNodes.length
+            for (i=0; i<len; i++) {
+                dot = dot + badNodes[i] + ';\n';
+            }
+
+            dot += '    node [shape = Mrecord, fillcolor=lightskyblue, style=filled];\n';
+            len = nodes.length
+            for (i=0; i<len; i++) {
+                dot = dot + nodes[i] + ';\n';
+            }
+
+            for (i in edges) {
+                if (HOP(edges, i)) {
+                    dot = dot + i +";\n";
+                }
+            }
+
+            dot = dot + "}\n";
+            require('fs').writeFileSync("jalangi_types.dot", dot);
+            return dot;
+        }
+
+        function getName(key) {
+            if (HOP(functionNames,key)) {
+                return functionNames[key];
+            } else if (HOP(typeNames,key)) {
+                return typeNames[key];
+            } else {
+                return "";
+            }
+        }
+
+        function generateDOT(table, roots, types, functions) {
+            var nodes = [];
+            var badNodes = [];
+            var srcNodes = [];
+            var edges = {};
+
+            nodes.push("    number [label = \"<number>number\"]");
+            nodes.push("    boolean [label = \"<boolean>boolean\"]");
+            nodes.push("    string [label = \"<string>string\"]");
+            nodes.push("    undefined [label = \"<undefined>undefined\"]");
+            nodes.push("    "+escapeNode("object(null)")+ " [label = \"<"+escapeNode("object(null)")+">null\"]");
+            for (var node in roots) {
+                if (HOP(roots, node)) {
+                    var tmp = escapeNode(node);
+                    var nodeStr = "    "+tmp + " [label = \"<"+tmp+">"+node.substring(0,node.indexOf("("))+"\\ "+getName(node);
+
+                    nodeStr = visitFieldsForDOT(table, functions, node, nodeStr, edges);
+                    nodeStr = visitFieldsForDOT(table, types, node, nodeStr, edges);
+
+                    nodeStr = nodeStr+"\"]";
+                    if (isGoodType(types, table, node) && isGoodType(functions, table, node)) {
+                        nodes.push(nodeStr);
+                    } else {
+                        badNodes.push(nodeStr);
+                    }
+                }
+            }
+
+            createLocationNodes(table, edges, srcNodes);
+            return writeDOTFile(nodes, edges, srcNodes, badNodes);
+
         }
 
         this.endExecution = function() {
-            analyze(iidToFieldTypes);
-            analyze(iidToSignature);
+            var tableAndRoots = equiv(iidToFieldTypes);
+            console.log(generateDOT(tableAndRoots[0], tableAndRoots[1], iidToFieldTypes, iidToSignature));
+            analyze(iidToFieldTypes, tableAndRoots[0]);
+            analyze(iidToSignature, tableAndRoots[0]);
             //console.log(JSON.stringify(iidToFieldTypes, null, '\t'));
         }
 

@@ -20,7 +20,7 @@ var o = {x: 1, y:2};
 
 o.x = 3;
 
-o.x = null;
+//o.x = null;
 
 var o1 = {x: 4, y:5};
 
@@ -36,6 +36,10 @@ var o4 = {};
 o4.f1 = o1;
 o4.f1 = o2;
 
+var o5 = {};
+
+o5.f = {x:2, y:3};
+
 
 var o5 = {};
 o5.g = [1,2];
@@ -45,5 +49,9 @@ var o6 = {};
 o6.g1 = o1;
 o6.g1 = [];
 
-var o7 = {x:1};
-o7.x = 8;
+function foo() {
+    console.log("Nothing");
+}
+
+var o7 = {fun1:1, fun2: function(x, y) { return x + y}};
+o7.fun1 = foo;

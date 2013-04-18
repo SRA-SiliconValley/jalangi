@@ -45,15 +45,14 @@
         var getSymbolic = this.getSymbolic = ConcolicValue.getSymbolic;
 
 
-        function getSetFields(map, key, obj, func) {
-            var tval;
-
+        function getSetFields(map, key, obj) {
             if (!HOP(map, key)) {
                 if (obj) {
-                    typeNames[key] = obj.constructor?obj.constructor.name:"";
-                }
-                if (func) {
-                    functionNames[key] = func.name?func.name:"";
+                    if (key.indexOf("function") === 0) {
+                        functionNames[key] = obj.name?obj.name:"";
+                    } else {
+                        typeNames[key] = obj.constructor?obj.constructor.name:"";
+                    }
                 }
                 return map[key] = {};
             }
@@ -129,7 +128,7 @@
             var iid , tval;
             iid = getSymbolic(f);
             if (iid) {
-                tval = getSetFields(iidToSignature, iid, null, getConcrete(f));
+                tval = getSetFields(iidToSignature, iid, getConcrete(f));
                 setTypeInFunSignature(value, tval, "return", callLocation);
                 setTypeInFunSignature(base, tval, "this", callLocation);
                 var len = args.length;
@@ -148,15 +147,18 @@
         }
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
-            updateSignature(f, base, args, val, iid);
-            return annotateObject(iid, val);
+            var ret = annotateObject(iid, val);
+            updateSignature(f, base, args, ret, iid);
+            return ret ;
         }
 
         this.getField = function(iid, base, offset, val) {
+            //var ret = annotateObject(iid, val);
             if (getConcrete(val) !== undefined) {
                 updateType(base, offset, val, iid);
             }
-            return annotateObject(iid, val);
+            //getConcrete(base)[getConcrete(offset)] = ret;
+            return val;
         }
 
 //        this.read = function(iid, name, val) {

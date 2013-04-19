@@ -81,9 +81,9 @@
 
         getType: function(offset) {
             return this.possibleTypes[this.currentTypeIdx+offset];
-        }
+        },
 
-
+        type: require('Symbolic')
 }
 
     module.exports = SymbolicType;

@@ -70,7 +70,9 @@
 
         toString: function() {
             return this.stringPart + " = toString("+this.intPart+")";
-        }
+        },
+
+        type: require('Symbolic')
     };
 
     module.exports = ToStringPredicate;

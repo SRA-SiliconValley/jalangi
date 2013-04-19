@@ -18,28 +18,24 @@
 
 (function(module){
 
-    function SymbolicUndefined(sym, stype) {
-        if (!(this instanceof SymbolicUndefined)) {
-            return new SymbolicUndefined(sym, stype);
+    function SymbolicStringVar(sym) {
+        if (!(this instanceof SymbolicStringVar)) {
+            return new SymbolicStringVar(sym);
         }
-        if (sym instanceof SymbolicUndefined) {
-            this.sym = sym.sym;
-        } else {
-            this.sym = sym;
-            this.stype = stype;
+        this.sym = sym;
+    }
+
+    SymbolicStringVar.prototype = {
+        constructor: SymbolicStringVar,
+
+        getLength: function() {
+            return this.sym+"__length";
+        },
+
+        toString: function() {
+            return this.sym;
         }
     }
 
-    SymbolicUndefined.prototype = {
-        constructor: SymbolicUndefined,
-
-        toString : function() {
-            return this.sym+"";
-        },
-
-        type: require('Symbolic')
-
-    };
-
-    module.exports = SymbolicUndefined;
+    module.exports = SymbolicStringVar;
 }(module));

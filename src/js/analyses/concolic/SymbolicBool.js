@@ -207,7 +207,9 @@ SymbolicBool.NOT = 0;
                     break;
             }
             fs.writeSync(formulaFh,")");
-        }
+        },
+
+        type: require('Symbolic')
 
     }
 

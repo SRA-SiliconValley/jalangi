@@ -30,6 +30,7 @@
 
     var stdoutCache = {};
     var SymbolicStringExpression = require('./SymbolicStringExpression');
+    var SymbolicLinear = require('../concolic/SymbolicLinear');
 
     function stdout(cmd) {
         var ret;
@@ -74,7 +75,7 @@
                     }
                 } else {
                     idx = s+"";
-                    length = s.getField("length").symbolic.substitute(assignments);
+                    length = s.getLength().substitute(assignments);
                     if (i < length) {
                         tmp = idx+"__"+i;
                         freeVars[tmp] = true;
@@ -175,19 +176,22 @@
         getFormulaString : function(freeVars, mode, assignments) {
             var sb = "", s1, s2, formula, cmd, length1 = 0, length2 = 0, j;
             var classpath = __dirname+"/../../../../jout/production/jalangijava/:"+__dirname+"/../../../../thirdparty/javalib/automaton.jar ";
-            s1 = (typeof this.left === 'string')?this.left.length:this.left.getField("length");
-            s2 = (typeof this.right === 'string' || this.right instanceof RegExp)?this.right.length:this.right.getField("length");
-//        s1 = $7.G(0,this.left,"length", true);
-//        s2 = $7.G(0,this.right,"length", true);
+            s1 = (this.left instanceof SymbolicStringExpression)?this.left.getLength():this.left.length;
+            s2 = (this.right instanceof SymbolicStringExpression)?this.right.getLength():this.right.length;
 
             if (mode === "integer") {
                 switch(this.op) {
                     case SymbolicStringPredicate.EQ:
-                        formula = $7.B(0,"==",s1,s2);
-                        return formula.symbolic.getFormulaString(freeVars,mode, assignments);
+                        if (s1 instanceof SymbolicLinear && s2 instanceof SymbolicLinear) {
+                            return s1.subtract(s2).setop("==").getFormulaString(freeVars, mode, assignments);
+                        } else if (s1 instanceof SymbolicLinear) {
+                            return s1.subtractLong(s2).setop("==").getFormulaString(freeVars, mode, assignments);
+                        } else if (s2 instanceof SymbolicLinear) {
+                            return s2.subtractLong(s1).setop("==").getFormulaString(freeVars, mode, assignments);
+                        } else {
+                            throw new Error("Both strings are non symbolic "+this.toString());
+                        }
                     case SymbolicStringPredicate.NE:
-                        //formula = $7.B(0,"!=",s1,s2);
-                        //return formula.symbolic.getFormulaString(freeVars,mode, assignments);
                         return "TRUE";
                     case SymbolicStringPredicate.IN:
                         cmd = "java -cp " +
@@ -195,8 +199,8 @@
                             "RegexpEncoder " +
                             "length \""+
                             regex_escape(this.right+"")+
-                            "\" "+s1.symbolic+" true";
-                        freeVars[s1.symbolic+""] = true;
+                            "\" "+s1+" true";
+                        freeVars[s1+""] = true;
                         sb = stdout(cmd);
                         break;
                     case SymbolicStringPredicate.NOTIN:
@@ -205,21 +209,21 @@
                             "RegexpEncoder " +
                             "length \""+
                             regex_escape(this.right+"")+
-                            "\" "+s1.symbolic+" false";
-                        freeVars[s1.symbolic+""] = true;
+                            "\" "+s1+" false";
+                        freeVars[s1+""] = true;
                         sb = stdout(cmd);
                         break;
                 }
             } else if (mode === "string") {
                 switch(this.op) {
                     case SymbolicStringPredicate.EQ:
-                        if (s1.symbolic) {
-                            length1 = s1.symbolic.substitute(assignments);
+                        if (s1 instanceof SymbolicLinear) {
+                            length1 = s1.substitute(assignments);
                         } else {
                             length1 = s1;
                         }
-                        if (s2.symbolic) {
-                            length2 = s2.symbolic.substitute(assignments);
+                        if (s2 instanceof SymbolicLinear) {
+                            length2 = s2.substitute(assignments);
                         } else {
                             length2 = s2;
                         }
@@ -229,13 +233,13 @@
                             return getStringEqualityFormula(this.left, this.right, length1, freeVars, assignments);
                         }
                     case SymbolicStringPredicate.NE:
-                        if (s1.symbolic) {
-                            length1 = s1.symbolic.substitute(assignments);
+                        if (s1 instanceof SymbolicLinear) {
+                            length1 = s1.substitute(assignments);
                         } else {
                             length1 = s1;
                         }
-                        if (s2.symbolic) {
-                            length2 = s2.symbolic.substitute(assignments);
+                        if (s2 instanceof SymbolicLinear) {
+                            length2 = s2.substitute(assignments);
                         } else {
                             length2 = s2;
                         }
@@ -244,7 +248,6 @@
                         } else {
                             return "(NOT "+getStringEqualityFormula(this.left, this.right, length1, freeVars, assignments)+")";
                         }
-//                    return (length1 !== length2)?"TRUE":"FALSE";
                     case SymbolicStringPredicate.IN:
                         length1 = s1.symbolic.substitute(assignments);
                         cmd = "java -cp " +
@@ -296,7 +299,7 @@
             }
         },
 
-        type: require('Symbolic')
+        type: require('../concolic/Symbolic')
     };
 
     module.exports = SymbolicStringPredicate;

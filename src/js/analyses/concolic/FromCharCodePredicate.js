@@ -80,7 +80,7 @@
             return "("+this.stringPart + ") = String.fromCharCode("+this.intParts+")";
         },
 
-        type: require('Symbolic')
+        type: require('./Symbolic')
     };
 
     module.exports = FromCharCodePredicate;

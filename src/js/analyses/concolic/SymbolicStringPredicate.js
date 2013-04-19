@@ -296,7 +296,7 @@
             }
         },
 
-        type: require('Symbolic')
+        type: require('./Symbolic')
     };
 
     module.exports = SymbolicStringPredicate;

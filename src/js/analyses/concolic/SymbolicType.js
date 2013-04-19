@@ -83,7 +83,7 @@
             return this.possibleTypes[this.currentTypeIdx+offset];
         },
 
-        type: require('Symbolic')
+        type: require('./Symbolic')
 }
 
     module.exports = SymbolicType;

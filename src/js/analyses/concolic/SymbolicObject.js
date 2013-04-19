@@ -57,7 +57,7 @@
             return this.sym+"";
         },
 
-        type: require('Symbolic')
+        type: require('./Symbolic')
 
     };
 

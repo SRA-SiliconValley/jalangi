@@ -441,7 +441,7 @@
             fs.writeSync(formulaFh,"0");
         },
 
-        type: require('Symbolic')
+        type: require('./Symbolic')
     }
 
 

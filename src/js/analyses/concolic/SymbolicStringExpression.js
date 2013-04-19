@@ -127,7 +127,7 @@
             return sb;
         },
 
-        type: require('Symbolic')
+        type: require('./Symbolic')
 
     };
 

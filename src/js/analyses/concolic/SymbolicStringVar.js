@@ -30,6 +30,10 @@
         constructor: SymbolicStringVar,
 
         substitute : function(assignments) {
+            var ret;
+            if ((ret = assignments[this.sym])) {
+                return ret;
+            }
             return this;
         },
 

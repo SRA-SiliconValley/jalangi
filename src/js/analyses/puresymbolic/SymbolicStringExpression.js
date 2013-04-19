@@ -23,7 +23,7 @@
 
     function SymbolicStringExpression(sym) {
         if (!(this instanceof SymbolicStringExpression)) {
-            return new SymbolicStringExpression(sym, stype);
+            return new SymbolicStringExpression(sym);
         }
         if (sym instanceof SymbolicStringExpression) {
             this.list = [];
@@ -57,7 +57,21 @@
         },
 
         substitute : function(assignments) {
-            return this;
+            var sb = "", len = this.list.length, elem, tmp;
+            for(var i=0; i<len; i++) {
+                elem = this.list[i];
+                if (elem instanceof SymbolicStringVar) {
+                    tmp = elem.substitute(assignments);
+                    if (tmp instanceof SymbolicStringVar) {
+                        return this;
+                    } else {
+                        sb += tmp;
+                    }
+                } else {
+                    sb += elem;
+                }
+            }
+            return sb;
         },
 
         concatStr : function(str) {

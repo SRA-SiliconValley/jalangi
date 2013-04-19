@@ -31,6 +31,7 @@
     var stdoutCache = {};
     var SymbolicStringExpression = require('./SymbolicStringExpression');
     var SymbolicLinear = require('../concolic/SymbolicLinear');
+    var SymbolicBool = require('../concolic/SymbolicBool');
 
     function stdout(cmd) {
         var ret;
@@ -150,6 +151,35 @@
     SymbolicStringPredicate.prototype = {
         constructor: SymbolicStringPredicate,
 
+        substitute : function(assignments) {
+            var left = this.left;
+            var right = this.right;
+            if (left instanceof SymbolicStringExpression) {
+                left = left.substitute(assignments);
+                if (left instanceof SymbolicStringExpression) {
+                    return this;
+                }
+            }
+            if (right instanceof SymbolicStringExpression) {
+                right = right.substitute(assignments);
+                if (right instanceof SymbolicStringExpression) {
+                    return this;
+                }
+            }
+            switch(this.op) {
+                case SymbolicStringPredicate.EQ:
+                    return (left === right)?SymbolicBool.true:SymbolicBool.false;
+                case SymbolicStringPredicate.NE:
+                    return (left !== right)?SymbolicBool.true:SymbolicBool.false;
+                case SymbolicStringPredicate.IN:
+                    return right.test(left)?SymbolicBool.true:SymbolicBool.false;
+                case SymbolicStringPredicate.NOTIN:
+                    return (!right.test(left))?SymbolicBool.true:SymbolicBool.false;
+                default:
+                    throw new Error("Unknown op "+this.op);
+            }
+        },
+
         not: function() {
             var ret = new SymbolicStringPredicate(this);
             switch(this.op) {
@@ -167,10 +197,6 @@
                     break;
             }
             return ret;
-        },
-
-        substitute : function(assignments) {
-            return this;
         },
 
         getFormulaString : function(freeVars, mode, assignments) {

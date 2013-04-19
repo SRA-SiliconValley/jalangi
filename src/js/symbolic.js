@@ -25,9 +25,6 @@ $7 = {};
 
     var PREFIX1 = "$7";
     var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
-    var DEBUG = false;
-    var WARN = false;
-    var SERIOUS_WARN = false;
     var  N_LOG_FUNCTION_LIT = 12;
 
     //-------------------------------- End constants ---------------------------------
@@ -90,83 +87,102 @@ $7 = {};
         return [null, true];
     }
 
-    function isReturnLogNotRequired(f) {
-        if (f === console.log ||
-            f === RegExp.prototype.test ||
-            f === String.prototype.indexOf ||
-            f === String.prototype.lastIndexOf ||
-            f === String.prototype.substring ||
-            f === Math.abs ||
-            f === Math.acos ||
-            f === Math.asin ||
-            f === Math.atan ||
-            f === Math.atan2 ||
-            f === Math.ceil ||
-            f === Math.cos ||
-            f === Math.exp ||
-            f === Math.floor ||
-            f === Math.log ||
-            f === Math.max ||
-            f === Math.min ||
-            f === Math.pow ||
-            f === Math.round ||
-            f === Math.sin ||
-            f === Math.sqrt ||
-            f === Math.tan ||
-            f === String.prototype.charCodeAt ||
-            f === parseInt
-            ) {
-            return true;
-        }
-        return false;
-    }
+    var Symbolic = require('analyses/concolic/Symbolic');
+    var SymbolicBool = require('analyses/concolic/SymbolicBool');
+    var SymbolicLinear = require('analyses/concolic/SymbolicLinear');
+    var SymbolicStringExpression = require('analyses/concolic/SymbolicStringExpression');
+    var SymbolicStringPredicate = require('analyses/concolic/SymbolicStringPredicate');
+    var SolverEngine = require('analyses/puresymbolic/SolverEngine');
+    var solver = new SolverEngine();
+    var pathConstraint = SymbolicBool.true;
+
 
     //---------------------------- Utility functions -------------------------------
-    function getConcrete(val) {
-        if (sEngine && sEngine.getConcrete) {
-            return sEngine.getConcrete(val);
+    function makeConcrete(val, pathConstraint) {
+        if (!isSymbolic(val)) {
+            return {pc: pathConstraint, concrete: val};
+        }
+        var solution = solver.generateInputs(pathConstraint);
+        if (solution === null) {
+            throw new Error("Current path constraint must have a solution");
+        }
+        var concrete = val.substitute(solution);
+        if (concrete === SymbolicBool.true) {
+            return {pc: new SymbolicBool("&&", val, pathConstraint), concrete: true};
+        } else if (concrete === SymbolicBool.false) {
+            return {pc: new SymbolicBool("&&", val.not(), pathConstraint), concrete: false};
+        } else if (isSymbolic(concrete)) {
+            throw new Error("Failed to concretize the symbolic value "+val+
+                " with path constraint "+pathConstraint+
+                " and solution "+JSON.stringify(solution));
         } else {
-            return val;
+            if (isSymbolicNumber(val)) {
+                return {
+                    pc: new SymbolicBool("&&", val.subtractLong(concrete).setop("=="), pathConstraint),
+                    concrete: concrete
+                }
+            } else if (isSymbolicString(val)) {
+                return {
+                    pc: new SymbolicBool("&&", new SymbolicStringPredicate("==", val, concrete), pathConstraint),
+                    concrete: concrete
+                }
+
+            } else {
+                throw new Error("Unknown symbolic type "+val);
+            }
+        }
+
+    }
+
+    function makePredicate(val) {
+        var ret = val;
+        if (val instanceof SymbolicLinear) {
+            if (val.op === SymbolicLinear.UN) {
+                ret = val.setop("!=");
+            }
+            return ret;
+        } else if (val instanceof SymbolicStringExpression) {
+            ret = new SymbolicStringPredicate("!=",val,"");
+            return ret;
+        } else if (val instanceof SymbolicStringPredicate  ||
+            val instanceof SymbolicBool) {
+            return ret;
+        } else {
+            throw new Error("Unknown symbolic value "+val);
         }
     }
 
-    function getSymbolic(val) {
-        if (sEngine && sEngine.getSymbolic) {
-            return sEngine.getSymbolic(val);
+    function isFeasible(pathConstraint, val, branch) {
+        var pred = makePredicate(val);
+        var ret = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
+        var solution = solver.generateInputs(ret);
+        if (solution) {
+            solver.writeInputs(solution);
+            return ret;
         } else {
-            return val;
+            return null;
         }
     }
 
-    function addAxiom(c) {
-        if (sEngine && sEngine.installAxiom) {
-            sEngine.installAxiom(c);
-        }
+    function isSymbolic(val) {
+        return val.type === Symbolic;
     }
+
+    function isSymbolicString(s) {
+        return s instanceof SymbolicStringExpression;
+    }
+
+    function isSymbolicNumber(s) {
+        return s instanceof SymbolicLinear;
+    }
+
+
 
     function HOP(obj, prop) {
         return Object.prototype.hasOwnProperty.call(obj, prop);
     };
 
 
-
-    function debugPrint(s) {
-        if (DEBUG) {
-            console.log("***" + s);
-        }
-    }
-
-    function warnPrint(iid, s) {
-        if (WARN && iid !== 0) {
-            console.log("        at " + iid + " " + s);
-        }
-    }
-
-    function seriousWarnPrint(iid, s) {
-        if (SERIOUS_WARN && iid !== 0) {
-            console.log("        at " + iid + " Serious " + s);
-        }
-    }
 
     function slice(a, start) {
         return Array.prototype.slice.call(a, start || 0);

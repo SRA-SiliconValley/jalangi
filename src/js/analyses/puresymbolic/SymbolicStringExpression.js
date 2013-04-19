@@ -19,8 +19,9 @@
 (function(module){
 
     var SymbolicStringVar = require('./SymbolicStringVar');
+    var SymbolicLinear = require('../concolic/SymbolicLinear');
 
-    function SymbolicStringExpression(sym, concLength, stype) {
+    function SymbolicStringExpression(sym) {
         if (!(this instanceof SymbolicStringExpression)) {
             return new SymbolicStringExpression(sym, stype);
         }
@@ -29,33 +30,30 @@
             for(var i=sym.list.length-1; i >=0; i--) {
                 this.list[i] = sym.list[i];
             }
-            //this.stype = sym.stype;
         } else {
             this.list = [];
-            this.list.push(new SymbolicStringVar(sym, concLength));
-            this.stype = stype;
+            this.list.push(new SymbolicStringVar(sym));
         }
     }
 
     SymbolicStringExpression.prototype = {
         constructor: SymbolicStringExpression,
 
-        getField : function(offset) {
-            if (offset === 'length') {
-                var ret = 0, len = this.list.length, val;
-                for(var i=0; i<len; i++) {
-                    val = this.list[i];
-                    val = $7.G(0,val,"length", true);
-                    if (i === 0) {
-                        ret = val;
+        getLength : function() {
+            var ret = null, len = this.list.length, val, constant = 0;
+            for(var i=0; i<len; i++) {
+                val = this.list[i];
+                if (typeof val === 'string') {
+                    constant += val.length;
+                } else {
+                    if (ret) {
+                        ret = ret.add(new SymbolicLinear(val.getLength()));
                     } else {
-                        ret = $7.B(0,"+", ret, val);
+                        ret = new SymbolicLinear(val.getLength());
                     }
                 }
-                return ret;
-
             }
-            return undefined;
+            return ret.addLong(constant);
         },
 
         substitute : function(assignments) {
@@ -121,7 +119,7 @@
                 if (elem instanceof SymbolicStringVar) {
                     sb += elem;
                 } else {
-                    sb += '"'+elem+'"';
+                    sb += JSON.stringify(elem);
                 }
             }
             return sb;

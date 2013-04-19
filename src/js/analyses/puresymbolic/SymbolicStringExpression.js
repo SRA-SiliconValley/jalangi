@@ -123,7 +123,9 @@
                 }
             }
             return sb;
-        }
+        },
+
+        type: require('../concolic/Symbolic')
 
     };
 

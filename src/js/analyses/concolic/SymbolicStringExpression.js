@@ -125,7 +125,9 @@
                 }
             }
             return sb;
-        }
+        },
+
+        type: require('Symbolic')
 
     };
 

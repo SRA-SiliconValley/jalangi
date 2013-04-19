@@ -55,7 +55,9 @@
 
         toString : function() {
             return this.sym+"";
-        }
+        },
+
+        type: require('Symbolic')
 
     };
 

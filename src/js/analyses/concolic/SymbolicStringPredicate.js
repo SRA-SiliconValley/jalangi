@@ -294,7 +294,9 @@
                 case SymbolicStringPredicate.NOTIN:
                     return this.left+" regexnotin " + this.right;
             }
-        }
+        },
+
+        type: require('Symbolic')
     };
 
     module.exports = SymbolicStringPredicate;

@@ -297,7 +297,9 @@
                 case SymbolicStringPredicate.NOTIN:
                     return this.left+" regexnotin " + this.right;
             }
-        }
+        },
+
+        type: require('../concolic/Symbolic')
     };
 
     module.exports = SymbolicStringPredicate;

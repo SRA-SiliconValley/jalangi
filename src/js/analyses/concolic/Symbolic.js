@@ -17,29 +17,5 @@
 // Author: Koushik Sen
 
 (function(module){
-
-    function SymbolicUndefined(sym, stype) {
-        if (!(this instanceof SymbolicUndefined)) {
-            return new SymbolicUndefined(sym, stype);
-        }
-        if (sym instanceof SymbolicUndefined) {
-            this.sym = sym.sym;
-        } else {
-            this.sym = sym;
-            this.stype = stype;
-        }
-    }
-
-    SymbolicUndefined.prototype = {
-        constructor: SymbolicUndefined,
-
-        toString : function() {
-            return this.sym+"";
-        },
-
-        type: require('Symbolic')
-
-    };
-
-    module.exports = SymbolicUndefined;
+    module.exports = {};
 }(module));

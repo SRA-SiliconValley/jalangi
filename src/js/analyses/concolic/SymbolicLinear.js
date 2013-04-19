@@ -439,7 +439,9 @@
                 fs.writeSync(formulaFh," > ");
             }
             fs.writeSync(formulaFh,"0");
-        }
+        },
+
+        type: require('Symbolic')
     }
 
 

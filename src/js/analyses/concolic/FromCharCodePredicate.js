@@ -78,7 +78,9 @@
 
         toString: function() {
             return "("+this.stringPart + ") = String.fromCharCode("+this.intParts+")";
-        }
+        },
+
+        type: require('Symbolic')
     };
 
     module.exports = FromCharCodePredicate;

@@ -134,6 +134,12 @@ $7 = {};
 
     }
 
+    function concretize(val) {
+        var ret = makeConcrete(val, pathConstraint);
+        pathConstraint = ret.pc;
+        return ret.concrete;
+    }
+
     function makePredicate(val) {
         var ret = val;
         if (val instanceof SymbolicLinear) {
@@ -328,7 +334,7 @@ $7 = {};
 
     function T(iid, val, type) {
         if (type === N_LOG_FUNCTION_LIT) {
-            val[SPECIAL_PROP2] = true;
+            makeConcrete(val)[SPECIAL_PROP2] = true;
         }
         return val;
     }
@@ -359,32 +365,34 @@ $7 = {};
         };
     }
 
-    function G(iid, base, offset, norr) {
+    function G(iid, base, offset) {
+        offset = concretize(offset);
+
         if (offset === SPECIAL_PROP2) {
             return undefined;
+        } else if (offset === "length" && base instanceof SymbolicStringExpression) {
+            return base.getLength();
         }
 
-        var base_c = getConcrete(base);
-        var val = base_c[getConcrete(offset)];
-        return val;
+        base = concretize(base);
+
+        return base[offset];
     }
 
     function P(iid, base, offset, val) {
+        offset = concretize(offset);
+
         if (offset === SPECIAL_PROP2) {
             return undefined;
         }
 
-        var base_c = getConcrete(base);
-        base_c[getConcrete(offset)] = val;
+        base = concretize(base);
+
+        base[offset] = val;
         return val;
     }
 
     function B(iid, op, left, right) {
-        var left_c, right_c, result_c;
-
-        left_c = getConcrete(left);
-        right_c = getConcrete(right);
-
         switch(op) {
             case "+":
                 result_c = left_c + right_c;
@@ -462,8 +470,6 @@ $7 = {};
                 throw new Error(op +" at "+iid+" not found");
                 break;
         }
-
-        return result_c;
     }
 
 
@@ -541,8 +547,6 @@ $7 = {};
     sandbox.C = C; // Condition
     sandbox.C1 = C1; // Switch key
     sandbox.C2 = C2; // case label C1 === C2
-    sandbox.addAxiom = addAxiom; // Add axiom
-    sandbox.getConcrete = getConcrete;  // Get concrete value
     sandbox._ = last;  // Last value passed to C
 
     sandbox.H = H; // hash in for-in

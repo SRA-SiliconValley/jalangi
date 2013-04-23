@@ -137,44 +137,62 @@
             return newInputs;
         }
 
-        var iCount = 0;
 
-        this.writeInputs =  function() {
+        this.writeInputs =  function(currentSolution, inputs, index) {
+            var iCount = 0;
 
-            if (isLastSolutionNew) {
-//                try {
-//                    iCount = JSON.parse(fs.readFileSync(TAIL_FILE_NAME,"utf8"));
-////                    fs.writeFileSync(TAIL_FILE_NAME,JSON.stringify(iCount),"utf8");
-//
-//                } catch(e) {
-//                    iCount = 0;
-//                }
-                iCount++;
+            try {
+                iCount = JSON.parse(fs.readFileSync(TAIL_FILE_NAME,"utf8"));
+            } catch(e) {
+                iCount = -1;
+            }
+            iCount++;
 
-                var fd = fs.openSync(INPUTS_FILE_NAME+iCount, 'w');
-                for (var key in currentSolution) {
-                    if (HOP(currentSolution, key)) {
+            var fd = fs.openSync(INPUTS_FILE_NAME+iCount, 'w');
+            fs.writeSync(fd,PREFIX1+".setCurrentSolutionIndex("+JSON.stringify(index)+");\n");
+            fs.writeSync(fd,PREFIX1+".setCurrentSolution("+JSON.stringify(currentSolution)+");\n");
+            for (var key in inputs) {
+                if (HOP(inputs, key)) {
                         if (key.indexOf("x")>=0 && !(key.indexOf("__") > 0)) {
-                            fs.writeSync(fd,PREFIX1+".setInput(\""+key +"\","+ JSON.stringify(currentSolution[key])+");\n");
+                            if (HOP(currentSolution, key)) {
+                                fs.writeSync(fd,PREFIX1+".setInput(\""+key +"\","+ JSON.stringify(currentSolution[key])+");\n");
+                            } else {
+                                fs.writeSync(fd,PREFIX1+".setInput(\""+key +"\","+ JSON.stringify(inputs[key])+");\n");
+                            }
                         }
+                }
+            }
+            fs.closeSync(fd);
+
+            fs.writeFileSync(TAIL_FILE_NAME,JSON.stringify(iCount),"utf8");
+        };
+
+        this.isFeasible = function (formula, newInputs, oldInputs) {
+            if (oldInputs) {
+                var tmp = {};
+                for (var key in oldInputs) {
+                    if (HOP(oldInputs, key)) {
+                        tmp[key] = oldInputs[key];
                     }
                 }
-                fs.closeSync(fd);
-
-//                fs.writeFileSync(TAIL_FILE_NAME,JSON.stringify(iCount),"utf8");
-                isLastSolutionNew = false;
+                for (key in newInputs) {
+                    if (HOP(newInputs, key)) {
+                        tmp[key] = newInputs[key];
+                    }
+                }
             }
-        }
+            if (formula.substitute(tmp) === SymbolicBool.true) {
+                return true;
+            } else {
+                return false;
+            }
+        };
 
-        var currentSolution = null, isLastSolutionNew = false;
 
-        this.generateInputs = function(formula, oldInputs) {
+        this.generateInputs = function(formula) {
             var newInputs, count, MAX_COUNT = 100, negatedSolution, extra, allTrue;
 
             if (formula) {
-                if (currentSolution && formula.substitute(currentSolution) === SymbolicBool.true) {
-                    return currentSolution;
-                } else {
                     count = 0;
                     extra = null;
                     while(count < MAX_COUNT) {
@@ -187,22 +205,7 @@
                                 if (count > 1) {
                                     console.log("Solved constraint after trial # "+count);
                                 }
-                                isLastSolutionNew = true;
-                                if (oldInputs) {
-                                    var tmp = {};
-                                    for (var key in oldInputs) {
-                                        if (HOP(oldInputs, key)) {
-                                            tmp[key] = oldInputs[key];
-                                        }
-                                    }
-                                    for (key in newInputs) {
-                                        if (HOP(newInputs, key)) {
-                                            tmp[key] = newInputs[key];
-                                        }
-                                    }
-                                    newInputs = tmp;
-                                }
-                                return (currentSolution = newInputs);
+                                return newInputs;
                             } else {
                                 if (extra) {
                                     extra = extra + " AND " + negatedSolution;
@@ -215,10 +218,9 @@
                         }
                         count++;
                     }
-                }
             }
             return null;
-        }
+        };
 
         this.checkWithConcolicSolver = function (pathConstraint, i) {
             var j;

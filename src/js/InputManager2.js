@@ -24,9 +24,26 @@ if (typeof $7 === 'undefined') {
     var inputs = {};
     var auxInputCount = 0;
     var inputCount = 0;
+    var currentSolutionIndex = [], currentSolution;
 
     function setInput(key, val) {
         inputs[key]= val;
+    }
+
+    function setCurrentSolutionIndex(idx) {
+        currentSolutionIndex = idx;
+    }
+
+    function setCurrentSolution(soln) {
+        currentSolution = soln;
+    }
+
+    function getCurrentSolutionIndex() {
+        return currentSolutionIndex;
+    }
+
+    function getCurrentSolution() {
+        return currentSolution;
     }
 
     function getNextSymbol(isAux) {
@@ -70,4 +87,8 @@ if (typeof $7 === 'undefined') {
     sandbox.inputs = inputs;
     sandbox.setInput = setInput;
     sandbox.readInput = readInput;
+    sandbox.getCurrentSolution = getCurrentSolution;
+    sandbox.getCurrentSolutionIndex = getCurrentSolutionIndex;
+    sandbox.setCurrentSolution = setCurrentSolution;
+    sandbox.setCurrentSolutionIndex = setCurrentSolutionIndex;
 }($7));

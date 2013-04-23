@@ -42,14 +42,43 @@ fi
 
 echo $CMD
 
-
 echo --------------- Instrumenting $1.js --------------
 $CMD $JALANGI_HOME/src/js/instrument/esnstrument.js $JALANGI_HOME/$1.js
 
-touch inputs.js
 
-export JALANGI_MODE=symbolic
-$CMD $JALANGI_HOME/$1_jalangi_.js
+i=0
+iter=1
+
+while [[ $i -le $iter &&  $i -le $2 ]]
+do
+
+    rm inputs.js 2> /dev/null
+    cp jalangi_inputs$i inputs.js 2> /dev/null
+    if [ ! -f inputs.js ];
+    then
+        touch inputs.js
+    fi
+
+    echo "*********************************************************************************"
+    echo "******************************** Input $i ************************************"
+    echo "*********************************************************************************"
+
+    export JALANGI_MODE=symbolic
+    $CMD $JALANGI_HOME/$1_jalangi_.js
+
+    declare -i iter=$(sed -n 1p jalangi_tail 2>/dev/null)
+    i=$((i+1))
+
+done
+
+iter=$((iter+1))
+
+if [ $iter -eq $2 ]
+then
+    echo "$1.js passed" >> $JALANGI_HOME/jalangi_sym_test_results
+else
+    echo "***************** $1.js Failed!!!" >> $JALANGI_HOME/jalangi_sym_test_results
+fi
 
 if [ "$USE_NODE_COVER" == "true" ]
 then

@@ -151,28 +151,6 @@ $7 = {};
         return ret.concrete;
     }
 
-    function isFeasible(pathConstraint, val, branch) {
-        var pred = makePredicate(val);
-        var ret = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
-        var solution = solver.generateInputs(ret, sandbox.inputs);
-        if (solution) {
-            solver.writeInputs();
-            return ret;
-        } else {
-            return null;
-        }
-    }
-
-    function takeBranch(val, branch) {
-        var ret = isFeasible(pathConstraint, val, branch);
-        if (ret) {
-            pathConstraint = ret;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     function isSymbolic(val) {
         if (val === undefined || val === null) {
             return false;
@@ -210,8 +188,8 @@ $7 = {};
 
     function makeSymbolicString(idx) {
         var ret = new SymbolicStringExpression(idx);
-        takeBranch(B(0, ">=", ret.getLength(), 0), true);
-        takeBranch(B(0, "<=", ret.getLength(), MAX_STRING_LENGTH), true);
+        takeBranch(B(0, ">=", ret.getLength(), 0), 1);
+        takeBranch(B(0, "<=", ret.getLength(), MAX_STRING_LENGTH), 1);
         return ret;
     }
 
@@ -239,33 +217,6 @@ $7 = {};
             console.log(loc+":"+iid+":"+type+":"+val);
         }
     }
-
-
-    var random = (function() {
-        var randoms;
-        var RANDOM_FILE_NAME = "jalangi_randoms";
-        var index = -1;
-        var fs = require("fs");
-
-        try {
-            randoms = JSON.parse(fs.readFileSync(RANDOM_FILE_NAME,"utf8"));
-        } catch(e) {
-            randoms = [];
-        }
-
-        return function() {
-            var ret;
-            ++index;
-            if ((ret = randoms[index]) !== undefined) {
-                return ret;
-            } else {
-//                ret = randoms[index] = ((Math.random()>0.5)?1:0);
-                ret = randoms[index] = 1;
-                fs.writeFileSync(RANDOM_FILE_NAME,JSON.stringify(randoms),"utf8");
-                return ret;
-            }
-        }
-    })();
 
     //---------------------------- End utility functions -------------------------------
 
@@ -744,6 +695,87 @@ $7 = {};
         return result_c;
     }
 
+    var branchIndex = (function() {
+        var index = 0;
+
+        return {
+            getNext: function(){
+                return sandbox.getCurrentSolutionIndex()[index];
+            },
+
+            setNext: function (branch) {
+                sandbox.getCurrentSolutionIndex()[index++] = branch;
+            },
+
+            getCurrentIndex: function(branch) {
+                var ret = [];
+                var i;
+                for (i=0; i<index; i++) {
+                    ret.push(sandbox.getCurrentSolutionIndex()[i]);
+                }
+                ret.push(branch);
+                return ret;
+            }
+        }
+    })();
+
+    function isFeasible(val, solution, branch) {
+        var pred = makePredicate(val);
+        var ret = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
+        return solver.isFeasible(ret, solution, sandbox.inputs);
+    }
+
+    function takeBranch(val, branch) {
+        var pred = makePredicate(val);
+        pathConstraint = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
+        branchIndex.setNext(branch);
+    }
+
+    function generateInput(val, branch) {
+        var pred = makePredicate(val);
+        var ret = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
+        var solution = solver.generateInputs(ret);
+        if (solution) {
+            solver.writeInputs(solution, sandbox.inputs, branchIndex.getCurrentIndex(branch));
+            return solution;
+        } else {
+            return null;
+        }
+    }
+
+    function branch(val) {
+        var v, ret;
+        if ((v = branchIndex.getNext()) !== undefined) {
+            takeBranch(val, ret = v);
+        } else {
+            var I = sandbox.getCurrentSolution();
+            if (I) {
+                if (isFeasible(val, I, 0)) {
+                    generateInput(val, 1);
+                    takeBranch(val, ret = 0);
+                } else if (isFeasible(val, I, 1)) {
+                    generateInput(val, 0);
+                    takeBranch(val, ret = 1);
+                } else {
+                    throw new Error("Both branches are not feasible.  This is not possible.")
+                }
+            } else {
+                if (I = generateInput(val, 0)) {
+                    sandbox.setCurrentSolution(I);
+                    generateInput(val, 1);
+                    takeBranch(val, ret = 0);
+                } else if (I = generateInput(val, 1)) {
+                    sandbox.setCurrentSolution(I);
+                    generateInput(val, 0);
+                    takeBranch(val, ret = 1);
+                } else {
+                    throw new Error("Both branches are not feasible.  This is not possible.")
+                }
+            }
+        }
+        return ret;
+    }
+
     var lastVal;
     var switchLeft;
 
@@ -762,14 +794,7 @@ $7 = {};
         left = B(iid, "===", switchLeft, left);
 
         if (isSymbolic(left)) {
-            ret = random();
-            if (takeBranch(left, ret)) {
-                return ret;
-            }  else if (takeBranch(left, !ret)){
-                return ret?0:1;
-            } else {
-                throw new Error("Both branches are infeasible");
-            }
+            return branch(left);
         } else {
             return left;
         }
@@ -780,14 +805,7 @@ $7 = {};
 
         lastVal = left;
         if (isSymbolic(left)) {
-            ret = random();
-            if (takeBranch(left, !!ret)) {
-                return !!ret;
-            }  else if (takeBranch(left, !ret)){
-                return !ret;
-            } else {
-                throw new Error("Both branches are infeasible");
-            }
+            return branch(left);
         } else {
             return left;
         }

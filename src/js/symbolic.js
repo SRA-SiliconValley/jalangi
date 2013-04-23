@@ -109,6 +109,25 @@ $7 = {};
 
 
     //---------------------------- Utility functions -------------------------------
+    function getFullSolution(newInputs) {
+        var oldInputs = sandbox.inputs;
+        if (oldInputs) {
+            var tmp = {};
+            for (var key in oldInputs) {
+                if (HOP(oldInputs, key)) {
+                    tmp[key] = oldInputs[key];
+                }
+            }
+            for (key in newInputs) {
+                if (HOP(newInputs, key)) {
+                    tmp[key] = newInputs[key];
+                }
+            }
+        }
+        return tmp;
+    }
+
+
     function makeConcrete(val, pathConstraint) {
         if (!isSymbolic(val)) {
             return {pc: pathConstraint, concrete: val};
@@ -117,7 +136,7 @@ $7 = {};
         if (solution === null) {
             throw new Error("Current path constraint must have a solution");
         }
-        var concrete = val.substitute(solution);
+        var concrete = val.substitute(getFullSolution(solution));
         if (concrete === SymbolicBool.true) {
             return {pc: new SymbolicBool("&&", val, pathConstraint), concrete: true};
         } else if (concrete === SymbolicBool.false) {
@@ -498,6 +517,9 @@ $7 = {};
                 }
             }
             if (isSymbolicNumber(ret)) {
+                if (op === "===" || op === '!==') {
+                    op = op.substring(0,2);
+                }
                 ret = ret.setop(op);
             }
 
@@ -535,7 +557,7 @@ $7 = {};
 
         var result_c, left_c, right_c;
 
-        if ((result_c = binarys(iid, op, left, right))) {
+        if ((result_c = binarys(iid, op, left, right)) !== undefined) {
             return result_c;
         }
 

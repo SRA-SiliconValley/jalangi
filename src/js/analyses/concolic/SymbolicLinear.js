@@ -157,7 +157,10 @@
                 }
             }
             if (tmp.isEmpty()) {
-                return undefined;
+                if (add)
+                    return this.constant + e.constant;
+                else
+                    return this.constant - e.constant;
             }
 
             if (add)
@@ -175,7 +178,7 @@
         },
 
         multiply: function(l) {
-            if (l == 0) return undefined;
+            if (l == 0) return 0;
             if (l == 1) return this;
             var tmp = new SymbolicLinear();
             for (var key in this.linear) {

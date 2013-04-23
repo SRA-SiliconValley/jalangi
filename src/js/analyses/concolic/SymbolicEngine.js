@@ -37,6 +37,7 @@
         var SymbolicObject = require('./SymbolicObject');
         var SymbolicUndefined = require('./SymbolicUndefined');
         var SolverEngine = require('./SolverEngine');
+        var Symbolic = require('./Symbolic');
         var solver = new SolverEngine();
 
 
@@ -671,7 +672,7 @@
                 }
             }
             //var ret = (left_s?left_s:left_c) + " " + op + " " + (right_s?right_s:right_c);
-            if (ret) {
+            if (ret && ret.type === Symbolic) {
                 return new ConcolicValue(result_c,ret);
             } else {
                 return result_c;
@@ -725,7 +726,7 @@
                     }
                 }
             }
-            if (ret) {
+            if (ret && ret.type === Symbolic) {
                 return new ConcolicValue(result_c,ret);
             } else {
                 return result_c;

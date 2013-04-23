@@ -190,15 +190,15 @@
 
 
         this.generateInputs = function(formula) {
-            var newInputs, count, MAX_COUNT = 100, negatedSolution, extra, allTrue;
+            var newInputs, count, MAX_COUNT = 100, negatedSolution = "TRUE", extra, allTrue;
 
             if (formula) {
                     count = 0;
                     extra = null;
                     while(count < MAX_COUNT) {
-                        generateFormula(formula, "integer", {}, extra);
+                        allTrue = generateFormula(formula, "integer", {}, extra);
                         newInputs = {};
-                        if ((negatedSolution = invokeSMTSolver(newInputs, "integer"))) {
+                        if ((allTrue && (negatedSolution = "TRUE"))|| (negatedSolution = invokeSMTSolver(newInputs, "integer"))) {
                             allTrue = generateFormula(formula, "string", newInputs, null);
                             if (allTrue || invokeSMTSolver(newInputs, "string")) {
                                 constructStringInputs(newInputs);

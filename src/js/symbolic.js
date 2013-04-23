@@ -101,8 +101,8 @@ $7 = {};
     var Symbolic = require('./analyses/concolic/Symbolic');
     var SymbolicBool = require('./analyses/concolic/SymbolicBool');
     var SymbolicLinear = require('./analyses/concolic/SymbolicLinear');
-    var SymbolicStringExpression = require('./analyses/concolic/SymbolicStringExpression');
-    var SymbolicStringPredicate = require('./analyses/concolic/SymbolicStringPredicate');
+    var SymbolicStringExpression = require('./analyses/puresymbolic/SymbolicStringExpression');
+    var SymbolicStringPredicate = require('./analyses/puresymbolic/SymbolicStringPredicate');
     var SolverEngine = require('./analyses/puresymbolic/SolverEngine');
     var solver = new SolverEngine();
     var pathConstraint = SymbolicBool.true;
@@ -508,6 +508,9 @@ $7 = {};
                 else
                     ret = right.subtractFrom(left);
             } else  if (op === "===" || op === "!==" || op === "==" || op === "!=") {
+                if (op === "===" || op === '!==') {
+                    op = op.substring(0,2);
+                }
                 if (isSymbolicString(left) && isSymbolicString(right)) {
                     ret = new SymbolicStringPredicate(op,left,right);
                 } else if (isSymbolicString(left) && typeof right === 'string') {

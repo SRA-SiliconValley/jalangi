@@ -30,7 +30,7 @@
 
         substitute : function(assignments) {
             var ret;
-            if ((ret = assignments[this.sym])) {
+            if ((ret = assignments[this.sym])!== undefined) {
                 return ret;
             }
             return this;

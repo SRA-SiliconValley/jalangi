@@ -64,6 +64,9 @@ if (typeof $7 === 'undefined') {
         if ((ret = inputs[idx]) === undefined) {
             ret = inputs[idx] = val;
         }
+        if (typeof val === 'string') {
+            inputs[idx+"__length"] = val.length;
+        }
         return ret;
     }
 

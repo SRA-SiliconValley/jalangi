@@ -76,7 +76,7 @@
                     }
                 } else {
                     idx = s+"";
-                    length = s.getLength().substitute(assignments);
+                    length = assignments[s.getLength()];
                     if (i < length) {
                         tmp = idx+"__"+i;
                         freeVars[tmp] = true;

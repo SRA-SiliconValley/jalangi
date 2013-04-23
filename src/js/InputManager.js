@@ -20,6 +20,11 @@ if (typeof $7 === 'undefined') {
     $7 = {};
 }
 
+if (process && process.env.JALANGI_MODE === 'symbolic') {
+    require('./InputManager2')
+} else {
+
+
 (function(sandbox){
 
     var PREFIX1 = "$7";
@@ -115,3 +120,5 @@ if (typeof $7 === 'undefined') {
         sandbox.addAxiom = function() {};
     }
 }($7));
+
+}

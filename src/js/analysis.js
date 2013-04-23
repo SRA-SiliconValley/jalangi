@@ -18,6 +18,9 @@
 
 $7 = {};
 
+if (process && process.env.JALANGI_MODE === 'symbolic') {
+    require('./symbolic')
+} else {
 
 (function(sandbox) {
 //------------------------------- Stats for the paper -----------------------
@@ -1598,7 +1601,7 @@ $7 = {};
 
 }($7));
 
-
+}
 
 
 //@TODO: test with apply and call

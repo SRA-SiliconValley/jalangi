@@ -15,38 +15,44 @@
 # Author: Koushik Sen
 
 
+rm -rf jalangi_tmp
+mkdir jalangi_tmp
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export JALANGI_HOME=$DIR/..
 cd jalangi_tmp
 
 if [ "$USE_NODE_COVER" == "true" ]
 then
-    export CMD='cover run '
+    if [ "$USE_TIME" == "true" ]
+    then
+        export CMD='time cover run '
+    else
+        export CMD='cover run '
+    fi
     cp ../.coverignore .
     mv ../.coverage_data .
 else
-    export CMD='node '
+    if [ "$USE_TIME" == "true" ]
+    then
+        export CMD='time node '
+    else
+        export CMD='node '
+    fi
 fi
 
-rm -rf .coverage_data
-rm inputs.js
-touch inputs.js
-echo "***************** Running tests/$1.js on jalangi_inputs0 ********************"
-$CMD $JALANGI_HOME/$1.js
+echo $CMD
 
-for i in jalangi_inputs*
-do
-    echo "***************** Running tests/$1.js on $i ********************"
-    cp $i inputs.js
-    $CMD $JALANGI_HOME/$1.js
-done
+
+echo --------------- Instrumenting $1.js --------------
+$CMD $JALANGI_HOME/src/js/instrument/esnstrument.js $JALANGI_HOME/$1.js
+
+touch inputs.js
+
+export JALANGI_MODE=symbolic
+$CMD $JALANGI_HOME/$1_jalangi_.js
 
 if [ "$USE_NODE_COVER" == "true" ]
 then
-    sleep 2
-    cover combine
-    cover report
-    cover report html
-    echo "test results ..."
-    open cover_html/index.html
+    mv .coverage_data ..
 fi
+

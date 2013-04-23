@@ -137,58 +137,84 @@
             return newInputs;
         }
 
+        var iCount = 0;
 
-        this.writeInputs =  function(newInputs) {
-            var iCount;
+        this.writeInputs =  function() {
 
-            try {
-                iCount = JSON.parse(fs.readFileSync(TAIL_FILE_NAME,"utf8"));
-            } catch(e) {
-                iCount = 0;
-            }
-            iCount++;
+            if (isLastSolutionNew) {
+//                try {
+//                    iCount = JSON.parse(fs.readFileSync(TAIL_FILE_NAME,"utf8"));
+////                    fs.writeFileSync(TAIL_FILE_NAME,JSON.stringify(iCount),"utf8");
+//
+//                } catch(e) {
+//                    iCount = 0;
+//                }
+                iCount++;
 
-            var fd = fs.openSync(INPUTS_FILE_NAME+iCount, 'w');
-            for (var key in newInputs) {
-                if (HOP(newInputs, key)) {
-                    if (key.indexOf("x")>0 && !(key.indexOf("__") > 0)) {
-                        fs.writeSync(fd,PREFIX1+".setInput(\""+key +"\","+ JSON.stringify(newInputs[key])+");\n");
+                var fd = fs.openSync(INPUTS_FILE_NAME+iCount, 'w');
+                for (var key in currentSolution) {
+                    if (HOP(currentSolution, key)) {
+                        if (key.indexOf("x")>=0 && !(key.indexOf("__") > 0)) {
+                            fs.writeSync(fd,PREFIX1+".setInput(\""+key +"\","+ JSON.stringify(currentSolution[key])+");\n");
+                        }
                     }
                 }
-            }
-            fs.closeSync(fd);
+                fs.closeSync(fd);
 
-            fs.writeFileSync(TAIL_FILE_NAME,JSON.stringify(iCount),"utf8");
+//                fs.writeFileSync(TAIL_FILE_NAME,JSON.stringify(iCount),"utf8");
+                isLastSolutionNew = false;
+            }
         }
 
-        this.generateInputs = function(formula) {
+        var currentSolution = null, isLastSolutionNew = false;
+
+        this.generateInputs = function(formula, oldInputs) {
             var newInputs, count, MAX_COUNT = 100, negatedSolution, extra, allTrue;
 
             if (formula) {
-                count = 0;
-                extra = null;
-                while(count < MAX_COUNT) {
-                    generateFormula(formula, "integer", {}, extra);
-                    newInputs = {};
-                    if ((negatedSolution = invokeSMTSolver(newInputs, "integer"))) {
-                        allTrue = generateFormula(formula, "string", newInputs, null);
-                        if (allTrue || invokeSMTSolver(newInputs, "string")) {
-                            constructStringInputs(newInputs);
-                            if (count > 1) {
-                                console.log("Solved constraint after trial # "+count);
-                            }
-                            return newInputs;
-                        } else {
-                            if (extra) {
-                                extra = extra + " AND " + negatedSolution;
+                if (currentSolution && formula.substitute(currentSolution) === SymbolicBool.true) {
+                    return currentSolution;
+                } else {
+                    count = 0;
+                    extra = null;
+                    while(count < MAX_COUNT) {
+                        generateFormula(formula, "integer", {}, extra);
+                        newInputs = {};
+                        if ((negatedSolution = invokeSMTSolver(newInputs, "integer"))) {
+                            allTrue = generateFormula(formula, "string", newInputs, null);
+                            if (allTrue || invokeSMTSolver(newInputs, "string")) {
+                                constructStringInputs(newInputs);
+                                if (count > 1) {
+                                    console.log("Solved constraint after trial # "+count);
+                                }
+                                isLastSolutionNew = true;
+                                if (oldInputs) {
+                                    var tmp = {};
+                                    for (var key in oldInputs) {
+                                        if (HOP(oldInputs, key)) {
+                                            tmp[key] = oldInputs[key];
+                                        }
+                                    }
+                                    for (key in newInputs) {
+                                        if (HOP(newInputs, key)) {
+                                            tmp[key] = newInputs[key];
+                                        }
+                                    }
+                                    newInputs = tmp;
+                                }
+                                return (currentSolution = newInputs);
                             } else {
-                                extra = negatedSolution;
+                                if (extra) {
+                                    extra = extra + " AND " + negatedSolution;
+                                } else {
+                                    extra = negatedSolution;
+                                }
                             }
+                        } else {
+                            return null;
                         }
-                    } else {
-                        return null;
+                        count++;
                     }
-                    count++;
                 }
             }
             return null;

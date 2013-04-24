@@ -36,9 +36,9 @@ $ANALYSIS_SCRIPT tests/unit/regex1 2
 $ANALYSIS_SCRIPT tests/unit/regex2 2
 $ANALYSIS_SCRIPT tests/unit/regex3 2
 $ANALYSIS_SCRIPT tests/unit/regex4 2
-$ANALYSIS_SCRIPT tests/unit/regex5 8
 $ANALYSIS_SCRIPT tests/unit/regex6 3
 $ANALYSIS_SCRIPT tests/unit/regex7 3
+$ANALYSIS_SCRIPT tests/unit/regex8 9
 $ANALYSIS_SCRIPT tests/unit/regex9 2
 $ANALYSIS_SCRIPT tests/unit/switchs1 5
 $ANALYSIS_SCRIPT tests/unit/qsort 24

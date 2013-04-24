@@ -75,9 +75,9 @@ iter=$((iter+1))
 
 if [ $iter -eq $2 ]
 then
-    echo "$1.js passed" >> $JALANGI_HOME/jalangi_sym_test_results
+    echo "$1.js $2 passed" >> $JALANGI_HOME/jalangi_sym_test_results
 else
-    echo "***************** $1.js Failed!!!" >> $JALANGI_HOME/jalangi_sym_test_results
+    echo "***************** $1.js $2 Failed!!!" >> $JALANGI_HOME/jalangi_sym_test_results
 fi
 
 if [ "$USE_NODE_COVER" == "true" ]

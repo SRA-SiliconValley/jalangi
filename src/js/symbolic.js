@@ -103,6 +103,7 @@ $7 = {};
     var SymbolicLinear = require('./analyses/concolic/SymbolicLinear');
     var SymbolicStringExpression = require('./analyses/puresymbolic/SymbolicStringExpression');
     var SymbolicStringPredicate = require('./analyses/puresymbolic/SymbolicStringPredicate');
+    var ToStringPredicate = require('./analyses/puresymbolic/ToStringPredicate');
     var SolverEngine = require('./analyses/puresymbolic/SolverEngine');
     var solver = new SolverEngine();
     var pathConstraint = SymbolicBool.true;
@@ -207,8 +208,8 @@ $7 = {};
 
     function makeSymbolicString(idx) {
         var ret = new SymbolicStringExpression(idx);
-        takeBranch(B(0, ">=", ret.getLength(), 0), 1);
-        takeBranch(B(0, "<=", ret.getLength(), MAX_STRING_LENGTH), 1);
+        addAxiom(B(0, ">=", ret.getLength(), 0));
+        addAxiom(B(0, "<=", ret.getLength(), MAX_STRING_LENGTH));
         return ret;
     }
 
@@ -412,51 +413,58 @@ $7 = {};
     }
 
     function symbolicIntToString(num) {
-        throw new Error("Unsupported function");
-//        var concrete = getConcrete(num);
-//        var newSym = $7.readInput(""+concrete, true);
-//        installAxiom(new ConcolicValue(true,new ToStringPredicate(getSymbolic(num), getSymbolic(newSym))));
-//        return newSym;
+        var newSym = sandbox.readInput("", true);
+        addAxiom(new ToStringPredicate(num, newSym));
+        return newSym;
     }
 
     function symbolicStringToInt(str) {
-        throw new Error("Unsupported function");
-//        var concrete = getConcrete(str);
-//        var newSym = $7.readInput(+concrete, true);
-//        installAxiom(new ConcolicValue(true,new ToStringPredicate(getSymbolic(newSym), getSymbolic(str))));
-//        return newSym;
+        var newSym = sandbox.readInput(0, true);
+        addAxiom(new ToStringPredicate(newSym, str));
+        return newSym;
     }
 
     function binarys(iid, op, left, right) {
-        var ret;
+        var ret, type;
 
         if (op === "+") {
-            if (isSymbolicString(left) && isSymbolicString(right)) {
-                ret = left.concat(right);
-            } else if (isSymbolicString(left)) {
-                if (isSymbolicNumber(right)) {
-                    right = symbolicIntToString(right);
-                    ret = left.concat(right);
-                } else {
-                    ret = left.concatStr(right);
-                }
-            } else if (isSymbolicString(right)) {
+            if (isSymbolicString(left) || isSymbolicString(right) || typeof left === 'string' || typeof right === 'string') {
+                type = 'string';
+            } else if (isSymbolicNumber(left) || isSymbolicNumber(right) || typeof left === 'number' || typeof right === 'number') {
+                type = 'number';
+            }
+            if (type==='string') {
                 if (isSymbolicNumber(left)) {
                     left = symbolicIntToString(left);
+                }
+                if (isSymbolicNumber(right)) {
+                    right = symbolicIntToString(right);
+                }
+                if (isSymbolicString(left) && isSymbolicString(right)) {
                     ret = left.concat(right);
-                } else {
+                } else if (isSymbolicString(left)) {
+                    ret = left.concatStr(right);
+                } else if (isSymbolicString(right)) {
                     ret = right.concatToStr(left);
                 }
-            } else if (isSymbolicNumber(left) && isSymbolicNumber(right)) {
-                ret = left.add(right);
-            } else if (isSymbolicNumber(left)) {
-                right = right + 0;
-                if (right == right)
-                    ret = left.addLong(right);
-            } else if (isSymbolicNumber(right)) {
-                left = left + 0;
-                if (left == left)
-                    ret = right.addLong(left);
+            } else if (type === 'number') {
+                if (isSymbolicString(left)) {
+                    left = symbolicStringToInt(left);
+                }
+                if (isSymbolicString(right)) {
+                    right = symbolicStringToInt(right);
+                }
+                if (isSymbolicNumber(left) && isSymbolicNumber(right)) {
+                    ret = left.add(right);
+                } else if (isSymbolicNumber(left)) {
+                    right = right + 0;
+                    if (right == right)
+                        ret = left.addLong(right);
+                } else if (isSymbolicNumber(right)) {
+                    left = left + 0;
+                    if (left == left)
+                        ret = right.addLong(left);
+                }
             }
         } else if (op === "-") {
             if (isSymbolicString(left)) {
@@ -658,6 +666,7 @@ $7 = {};
             ret = new SymbolicStringPredicate("!=",left_s,"");
             return ret;
         } else if (left_s instanceof SymbolicStringPredicate  ||
+            left_s instanceof ToStringPredicate ||
             left_s instanceof SymbolicBool) {
             return ret;
         }
@@ -755,6 +764,12 @@ $7 = {};
         pathConstraint = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
         branchIndex.setNext(branch);
     }
+
+    function addAxiom(val) {
+        var pred = makePredicate(val);
+        pathConstraint = new SymbolicBool("&&", pathConstraint, pred);
+    }
+
 
     function generateInput(val, branch) {
         var pred = makePredicate(val);

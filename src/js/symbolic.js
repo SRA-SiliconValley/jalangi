@@ -52,7 +52,25 @@ $7 = {};
         }
     }
 
-    function getSymbolicFunctionToInvokeAndLog (f, isConstructor) {
+    function regex_escape (text) {
+        return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+    }
+
+    function regexp_test (str) {
+        // this is a regexp object
+        var newSym;
+
+        if (isSymbolic(str) && str.isCompound && str.isCompound()) {
+            newSym = sandbox.readInput("",true);
+            addAxiom(B(0,"==",newSym,str));
+        } else {
+            newSym = str;
+        }
+        return B(0, "regexin", newSym, this);
+    }
+
+
+    function getSymbolicFunctionToInvoke (f, isConstructor) {
         if (f === Array ||
             f === Error ||
             f === String ||
@@ -62,6 +80,8 @@ $7 = {};
             f === $7.addAxiom ||
             f === $7.readInput) {
             return create_concrete_invoke_cons(f);
+        } else if (f === RegExp.prototype.test) {
+            return regexp_test;
         }
 //         else if (f === Function.prototype.apply ||
 //            f === Function.prototype.call ||
@@ -295,7 +315,7 @@ $7 = {};
     function invokeFun(iid, base, f, args, isConstructor) {
         var g, invoke, val;
 
-        var f_m = getSymbolicFunctionToInvokeAndLog(f, isConstructor);
+        var f_m = getSymbolicFunctionToInvoke(f, isConstructor);
 
         invoke = f_m || f === undefined || HOP(f,SPECIAL_PROP2) || typeof f !== "function";
         g = f_m || f ;
@@ -390,8 +410,30 @@ $7 = {};
 
         if (offset === SPECIAL_PROP2) {
             return undefined;
-        } else if (offset === "length" && base instanceof SymbolicStringExpression) {
-            return base.getLength();
+        } else if (base instanceof SymbolicStringExpression) {
+            if (offset === "length") {
+                return base.getLength();
+            } else if ("indexOf") {
+                return String.prototype.indexOf;
+            } else if ("lastIndexOf") {
+                return String.prototype.lastIndexOf;
+            } else if ("substring") {
+                return String.prototype.substring;
+            } else if ("substr") {
+                return String.prototype.substr;
+            } else if ("charCodeAt") {
+                return String.prototype.charCodeAt;
+            }  else if ("charAt") {
+                return String.prototype.charAt;
+            }
+            //            f === String.prototype.indexOf ||
+//            f === String.prototype.lastIndexOf ||
+//            f === String.prototype.substring ||
+//            f === String.prototype.substr ||
+//            f === String.prototype.charCodeAt ||
+//            f === String.prototype.charAt ||
+//            f === String.prototype.replace ||
+
         }
 
         base = concretize(base);

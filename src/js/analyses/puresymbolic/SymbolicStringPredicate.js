@@ -275,7 +275,7 @@
                             return "(NOT "+getStringEqualityFormula(this.left, this.right, length1, freeVars, assignments)+")";
                         }
                     case SymbolicStringPredicate.IN:
-                        length1 = s1.symbolic.substitute(assignments);
+                        length1 = s1.substitute(assignments);
                         cmd = "java -cp " +
                             classpath +
                             "RegexpEncoder content \""+
@@ -289,7 +289,7 @@
                         sb = stdout(cmd);
                         break;
                     case SymbolicStringPredicate.NOTIN:
-                        length1 = s1.symbolic.substitute(assignments);
+                        length1 = s1.substitute(assignments);
                         cmd = "java -cp " +
                             classpath +
                             "RegexpEncoder content \""+

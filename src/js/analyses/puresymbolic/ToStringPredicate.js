@@ -51,11 +51,11 @@
             }
             var tmp2 = this.stringPart.substitute(assignments);
             if (typeof tmp2 === 'string') {
-//                if ((tmp+"") === tmp2) {
+                if ((tmp+"") === tmp2) {
                     return SymbolicBool.true; // this predicate is an axiom which must return true on substitution
-//                } else {
-//                    return SymbolicBool.false;
-//                }
+                } else {
+                    return SymbolicBool.false;
+                }
             }
             var sym = this.stringPart.getLength();
             var int_to_s = tmp+"";

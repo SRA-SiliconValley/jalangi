@@ -153,19 +153,18 @@ $7 = {};
         if (!isSymbolic(val)) {
             return {pc: pathConstraint, concrete: val};
         }
-        var solution = solver.generateInputs(pathConstraint, sandbox.inputs);
-        if (solution === null) {
-            throw new Error("Current path constraint must have a solution");
-        }
-        var concrete = val.substitute(getFullSolution(solution));
+//        var solution = solver.generateInputs(pathConstraint);
+//        if (solution === null) {
+//            throw new Error("Current path constraint must have a solution");
+//        }
+        var concrete = val.substitute(getFullSolution(sandbox.getCurrentSolution()));
         if (concrete === SymbolicBool.true) {
             return {pc: new SymbolicBool("&&", val, pathConstraint), concrete: true};
         } else if (concrete === SymbolicBool.false) {
             return {pc: new SymbolicBool("&&", val.not(), pathConstraint), concrete: false};
         } else if (isSymbolic(concrete)) {
             throw new Error("Failed to concretize the symbolic value "+val+
-                " with path constraint "+pathConstraint+
-                " and solution "+JSON.stringify(solution));
+                " with path constraint "+pathConstraint);
         } else {
             if (isSymbolicNumber(val)) {
                 return {
@@ -455,13 +454,15 @@ $7 = {};
     }
 
     function symbolicIntToString(num) {
-        var newSym = sandbox.readInput("", true);
+        var c = num.substitute(getFullSolution(sandbox.getCurrentSolution()));
+        var newSym = sandbox.readInput(c+"", true);
         addAxiom(new ToStringPredicate(num, newSym));
         return newSym;
     }
 
     function symbolicStringToInt(str) {
-        var newSym = sandbox.readInput(0, true);
+        var s = str.substitute(getFullSolution(sandbox.getCurrentSolution()));
+        var newSym = sandbox.readInput(+s, true);
         addAxiom(new ToStringPredicate(newSym, str));
         return newSym;
     }
@@ -795,10 +796,14 @@ $7 = {};
         }
     })();
 
-    function isFeasible(val, solution, branch) {
+    function isFeasible(val, branch) {
         var pred = makePredicate(val);
         var ret = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
-        return solver.isFeasible(ret, solution, sandbox.inputs);
+        if (ret.substitute(getFullSolution(sandbox.getCurrentSolution())) === SymbolicBool.true) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     function takeBranch(val, branch) {
@@ -818,7 +823,7 @@ $7 = {};
         var ret = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
         var solution = solver.generateInputs(ret);
         if (solution) {
-            solver.writeInputs(solution, sandbox.inputs, branchIndex.getCurrentIndex(branch));
+            solver.writeInputs(getFullSolution(solution), branchIndex.getCurrentIndex(branch));
             return solution;
         } else {
             return null;
@@ -832,10 +837,10 @@ $7 = {};
         } else {
             var I = sandbox.getCurrentSolution();
             if (I) {
-                if (isFeasible(val, I, 0)) {
+                if (isFeasible(val, 0)) {
                     generateInput(val, 1);
                     takeBranch(val, ret = 0);
-                } else if (isFeasible(val, I, 1)) {
+                } else if (isFeasible(val, 1)) {
                     generateInput(val, 0);
                     takeBranch(val, ret = 1);
                 } else {

@@ -138,7 +138,7 @@
         }
 
 
-        this.writeInputs =  function(currentSolution, inputs, index) {
+        this.writeInputs =  function(currentSolution, index) {
             var iCount = 0;
 
             try {
@@ -151,14 +151,10 @@
             var fd = fs.openSync(INPUTS_FILE_NAME+iCount, 'w');
             fs.writeSync(fd,PREFIX1+".setCurrentSolutionIndex("+JSON.stringify(index)+");\n");
             fs.writeSync(fd,PREFIX1+".setCurrentSolution("+JSON.stringify(currentSolution)+");\n");
-            for (var key in inputs) {
-                if (HOP(inputs, key)) {
+            for (var key in currentSolution) {
+                if (HOP(currentSolution, key)) {
                         if (key.indexOf("x")>=0 && !(key.indexOf("__") > 0)) {
-                            if (HOP(currentSolution, key)) {
-                                fs.writeSync(fd,PREFIX1+".setInput(\""+key +"\","+ JSON.stringify(currentSolution[key])+");\n");
-                            } else {
-                                fs.writeSync(fd,PREFIX1+".setInput(\""+key +"\","+ JSON.stringify(inputs[key])+");\n");
-                            }
+                            fs.writeSync(fd,PREFIX1+".setInput(\""+key +"\","+ JSON.stringify(currentSolution[key])+");\n");
                         }
                 }
             }
@@ -166,28 +162,6 @@
 
             fs.writeFileSync(TAIL_FILE_NAME,JSON.stringify(iCount),"utf8");
         };
-
-        this.isFeasible = function (formula, newInputs, oldInputs) {
-            if (oldInputs) {
-                var tmp = {};
-                for (var key in oldInputs) {
-                    if (HOP(oldInputs, key)) {
-                        tmp[key] = oldInputs[key];
-                    }
-                }
-                for (key in newInputs) {
-                    if (HOP(newInputs, key)) {
-                        tmp[key] = newInputs[key];
-                    }
-                }
-            }
-            if (formula.substitute(tmp) === SymbolicBool.true) {
-                return true;
-            } else {
-                return false;
-            }
-        };
-
 
         this.generateInputs = function(formula) {
             var newInputs, count, MAX_COUNT = 100, negatedSolution = "TRUE", extra, allTrue;

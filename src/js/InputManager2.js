@@ -62,9 +62,13 @@ if (typeof $7 === 'undefined') {
     function getNextConcreteInput(idx, val) {
         var ret;
         if ((ret = inputs[idx]) === undefined) {
-            ret = inputs[idx] = val;
+            if (idx.indexOf('x')===0) {
+                ret = inputs[idx] = val;
+            } else {
+                ret = val;
+            }
         }
-        if (typeof val === 'string') {
+        if (typeof val === 'string' && idx.indexOf('x')===0 ) {
             inputs[idx+"__length"] = val.length;
         }
         return ret;

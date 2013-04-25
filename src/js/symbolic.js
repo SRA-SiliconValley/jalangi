@@ -132,57 +132,140 @@ $7 = {};
     //---------------------------- Utility functions -------------------------------
     function getFullSolution(newInputs) {
         var oldInputs = sandbox.inputs;
+        if (newInputs === undefined) {
+            newInputs = sandbox.getCurrentSolution();
+        }
         if (oldInputs) {
-            var tmp = {};
-            for (var key in oldInputs) {
-                if (HOP(oldInputs, key)) {
-                    tmp[key] = oldInputs[key];
-                }
+            return combine(oldInputs, newInputs);
+        } else {
+            return newInputs;
+        }
+    }
+
+
+    function combine(oldInputs, newInputs) {
+        var tmp = {};
+        for (var key in oldInputs) {
+            if (HOP(oldInputs, key)) {
+                tmp[key] = oldInputs[key];
             }
-            for (key in newInputs) {
-                if (HOP(newInputs, key)) {
-                    tmp[key] = newInputs[key];
-                }
+        }
+        for (key in newInputs) {
+            if (HOP(newInputs, key)) {
+                tmp[key] = newInputs[key];
             }
         }
         return tmp;
     }
 
+    function simplify(val) {
+        var solution= getFullSolution(sandbox.getCurrentSolution());
+        var concrete = val.substitute(solution);
+        if (concrete === SymbolicBool.true) {
+            concrete = true;
+        } else if (concrete === SymbolicBool.false) {
+            concrete = false;
+        }
+        return concrete;
+    }
 
     function makeConcrete(val, pathConstraint) {
         if (!isSymbolic(val)) {
             return {pc: pathConstraint, concrete: val};
         }
-//        var solution = solver.generateInputs(pathConstraint);
-//        if (solution === null) {
-//            throw new Error("Current path constraint must have a solution");
-//        }
-        var concrete = val.substitute(getFullSolution(sandbox.getCurrentSolution()));
-        if (concrete === SymbolicBool.true) {
-            return {pc: new SymbolicBool("&&", val, pathConstraint), concrete: true};
-        } else if (concrete === SymbolicBool.false) {
-            return {pc: new SymbolicBool("&&", val.not(), pathConstraint), concrete: false};
-        } else if (isSymbolic(concrete)) {
-            throw new Error("Failed to concretize the symbolic value "+val+
-                " with path constraint "+pathConstraint);
-        } else {
-            if (isSymbolicNumber(val)) {
-                return {
-                    pc: new SymbolicBool("&&", val.subtractLong(concrete).setop("=="), pathConstraint),
-                    concrete: concrete
-                }
-            } else if (isSymbolicString(val)) {
-                return {
-                    pc: new SymbolicBool("&&", new SymbolicStringPredicate("==", val, concrete), pathConstraint),
-                    concrete: concrete
-                }
 
+        var concrete = simplify(val);
+
+        if (isSymbolic(concrete)) {
+            var tmpSolution = solver.generateInputs(pathConstraint.substitute(getFullSolution()));
+            if (tmpSolution === null) {
+                throw new Error("Current path constraint must have a solution");
             } else {
-                throw new Error("Unknown symbolic type "+val);
+                sandbox.setCurrentSolution(combine(sandbox.getCurrentSolution(), tmpSolution));
+                concrete = simplify(val);
             }
         }
 
+        if (isSymbolic(concrete)) {
+            throw new Error("Failed to concretize the symbolic value "+val+
+                " with path constraint "+pathConstraint);
+        }
+
+        if (typeof concrete === 'boolean') {
+            return {pc: new SymbolicBool("&&", val, pathConstraint), concrete: concrete};
+        } else if (isSymbolicNumber(val)) {
+            return {
+                pc: new SymbolicBool("&&", val.subtractLong(concrete).setop("=="), pathConstraint),
+                concrete: concrete
+            }
+        } else if (isSymbolicString(val)) {
+            return {
+                pc: new SymbolicBool("&&", new SymbolicStringPredicate("==", val, concrete), pathConstraint),
+                concrete: concrete
+            }
+
+        } else {
+            throw new Error("Unknown symbolic type "+val+ " with path constraint "+
+                pathConstraint + " inputs "+JSON.stringify(sandbox.inputs));
+        }
     }
+
+//    function isFeasible(val, branch) {
+//        var pred = makePredicate(val);
+//        var ret = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
+//        if (ret.substitute(getFullSolution(sandbox.getCurrentSolution())) === SymbolicBool.true) {
+//            return true;
+//        } else {
+//            return false;
+//        }
+//    }
+
+
+    function isFeasible(val, branch) {
+        var pred = makePredicate(val);
+//        var ret = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
+        var ret = makeConcrete(branch?pred:pred.not(), pathConstraint);
+        if (ret.concrete) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+//    function makeConcrete(val, pathConstraint) {
+//        if (!isSymbolic(val)) {
+//            return {pc: pathConstraint, concrete: val};
+//        }
+////        var solution = solver.generateInputs(pathConstraint);
+////        if (solution === null) {
+////            throw new Error("Current path constraint must have a solution");
+////        }
+//        var concrete = val.substitute(getFullSolution(sandbox.getCurrentSolution()));
+//        if (concrete === SymbolicBool.true) {
+//            return {pc: new SymbolicBool("&&", val, pathConstraint), concrete: true};
+//        } else if (concrete === SymbolicBool.false) {
+//            return {pc: new SymbolicBool("&&", val.not(), pathConstraint), concrete: false};
+//        } else if (isSymbolic(concrete)) {
+//            throw new Error("Failed to concretize the symbolic value "+val+
+//                " with path constraint "+pathConstraint);
+//        } else {
+//            if (isSymbolicNumber(val)) {
+//                return {
+//                    pc: new SymbolicBool("&&", val.subtractLong(concrete).setop("=="), pathConstraint),
+//                    concrete: concrete
+//                }
+//            } else if (isSymbolicString(val)) {
+//                return {
+//                    pc: new SymbolicBool("&&", new SymbolicStringPredicate("==", val, concrete), pathConstraint),
+//                    concrete: concrete
+//                }
+//
+//            } else {
+//                throw new Error("Unknown symbolic type "+val);
+//            }
+//        }
+//
+//    }
 
     function concretize(val) {
         var ret = makeConcrete(val, pathConstraint);
@@ -203,6 +286,10 @@ $7 = {};
 
     function isSymbolicNumber(s) {
         return s instanceof SymbolicLinear;
+    }
+
+    function isSymbolicBool(s) {
+        return s instanceof SymbolicBool;
     }
 
     var MAX_STRING_LENGTH = 30;
@@ -454,15 +541,15 @@ $7 = {};
     }
 
     function symbolicIntToString(num) {
-        var c = num.substitute(getFullSolution(sandbox.getCurrentSolution()));
-        var newSym = sandbox.readInput(c+"", true);
+        //var c = num.substitute(getFullSolution(sandbox.getCurrentSolution()));
+        var newSym = sandbox.readInput("", true);
         addAxiom(new ToStringPredicate(num, newSym));
         return newSym;
     }
 
     function symbolicStringToInt(str) {
-        var s = str.substitute(getFullSolution(sandbox.getCurrentSolution()));
-        var newSym = sandbox.readInput(+s, true);
+//        var s = str.substitute(getFullSolution(sandbox.getCurrentSolution()));
+        var newSym = sandbox.readInput(0, true);
         addAxiom(new ToStringPredicate(newSym, str));
         return newSym;
     }
@@ -795,16 +882,6 @@ $7 = {};
             }
         }
     })();
-
-    function isFeasible(val, branch) {
-        var pred = makePredicate(val);
-        var ret = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
-        if (ret.substitute(getFullSolution(sandbox.getCurrentSolution())) === SymbolicBool.true) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     function takeBranch(val, branch) {
         var pred = makePredicate(val);

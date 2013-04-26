@@ -171,7 +171,7 @@ $7 = {};
 
     function makeConcrete(val, pathConstraint) {
         if (!isSymbolic(val)) {
-            return {pc: pathConstraint, concrete: val};
+            return {constraint: SymbolicBool.true, concrete: val};
         }
 
         var concrete = simplify(val);
@@ -192,15 +192,18 @@ $7 = {};
         }
 
         if (typeof concrete === 'boolean') {
-            return {pc: new SymbolicBool("&&", val, pathConstraint), concrete: concrete};
+            return {
+                constraint: val,
+                concrete: concrete
+            };
         } else if (isSymbolicNumber(val)) {
             return {
-                pc: new SymbolicBool("&&", val.subtractLong(concrete).setop("=="), pathConstraint),
+                constraint: val.subtractLong(concrete).setop("=="),
                 concrete: concrete
             }
         } else if (isSymbolicString(val)) {
             return {
-                pc: new SymbolicBool("&&", new SymbolicStringPredicate("==", val, concrete), pathConstraint),
+                constraint: new SymbolicStringPredicate("==", val, concrete),
                 concrete: concrete
             }
 
@@ -210,20 +213,8 @@ $7 = {};
         }
     }
 
-//    function isFeasible(val, branch) {
-//        var pred = makePredicate(val);
-//        var ret = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
-//        if (ret.substitute(getFullSolution(sandbox.getCurrentSolution())) === SymbolicBool.true) {
-//            return true;
-//        } else {
-//            return false;
-//        }
-//    }
-
-
     function isFeasible(val, branch) {
         var pred = makePredicate(val);
-//        var ret = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
         var ret = makeConcrete(branch?pred:pred.not(), pathConstraint);
         if (ret.concrete) {
             return true;
@@ -232,44 +223,9 @@ $7 = {};
         }
     }
 
-//    function makeConcrete(val, pathConstraint) {
-//        if (!isSymbolic(val)) {
-//            return {pc: pathConstraint, concrete: val};
-//        }
-////        var solution = solver.generateInputs(pathConstraint);
-////        if (solution === null) {
-////            throw new Error("Current path constraint must have a solution");
-////        }
-//        var concrete = val.substitute(getFullSolution(sandbox.getCurrentSolution()));
-//        if (concrete === SymbolicBool.true) {
-//            return {pc: new SymbolicBool("&&", val, pathConstraint), concrete: true};
-//        } else if (concrete === SymbolicBool.false) {
-//            return {pc: new SymbolicBool("&&", val.not(), pathConstraint), concrete: false};
-//        } else if (isSymbolic(concrete)) {
-//            throw new Error("Failed to concretize the symbolic value "+val+
-//                " with path constraint "+pathConstraint);
-//        } else {
-//            if (isSymbolicNumber(val)) {
-//                return {
-//                    pc: new SymbolicBool("&&", val.subtractLong(concrete).setop("=="), pathConstraint),
-//                    concrete: concrete
-//                }
-//            } else if (isSymbolicString(val)) {
-//                return {
-//                    pc: new SymbolicBool("&&", new SymbolicStringPredicate("==", val, concrete), pathConstraint),
-//                    concrete: concrete
-//                }
-//
-//            } else {
-//                throw new Error("Unknown symbolic type "+val);
-//            }
-//        }
-//
-//    }
-
     function concretize(val) {
         var ret = makeConcrete(val, pathConstraint);
-        pathConstraint = ret.pc;
+        addAxiom(ret.constraint);
         return ret.concrete;
     }
 
@@ -512,14 +468,6 @@ $7 = {};
             }  else if ("charAt") {
                 return String.prototype.charAt;
             }
-            //            f === String.prototype.indexOf ||
-//            f === String.prototype.lastIndexOf ||
-//            f === String.prototype.substring ||
-//            f === String.prototype.substr ||
-//            f === String.prototype.charCodeAt ||
-//            f === String.prototype.charAt ||
-//            f === String.prototype.replace ||
-
         }
 
         base = concretize(base);
@@ -885,13 +833,69 @@ $7 = {};
 
     function takeBranch(val, branch) {
         var pred = makePredicate(val);
-        pathConstraint = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
+        pred = branch?pred:pred.not();
+        addAxiom(pred);
+//        pathConstraint = new SymbolicBool("&&", pathConstraint, pred);
         branchIndex.setNext(branch);
     }
 
+    var formulaStack = [];
+    formulaStack.count = 0;
+
     function addAxiom(val) {
-        var pred = makePredicate(val);
-        pathConstraint = new SymbolicBool("&&", pathConstraint, pred);
+
+        if (val === "begin") {
+            formulaStack.push("begin");
+            formulaStack.count ++;
+        } else if (val === "and" || val === "or") {
+            val = (val==='and')?"&&":"||";
+            var ret, i, start = -1, len;
+            formulaStack.count--;
+            len = formulaStack.length;
+            for(i = len-1; i>=0; i--) {
+                if (formulaStack[i] === "begin") {
+                    start = i+1;
+                    break;
+                }
+            }
+            if (start === -1) {
+                throw new Error("$7.addAxiom('begin') not found");
+            }
+            if (start === len) {
+                return;
+            }
+
+            i = start;
+            var c1 = formulaStack[i];
+            c1 = c1;
+            var c2;
+            while(i < len-1) {
+                i++;
+                c2 = formulaStack[i];
+                c2 = c2[1];
+                c1 = new SymbolicBool(val, c1, c2);
+            }
+            formulaStack.splice(start-1,len - start+1);
+            formulaStack.push(c1);
+
+        } else if (val === 'ignore') {
+            formulaStack.pop();
+        } else {
+            var pred = makePredicate(val);
+            if (isSymbolic(pred)) {
+                formulaStack.push(pred);
+            } else if (formulaStack.count > 0) {
+                if (val) {
+                    formulaStack.push(SymbolicBool.true);
+                } else {
+                    formulaStack.push(SymbolicBool.false);
+                }
+            }
+        }
+
+        if (formulaStack.count===0) {
+            pathConstraint = new SymbolicBool("&&", pathConstraint, formulaStack.pop());
+        }
     }
 
 

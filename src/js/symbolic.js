@@ -77,12 +77,13 @@ $7 = {};
             f === String ||
             f === Number ||
             f === Boolean ||
-            f === RegExp ||
-            f === $7.addAxiom ||
-            f === $7.readInput) {
+            f === RegExp) {
             return create_concrete_invoke_cons(f);
         } else if (f === RegExp.prototype.test) {
             return regexp_test;
+        } else if (f === sandbox.addAxiom ||
+            f === sandbox.readInput) {
+            return f;
         } else {
             if (!sfuns) {
                 sfuns = require('./analyses/concolic/SymbolicFunctions2_jalangi_')
@@ -894,12 +895,10 @@ $7 = {};
 
             i = start;
             var c1 = formulaStack[i];
-            c1 = c1;
             var c2;
             while(i < len-1) {
                 i++;
                 c2 = formulaStack[i];
-                c2 = c2[1];
                 c1 = new SymbolicBool(val, c1, c2);
             }
             formulaStack.splice(start-1,len - start+1);

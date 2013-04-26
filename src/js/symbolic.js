@@ -69,6 +69,7 @@ $7 = {};
         return B(0, "regexin", newSym, this);
     }
 
+    var sfuns;
 
     function getSymbolicFunctionToInvoke (f, isConstructor) {
         if (f === Array ||
@@ -82,6 +83,27 @@ $7 = {};
             return create_concrete_invoke_cons(f);
         } else if (f === RegExp.prototype.test) {
             return regexp_test;
+        } else {
+            if (!sfuns) {
+                sfuns = require('./analyses/concolic/SymbolicFunctions2_jalangi_')
+            }
+            if (f === String.prototype.indexOf) {
+                return sfuns.string_indexOf;
+            } else if (f === String.prototype.charCodeAt) {
+                return sfuns.string_charCodeAt;
+            } else if (f === String.prototype.charAt) {
+                return sfuns.string_charAt;
+            } else if (f === String.prototype.lastIndexOf) {
+                return sfuns.string_lastIndexOf;
+            }  else if (f === String.prototype.substring) {
+                return sfuns.string_substring;
+            } else if (f === String.prototype.substr) {
+                return sfuns.string_substr;
+            } else if (f === parseInt) {
+                return sfuns.builtin_parseInt;
+            } else if (f === String.prototype.replace) {
+                return create_concrete_invoke(f);
+            }
         }
 //         else if (f === Function.prototype.apply ||
 //            f === Function.prototype.call ||
@@ -467,7 +489,10 @@ $7 = {};
                 return String.prototype.charCodeAt;
             }  else if ("charAt") {
                 return String.prototype.charAt;
+            } else if ("replace") {
+                return String.prototype.replace;
             }
+
         }
 
         base = concretize(base);
@@ -984,6 +1009,7 @@ $7 = {};
     function endExecution() {
     }
 
+    sandbox.addAxiom = addAxiom;
 
     sandbox.U = U; // Unary operation
     sandbox.B = B; // Binary operation

@@ -857,11 +857,13 @@ $7 = {};
     })();
 
     function takeBranch(val, branch) {
-        var pred = makePredicate(val);
-        pred = branch?pred:pred.not();
-        addAxiom(pred);
+        if (isSymbolic(val)) {
+            var pred = makePredicate(val);
+            pred = branch?pred:pred.not();
+            addAxiom(pred);
 //        pathConstraint = new SymbolicBool("&&", pathConstraint, pred);
-        branchIndex.setNext(branch);
+            branchIndex.setNext(branch);
+        }
     }
 
     var formulaStack = [];
@@ -905,7 +907,7 @@ $7 = {};
 
         } else if (val === 'ignore') {
             formulaStack.pop();
-        } else {
+        } else if (isSymbolic(val)) {
             var pred = makePredicate(val);
             if (isSymbolic(pred)) {
                 formulaStack.push(pred);
@@ -918,7 +920,7 @@ $7 = {};
             }
         }
 
-        if (formulaStack.count===0) {
+        if (formulaStack.count===0 && formulaStack.length > 0 ) {
             pathConstraint = new SymbolicBool("&&", pathConstraint, formulaStack.pop());
         }
     }

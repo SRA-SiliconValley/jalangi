@@ -194,7 +194,7 @@ $7 = {};
 
     function makeConcrete(val, pathConstraint) {
         if (!isSymbolic(val)) {
-            return {constraint: SymbolicBool.true, concrete: val};
+            return {concrete: val};
         }
 
         var concrete = simplify(val);
@@ -248,7 +248,9 @@ $7 = {};
 
     function concretize(val) {
         var ret = makeConcrete(val, pathConstraint);
-        addAxiom(ret.constraint);
+        if (ret.constraint){
+            addAxiom(ret.constraint);
+        }
         return ret.concrete;
     }
 
@@ -478,20 +480,22 @@ $7 = {};
         } else if (base instanceof SymbolicStringExpression) {
             if (offset === "length") {
                 return base.getLength();
-            } else if ("indexOf") {
+            } else if (offset === "indexOf") {
                 return String.prototype.indexOf;
-            } else if ("lastIndexOf") {
+            } else if (offset === "lastIndexOf") {
                 return String.prototype.lastIndexOf;
-            } else if ("substring") {
+            } else if (offset === "substring") {
                 return String.prototype.substring;
-            } else if ("substr") {
+            } else if (offset === "substr") {
                 return String.prototype.substr;
-            } else if ("charCodeAt") {
+            } else if (offset === "charCodeAt") {
                 return String.prototype.charCodeAt;
-            }  else if ("charAt") {
+            }  else if (offset === "charAt") {
                 return String.prototype.charAt;
-            } else if ("replace") {
+            } else if (offset === "replace") {
                 return String.prototype.replace;
+            } else if (offset === "toString") {
+                return String.prototype.toString;
             }
 
         }

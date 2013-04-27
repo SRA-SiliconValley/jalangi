@@ -14,6 +14,11 @@
         $7.addAxiom("begin");
 
         $7.addAxiom("begin");
+        $7.addAxiom(ret===-1);
+        $7.addAxiom(!reg.test(this));
+        $7.addAxiom("and");
+
+        $7.addAxiom("begin");
         var T = $7.readInput("", true);
         var S1 = $7.readInput("",true);
         var S2 = $7.readInput("",true);
@@ -44,11 +49,6 @@
         $7.addAxiom(this === (T + S1 + str + S2));
         $7.addAxiom(ret === pos + S1.length);
         $7.addAxiom(!reg.test(S1));
-        $7.addAxiom("and");
-
-        $7.addAxiom("begin");
-        $7.addAxiom(ret===-1);
-        $7.addAxiom(!reg.test(this));
         $7.addAxiom("and");
 
         $7.addAxiom("or");

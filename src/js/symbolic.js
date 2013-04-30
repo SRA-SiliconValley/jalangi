@@ -56,6 +56,24 @@ $7 = {};
         return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
     }
 
+    function string_fromCharCode () {
+        var ints = [];
+        var i, len=arguments.length, flag = false;;
+        for (i=0; i < len; i++) {
+            if (arguments[i] instanceof SymbolicLinear) {
+                flag = true;
+            }
+            ints[i] = arguments[i];
+
+        }
+        if (!flag) {
+            return result;
+        }
+        var newSym = sandbox.readInput("", true);
+        sandbox.addAxiom(new FromCharCodePredicate(ints, newSym));
+        return newSym;
+    }
+
     function regexp_test (str) {
         // this is a regexp object
         var newSym;
@@ -81,6 +99,8 @@ $7 = {};
             return create_concrete_invoke_cons(f);
         } else if (f === RegExp.prototype.test) {
             return regexp_test;
+        } else if (f === String.fromCharCode) {
+            return string_fromCharCode;
         } else if (f === sandbox.addAxiom ||
             f === sandbox.readInput) {
             return f;
@@ -147,6 +167,7 @@ $7 = {};
     var SymbolicStringExpression = require('./analyses/puresymbolic/SymbolicStringExpression');
     var SymbolicStringPredicate = require('./analyses/puresymbolic/SymbolicStringPredicate');
     var ToStringPredicate = require('./analyses/puresymbolic/ToStringPredicate');
+    var FromCharCodePredicate = require('./analyses/puresymbolic/FromCharCodePredicate');
     var SolverEngine = require('./analyses/puresymbolic/SolverEngine');
     var solver = new SolverEngine();
     var pathConstraint = SymbolicBool.true;
@@ -192,11 +213,14 @@ $7 = {};
         return concrete;
     }
 
-    function makeConcrete(val, pathConstraint) {
+    function makeConcrete(val, pathConstraint, warn) {
         if (!isSymbolic(val)) {
             return {concrete: val};
         }
 
+        if (warn) {
+            console.log("Warning: concretizing a symbolic value "+val);
+        }
         var concrete = simplify(val);
 
         if (isSymbolic(concrete)) {
@@ -238,7 +262,7 @@ $7 = {};
 
     function isFeasible(val, branch) {
         var pred = makePredicate(val);
-        var ret = makeConcrete(branch?pred:pred.not(), pathConstraint);
+        var ret = makeConcrete(branch?pred:pred.not(), pathConstraint, false);
         if (ret.concrete) {
             return true;
         } else {
@@ -247,8 +271,10 @@ $7 = {};
     }
 
     function concretize(val) {
-        var ret = makeConcrete(val, pathConstraint);
-        addAxiom(ret.constraint);
+        var ret = makeConcrete(val, pathConstraint, true);
+        if (ret.constraint !== undefined) {
+            addAxiom(ret.constraint);
+        }
         return ret.concrete;
     }
 
@@ -773,6 +799,7 @@ $7 = {};
             return ret;
         } else if (left_s instanceof SymbolicStringPredicate  ||
             left_s instanceof ToStringPredicate ||
+            left_s instanceof FromCharCodePredicate ||
             left_s instanceof SymbolicBool) {
             return ret;
         }
@@ -919,8 +946,10 @@ $7 = {};
                     formulaStack.push(SymbolicBool.false);
                 }
             }
+        } else if (val) {
+            formulaStack.push(SymbolicBool.true);
         } else {
-            return;
+            formulaStack.push(SymbolicBool.false);
         }
 
         if (formulaStack.count===0 && formulaStack.length > 0 ) {

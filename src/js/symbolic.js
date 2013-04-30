@@ -248,9 +248,7 @@ $7 = {};
 
     function concretize(val) {
         var ret = makeConcrete(val, pathConstraint);
-        if (ret.constraint){
-            addAxiom(ret.constraint);
-        }
+        addAxiom(ret.constraint);
         return ret.concrete;
     }
 
@@ -921,6 +919,8 @@ $7 = {};
                     formulaStack.push(SymbolicBool.false);
                 }
             }
+        } else {
+            return;
         }
 
         if (formulaStack.count===0 && formulaStack.length > 0 ) {

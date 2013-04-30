@@ -59,7 +59,7 @@
         var reg = new RegExp(".*"+regex_escape(str)+".*");
         var ret = $7.readInput(0,true);
 
-        if (startPos === undefined) {
+        if (arguments.length <= 1) {
             startPos = this.length - 1;
         }
 
@@ -121,7 +121,7 @@
 
     sandbox.string_substring = function(start, end) {
 
-        if (end === undefined) {
+        if (arguments.length <= 1) {
             end = this.length;
         }
 

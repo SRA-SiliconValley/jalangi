@@ -110,10 +110,21 @@
 
     sandbox.string_charCodeAt = function(idx) {
         var ret = $7.readInput(0,true);
+        var c = this.substring(idx, idx + 1);
 
         $7.addAxiom("begin");
-        $7.addAxiom(this.substring(idx, idx + 1) === String.fromCharCode(ret));
+
+        $7.addAxiom("begin");
+        $7.addAxiom(c !== '');
+        $7.addAxiom(c === String.fromCharCode(ret));
         $7.addAxiom("and");
+
+        $7.addAxiom("begin");
+        $7.addAxiom(c === '');
+        $7.addAxiom(ret === -100000); // @todo should be NaN, but no way to model NaN.
+        $7.addAxiom("and");
+
+        $7.addAxiom("or");
 
         return ret;
 

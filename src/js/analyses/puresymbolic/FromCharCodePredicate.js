@@ -46,28 +46,34 @@
 
         substitute : function(assignments) {
             var s = "";
-            var i, len = this.intParts.length;
+            var i, len = this.intParts.length, flag = false;
+            var ints = [];
             for (i=0; i<len; i++) {
                 var tmp = (this.intParts[i] instanceof SymbolicLinear)?this.intParts[i].substitute(assignments):(+this.intParts[i]);
+                ints.push(tmp);
                 if (typeof tmp !== 'number') {
-                    return this;
+                    flag = true;
                 }
                 s += String.fromCharCode(tmp);
             }
 
             var tmp2 = this.stringPart.substitute(assignments);
-            if (typeof tmp2 === 'string') {
-                if (s === tmp2) {
-                    return SymbolicBool.true; // this predicate is an axiom which must return true on substitution
+
+            if (!flag) {
+                if (typeof tmp2 === 'string') {
+                    if (s === tmp2) {
+                        return SymbolicBool.true; // this predicate is an axiom which must return true on substitution
+                    } else {
+                        return SymbolicBool.false;
+                    }
                 } else {
-                    return SymbolicBool.false;
+                    var sym = this.stringPart.getLength();
+                    assignments[sym] = s.length;
+                    return new SymbolicStringPredicate("==", s, this.stringPart);
                 }
+            } else {
+                return new FromCharCodePredicate(ints, this.stringPart);
             }
-
-            var sym = this.stringPart.getLength();
-            assignments[sym] = s.length;
-
-            return new SymbolicStringPredicate("==", s, this.stringPart);
         },
 
         getFormulaString : function(freeVars, mode, assignments) {

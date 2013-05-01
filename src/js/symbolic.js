@@ -67,7 +67,7 @@ $7 = {};
 
         }
         if (!flag) {
-            return result;
+            return String.fromCharCode.apply(this, arguments);
         }
         var newSym = sandbox.readInput("", true);
         sandbox.addAxiom(new FromCharCodePredicate(ints, newSym));

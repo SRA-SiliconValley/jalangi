@@ -50,17 +50,22 @@
                 return this;
             }
             var tmp2 = this.stringPart.substitute(assignments);
-            if (typeof tmp2 === 'string') {
-                if ((tmp+"") === tmp2) {
-                    return SymbolicBool.true; // this predicate is an axiom which must return true on substitution
+            if (typeof tmp === 'number') {
+                if (typeof tmp2 === 'string') {
+                    if ((tmp+"") === tmp2) {
+                        return SymbolicBool.true; // this predicate is an axiom which must return true on substitution
+                    } else {
+                        return SymbolicBool.false;
+                    }
                 } else {
-                    return SymbolicBool.false;
+                    var sym = this.stringPart.getLength();
+                    var int_to_s = tmp+"";
+                    assignments[sym] = int_to_s.length;
+                    return new SymbolicStringPredicate("==", int_to_s, this.stringPart);
                 }
+            } else {
+                return new ToStringPredicate(tmp, tmp2);
             }
-            var sym = this.stringPart.getLength();
-            var int_to_s = tmp+"";
-            assignments[sym] = int_to_s.length;
-            return new SymbolicStringPredicate("==", int_to_s, this.stringPart);
         },
 
         getFormulaString : function(freeVars, mode, assignments) {

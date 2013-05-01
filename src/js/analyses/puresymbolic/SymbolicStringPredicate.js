@@ -125,6 +125,16 @@
                 typeof right === 'string'))
                 right = ""+right;
             this.right = right;
+            if (typeof left === 'string' && typeof right === 'string') {
+                return ((op === '==' && left === right) ||
+                    (op === '!=' && left !== right))?SymbolicBool.true:SymbolicBool.false;
+            }
+
+            if (typeof left === 'string' && typeof right instanceof RegExp) {
+                return ((op === 'regexin' && right.test(left)) ||
+                    (op === 'regexnotin' && !right.test(left)))? SymbolicBool.true: SymbolicBool.false;
+            }
+
             switch(op) {
                 case "==":
                     this.op = SymbolicStringPredicate.EQ;

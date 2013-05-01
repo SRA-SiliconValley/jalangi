@@ -630,6 +630,32 @@ $7 = {};
                         ret = right.not();
                 } else {
                     ret = left.subtract(right);
+                    if (!isSymbolicNumber(ret)) {
+                        switch(op) {
+                            case "<":
+                                ret = ret < 0;
+                                break;
+                            case ">":
+                                ret = ret > 0;
+                                break;
+                            case "<=":
+                                ret = ret <= 0;
+                                break;
+                            case ">=":
+                                ret = ret >= 0;
+                                break;
+                            case "==":
+                            case "===":
+                                ret = ret === 0;
+                                break;
+                            case "!=":
+                            case "!==":
+                                ret = ret !== 0;
+                                break;
+                            default:
+                                throw new Error("Operator "+op+" unknown");
+                        }
+                    }
                 }
             } else if (isSymbolicNumber(left) && typeof right === 'number') {
                 if (left.op !== SymbolicLinear.UN)
@@ -637,16 +663,18 @@ $7 = {};
                         ret = left;
                     else
                         ret = left.not();
-                else
+                else {
                     ret = left.subtractLong(right);
+                }
             } else if (isSymbolicNumber(right) && typeof left === 'number') {
                 if (right.op !== SymbolicLinear.UN)
                     if (left)
                         ret = right;
                     else
                         ret = right.not();
-                else
+                else {
                     ret = right.subtractFrom(left);
+                }
             } else  if (op === "===" || op === "!==" || op === "==" || op === "!=") {
                 if (op === "===" || op === '!==') {
                     op = op.substring(0,2);
@@ -946,7 +974,11 @@ $7 = {};
                     formulaStack.push(SymbolicBool.false);
                 }
             }
-        } else if (val) {
+        }
+//        else {
+//            return;
+//        }
+        else if (val) {
             formulaStack.push(SymbolicBool.true);
         } else {
             formulaStack.push(SymbolicBool.false);

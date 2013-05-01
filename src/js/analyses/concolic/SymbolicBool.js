@@ -142,6 +142,14 @@ SymbolicBool.NOT = 0;
             }
         },
 
+        isAnd: function() {
+            return this.op === SymbolicBool.AND;
+        },
+
+        isOr: function() {
+            return this.op === SymbolicBool.OR;
+        },
+
         toString: function() {
             switch(this.op) {
                 case SymbolicBool.TRUE:

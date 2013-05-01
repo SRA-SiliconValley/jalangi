@@ -47,12 +47,34 @@
 
 
         function generateFormula(formula, mode, assignments, extra) {
-            var freeVars = {}, f;
+            var formulaStrings = [];
+            var freeVars = {}, f, allTrue = true, j, i;
 
-            f = formula.substitute(assignments).getFormulaString(freeVars, mode, assignments);
-            if (f.trim() === "(TRUE)") {
-                return true;
+            while (formula instanceof SymbolicBool && formula.isAnd()) {
+                f = formula.right.substitute(assignments).getFormulaString(freeVars,mode, assignments);
+                formulaStrings.push(f);
+                if (f.trim() !== "(TRUE)") {
+                    allTrue = false;
+                }
+                formula = formula.left;
             }
+            f = formula.substitute(assignments).getFormulaString(freeVars,mode, assignments);
+            formulaStrings.push(f);
+            if (f.trim() !== "(TRUE)") {
+                allTrue = false;
+            }
+
+            if (allTrue) {
+                return allTrue;
+            }
+
+
+//            var freeVars = {}, f;
+//
+//            f = formula.substitute(assignments).getFormulaString(freeVars, mode, assignments);
+//            if (f.trim() === "(TRUE)") {
+//                return true;
+//            }
 
 
             var formulaFh = fs.openSync(FORMULA_FILE_NAME+mode, 'w');
@@ -62,6 +84,13 @@
                 }
             }
 
+            i = formulaStrings.length;
+            for (j=i-1; j>0; j--) {
+                fs.writeSync(formulaFh,"ASSERT ");
+                fs.writeSync(formulaFh,formulaStrings[j]);
+                fs.writeSync(formulaFh,";\n");
+            }
+
             if (extra) {
                 fs.writeSync(formulaFh,"ASSERT ");
                 fs.writeSync(formulaFh, extra);
@@ -69,7 +98,7 @@
             }
 
             fs.writeSync(formulaFh,"CHECKSAT ");
-            fs.writeSync(formulaFh,f);
+            fs.writeSync(formulaFh,formulaStrings[0]);
             fs.writeSync(formulaFh,";\n");
             fs.writeSync(formulaFh,"COUNTERMODEL;\n");
             fs.closeSync(formulaFh);

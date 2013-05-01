@@ -57,13 +57,19 @@
         },
 
         substitute : function(assignments) {
-            var sb = "", len = this.list.length, elem, tmp;
+            var sb = "", len = this.list.length, elem, tmp, ret;
             for(var i=0; i<len; i++) {
                 elem = this.list[i];
                 if (elem instanceof SymbolicStringVar) {
                     tmp = elem.substitute(assignments);
                     if (tmp instanceof SymbolicStringVar) {
-                        return this;
+                        if (!ret) {
+                            ret = new SymbolicStringExpression(tmp.toString());
+                            ret = ret.concatToStr(sb);
+                        } else {
+                            ret = ret.concatStr(sb).concat(new SymbolicStringExpression(tmp.toString()));
+                        }
+                        sb = "";
                     } else {
                         sb += tmp;
                     }
@@ -71,7 +77,11 @@
                     sb += elem;
                 }
             }
-            return sb;
+            if (ret) {
+                return ret.concatStr(sb);
+            } else {
+                return sb;
+            }
         },
 
         concatStr : function(str) {

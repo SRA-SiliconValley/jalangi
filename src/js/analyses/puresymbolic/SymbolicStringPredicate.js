@@ -156,16 +156,16 @@
             var right = this.right;
             if (left instanceof SymbolicStringExpression) {
                 left = left.substitute(assignments);
-                if (left instanceof SymbolicStringExpression) {
-                    return this;
-                }
             }
             if (right instanceof SymbolicStringExpression) {
                 right = right.substitute(assignments);
-                if (right instanceof SymbolicStringExpression) {
-                    return this;
-                }
             }
+            if (left instanceof SymbolicStringExpression || right instanceof SymbolicStringExpression) {
+                var ret = new SymbolicStringPredicate(this.op, left, right);
+                ret.op = this.op;
+                return ret;
+            }
+
             switch(this.op) {
                 case SymbolicStringPredicate.EQ:
                     return (left === right)?SymbolicBool.true:SymbolicBool.false;

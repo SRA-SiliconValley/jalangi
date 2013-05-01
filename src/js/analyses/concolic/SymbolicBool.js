@@ -72,7 +72,22 @@
     }
 
 
-SymbolicBool.NOT = 0;
+
+    SymbolicBool.simpleImplies = function(f1, f2) {
+        if (f1 === f2) {
+            return true;
+        } else if (f1 instanceof SymbolicBool && f1.isAnd()) {
+            if (SymbolicBool.simpleImplies(f1.left, f2) || SymbolicBool.simpleImplies(f1.right, f2)) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    };
+
+    SymbolicBool.NOT = 0;
     SymbolicBool.AND = 1;
     SymbolicBool.OR = 2;
     SymbolicBool.IMPLIES = 3;

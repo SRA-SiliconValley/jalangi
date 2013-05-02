@@ -103,7 +103,7 @@
             return f;
         } else {
             if (!sfuns) {
-                sfuns = require('./../concolic/SymbolicFunctions2_jalangi_')
+                sfuns = require('./SymbolicFunctions2_jalangi_')
             }
             if (f === String.prototype.indexOf) {
                 return sfuns.string_indexOf;
@@ -961,29 +961,14 @@
         if ((v = branchIndex.getNext()) !== undefined) {
             takeBranch(val, ret = v);
         } else {
-            var I = getCurrentSolution();
-            if (I) {
-                if (isFeasible(val, 0)) {
-                    generateInput(val, 1);
-                    takeBranch(val, ret = 0);
-                } else if (isFeasible(val, 1)) {
-                    generateInput(val, 0);
-                    takeBranch(val, ret = 1);
-                } else {
-                    throw new Error("Both branches are not feasible.  This is not possible.")
-                }
+            if (isFeasible(val, 0)) {
+                generateInput(val, 1);
+                takeBranch(val, ret = 0);
+            } else if (isFeasible(val, 1)) {
+                generateInput(val, 0);
+                takeBranch(val, ret = 1);
             } else {
-                if (I = generateInput(val, 0)) {
-                    currentSolution = I;
-                    generateInput(val, 1);
-                    takeBranch(val, ret = 0);
-                } else if (I = generateInput(val, 1)) {
-                    currentSolution = I;
-                    generateInput(val, 0);
-                    takeBranch(val, ret = 1);
-                } else {
-                    throw new Error("Both branches are not feasible.  This is not possible.")
-                }
+                throw new Error("Both branches are not feasible.  This is not possible.")
             }
         }
         return ret;

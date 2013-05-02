@@ -22,7 +22,7 @@ if (typeof window === "undefined") {
 }
 
 var a = $7.readInput(0);
-var b = $7.readInput("");
+var b = $7.readInput("0");
 
 var x = parseInt(a);
 var y = parseInt(b);

@@ -110,7 +110,7 @@ javac -cp ./thirdparty/javalib/automaton.jar -d jout/production/jalangijava src/
 java -cp ./jout/production/jalangijava/:./thirdparty/javalib/automaton.jar RegexpEncoder length ".*www\..*" y38 false || { echo "Installation of Java part of Jalangi failed!  Make sure that you have Sun's JDK 1.6 or higher."; exit 1; }
 
 node src/js/instrument/esnstrument.js src/js/analyses/concolic/SymbolicFunctions.js
-node src/js/instrument/esnstrument.js src/js/analyses/concolic/SymbolicFunctions2.js
+node src/js/instrument/esnstrument.js src/js/analyses/puresymbolic/SymbolicFunctions2.js
 
 echo "****************************"
 echo "Installation successful."

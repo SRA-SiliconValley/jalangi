@@ -21,6 +21,7 @@
 
     var SymbolicStringPredicate = require("./SymbolicStringPredicate");
     var SymbolicLinear = require("./SymbolicLinear");
+    var SymbolicBool = require("./SymbolicBool");
 
     function ToStringPredicate(intPart, stringPart) {
         if (!(this instanceof ToStringPredicate)) {
@@ -50,6 +51,11 @@
             }
             var sym = this.stringPart.getField("length").symbolic.toString();
             var int_to_s = tmp+"";
+//            var len1 = sym.substitute(assignments);
+//            if (typeof len1 === 'number' && int_to_s.length !== len1) {
+//                return SymbolicBool.false;
+//            }
+
             assignments[sym] = int_to_s.length;
             return new SymbolicStringPredicate("==", int_to_s, this.stringPart);
         },

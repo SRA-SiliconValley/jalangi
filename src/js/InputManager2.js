@@ -68,8 +68,8 @@ if (typeof $7 === 'undefined') {
                 ret = val;
             }
         }
-        if (typeof val === 'string' && idx.indexOf('x')===0 ) {
-            inputs[idx+"__length"] = val.length;
+        if (typeof ret === 'string' && idx.indexOf('x')===0 ) {
+            inputs[idx+"__length"] = ret.length;
         }
         return ret;
     }

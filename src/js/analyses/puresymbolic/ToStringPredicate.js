@@ -45,11 +45,8 @@
         },
 
         substitute : function(assignments) {
-            var tmp = this.intPart.substitute(assignments);
-            if (typeof tmp !== 'number') {
-                return this;
-            }
-            var tmp2 = this.stringPart.substitute(assignments);
+            var tmp = typeof this.intPart === 'number'?this.intPart:this.intPart.substitute(assignments);
+            var tmp2 = typeof this.stringPart === 'string'?this.stringPart:this.stringPart.substitute(assignments);
             if (typeof tmp === 'number') {
                 if (typeof tmp2 === 'string') {
                     if ((tmp+"") === tmp2) {
@@ -75,9 +72,14 @@
         getFormulaString : function(freeVars, mode, assignments) {
             if (mode === 'integer') {
                 if (this.intPart instanceof SymbolicLinear) {
-                    this.intPart.getFreeVars(freeVars);
+                    //this.intPart.getFreeVars(freeVars);
+                    var i1 = this.intPart.setop(">=");
+                    var i2 = this.intPart.setop("<=");
+
+                    return (new SymbolicBool("||", i1, i2)).getFormulaString(freeVars, mode, assignments);
+                } else {
+                    return this.stringPart.getLength().subtractLong(this.intPart).setop("==").getFormulaString(freeVars, mode, assignments);
                 }
-                return "(TRUE)";
             } else {
                 throw new Error("Cannot get formula for ToStringPredicate in string mode");
             }

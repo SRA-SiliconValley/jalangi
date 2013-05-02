@@ -60,7 +60,11 @@
                 } else {
                     var sym = this.stringPart.getLength();
                     var int_to_s = tmp+"";
-                    assignments[sym] = int_to_s.length;
+                    var len1 = sym.substitute(assignments);
+                    if (typeof len1 === 'number' && int_to_s.length !== len1) {
+                        return SymbolicBool.false;
+                    }
+//                    assignments[sym] = int_to_s.length;
                     return new SymbolicStringPredicate("==", int_to_s, this.stringPart);
                 }
             } else {

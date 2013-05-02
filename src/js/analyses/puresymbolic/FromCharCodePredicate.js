@@ -68,7 +68,11 @@
                     }
                 } else {
                     var sym = this.stringPart.getLength();
-                    assignments[sym] = s.length;
+                    var len1 = sym.substitute(assignments);
+                    if (typeof len1 === 'number' && s.length !== len1) {
+                        return SymbolicBool.false;
+                    }
+//                    assignments[sym] = s.length;
                     return new SymbolicStringPredicate("==", s, this.stringPart);
                 }
             } else {

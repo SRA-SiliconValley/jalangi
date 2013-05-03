@@ -170,6 +170,27 @@
             if (right instanceof SymbolicStringExpression) {
                 right = right.substitute(assignments);
             }
+            if (typeof left === 'string' && right instanceof SymbolicStringExpression) {
+                var val, i, len = right.list.length;
+                for (i=0; i<len; i++) {
+                    val = right.list[i];
+                    if (typeof val === 'string' && left.indexOf(val)<0) {
+                        return SymbolicBool.false;
+                    }
+                }
+            }
+
+            if (typeof right === 'string' && left instanceof SymbolicStringExpression) {
+                var val, i, len = left.list.length;
+                for (i=0; i<len; i++) {
+                    val = left.list[i];
+                    if (typeof val === 'string' && right.indexOf(val)<0) {
+                        return SymbolicBool.false;
+                    }
+                }
+            }
+
+
             if (left instanceof SymbolicStringExpression || right instanceof SymbolicStringExpression) {
                 var ret = new SymbolicStringPredicate(this.op, left, right);
                 ret.op = this.op;

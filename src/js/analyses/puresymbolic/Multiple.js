@@ -50,6 +50,68 @@
         return ret;
     }
 
+    function F(iid, f, isConstructor) {
+        return function() {
+            var base = this;
+            return invokeFun(iid, base, f, arguments, isConstructor);
+        }
+    }
+
+    function M(iid, base, offset, isConstructor) {
+        return function() {
+            var f = G(iid, base, offset);
+            return invokeFun(iid, base, f, arguments, isConstructor);
+        };
+    }
+
+    function Fe(iid, val, dis) {
+    }
+
+    function Fr(iid) {
+    }
+
+    function Se(iid, val) {
+        single.Se(iid, val);
+    }
+
+    function Sr(iid) {
+        single.Sr(iid);
+    }
+
+    function I(val) {
+        return val;
+    }
+
+    function T(iid, val, type) {
+        single.T(iid, val, type);
+        return val;
+    }
+
+    function H(iid, val) {
+        return val;
+    }
+
+
+    function R(iid, name, val) {
+        return val;
+    }
+
+    function W(iid, name, val) {
+        return val;
+    }
+
+    function N(iid, name, val, isArgumentSync) {
+        return val;
+    }
+
+
+    function A(iid,base,offset,op) {
+        var oprnd1 = G(iid,base, offset);
+        return function(oprnd2) {
+            var val = B(iid, op, oprnd1, oprnd2);
+            return P(iid, base, offset, val);
+        };
+    }
 
 
     function update(oldValue, newValue) {
@@ -169,6 +231,9 @@
     };
 
 
+    function endExecution() {
+
+    }
 
 
 }(module.exports));

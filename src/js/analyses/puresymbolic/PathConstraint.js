@@ -19,14 +19,29 @@
 (function(sandbox) {
     var SymbolicBool = require('./../concolic/SymbolicBool');
     var Symbolic = require('./../concolic/Symbolic');
+    var SolverEngine = require('./SolverEngine');
+    var solver = new SolverEngine();
+    var PATH_FILE_NAME = 'jalangi_path';
+    var fs = require('fs');
 
     var pathConstraint = SymbolicBool.true;
-    var pcStack = [];
-    pcStack.push(pathConstraint);
+    var pathIndex;
+    try {
+        pathIndex = JSON.parse(fs.readFileSync(PATH_FILE_NAME,"utf8"));
+        if (pathIndex.length === 0) {
+            process.exit(0);
+        }
+    } catch (e) {
+        pathIndex = [];
+    }
 
-
+    var index = 0;
     var formulaStack = [];
     formulaStack.count = 0;
+    var pcStack = [];
+    pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack});
+
+
 
 
     function isSymbolic(val) {
@@ -37,8 +52,10 @@
     }
 
     function pushPC(pc) {
+        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack});
         pathConstraint = pc;
-        pcStack.push(pc);
+        pathIndex = [];
+        index = 0;
         formulaStack = [];
         formulaStack.count = 0;
     }
@@ -47,20 +64,37 @@
         return pathConstraint;
     }
 
-    function popPC() {
-        pcStack.pop();
-        pathConstraint = pcStack[pcStack.length-1];
-        formulaStack = [];
-        formulaStack.count = 0;
+    function getIndex() {
+        return pathIndex;
     }
 
-    function addAxiom(val) {
+    function getNext() {
+        var ret = pathIndex[index++];
+        if (ret === undefined) {
+            index--;
+        }
+        return ret;
+    }
+
+    function setNext(elem) {
+        pathIndex[index++] = elem;
+    }
+
+    function popPC() {
+        pcStack.pop();
+        pathConstraint = pcStack[pcStack.length-1].pc;
+        pathIndex = pcStack[pcStack.length-1].path;
+        index = pcStack[pcStack.length-1].index;
+        formulaStack = pcStack[pcStack.length-1].formulaStack;
+    }
+
+    function addAxiom(val, branch) {
         if (val === "begin") {
             formulaStack.push("begin");
             formulaStack.count ++;
         } else if (val === "and" || val === "or") {
             val = (val==='and')?"&&":"||";
-            var ret, i, start = -1, len;
+            var i, start = -1, len;
             formulaStack.count--;
             len = formulaStack.length;
             for(i = len-1; i>=0; i--) {
@@ -89,21 +123,18 @@
 
         } else if (val === 'ignore') {
             formulaStack.pop();
-        } else if (isSymbolic(val)) {
-            var pred = val;
-            if (isSymbolic(pred)) {
-                formulaStack.push(pred);
-            } else if (formulaStack.count > 0) {
+        } else {
+            if (!isSymbolic(val)) {
                 if (val) {
-                    formulaStack.push(SymbolicBool.true);
+                    val = SymbolicBool.true;
                 } else {
-                    formulaStack.push(SymbolicBool.false);
+                    val = SymbolicBool.false;
                 }
             }
-        } else if (val) {
-            formulaStack.push(SymbolicBool.true);
-        } else {
-            formulaStack.push(SymbolicBool.false);
+            if (branch !== undefined && !branch) {
+                val = val.not();
+            }
+            formulaStack.push(val);
         }
 
         if (formulaStack.count===0 && formulaStack.length > 0 ) {
@@ -111,10 +142,45 @@
         }
     }
 
+    function isFeasible(pred, branch) {
+        var c = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
+        return solver.generateInputs(c);
+    }
+
+    function generateInputs() {
+        var elem, fs = require('fs');
+
+        while(pathIndex.length > 0) {
+            elem = pathIndex.pop();
+            if (!elem.done) {
+                pathIndex.push({done: !elem.done, branch: 1});
+                break;
+            }
+        }
+        index = 0;
+
+
+        fs.writeFileSync(PATH_FILE_NAME,JSON.stringify(pathIndex),"utf8");
+
+        var solution = solver.generateInputs(pathConstraint);
+        if (solution) {
+            solver.writeInputs(solution, []);
+            return solution;
+        } else {
+            return null;
+        }
+
+    }
+
     sandbox.addAxiom = addAxiom;
     sandbox.popPC = popPC;
     sandbox.pushPC = pushPC;
     sandbox.getPC = getPC;
+    sandbox.getIndex = getIndex;
+    sandbox.getNext = getNext;
+    sandbox.setNext = setNext;
+    sandbox.isFeasible = isFeasible;
+    sandbox.generateInputs = generateInputs;
 
 }(module.exports));
 

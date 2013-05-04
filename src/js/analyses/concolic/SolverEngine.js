@@ -225,7 +225,7 @@
             try {
                 iCount = JSON.parse(fs.readFileSync(TAIL_FILE_NAME,"utf8"));
             } catch(e) {
-                iCount = 0;
+                iCount = -1;
             }
             iCount++;
             storeInputs(newInputs, suffix, iCount, pathConstraintIndex);

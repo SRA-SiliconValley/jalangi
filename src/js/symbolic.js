@@ -20,7 +20,7 @@ $7 = {};
 
 
 (function(sandbox) {
-    var single = require('./analyses/puresymbolic/Single');
+    var single = require('./analyses/puresymbolic/Single2');
 
 //    function makeSymbolic(idx, val) {
 //        return single.makeSymbolic(idx, val);

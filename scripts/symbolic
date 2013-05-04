@@ -71,7 +71,7 @@ do
 
 done
 
-iter=$((iter+1))
+#iter=$((iter+1))
 
 if [ $iter -eq $2 ]
 then

@@ -34,6 +34,7 @@
     } catch (e) {
         pathIndex = [];
     }
+    var solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
 
     var index = 0;
     var formulaStack = [];
@@ -142,18 +143,72 @@
         }
     }
 
+    function combine(oldInputs, newInputs) {
+        var tmp = {};
+        for (var key in oldInputs) {
+            if (HOP(oldInputs, key)) {
+                tmp[key] = oldInputs[key];
+            }
+        }
+        for (key in newInputs) {
+            if (HOP(newInputs, key)) {
+                tmp[key] = newInputs[key];
+            }
+        }
+        return tmp;
+    }
+
+    function HOP(obj, prop) {
+        return Object.prototype.hasOwnProperty.call(obj, prop);
+    }
+
+    function isFeasiblePreferred(pred, branch) {
+        var c = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not()), tmp;
+
+        solution = combine($7.inputs, solution);
+        if (solution) {
+            var concrete = c.substitute(solution);
+            if (concrete === SymbolicBool.true) {
+                concrete = true;
+                return solution;
+            } else if (concrete === SymbolicBool.false) {
+                concrete = false;
+                return null;
+            }
+            if (isSymbolic(concrete)) {
+                tmp = solver.generateInputs(concrete);
+                if (tmp) {
+                    return (solution = combine(solution, tmp));
+                } else {
+                    return null;
+                }
+            } else {
+                throw new Error("Not reachable");
+            }
+        }
+//        else {
+//            tmp = solver.generateInputs(c);
+//            if (tmp) {
+//                solution = combine($7.inputs, tmp);
+//                return solution;
+//            } else {
+//                return null;
+//            }
+//        }
+    }
+
     function isFeasible(pred, branch) {
         var c = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
         return solver.generateInputs(c);
     }
 
     function generateInputs() {
-        var elem, fs = require('fs');
+        var elem;
 
         while(pathIndex.length > 0) {
             elem = pathIndex.pop();
             if (!elem.done) {
-                pathIndex.push({done: !elem.done, branch: 1});
+                pathIndex.push({done: true, branch: !elem.branch, solution: elem.solution});
                 break;
             }
         }
@@ -162,14 +217,12 @@
 
         fs.writeFileSync(PATH_FILE_NAME,JSON.stringify(pathIndex),"utf8");
 
-        var solution = solver.generateInputs(pathConstraint);
-        if (solution) {
-            solver.writeInputs(solution, []);
-            return solution;
-        } else {
-            return null;
+        if (!solution) {
+            solution = solver.generateInputs(pathConstraint);
         }
-
+        solution = combine($7.inputs, solution);
+        solver.writeInputs(solution, []);
+        return pathIndex.length > 0;
     }
 
     sandbox.addAxiom = addAxiom;
@@ -180,6 +233,7 @@
     sandbox.getNext = getNext;
     sandbox.setNext = setNext;
     sandbox.isFeasible = isFeasible;
+    sandbox.isFeasiblePreferred = isFeasiblePreferred;
     sandbox.generateInputs = generateInputs;
 
 }(module.exports));

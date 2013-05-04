@@ -159,7 +159,7 @@
         console.log("Warning: concretizing a symbolic value "+val);
 
         var concrete;
-        var solution = pc.isFeasible(SymbolicBool.true, 1);
+        var solution = pc.isFeasiblePreferred(SymbolicBool.true, true);
         if (solution === null) {
             throw new Error("Current path constraint must have a solution");
         } else {
@@ -827,20 +827,25 @@
 
 
     function branch(val) {
-        var v, ret;
+        var v, ret, tmp;
+        val = makePredicate(val);
         if ((v = pc.getNext()) !== undefined) {
-            takeBranch(val, ret = v.branch);
+            pc.addAxiom(val, ret = v.branch);
         } else {
-            if (isFeasible(val, 0)) {
-                if (isFeasible(val, 1)) {
-                    pc.setNext({done:false, branch:0});
+            if (pc.isFeasiblePreferred(val, false)) {
+                if (tmp = pc.isFeasible(val, true)) {
+                    pc.setNext({done:false, branch:false, solution: tmp});
                 } else {
-                    pc.setNext({done:true, branch:0});
+                    pc.setNext({done:true, branch:false, solution: tmp});
                 }
-                takeBranch(val, ret = 0);
-            } else if (isFeasible(val, 1)) {
-                pc.setNext({done:true, branch:1});
-                takeBranch(val, ret = 1);
+                pc.addAxiom(val, ret = false);
+            } else if (pc.isFeasiblePreferred(val, true)) {
+                if (tmp = pc.isFeasible(val, false)) {
+                    pc.setNext({done:false, branch:true, solution: tmp});
+                } else {
+                    pc.setNext({done:true, branch:true, solution: tmp});
+                }
+                pc.addAxiom(val, ret = true);
             } else {
                 throw new Error("Both branches are not feasible.  This is not possible.")
             }

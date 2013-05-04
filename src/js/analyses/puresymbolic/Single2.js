@@ -862,12 +862,10 @@
 
     function C1(iid, left) {
         switchLeft = left;
-        return 1;
+        return true;
     }
 
     function C2(iid, left) {
-        var ret;
-
         left = B(iid, "===", switchLeft, left);
 
         if (isSymbolic(left)) {

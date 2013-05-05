@@ -158,19 +158,7 @@
 
         console.log("Warning: concretizing a symbolic value "+val);
 
-        var concrete;
-        var solution = pc.isFeasiblePreferred(SymbolicBool.true, true);
-        if (solution === null) {
-            throw new Error("Current path constraint must have a solution");
-        } else {
-            concrete = simplify(solution, val);
-        }
-
-        if (isSymbolic(concrete)) {
-            throw new Error("Failed to concretize the symbolic value "+val+
-                " with path constraint "+pc.getPC());
-        }
-
+        var concrete = pc.makeConcrete(val, true);
         if (typeof concrete === 'boolean') {
             pc.addAxiom(val);
         } else if (isSymbolicNumber(val)) {
@@ -795,52 +783,21 @@
         return result_c;
     }
 
-    function generateInput(val, branch) {
-        var pred = makePredicate(val);
-        var ret = new SymbolicBool("&&", pc.getPC(), branch?pred:pred.not());
-        var solution = solver.generateInputs(ret);
-        if (solution) {
-            solver.writeInputs(getFullSolution(solution), branchIndex.getCurrentIndex(branch));
-            return solution;
-        } else {
-            return null;
-        }
-    }
-
-    function takeBranch(val, branch) {
-        if (isSymbolic(val)) {
-            var pred = makePredicate(val);
-            pc.addAxiom(pred, branch);
-        } else {
-            throw new Error("val must be symbolic");
-        }
-    }
-
-    function isFeasible(val, branch) {
-        if (isSymbolic(val)) {
-            var pred = makePredicate(val);
-            return !!pc.isFeasible(pred, branch);
-        } else {
-            throw new Error("val must be symbolic");
-        }
-    }
-
-
     function branch(val) {
         var v, ret, tmp;
         val = makePredicate(val);
         if ((v = pc.getNext()) !== undefined) {
             pc.addAxiom(val, ret = v.branch);
         } else {
-            if (pc.isFeasiblePreferred(val, false)) {
-                if (tmp = pc.isFeasible(val, true)) {
+            if (pc.makeConcrete(val, false)) {
+                if (tmp = pc.getSolution(val, true)) {
                     pc.setNext({done:false, branch:false, solution: tmp});
                 } else {
                     pc.setNext({done:true, branch:false, solution: tmp});
                 }
                 pc.addAxiom(val, ret = false);
-            } else if (pc.isFeasiblePreferred(val, true)) {
-                if (tmp = pc.isFeasible(val, false)) {
+            } else if (pc.makeConcrete(val, true)) {
+                if (tmp = pc.getSolution(val, false)) {
                     pc.setNext({done:false, branch:true, solution: tmp});
                 } else {
                     pc.setNext({done:true, branch:true, solution: tmp});

@@ -143,6 +143,25 @@
         }
     }
 
+    function updateSolution() {
+        solution = combine($7.inputs, solution);
+        var concrete = pathConstraint.substitute(solution);
+        if (concrete === SymbolicBool.false) {
+            concrete = pathConstraint;
+        }
+        if (concrete === SymbolicBool.true) {
+            return;
+        } else if (isSymbolic(concrete)) {
+            var tmp = solver.generateInputs(concrete);
+            if (tmp) {
+                solution = combine(solution, tmp);
+            } else {
+                throw new Error("Not reachable");
+            }
+        }
+
+    }
+
     function combine(oldInputs, newInputs) {
         var tmp = {};
         for (var key in oldInputs) {
@@ -162,42 +181,24 @@
         return Object.prototype.hasOwnProperty.call(obj, prop);
     }
 
-    function isFeasiblePreferred(pred, branch) {
-        var c = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not()), tmp;
-
-        solution = combine($7.inputs, solution);
-        if (solution) {
-            var concrete = c.substitute(solution);
-            if (concrete === SymbolicBool.true) {
-                concrete = true;
-                return solution;
-            } else if (concrete === SymbolicBool.false) {
-                concrete = false;
-                return null;
-            }
-            if (isSymbolic(concrete)) {
-                tmp = solver.generateInputs(concrete);
-                if (tmp) {
-                    return (solution = combine(solution, tmp));
-                } else {
-                    return null;
-                }
-            } else {
-                throw new Error("Not reachable");
-            }
+    function makeConcrete(pred, branch) {
+        updateSolution();
+        var c = branch?pred:pred.not();
+//        solution = combine($7.inputs, solution);
+        var concrete = c.substitute(solution);
+        if (concrete === SymbolicBool.true) {
+            return true;
+        } else if (concrete === SymbolicBool.false) {
+            return false;
         }
-//        else {
-//            tmp = solver.generateInputs(c);
-//            if (tmp) {
-//                solution = combine($7.inputs, tmp);
-//                return solution;
-//            } else {
-//                return null;
-//            }
-//        }
+        if (isSymbolic(concrete)) {
+            throw new Error("Not reachable");
+        } else {
+            return concrete;
+        }
     }
 
-    function isFeasible(pred, branch) {
+    function getSolution(pred, branch) {
         var c = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
         return solver.generateInputs(c);
     }
@@ -218,9 +219,8 @@
         fs.writeFileSync(PATH_FILE_NAME,JSON.stringify(pathIndex),"utf8");
 
         if (!solution) {
-            solution = solver.generateInputs(pathConstraint);
+            updateSolution();
         }
-        solution = combine($7.inputs, solution);
         solver.writeInputs(solution, []);
         return pathIndex.length > 0;
     }
@@ -232,8 +232,8 @@
     sandbox.getIndex = getIndex;
     sandbox.getNext = getNext;
     sandbox.setNext = setNext;
-    sandbox.isFeasible = isFeasible;
-    sandbox.isFeasiblePreferred = isFeasiblePreferred;
+    sandbox.getSolution = getSolution;
+    sandbox.makeConcrete = makeConcrete;
     sandbox.generateInputs = generateInputs;
 
 }(module.exports));

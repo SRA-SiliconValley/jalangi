@@ -33,9 +33,9 @@
         return function() {
             var len = arguments.length;
             for (var i = 0; i<len; i++) {
-                arguments[i] = concretize(arguments[i]);
+                arguments[i] = pc.concretize(arguments[i]);
             }
-            return f.apply(concretize(this),arguments);
+            return f.apply(pc.concretize(this),arguments);
         }
     }
 
@@ -43,7 +43,7 @@
         return function() {
             var len = arguments.length;
             for (var i = 0; i<len; i++) {
-                arguments[i] = concretize(arguments[i]);
+                arguments[i] = pc.concretize(arguments[i]);
             }
             return f.apply(this, arguments);
         }
@@ -140,36 +140,6 @@
         return pc;
     }
 
-
-    function simplify(solution, val) {
-        var concrete = val.substitute(solution);
-        if (concrete === SymbolicBool.true) {
-            concrete = true;
-        } else if (concrete === SymbolicBool.false) {
-            concrete = false;
-        }
-        return concrete;
-    }
-
-    function concretize(val) {
-        if (!isSymbolic(val)) {
-            return val;
-        }
-
-        console.log("Warning: concretizing a symbolic value "+val);
-
-        var concrete = pc.makeConcrete(val, true);
-        if (typeof concrete === 'boolean') {
-            pc.addAxiom(val);
-        } else if (isSymbolicNumber(val)) {
-            pc.addAxiom(val.subtractLong(concrete).setop("=="));
-        } else if (isSymbolicString(val)) {
-            pc.addAxiom(new SymbolicStringPredicate("==", val, concrete));
-        } else {
-            throw new Error("Unknown symbolic type "+val+ " with path constraint "+ pc.getPC());
-        }
-        return concrete;
-    }
 
     function isSymbolic(val) {
         if (val === undefined || val === null) {
@@ -358,7 +328,7 @@
 
     function T(iid, val, type) {
         if (type === N_LOG_FUNCTION_LIT) {
-            concretize(val)[SPECIAL_PROP2] = true;
+            pc.concretize(val)[SPECIAL_PROP2] = true;
         }
         return val;
     }
@@ -390,7 +360,7 @@
     }
 
     function G(iid, base, offset) {
-        offset = concretize(offset);
+        offset = pc.concretize(offset);
 
         if (offset === SPECIAL_PROP2) {
             return undefined;
@@ -417,19 +387,19 @@
 
         }
 
-        base = concretize(base);
+        base = pc.concretize(base);
 
         return base[offset];
     }
 
     function P(iid, base, offset, val) {
-        offset = concretize(offset);
+        offset = pc.concretize(offset);
 
         if (offset === SPECIAL_PROP2) {
             return undefined;
         }
 
-        base = concretize(base);
+        base = pc.concretize(base);
 
         base[offset] = val;
         return val;
@@ -595,7 +565,7 @@
                 right = symbolicStringToInt(right);
             }
             if (isSymbolicNumber(left) && isSymbolicNumber(right)) {
-                left = concretize(left);
+                left = pc.concretize(left);
                 ret = right.multiply(left);
             } else if (isSymbolicNumber(left) && typeof right === 'number') {
                 ret = left.multiply(right);
@@ -604,7 +574,7 @@
             }
         } else if (op === "regexin") {
             if (isSymbolicString(left)) {
-                ret = new SymbolicStringPredicate("regexin",left, concretize(right));
+                ret = new SymbolicStringPredicate("regexin",left, pc.concretize(right));
             }
         } else if (op === '|') {
             if (isSymbolicString(left) && typeof right === 'number' && right === 0) {
@@ -625,8 +595,8 @@
             return result_c;
         }
 
-        left_c = concretize(left);
-        right_c = concretize(right);
+        left_c = pc.concretize(left);
+        right_c = pc.concretize(right);
 
         switch(op) {
             case "+":
@@ -757,7 +727,7 @@
             return result_c;
         }
 
-        left_c = concretize(left);
+        left_c = pc.concretize(left);
 
         switch(op) {
             case "+":
@@ -783,32 +753,6 @@
         return result_c;
     }
 
-    function branch(val) {
-        var v, ret, tmp;
-        val = makePredicate(val);
-        if ((v = pc.getNext()) !== undefined) {
-            pc.addAxiom(val, ret = v.branch);
-        } else {
-            if (pc.makeConcrete(val, false)) {
-                if (tmp = pc.getSolution(val, true)) {
-                    pc.setNext({done:false, branch:false, solution: tmp});
-                } else {
-                    pc.setNext({done:true, branch:false, solution: tmp});
-                }
-                pc.addAxiom(val, ret = false);
-            } else if (pc.makeConcrete(val, true)) {
-                if (tmp = pc.getSolution(val, false)) {
-                    pc.setNext({done:false, branch:true, solution: tmp});
-                } else {
-                    pc.setNext({done:true, branch:true, solution: tmp});
-                }
-                pc.addAxiom(val, ret = true);
-            } else {
-                throw new Error("Both branches are not feasible.  This is not possible.")
-            }
-        }
-        return ret;
-    }
 
     var lastVal;
     var switchLeft;
@@ -826,7 +770,7 @@
         left = B(iid, "===", switchLeft, left);
 
         if (isSymbolic(left)) {
-            return branch(left);
+            return pc.branch(makePredicate(left));
         } else {
             return left;
         }
@@ -837,7 +781,7 @@
 
         lastVal = left;
         if (isSymbolic(left)) {
-            return branch(left);
+            return pc.branch(makePredicate(left));
         } else {
             return left;
         }

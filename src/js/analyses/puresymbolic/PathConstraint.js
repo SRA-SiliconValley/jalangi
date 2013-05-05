@@ -17,6 +17,9 @@
 // Author: Koushik Sen
 
 (function(sandbox) {
+    var SymbolicLinear = require('./../concolic/SymbolicLinear');
+    var SymbolicStringExpression = require('./SymbolicStringExpression');
+    var SymbolicStringPredicate = require('./SymbolicStringPredicate');
     var SymbolicBool = require('./../concolic/SymbolicBool');
     var Symbolic = require('./../concolic/Symbolic');
     var SolverEngine = require('./SolverEngine');
@@ -43,6 +46,13 @@
     pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack});
 
 
+    function isSymbolicString(s) {
+        return s instanceof SymbolicStringExpression;
+    }
+
+    function isSymbolicNumber(s) {
+        return s instanceof SymbolicLinear;
+    }
 
 
     function isSymbolic(val) {
@@ -67,6 +77,10 @@
 
     function getIndex() {
         return pathIndex;
+    }
+
+    function setIndex(idx) {
+        pathIndex = idx;
     }
 
     function getNext() {
@@ -203,6 +217,53 @@
         return solver.generateInputs(c);
     }
 
+    function branch(val) {
+        var v, ret, tmp;
+        if ((v = getNext()) !== undefined) {
+            addAxiom(val, ret = v.branch);
+        } else {
+            if (makeConcrete(val, false)) {
+                if (tmp = getSolution(val, true)) {
+                    setNext({done:false, branch:false, solution: tmp});
+                } else {
+                    setNext({done:true, branch:false, solution: tmp});
+                }
+                addAxiom(val, ret = false);
+            } else if (makeConcrete(val, true)) {
+                if (tmp = getSolution(val, false)) {
+                    setNext({done:false, branch:true, solution: tmp});
+                } else {
+                    setNext({done:true, branch:true, solution: tmp});
+                }
+                addAxiom(val, ret = true);
+            } else {
+                throw new Error("Both branches are not feasible.  This is not possible.")
+            }
+        }
+        return ret;
+    }
+
+    function concretize(val) {
+        if (!isSymbolic(val)) {
+            return val;
+        }
+
+        console.log("Warning: concretizing a symbolic value "+val);
+
+        var concrete = makeConcrete(val, true);
+        if (typeof concrete === 'boolean') {
+            addAxiom(val);
+        } else if (isSymbolicNumber(val)) {
+            addAxiom(val.subtractLong(concrete).setop("=="));
+        } else if (isSymbolicString(val)) {
+            addAxiom(new SymbolicStringPredicate("==", val, concrete));
+        } else {
+            throw new Error("Unknown symbolic type "+val+ " with path constraint "+ getPC());
+        }
+        return concrete;
+    }
+
+
     function generateInputs() {
         var elem;
 
@@ -230,10 +291,9 @@
     sandbox.pushPC = pushPC;
     sandbox.getPC = getPC;
     sandbox.getIndex = getIndex;
-    sandbox.getNext = getNext;
-    sandbox.setNext = setNext;
-    sandbox.getSolution = getSolution;
-    sandbox.makeConcrete = makeConcrete;
+    sandbox.setIndex = setIndex;
+    sandbox.concretize = concretize;
+    sandbox.branch = branch;
     sandbox.generateInputs = generateInputs;
 
 }(module.exports));

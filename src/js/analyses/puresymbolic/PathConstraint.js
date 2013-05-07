@@ -62,10 +62,10 @@
         return val.type === Symbolic;
     }
 
-    function pushPC(pc) {
+    function pushPC(pc, pi) {
         pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack});
         pathConstraint = pc;
-        pathIndex = [];
+        pathIndex = pi;
         index = 0;
         formulaStack = [];
         formulaStack.count = 0;

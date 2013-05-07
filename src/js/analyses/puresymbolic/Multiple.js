@@ -18,7 +18,7 @@
 
 (function(sandbox) {
     var SymbolicBool = require('./../concolic/SymbolicBool');
-    var single = require('./Single');
+    var single = require('./Single2');
     var PredValues = require('./PredValues');
     var SolverEngine = require('./SolverEngine');
     var solver = new SolverEngine();
@@ -151,7 +151,7 @@
                 pred = and(pc.getPC(), pred);
 
                 if (solver.generateInputs(pred)) {
-                    pc.pushPC(pred);
+                    pc.pushPC(pred, []);
                     if (op !== undefined) {
                         value = single.B(iid, op, left.values[i].value, right.values[i].value);
                     } else {
@@ -173,7 +173,7 @@
             pred = and(pc.getPC(), left.values[i].pred);
 
             if (solver.generateInputs(pred)) {
-                pc.pushPC(pred);
+                pc.pushPC(pred, []);
                 value = single.U(iid, op, left.values[i].value);
                 ret = addValue(ret, pc.getPC(), value);
                 pc.popPC();
@@ -199,7 +199,7 @@
                 if (solver.generateInputs(pred)) {
                     var base = left.values[i].value;
                     var offset = right.values[i].value;
-                    pc.pushPC(pred);
+                    pc.pushPC(pred, []);
                     var oldValue = single.G(iid, base, offset);
                     single.P(iid, base, offset, update(oldValue, val));
                     pc.popPC();
@@ -213,22 +213,27 @@
         base = makePredValues(SymbolicBool.true, base);
         f = makePredValues(SymbolicBool.true, f);
 
-        var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret;
+        var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret, pathIndex;
         for (i=0; i<leni; ++i) {
             for (j=0; j<lenj; ++j) {
                 pred = and(base.values[i].pred, f.values[i].pred);
                 pred = and(pc.getPC(), pred);
 
                 if (solver.generateInputs(pred)) {
-                    pc.pushPC(pred);
-                    value = single.invokeFun(iid, base.values[i].value, f.values[i].value, args, isConstructor);
-                    ret = addValue(ret, pc.getPC(), value);
-                    pc.popPC();
+                    pathIndex = [];
+                    do {
+                        pc.pushPC(pred, pathIndex);
+                        value = single.invokeFun(iid, base.values[i].value, f.values[i].value, args, isConstructor);
+                        ret = addValue(ret, pc.getPC(), value);
+                        var ret2 = pc.generateInputs();
+                        pathIndex = pc.getIndex();
+                        pc.popPC();
+                    } while(ret2);
                 }
             }
         }
         return ret;
-    };
+    }
 
 
     function endExecution() {

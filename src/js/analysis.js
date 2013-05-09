@@ -566,7 +566,7 @@ if (process && process.env.JALANGI_MODE === 'symbolic') {
         return val;
     }
 
-    function W(iid, name, val) {
+    function W(iid, name, val, lhs) {
         if (sEngine && sEngine.writePre) {
             sEngine.writePre(iid, name, val);
         }

@@ -26,8 +26,8 @@ var y = $7.readInput(0);
 
 if ( 2*x === y) {
     if (x > y + 10) {
-        console.log("at 1 a = "+a+" b = "+b);
+        console.log("Hello");
     }
 } else {
-    console.log("at 3 a = "+a+" b = "+b);
+    console.log("else");
 }

@@ -436,10 +436,29 @@
     }
 
 
-    function wrapWrite(node, name, val) {
+    function wrapWrite(node, name, val, lhs) {
         printIidToLoc(node);
         var ret = replaceInExpr(
-            logWriteFunName+"("+RP+"1, "+RP+"2, "+RP+"3)",
+            logWriteFunName+"("+RP+"1, "+RP+"2, "+RP+"3, "+RP+"4)",
+            getIid(),
+            name,
+            val,
+            lhs
+        );
+        transferLoc(ret, node);
+        return ret;
+    }
+
+    function wrapWriteWithUndefinedCheck(node, name, val, lhs) {
+        printIidToLoc(node);
+//        var ret2 = replaceInExpr(
+//            "("+logIFunName+"(typeof ("+name+") === 'undefined'? "+RP+"2 : "+RP+"3))",
+//            createIdentifierAst(name),
+//            wrapRead(node, createLiteralAst(name),createIdentifierAst("undefined")),
+//            wrapRead(node, createLiteralAst(name),createIdentifierAst(name), true)
+//        );
+        var ret = replaceInExpr(
+            logWriteFunName+"("+RP+"1, "+RP+"2, "+RP+"3, "+logIFunName+"(typeof("+lhs.name+")==='undefined'?undefined:"+lhs.name+"))",
             getIid(),
             name,
             val
@@ -758,8 +777,13 @@
     function instrumentStore(node) {
         var ret;
         if (node.left.type === 'Identifier') {
-            ret = wrapWrite(node.right, createLiteralAst(node.left.name), node.right);
-            node.right = ret;
+            if (scope.hasVar(node.left.name)) {
+                ret = wrapWrite(node.right, createLiteralAst(node.left.name), node.right, node.left);
+            } else {
+                ret = wrapWriteWithUndefinedCheck(node.right, createLiteralAst(node.left.name), node.right, node.left);
+
+        }
+        node.right = ret;
             return node;
         } else {
             ret = wrapPutField(node, node.left.object, getPropertyAsAst(node.left), node.right);
@@ -771,7 +795,14 @@
         if (node.left.type === 'Identifier') {
             var ret = instrumentLoad(node.left);
             var tmp1 = wrapRHSOfModStore(node.right, ret, node.right, node.operator.substring(0,node.operator.length-1));
-            var tmp2 = wrapWrite(node.right, createLiteralAst(node.left.name),tmp1);
+
+            var tmp2;
+            if (scope.hasVar(node.left.name)) {
+                tmp2= wrapWrite(node.right, createLiteralAst(node.left.name),tmp1, node.left);
+            } else {
+                tmp2= wrapWriteWithUndefinedCheck(node.right, createLiteralAst(node.left.name),tmp1, node.left);
+
+            }
             tmp2 = wrapLHSOfModStore(node, node.left, tmp2);
             return tmp2;
         } else {
@@ -881,7 +912,7 @@
         "VariableDeclaration": function (node) {
             var declarations = MAP(node.declarations, function(def){
                 if (def.init !== null) {
-                    var init = wrapWrite(def.init, createLiteralAst(def.id.name), def.init);
+                    var init = wrapWrite(def.init, createLiteralAst(def.id.name), def.init, def.id);
                     def.init = init;
                 }
                 return def;

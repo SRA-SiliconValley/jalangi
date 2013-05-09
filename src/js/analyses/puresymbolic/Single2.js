@@ -342,7 +342,7 @@
         return val;
     }
 
-    function W(iid, name, val) {
+    function W(iid, name, val, lhs) {
         return val;
     }
 

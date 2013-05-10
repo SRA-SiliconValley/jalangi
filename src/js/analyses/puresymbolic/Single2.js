@@ -814,6 +814,8 @@
     sandbox.Se = Se; // Script enter
     sandbox.Sr = Sr; // Script return
 
+
+    sandbox.invokeFun = invokeFun;
     sandbox.makeSymbolic = makeSymbolic;
     sandbox.addAxiom = pc.addAxiom;
     sandbox.endExecution = endExecution;

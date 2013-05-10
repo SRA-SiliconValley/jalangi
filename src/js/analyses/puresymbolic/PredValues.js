@@ -24,7 +24,7 @@
     var solver = new SolverEngine();
 
     function PredValues(pred, value) {
-        if (!(this instanceof pred)) {
+        if (!(this instanceof PredValues)) {
             return new PredValues(pred, value)
         }
 

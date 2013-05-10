@@ -25,6 +25,8 @@ if (typeof $7 === 'undefined') {
     var auxInputCount = 0;
     var inputCount = 0;
     var currentSolutionIndex = [], currentSolution;
+    var PredValues = require('./analyses/puresymbolic/PredValues');
+
 
     function setInput(key, val) {
         inputs[key]= val;
@@ -76,6 +78,10 @@ if (typeof $7 === 'undefined') {
 
     function readInput(concrete, isAux, symbolOptional) {
         var ret, val;
+
+        if (concrete instanceof PredValues) {
+            concrete = concrete.values[0].value;
+        }
 
         var idx;
         if (symbolOptional) {

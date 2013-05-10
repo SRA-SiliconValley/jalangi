@@ -106,7 +106,9 @@
         }
 
         function invokeSMTSolver(newInputs, mode) {
+            //console.log("Invoking cvc3 ...");
             execSync(require('path').resolve(__dirname)+"/../../../../thirdparty/cvc3/bin/cvc3 < "+FORMULA_FILE_NAME+mode+" > "+SOLUTION_FILE_NAME+mode);
+            //console.log("done");
             return parseInputs(newInputs, mode);
         }
 

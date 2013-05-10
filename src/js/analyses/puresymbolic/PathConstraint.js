@@ -43,7 +43,7 @@
     var formulaStack = [];
     formulaStack.count = 0;
     var pcStack = [];
-    pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack});
+//    pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack});
 
 
     function isSymbolicString(s) {
@@ -63,12 +63,23 @@
     }
 
     function pushPC(pc, pi) {
-        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack});
+        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution});
         pathConstraint = pc;
         pathIndex = pi;
         index = 0;
         formulaStack = [];
         formulaStack.count = 0;
+        solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
+    }
+
+    function popPC() {
+        pathConstraint = pcStack[pcStack.length-1].pc;
+        pathIndex = pcStack[pcStack.length-1].path;
+        index = pcStack[pcStack.length-1].index;
+        formulaStack = pcStack[pcStack.length-1].formulaStack;
+        solution = pcStack[pcStack.length-1].solution;
+
+        pcStack.pop();
     }
 
     function getPC() {
@@ -93,14 +104,6 @@
 
     function setNext(elem) {
         pathIndex[index++] = elem;
-    }
-
-    function popPC() {
-        pcStack.pop();
-        pathConstraint = pcStack[pcStack.length-1].pc;
-        pathIndex = pcStack[pcStack.length-1].path;
-        index = pcStack[pcStack.length-1].index;
-        formulaStack = pcStack[pcStack.length-1].formulaStack;
     }
 
     function addAxiom(val, branch) {
@@ -243,6 +246,38 @@
         return ret;
     }
 
+
+    function branchBoth(falseBranch, trueBranch) {
+        var v, ret, tmp;
+        if ((v = getNext()) !== undefined) {
+            ret = v.branch;
+            addAxiom(ret?trueBranch:falseBranch);
+        } else {
+            if (makeConcrete(falseBranch, true)) {
+                if (tmp = getSolution(trueBranch, true)) {
+                    setNext({done:false, branch:false, solution: tmp});
+                    console.log("Solution "+JSON.stringify(tmp));
+                } else {
+                    setNext({done:true, branch:false, solution: tmp});
+                }
+                ret = false;
+                addAxiom(falseBranch, true);
+            } else if (makeConcrete(trueBranch, true)) {
+                if (tmp = getSolution(falseBranch, true)) {
+                    setNext({done:false, branch:true, solution: tmp});
+                    console.log("Solution "+JSON.stringify(tmp));
+                } else {
+                    setNext({done:true, branch:true, solution: tmp});
+                }
+                ret = true;
+                addAxiom(trueBranch, true);
+            } else {
+                throw new Error("Both branches are not feasible.  This is not possible.")
+            }
+        }
+        return ret;
+    }
+
     function concretize(val) {
         if (!isSymbolic(val)) {
             return val;
@@ -264,7 +299,7 @@
     }
 
 
-    function generateInputs() {
+    function generateInputs(noWrite) {
         var elem;
 
         while(pathIndex.length > 0) {
@@ -282,7 +317,8 @@
         if (!solution) {
             updateSolution();
         }
-        solver.writeInputs(solution, []);
+        if (!noWrite)
+            solver.writeInputs(solution, []);
         return pathIndex.length > 0;
     }
 
@@ -294,6 +330,7 @@
     sandbox.setIndex = setIndex;
     sandbox.concretize = concretize;
     sandbox.branch = branch;
+    sandbox.branchBoth = branchBoth;
     sandbox.generateInputs = generateInputs;
 
 }(module.exports));

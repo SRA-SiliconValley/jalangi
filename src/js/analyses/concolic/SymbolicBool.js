@@ -67,7 +67,8 @@
                 this.op = SymbolicBool.FALSE;
                 break;
             default:
-                throw new Error("new SymbolicBool(\""+op+"\","+left+","+right+") is an invalid call due to unknown op "+op);
+                this.op = SymbolicBool.LITERAL;
+                this.left = op;
         }
     }
 
@@ -95,6 +96,7 @@
     SymbolicBool.XOR = 5;
     SymbolicBool.TRUE = 6;
     SymbolicBool.FALSE = 7;
+    SymbolicBool.LITERAL = 8;
 
     SymbolicBool.prototype = {
         constructor: SymbolicBool,
@@ -154,6 +156,8 @@
                     } else {
                         return new SymbolicBool("||", left, right);
                     }
+                default:
+                    return this;
             }
         },
 
@@ -177,6 +181,8 @@
                     return "("+this.left+" && " + this.right+")";
                 case SymbolicBool.OR:
                     return "("+this.left+" || " + this.right+")";
+                case SymbolicBool.LITERAL:
+                    return "b"+this.left;
             }
         },
 

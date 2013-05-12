@@ -20,10 +20,11 @@ if (typeof window === "undefined") {
     require('../../src/js/InputManager');
     require(process.cwd()+'/inputs');
 }
-
 var a = $7.readInput(1);
 var b = $7.readInput(1);
 var c = $7.readInput(1);
+
+function main() {
 
 console.log("a , b, c = "+a +", "+b+", "+c);
 
@@ -47,3 +48,7 @@ if (x + y + z === 3) {
 } else {
     console.log("Sum is not 3");
 }
+}
+
+main();
+

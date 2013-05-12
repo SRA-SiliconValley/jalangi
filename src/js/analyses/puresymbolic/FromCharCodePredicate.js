@@ -41,7 +41,7 @@
         constructor: FromCharCodePredicate,
 
         not: function() {
-            throw new Error("Not of FromCharCodePredicate is illegal");
+            return new SymbolicBool("!", this);
         },
 
         substitute : function(assignments) {

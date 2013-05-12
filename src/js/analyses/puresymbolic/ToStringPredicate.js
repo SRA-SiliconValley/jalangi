@@ -41,7 +41,7 @@
         constructor: ToStringPredicate,
 
         not: function() {
-            throw new Error("Not of ToStringPredicate is illegal");
+            return new SymbolicBool("!", this);
         },
 
         substitute : function(assignments) {

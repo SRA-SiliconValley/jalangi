@@ -23,11 +23,12 @@
     var SymbolicBool = require('./../concolic/SymbolicBool');
     var Symbolic = require('./../concolic/Symbolic');
     var SolverEngine = require('./SolverEngine');
+    var BDD = require('./BDD');
     var solver = new SolverEngine();
     var PATH_FILE_NAME = 'jalangi_path';
     var fs = require('fs');
 
-    var pathConstraint = SymbolicBool.true;
+    var pathConstraint = BDD.one;
     var pathIndex;
     try {
         pathIndex = JSON.parse(fs.readFileSync(PATH_FILE_NAME,"utf8"));
@@ -142,29 +143,55 @@
         } else if (val === 'ignore') {
             formulaStack.pop();
         } else {
-            if (!isSymbolic(val)) {
+            if (branch !== undefined) {
+                if (!(val instanceof BDD.Node)) {
+                    throw new Error(val+" must of type Node");
+                }
+                if (!branch){
+                    val = val.not();
+                }
+            } else if (!isSymbolic(val)) {
                 if (val) {
                     val = SymbolicBool.true;
                 } else {
                     val = SymbolicBool.false;
                 }
             }
-            if (branch !== undefined && !branch) {
-                val = val.not();
-            }
             formulaStack.push(val);
         }
 
         if (formulaStack.count===0 && formulaStack.length > 0 ) {
-            pathConstraint = new SymbolicBool("&&", pathConstraint, formulaStack.pop());
+            var tmp = formulaStack.pop();
+            if (!(tmp instanceof BDD.Node)) {
+                tmp = getBDDFromFormula(tmp);
+            }
+            pathConstraint = pathConstraint.and(tmp);
         }
+    }
+
+    var literalToFormulas = [];
+
+    function getBDDFromFormula(formula) {
+        if (formula === SymbolicBool.true) {
+            return BDD.one;
+        }
+        if (formula === SymbolicBool.false) {
+            return BDD.zero;
+        }
+        literalToFormulas.push(formula);
+        return BDD.build(literalToFormulas.length);
+    }
+
+    function getFormulaFromBDD(bdd) {
+        return BDD.getFormula(bdd, literalToFormulas);
     }
 
     function updateSolution() {
         solution = combine($7.inputs, solution);
-        var concrete = pathConstraint.substitute(solution);
+        var f = getFormulaFromBDD(pathConstraint);
+        var concrete = f.substitute(solution);
         if (concrete === SymbolicBool.false) {
-            concrete = pathConstraint;
+            concrete = f;
         }
         if (concrete === SymbolicBool.true) {
             return;
@@ -201,6 +228,9 @@
     function makeConcrete(pred, branch) {
         updateSolution();
         var c = branch?pred:pred.not();
+        if ((c instanceof BDD.Node)) {
+            c = getFormulaFromBDD(c);
+        }
 //        solution = combine($7.inputs, solution);
         var concrete = c.substitute(solution);
         if (concrete === SymbolicBool.true) {
@@ -216,12 +246,16 @@
     }
 
     function getSolution(pred, branch) {
-        var c = new SymbolicBool("&&", pathConstraint, branch?pred:pred.not());
+        var c = pathConstraint.and(branch?pred:pred.not());
+        c = getFormulaFromBDD(c);
         return solver.generateInputs(c);
     }
 
     function branch(val) {
         var v, ret, tmp;
+        if (!(val instanceof BDD.Node)) {
+            val = getBDDFromFormula(val);
+        }
         if ((v = getNext()) !== undefined) {
             addAxiom(val, ret = v.branch);
         } else {
@@ -251,7 +285,7 @@
         var v, ret, tmp;
         if ((v = getNext()) !== undefined) {
             ret = v.branch;
-            addAxiom(ret?trueBranch:falseBranch);
+            addAxiom(ret?trueBranch:falseBranch, true);
         } else {
             if (makeConcrete(falseBranch, true)) {
                 if (tmp = getSolution(trueBranch, true)) {
@@ -332,6 +366,8 @@
     sandbox.branch = branch;
     sandbox.branchBoth = branchBoth;
     sandbox.generateInputs = generateInputs;
+    sandbox.getFormulaFromBDD = getFormulaFromBDD;
+    sandbox.getBDDFromFormula = getBDDFromFormula;
 
 }(module.exports));
 

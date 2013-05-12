@@ -17,11 +17,11 @@
 // Author: Koushik Sen
 
 (function(sandbox) {
-    var SymbolicBool = require('./../concolic/SymbolicBool');
     var single = require('./Single2');
     var PredValues = require('./PredValues');
-    var SolverEngine = require('./SolverEngine');
-    var solver = new SolverEngine();
+    var BDD = require('./BDD');
+    var SymbolicBool = require('./../concolic/SymbolicBool');
+
     var pc = single.getPC();
 
     function makePredValues(pred, value) {
@@ -31,16 +31,6 @@
         return value;
     }
 
-    function and(f1, f2) {
-        if (SymbolicBool.simpleImplies(f1, f2)) {
-            return f1;
-        } else if (SymbolicBool.simpleImplies(f2, f1)) {
-            return f2;
-        } else {
-            return new SymbolicBool("&&", f1, f2);
-        }
-    }
-
     function addValue(ret, pred, value) {
         var i, len, tPred;
 
@@ -48,8 +38,8 @@
             len = value.values.length;
 
             for (i=0; i<len; ++i) {
-                tPred = and(pred, value.values[i].pred);
-                if (solver.generateInputs(tPred)) {
+                tPred = pred.and(value.values[i].pred);
+                if (!tPred.isZero()) {
                     if (!ret) {
                         ret = new PredValues(tPred, value.values[i].value);
                     } else {
@@ -137,23 +127,23 @@
 
     function update(oldValue, newValue) {
         var ret;
-        oldValue = makePredValues(SymbolicBool.true, oldValue);
+        oldValue = makePredValues(BDD.one, oldValue);
         newValue = makePredValues(pc.getPC(), newValue);
 
 
         var i, len, pred, notPc = pc.getPC().not();
         len = newValue.values.length;
         for (i=0; i<len; ++i) {
-            pred = and(newValue.values[i].pred, pc.getPC());
-            if (solver.generateInputs(pred)) {
+            pred = newValue.values[i].pred.and(pc.getPC());
+            if (!pred.isZero()) {
                 ret = addValue(ret, pred, newValue.values[i].value);
             }
         }
 
         len = oldValue.values.length;
         for (i=0; i<len; ++i) {
-            pred = and(notPc, oldValue.values[i].pred);
-            if (solver.generateInputs(pred)) {
+            pred = notPc.and(oldValue.values[i].pred);
+            if (!pred.isZero()) {
                 ret = addValue(ret, pred, oldValue.values[i].value);
             }
         }
@@ -162,16 +152,16 @@
 
 
     function B(iid, op, left, right) {
-        left = makePredValues(SymbolicBool.true, left);
-        right = makePredValues(SymbolicBool.true, right);
+        left = makePredValues(BDD.one, left);
+        right = makePredValues(BDD.one, right);
 
         var i, j, leni = left.values.length, lenj = right.values.length, pred, value, ret;
         for (i=0; i<leni; ++i) {
             for (j=0; j<lenj; ++j) {
-                pred = and(left.values[i].pred, right.values[j].pred);
-                pred = and(pc.getPC(), pred);
+                pred = left.values[i].pred.and(right.values[j].pred);
+                pred = pc.getPC().and(pred);
 
-                if (solver.generateInputs(pred)) {
+                if (!pred.isZero()) {
                     pc.pushPC(pred, []);
                     if (op !== undefined) {
                         value = single.B(iid, op, left.values[i].value, right.values[j].value);
@@ -187,13 +177,13 @@
     };
 
     function U(iid, op, left) {
-        left = makePredValues(SymbolicBool.true, left);
+        left = makePredValues(BDD.one, left);
 
         var i, leni = left.values.length, pred, value, ret;
         for (i=0; i<leni; ++i) {
-            pred = and(pc.getPC(), left.values[i].pred);
+            pred = pc.getPC().and(left.values[i].pred);
 
-            if (solver.generateInputs(pred)) {
+            if (!pred.isZero()) {
                 pc.pushPC(pred, []);
                 value = single.U(iid, op, left.values[i].value);
                 ret = addValue(ret, pc.getPC(), value);
@@ -208,16 +198,16 @@
     };
 
     function P(iid, left, right, val) {
-        left = makePredValues(SymbolicBool.true, left);
-        right = makePredValues(SymbolicBool.true, right);
+        left = makePredValues(BDD.one, left);
+        right = makePredValues(BDD.one, right);
 
         var i, j, leni = left.values.length, lenj = right.values.length, pred;
         for (i=0; i<leni; ++i) {
             for (j=0; j<lenj; ++j) {
-                pred = and(left.values[i].pred, right.values[i].pred);
-                pred = and(pc.getPC(), pred);
+                pred = left.values[i].pred.and(right.values[i].pred);
+                pred = pc.getPC().and(pred);
 
-                if (solver.generateInputs(pred)) {
+                if (!pred.isZero()) {
                     var base = left.values[i].value;
                     var offset = right.values[i].value;
                     pc.pushPC(pred, []);
@@ -231,16 +221,16 @@
 
 
     function invokeFun(iid, base, f, args, isConstructor) {
-        base = makePredValues(SymbolicBool.true, base);
-        f = makePredValues(SymbolicBool.true, f);
+        base = makePredValues(BDD.one, base);
+        f = makePredValues(BDD.one, f);
 
         var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret, pathIndex, ret2;
         for (i=0; i<leni; ++i) {
             for (j=0; j<lenj; ++j) {
-                pred = and(base.values[i].pred, f.values[i].pred);
-                pred = and(pc.getPC(), pred);
+                pred = base.values[i].pred.and(f.values[i].pred);
+                pred = pc.getPC().and(pred);
 
-                if (solver.generateInputs(pred)) {
+                if (!pred.isZero()) {
                     pathIndex = [];
                     var first = true;
                     do {
@@ -255,6 +245,9 @@
                             first = false;
                             ret2 = pc.generateInputs(true);
 
+                        }
+                        if (ret2) {
+                            console.log("Pause");
                         }
                         pathIndex = pc.getIndex();
                         pc.popPC();
@@ -318,23 +311,25 @@
     function C2(iid, left) {
         left = B(iid, "===", switchLeft, left);
 
-        var i, leni = left.values.length, pred1 = SymbolicBool.false, pred2 = SymbolicBool.false,value, ret;
+        var i, leni = left.values.length, pred1 = BDD.zero, pred2 = BDD.zero, ret;
         for (i=0; i<leni; ++i) {
-            pred1 = new SymbolicBool("||",pred1, and(left.values[i].pred, makePredicate(left.values[i].value)));
-            pred2 = new SymbolicBool("||",pred2, and(left.values[i].pred, makePredicate(left.values[i].value).not()));
+            ret = makePredicate(left.values[i].value);
+            ret = pc.getBDDFromFormula(ret);
+            pred1 = pred1.or(left.values[i].pred.and( ret));
+            pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
         return pc.branchBoth(pred2, pred1);
     }
 
     function C(iid, left) {
-        var ret;
-
         lastVal = left;
-        left = makePredValues(SymbolicBool.true, left);
-        var i, leni = left.values.length, pred1 = SymbolicBool.false, pred2 = SymbolicBool.false,value, ret;
+        left = makePredValues(BDD.one, left);
+        var i, leni = left.values.length, pred1 = BDD.zero, pred2 = BDD.zero, ret;
         for (i=0; i<leni; ++i) {
-            pred1 = new SymbolicBool("||",pred1, and(left.values[i].pred, makePredicate(left.values[i].value)));
-            pred2 = new SymbolicBool("||",pred2, and(left.values[i].pred, makePredicate(left.values[i].value).not()));
+            ret = makePredicate(left.values[i].value);
+            ret = pc.getBDDFromFormula(ret);
+            pred1 = pred1.or(left.values[i].pred.and( ret));
+            pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
         return pc.branchBoth(pred2, pred1);
     }

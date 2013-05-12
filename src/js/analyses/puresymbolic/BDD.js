@@ -115,6 +115,10 @@
         return BDD.not(this);
     };
 
+    Node.prototype.isZero = function() {
+        return this === BDD.zero;
+    };
+
     BDD.one = new Node(10000000, null, null, 1);
     BDD.zero = new Node(10000000, null, null, 0);
 
@@ -206,21 +210,27 @@
         return not(u);
     };
 
-    BDD.getFormula = function(u) {
+    BDD.getFormula = function(u, literalToFormulas) {
         if (u === BDD.one) {
             return SymbolicBool.true;
         }
         if (u === BDD.zero) {
             return SymbolicBool.false;
         }
+        var t;
+
+        t = literalToFormulas?literalToFormulas[u.var-1]: new SymbolicBool(u.var);
+
         return new SymbolicBool("||",
             new SymbolicBool("&&",
-                new SymbolicBool(u.var),
-                BDD.getFormula(u.high)),
+                t,
+                BDD.getFormula(u.high, literalToFormulas)),
             new SymbolicBool("&&",
-                (new SymbolicBool(u.var)).not(),
-                BDD.getFormula(u.low)));
-    }
+                t.not(),
+                BDD.getFormula(u.low, literalToFormulas)));
+    };
+
+    BDD.Node = Node;
 
     console.log("Initialized BDD module.")
 })(module.exports);

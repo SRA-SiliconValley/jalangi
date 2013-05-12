@@ -237,7 +237,7 @@
                         pc.pushPC(pred, pathIndex);
                         console.log("Calling "+ f.values[i].value.name);
                         value = single.invokeFun(iid, base.values[i].value, f.values[i].value, args, isConstructor);
-                        console.log("return");
+                        console.log("return "+ f.values[i].value.name);
                         ret = addValue(ret, pc.getPC(), value);
                         if (!first) {
                             ret2 = pc.generateInputs();
@@ -247,7 +247,7 @@
 
                         }
                         if (ret2) {
-                            console.log("Pause");
+                            console.log("backtrack");
                         }
                         pathIndex = pc.getIndex();
                         pc.popPC();

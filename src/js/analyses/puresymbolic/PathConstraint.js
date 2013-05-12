@@ -170,6 +170,7 @@
     }
 
     var literalToFormulas = [];
+    var formulaCache = {};
 
     function getBDDFromFormula(formula) {
         if (formula === SymbolicBool.true) {
@@ -178,8 +179,19 @@
         if (formula === SymbolicBool.false) {
             return BDD.zero;
         }
-        literalToFormulas.push(formula);
-        return BDD.build(literalToFormulas.length);
+        var str = formula.toString();
+        var nstr = formula.not().toString();
+        var ret;
+        if ((ret = formulaCache[str])!== undefined) {
+            return ret;
+        } else if ((ret = formulaCache[nstr])!== undefined) {
+            return ret.not();
+        } else {
+            literalToFormulas.push(formula);
+            ret = BDD.build(literalToFormulas.length);
+            formulaCache[str] = ret;
+            return ret;
+        }
     }
 
     function getFormulaFromBDD(bdd) {
@@ -351,8 +363,11 @@
         if (!solution) {
             updateSolution();
         }
-        if (!noWrite)
+        if (!noWrite) {
             solver.writeInputs(solution, []);
+            console.log("-------------");
+            //console.log("nLiterals "+literalToFormulas.length+" "+JSON.stringify(literalToFormulas));
+        }
         return pathIndex.length > 0;
     }
 

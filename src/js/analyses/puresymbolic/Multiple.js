@@ -75,12 +75,6 @@
         };
     }
 
-    function Fe(iid, val, dis) {
-    }
-
-    function Fr(iid) {
-    }
-
     function Se(iid, val) {
         single.Se(iid, val);
     }
@@ -232,30 +226,66 @@
 
                 if (!pred.isZero()) {
                     pathIndex = [];
-                    var first = true;
-                    do {
-                        pc.pushPC(pred, pathIndex);
-                        console.log("Calling "+ f.values[i].value.name);
+//                    var first = true;
+//                    do {
+                        pc.pushPC(pred, []);
+//                        console.log("Calling "+ f.values[i].value.name);
                         value = single.invokeFun(iid, base.values[i].value, f.values[i].value, args, isConstructor);
-                        console.log("return "+ f.values[i].value.name);
+//                        console.log("return "+ f.values[i].value.name);
                         ret = addValue(ret, pc.getPC(), value);
-                        if (!first) {
-                            ret2 = pc.generateInputs();
-                        } else {
-                            first = false;
-                            ret2 = pc.generateInputs(true);
-
-                        }
-                        if (ret2) {
-                            console.log("backtrack");
-                        }
-                        pathIndex = pc.getIndex();
+//                        if (!first) {
+//                            ret2 = pc.generateInputs();
+//                        } else {
+//                            first = false;
+//                            ret2 = pc.generateInputs(true);
+//
+//                        }
+//                        if (ret2) {
+//                            console.log("backtrack");
+//                        }
+//                        pathIndex = pc.getIndex();
                         pc.popPC();
-                    } while(ret2);
+//                    } while(ret2);
                 }
             }
         }
         return ret;
+    }
+
+    var returnVal;
+
+    function Fe(iid, val, dis) {
+        returnVal = undefined;
+    }
+
+    function Fr(iid) {
+        var ret2, pathIndex, old, first = pc.isFirst(), aggrRet = pc.getReturnVal();
+        if (!first) {
+            ret2 = pc.generateInputs();
+        } else {
+            ret2 = pc.generateInputs(true);
+
+        }
+
+        if (ret2) {
+            console.log("backtrack");
+        }
+
+
+        returnVal = addValue(aggrRet, pc.getPC(), returnVal);
+        pathIndex = pc.getIndex();
+        old = pc.popPC();
+        pc.pushPC(old.pc, pathIndex, true, returnVal);
+        return ret2;
+    }
+
+    function Rt(iid, val) {
+        returnVal = val;
+        return val;
+    }
+
+    function Ra() {
+        return returnVal;
     }
 
     var Symbolic = require('./../concolic/Symbolic');
@@ -361,6 +391,8 @@
     sandbox.Fr = Fr; // Function return
     sandbox.Se = Se; // Script enter
     sandbox.Sr = Sr; // Script return
+    sandbox.Rt = Rt;
+    sandbox.Ra = Ra;
 
     sandbox.makeSymbolic = makeSymbolic;
     sandbox.addAxiom = pc.addAxiom;

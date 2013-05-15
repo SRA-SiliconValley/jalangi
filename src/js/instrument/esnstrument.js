@@ -71,6 +71,8 @@
     var logHashFunName = PREFIX1+".H";
     var logLitFunName = PREFIX1+".T";
     var logInitFunName = PREFIX1+".N";
+    var logReturnFunName = PREFIX1+".Rt";
+    var logReturnAggrFunName = PREFIX1+".Ra";
 
     var logBinaryOpFunName = PREFIX1+".B";
     var logUnaryOpFunName = PREFIX1+".U";
@@ -493,6 +495,20 @@
         return ret;
     }
 
+    function wrapReturn(node, expr) {
+        var lid = (expr === null)? node: expr;
+        printIidToLoc(lid);
+        if (expr === null) {
+            expr = createIdentifierAst("undefined");
+        }
+        var ret =  replaceInExpr(
+            logReturnFunName+"("+RP+"1, "+RP+"2)",
+            getIid(),
+            expr
+        );
+        transferLoc(ret, lid);
+        return ret;
+    }
 
     function wrapHash(node, ast) {
         printIidToLoc(node);
@@ -639,36 +655,29 @@
         return ret;
     }
 
+    var labelCounter = 0;
+
     function wrapFunBodyWithTryCatch(node, body) {
         printIidToLoc(node);
+        var l = labelCounter++;
         var ret = replaceInStatement(
-            "try {"+RP+"1} catch("+PREFIX1+
+            "function n() { jalangiLabel"+l+": while(true) { try {"+RP+"1} catch("+PREFIX1+
                 "e) { console.log("+PREFIX1+"e); console.log("+
                 PREFIX1+"e.stack); throw "+PREFIX1+
-                "e; } finally { "+logFunctionReturnFunName+"("+
-                RP+"2); }", body,
+                "e; } finally { if ("+logFunctionReturnFunName+"("+
+                RP+"2)) continue jalangiLabel"+l+";\n else \n  return "+logReturnAggrFunName+"();\n }\n }}", body,
             getIid()
         );
+        //console.log(JSON.stringify(ret));
+
+        ret = ret[0].body.body;
         transferLoc(ret[0], node);
         return ret;
     }
 
     function wrapScriptBodyWithTryCatch(node, body) {
         printIidToLoc(node);
-        var path = require('path');
-        var preFile = path.resolve(__dirname,'analysis.js');
-        var inputManagerFile = path.resolve(__dirname,'InputManager.js');
-        var thisFile = path.resolve(__filename);
-        var inputFile = path.resolve(process.cwd()+"/inputs.js");
-
-        var n_code = 'if (typeof window ==="undefined") {\n' +
-            '    require("'+preFile+'");\n' +
-            '    require("'+inputManagerFile+'");\n' +
-            '    require("'+thisFile+'");\n' +
-            '    require("'+inputFile+'");\n' +
-            '}\n';
-        var ret = replaceInStatement(//n_code+
-            "try {"+RP+"1} catch("+PREFIX1+
+        var ret = replaceInStatement("try {"+RP+"1} catch("+PREFIX1+
                 "e) { console.log("+PREFIX1+"e); console.log("+
                 PREFIX1+"e.stack); throw "+PREFIX1+
                 "e; } finally { "+logScriptExitFunName+"("+
@@ -957,14 +966,14 @@
             return ret1;
         },
         "FunctionExpression": function(node) {
-            node.body.body = instrumentFunctionEntryExit(node, node.body.body);
+            //node.body.body = instrumentFunctionEntryExit(node, node.body.body);
             var ret1 = wrapLiteral(node, node, N_LOG_FUNCTION_LIT);
             scope = scope.parent;
             return ret1;
         },
         "FunctionDeclaration": function(node) {
             //console.log(node.body.body);
-            node.body.body = instrumentFunctionEntryExit(node, node.body.body);
+            //node.body.body = instrumentFunctionEntryExit(node, node.body.body);
             scope = scope.parent;
             return node;
         },
@@ -999,6 +1008,11 @@
         "ForInStatement": function(node) {
             var ret = wrapHash(node.right, node.right);
             node.right = ret;
+            return node;
+        },
+        "ReturnStatement": function(node) {
+            var ret = wrapReturn(node, node.argument);
+            node.argument = ret;
             return node;
         }
     }
@@ -1054,6 +1068,14 @@
             });
             node.discriminant = dis;
             node.cases = cases;
+            return node;
+        },
+        "FunctionExpression": function(node) {
+            node.body.body = instrumentFunctionEntryExit(node, node.body.body);
+            return node;
+        },
+        "FunctionDeclaration": function(node) {
+            node.body.body = instrumentFunctionEntryExit(node, node.body.body);
             return node;
         },
         "ConditionalExpression": funCond,

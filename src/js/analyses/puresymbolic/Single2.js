@@ -304,6 +304,7 @@
     }
 
     function Fe(iid, val, dis) {
+        returnVal = undefined;
     }
 
     function Fr(iid) {
@@ -324,6 +325,16 @@
 
     function I(val) {
         return val;
+    }
+
+    var returnVal;
+
+    function Rt(iid, val) {
+        return returnVal = val;
+    }
+
+    function Ra() {
+        return returnVal;
     }
 
     function T(iid, val, type) {
@@ -813,7 +824,8 @@
     sandbox.Fr = Fr; // Function return
     sandbox.Se = Se; // Script enter
     sandbox.Sr = Sr; // Script return
-
+    sandbox.Rt = Rt; // Value return
+    sandbox.Ra = Ra;
 
     sandbox.invokeFun = invokeFun;
     sandbox.makeSymbolic = makeSymbolic;

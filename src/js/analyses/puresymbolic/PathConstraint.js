@@ -63,17 +63,19 @@
         return val.type === Symbolic;
     }
 
-    function pushPC(pc, pi) {
-        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution});
+    function pushPC(pc, pi, isNotFirst, returnVal) {
+        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, first:!isNotFirst, returnVal: returnVal });
         pathConstraint = pc;
         pathIndex = pi;
         index = 0;
         formulaStack = [];
         formulaStack.count = 0;
         solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
+        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, first:!isNotFirst, returnVal: returnVal });
     }
 
     function popPC() {
+        var ret = pcStack.pop();
         pathConstraint = pcStack[pcStack.length-1].pc;
         pathIndex = pcStack[pcStack.length-1].path;
         index = pcStack[pcStack.length-1].index;
@@ -81,6 +83,15 @@
         solution = pcStack[pcStack.length-1].solution;
 
         pcStack.pop();
+        return ret;
+    }
+
+    function isFirst() {
+        return pcStack[pcStack.length - 1].first;
+    }
+
+    function getReturnVal() {
+        return pcStack[pcStack.length - 1].returnVal;
     }
 
     function getPC() {
@@ -375,6 +386,7 @@
     sandbox.popPC = popPC;
     sandbox.pushPC = pushPC;
     sandbox.getPC = getPC;
+    sandbox.isFirst = isFirst;
     sandbox.getIndex = getIndex;
     sandbox.setIndex = setIndex;
     sandbox.concretize = concretize;
@@ -383,6 +395,7 @@
     sandbox.generateInputs = generateInputs;
     sandbox.getFormulaFromBDD = getFormulaFromBDD;
     sandbox.getBDDFromFormula = getBDDFromFormula;
+    sandbox.getReturnVal = getReturnVal;
 
 }(module.exports));
 

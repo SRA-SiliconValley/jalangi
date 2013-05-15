@@ -494,6 +494,7 @@ if (process && process.env.JALANGI_MODE === 'symbolic') {
         if (rrEngine) {
             rrEngine.RR_Fe(iid, val, dis);
         }
+        returnVal = undefined;
     }
 
     function Fr(iid) {
@@ -501,6 +502,16 @@ if (process && process.env.JALANGI_MODE === 'symbolic') {
         if (rrEngine) {
             rrEngine.RR_Fr(iid);
         }
+    }
+
+    var returnVal;
+
+    function Rt(iid, val) {
+        return returnVal = val;
+    }
+
+    function Ra() {
+        return returnVal;
     }
 
     var scriptCount = 0;
@@ -1587,6 +1598,8 @@ if (process && process.env.JALANGI_MODE === 'symbolic') {
     sandbox.Fr = Fr; // Function return
     sandbox.Se = Se; // Script enter
     sandbox.Sr = Sr; // Script return
+    sandbox.Rt = Rt; // returned value
+    sandbox.Ra = Ra;
 
     sandbox.replay = rrEngine?rrEngine.RR_replay:undefined;
     sandbox.onflush = rrEngine?rrEngine.onflush:function(){};

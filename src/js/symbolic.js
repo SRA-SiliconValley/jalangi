@@ -143,6 +143,8 @@ $7 = {};
     sandbox.Fr = single.Fr; // Function return
     sandbox.Se = single.Se; // Script enter
     sandbox.Sr = single.Sr; // Script return
+    sandbox.Rt = single.Rt; // Value return
+    sandbox.Ra = single.Ra;
 
     sandbox.makeSymbolic = single.makeSymbolic;
     sandbox.addAxiom = single.addAxiom;

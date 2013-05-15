@@ -102,6 +102,9 @@
     }
 
     function W(iid, name, val, lhs) {
+        if (pc.isRetracing()) {
+            return lhs;
+        }
         return update(lhs, val);
     }
 
@@ -146,6 +149,9 @@
 
 
     function B(iid, op, left, right) {
+        if (pc.isRetracing()) {
+            return;
+        }
         left = makePredValues(BDD.one, left);
         right = makePredValues(BDD.one, right);
 
@@ -171,6 +177,9 @@
     };
 
     function U(iid, op, left) {
+        if (pc.isRetracing()) {
+            return;
+        }
         left = makePredValues(BDD.one, left);
 
         var i, leni = left.values.length, pred, value, ret;
@@ -192,6 +201,9 @@
     };
 
     function P(iid, left, right, val) {
+        if (pc.isRetracing()) {
+            return;
+        }
         left = makePredValues(BDD.one, left);
         right = makePredValues(BDD.one, right);
 
@@ -215,6 +227,9 @@
 
 
     function invokeFun(iid, base, f, args, isConstructor) {
+        if (pc.isRetracing()) {
+            return;
+        }
         base = makePredValues(BDD.one, base);
         f = makePredValues(BDD.one, f);
 
@@ -226,26 +241,10 @@
 
                 if (!pred.isZero()) {
                     pathIndex = [];
-//                    var first = true;
-//                    do {
-                        pc.pushPC(pred, []);
-//                        console.log("Calling "+ f.values[i].value.name);
-                        value = single.invokeFun(iid, base.values[i].value, f.values[i].value, args, isConstructor);
-//                        console.log("return "+ f.values[i].value.name);
-                        ret = addValue(ret, pc.getPC(), value);
-//                        if (!first) {
-//                            ret2 = pc.generateInputs();
-//                        } else {
-//                            first = false;
-//                            ret2 = pc.generateInputs(true);
-//
-//                        }
-//                        if (ret2) {
-//                            console.log("backtrack");
-//                        }
-//                        pathIndex = pc.getIndex();
-                        pc.popPC();
-//                    } while(ret2);
+                    pc.pushPC(pred, []);
+                    value = single.invokeFun(iid, base.values[i].value, f.values[i].value, args, isConstructor);
+                    ret = addValue(ret, pc.getPC(), value);
+                    pc.popPC();
                 }
             }
         }
@@ -259,13 +258,13 @@
     }
 
     function Fr(iid) {
-        var ret2, pathIndex, old, first = pc.isFirst(), aggrRet = pc.getReturnVal();
+        var ret2, pathIndex, first = pc.isFirst(), aggrRet = pc.getReturnVal();
         if (!first) {
             ret2 = pc.generateInputs();
         } else {
             ret2 = pc.generateInputs(true);
-
         }
+        pathIndex = pc.getIndex();
 
         if (ret2) {
             console.log("backtrack");
@@ -273,9 +272,8 @@
 
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
-        pathIndex = pc.getIndex();
-        old = pc.popPC();
-        pc.pushPC(old.pc, pathIndex, true, returnVal);
+        pc.popPC();
+        pc.pushPC(pathIndex.pc, pathIndex, true, returnVal);
         return ret2;
     }
 
@@ -339,6 +337,10 @@
     }
 
     function C2(iid, left) {
+        if (pc.isRetracing()) {
+            return pc.branchBoth(null, null);
+        }
+
         left = B(iid, "===", switchLeft, left);
 
         var i, leni = left.values.length, pred1 = BDD.zero, pred2 = BDD.zero, ret;
@@ -352,6 +354,10 @@
     }
 
     function C(iid, left) {
+        if (pc.isRetracing()) {
+            return pc.branchBoth(null, null);
+        }
+
         lastVal = left;
         left = makePredValues(BDD.one, left);
         var i, leni = left.values.length, pred1 = BDD.zero, pred2 = BDD.zero, ret;

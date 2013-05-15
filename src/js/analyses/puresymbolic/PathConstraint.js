@@ -43,6 +43,9 @@
     var index = 0;
     var formulaStack = [];
     formulaStack.count = 0;
+    var first = true;
+    var returnValue;
+
     var pcStack = [];
 //    pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack});
 
@@ -64,34 +67,35 @@
     }
 
     function pushPC(pc, pi, isNotFirst, returnVal) {
-        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, first:!isNotFirst, returnVal: returnVal });
+        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, first:first, returnVal: returnValue });
         pathConstraint = pc;
         pathIndex = pi;
         index = 0;
         formulaStack = [];
         formulaStack.count = 0;
         solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
-        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, first:!isNotFirst, returnVal: returnVal });
+        first = !isNotFirst;
+        returnValue = returnVal;
     }
 
     function popPC() {
-        var ret = pcStack.pop();
         pathConstraint = pcStack[pcStack.length-1].pc;
         pathIndex = pcStack[pcStack.length-1].path;
         index = pcStack[pcStack.length-1].index;
         formulaStack = pcStack[pcStack.length-1].formulaStack;
         solution = pcStack[pcStack.length-1].solution;
+        first = pcStack[pcStack.length-1].first;
+        returnValue = pcStack[pcStack.length-1].returnVal;
 
-        pcStack.pop();
-        return ret;
+        return pcStack.pop();
     }
 
     function isFirst() {
-        return pcStack[pcStack.length - 1].first;
+        return first;
     }
 
     function getReturnVal() {
-        return pcStack[pcStack.length - 1].returnVal;
+        return returnValue;
     }
 
     function getPC() {
@@ -112,6 +116,10 @@
             index--;
         }
         return ret;
+    }
+
+    function isRetracing() {
+        return !!pathIndex[index];
     }
 
     function setNext(elem) {
@@ -308,23 +316,23 @@
         var v, ret, tmp;
         if ((v = getNext()) !== undefined) {
             ret = v.branch;
-            addAxiom(ret?trueBranch:falseBranch, true);
+            //addAxiom(ret?trueBranch:falseBranch, true);
         } else {
             if (makeConcrete(falseBranch, true)) {
                 if (tmp = getSolution(trueBranch, true)) {
-                    setNext({done:false, branch:false, solution: tmp});
+                    setNext({done:false, branch:false, solution: tmp, pc: trueBranch});
                     console.log("Solution "+JSON.stringify(tmp));
                 } else {
-                    setNext({done:true, branch:false, solution: tmp});
+                    setNext({done:true, branch:false, solution: null, pc: null});
                 }
                 ret = false;
                 addAxiom(falseBranch, true);
             } else if (makeConcrete(trueBranch, true)) {
                 if (tmp = getSolution(falseBranch, true)) {
-                    setNext({done:false, branch:true, solution: tmp});
+                    setNext({done:false, branch:true, solution: tmp, pc: trueBranch});
                     console.log("Solution "+JSON.stringify(tmp));
                 } else {
-                    setNext({done:true, branch:true, solution: tmp});
+                    setNext({done:true, branch:true, solution: null, pc: null});
                 }
                 ret = true;
                 addAxiom(trueBranch, true);
@@ -396,6 +404,7 @@
     sandbox.getFormulaFromBDD = getFormulaFromBDD;
     sandbox.getBDDFromFormula = getBDDFromFormula;
     sandbox.getReturnVal = getReturnVal;
+    sandbox.isRetracing = isRetracing;
 
 }(module.exports));
 

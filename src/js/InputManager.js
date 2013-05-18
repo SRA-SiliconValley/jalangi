@@ -20,7 +20,7 @@ if (typeof $7 === 'undefined') {
     $7 = {};
 }
 
-if (process && process.env.JALANGI_MODE === 'symbolic') {
+if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
     require('./InputManager2')
 } else {
 

@@ -21,7 +21,7 @@ rm -rf jalangi_dependency
 rm -rf jalangi_next*
 rm -rf ok_jalangi_next*
 cp next.js jalangi_next.js
-node src/socket.js 127.0.0.1 8080 $1 &
+node src/js/commands/socket.js 127.0.0.1 8080 $1 &
 sleep 2
 echo "Opening $1"
 /usr/bin/open -a "/Applications/Google Chrome.app" $1

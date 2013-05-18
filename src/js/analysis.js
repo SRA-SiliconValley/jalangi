@@ -18,7 +18,7 @@
 
 $7 = {};
 
-if (process && process.env.JALANGI_MODE === 'symbolic') {
+if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
     require('./symbolic')
 } else {
 

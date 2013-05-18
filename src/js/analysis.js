@@ -511,7 +511,9 @@ if (process && process.env.JALANGI_MODE === 'symbolic') {
     }
 
     function Ra() {
-        return returnVal;
+        var ret = returnVal;
+        returnVal = undefined;
+        return ret;
     }
 
     var scriptCount = 0;

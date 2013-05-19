@@ -6,11 +6,11 @@ echo "Hi from Aci!"
 echo "(/src/js/analysis.js:9): (style) The scope of the variable 'i' can be reduced (/src/js/analysis.js:9)"
 
 
-echo "Go to (src/java/RegexpEncoder.java:101)"
+echo "Go to (src/java/RegexpEncoder.java:101:1)"
 
-echo "Go to (src/js/analysis.js:111) "
+echo "Go to (src/js/analysis.js:110:1) "
 
-echo "Go (/Users/ksen/Dropbox/jalangi/src/js/analysis.js:110) "
+echo "Go (/Users/ksen/Dropbox/jalangi/src/js/analysis.js:110:1) "
 
 echo "DONE!"
 

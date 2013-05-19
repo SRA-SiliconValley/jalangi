@@ -15,8 +15,10 @@
 # Author: Koushik Sen
 
 
-rm -rf jalangi_tmp
-mkdir jalangi_tmp
+# Assumes that JALANGI_HOME is different from project home.
+# Assumes that the script is run from the project home.
+
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export JALANGI_HOME=$DIR/..
 
@@ -47,13 +49,13 @@ $CMD $JALANGI_HOME/src/js/instrument/esnstrument.js $2.js
 
 touch inputs.js
 
-echo --------------- Recording execution of $JALANGI_HOME/$2.js ---------------
+echo --------------- Recording execution of $2.js ---------------
 rm jalangi_trace 2> /dev/null
 export JALANGI_MODE=record
 export JALANGI_ANALYSIS=none
-$CMD $JALANGI_HOME/$2_jalangi_.js
+$CMD $2_jalangi_.js
 
-echo --------------- Replaying $JALANGI_HOME/$2.js with $1---------------
+echo --------------- Replaying $2.js with $1---------------
 export JALANGI_MODE=replay
 export JALANGI_ANALYSIS=$1
 $CMD $JALANGI_HOME/src/js/commands/replay.js

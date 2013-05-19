@@ -29,7 +29,7 @@ module.exports = (function(){
         if ($7.iids) {
             if ((ret = $7.iids[iid])) {
 
-                return ret[0]+":"+ret[1]+":"+ret[2];
+                return "("+ret[0]+":"+ret[1]+":"+ret[2]+")";
             }
         }
         return iid+"";

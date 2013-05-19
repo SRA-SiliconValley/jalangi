@@ -15,6 +15,7 @@
 # Author: Koushik Sen
 
 
+python -m SimpleHTTPServer &
 rm -rf jalangi_trace*
 rm -rf jalangi_taint*
 rm -rf jalangi_dependency

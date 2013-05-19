@@ -5,5 +5,7 @@ export PATH=$PATH:/usr/local/bin
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )"
 cd $DIR
 
-scripts/relanalysis analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-sha1
+scripts/relrerunall tests/unit/integer12
+
+
 

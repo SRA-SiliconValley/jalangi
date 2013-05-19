@@ -24,23 +24,17 @@ export JALANGI_HOME=$DIR/..
 
 export CMD='node '
 echo $CMD
-rm jalangi_* 2> /dev/null
 
-
-echo --------------- Instrumenting $2.js --------------
-$CMD $JALANGI_HOME/src/js/instrument/esnstrument.js $2.js
-
-rm inputs.js 2> /dev/null
+rm inputs.js
 touch inputs.js
 
-echo --------------- Recording execution of $2.js ---------------
-rm jalangi_trace 2> /dev/null
-export JALANGI_MODE=record
-export JALANGI_ANALYSIS=none
-$CMD $2_jalangi_.js
+echo "***************** Running ($1.js:1:1) on (inputs.js:1:1) ********************"
+$CMD $1.js
 
-echo --------------- Replaying $2.js with $1---------------
-export JALANGI_MODE=replay
-export JALANGI_ANALYSIS=$1
-$CMD $JALANGI_HOME/src/js/commands/replay.js
+for i in jalangi_inputs*
+do
+    echo "***************** Running ($1.js:1:1) on ($i:1:1) ********************"
+    cp $i inputs.js
+    $CMD $1.js
+done
 

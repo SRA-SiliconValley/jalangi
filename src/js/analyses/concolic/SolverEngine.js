@@ -120,7 +120,7 @@
 
         function storeInputs(newInputs, index, tail, pathConstraintIndex) {
             var i, c, len, newIdx, newType, val, stype, oldInput;
-            var fd = fs.openSync(INPUTS_FILE_NAME+tail, 'w');
+            var fd = fs.openSync(INPUTS_FILE_NAME+tail+".js", 'w');
             fs.writeSync(fd,PREFIX1+".setSolutionPoint(\""+index+"\");\n");
             for (var key in input) {
                 oldInput = input[key];

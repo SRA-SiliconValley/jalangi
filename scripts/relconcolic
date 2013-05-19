@@ -21,27 +21,10 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export JALANGI_HOME=$DIR/..
 
-if [ "$USE_NODE_COVER" == "true" ]
-then
-    if [ "$USE_TIME" == "true" ]
-    then
-        export CMD='time cover run '
-    else
-        export CMD='cover run '
-    fi
-    cp ../.coverignore .
-    mv ../.coverage_data .
-else
-    if [ "$USE_TIME" == "true" ]
-    then
-        export CMD='time node '
-    else
-        export CMD='node '
-    fi
-fi
-
+export CMD='node '
 echo $CMD
 
+rm jalangi_* 2> /dev/null
 
 echo --------------- Instrumenting $1.js --------------
 $CMD $JALANGI_HOME/src/js/instrument/esnstrument.js $1.js
@@ -55,7 +38,7 @@ while [[ $i -le $iter &&  $i -le $2 ]]
 do
 
     rm inputs.js 2> /dev/null
-    cp jalangi_inputs$i inputs.js 2> /dev/null
+    cp jalangi_inputs$i.js inputs.js 2> /dev/null
     if [ ! -f inputs.js ];
     then
         touch inputs.js
@@ -90,8 +73,14 @@ else
     echo "***************** $1.js Failed!!!" >> $JALANGI_HOME/jalangi_sym_test_results
 fi
 
-if [ "$USE_NODE_COVER" == "true" ]
-then
-    mv .coverage_data ..
-fi
+echo "***************** Generated (inputs.js:1:1) for ($1.js:1:1) ********************"
+for i in jalangi_inputs*
+do
+    echo "***************** Generated ($i:1:1) for ($1.js:1:1) ********************"
+done
 
+
+
+echo "**********************************************************************************"
+echo "******************************Done with Test Generation***************************"
+echo "**********************************************************************************"

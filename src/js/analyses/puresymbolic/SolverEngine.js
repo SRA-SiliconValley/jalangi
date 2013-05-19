@@ -179,7 +179,7 @@
             }
             iCount++;
 
-            var fd = fs.openSync(INPUTS_FILE_NAME+iCount, 'w');
+            var fd = fs.openSync(INPUTS_FILE_NAME+iCount+".js", 'w');
             fs.writeSync(fd,PREFIX1+".setCurrentSolutionIndex("+JSON.stringify(index)+");\n");
             fs.writeSync(fd,PREFIX1+".setCurrentSolution("+JSON.stringify(currentSolution)+");\n");
             for (var key in currentSolution) {

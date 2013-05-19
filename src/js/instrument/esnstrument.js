@@ -694,13 +694,13 @@
         var preFile = path.resolve(__dirname,'../analysis.js');
         var inputManagerFile = path.resolve(__dirname,'../InputManager.js');
         var thisFile = path.resolve(__filename);
-        var inputFile = path.resolve(process.cwd()+"/inputs.js");
+//        var inputFile = path.resolve(process.cwd()+"/inputs.js");
 
         var n_code = 'if (typeof window ==="undefined") {\n' +
             '    require("'+preFile+'");\n' +
             '    require("'+inputManagerFile+'");\n' +
             '    require("'+thisFile+'");\n' +
-            '    require("'+inputFile+'");\n' +
+            '    require(process.cwd()+"/inputs.js");\n' +
             '}\n';
         var ret = replaceInStatement(n_code+
             "\n{"+RP+"1}\n",

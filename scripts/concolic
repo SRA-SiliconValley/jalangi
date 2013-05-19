@@ -42,7 +42,7 @@ else
 fi
 
 echo $CMD
-
+pwd
 
 echo --------------- Instrumenting $1.js --------------
 $CMD $JALANGI_HOME/src/js/instrument/esnstrument.js $JALANGI_HOME/$1.js
@@ -57,7 +57,7 @@ while [[ $i -le $iter &&  $i -le $2 ]]
 do
 
     rm inputs.js 2> /dev/null
-    cp jalangi_inputs$i inputs.js 2> /dev/null
+    cp jalangi_inputs$i.js inputs.js 2> /dev/null
     if [ ! -f inputs.js ];
     then
         touch inputs.js

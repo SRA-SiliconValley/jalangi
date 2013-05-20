@@ -713,8 +713,12 @@
     function instrumentFunctionEntryExit(node, ast) {
         var body = createCallAsFunEnterStatement(node).
             concat(syncDefuns(node, scope, false)).concat(ast);
-        return wrapFunBodyWithTryCatch(node, body);
+        return body;
     }
+
+//    function instrumentFunctionEntryExit(node, ast) {
+//        return wrapFunBodyWithTryCatch(node, ast);
+//    }
 
     function instrumentScriptEntryExit(node, body0) {
         var modFile = (typeof filename === "string")?
@@ -966,14 +970,14 @@
             return ret1;
         },
         "FunctionExpression": function(node) {
-            //node.body.body = instrumentFunctionEntryExit(node, node.body.body);
+            node.body.body = instrumentFunctionEntryExit(node, node.body.body);
             var ret1 = wrapLiteral(node, node, N_LOG_FUNCTION_LIT);
             scope = scope.parent;
             return ret1;
         },
         "FunctionDeclaration": function(node) {
             //console.log(node.body.body);
-            //node.body.body = instrumentFunctionEntryExit(node, node.body.body);
+            node.body.body = instrumentFunctionEntryExit(node, node.body.body);
             scope = scope.parent;
             return node;
         },
@@ -1071,11 +1075,11 @@
             return node;
         },
         "FunctionExpression": function(node) {
-            node.body.body = instrumentFunctionEntryExit(node, node.body.body);
+            node.body.body = wrapFunBodyWithTryCatch(node, node.body.body);
             return node;
         },
         "FunctionDeclaration": function(node) {
-            node.body.body = instrumentFunctionEntryExit(node, node.body.body);
+            node.body.body = wrapFunBodyWithTryCatch(node, node.body.body);
             return node;
         },
         "ConditionalExpression": funCond,

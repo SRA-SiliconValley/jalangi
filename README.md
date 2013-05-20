@@ -43,7 +43,7 @@ We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS 10.7 and high
     ./scripts/funtest tests/unit/demo2 10
     ./scripts/browserReplay tests/unit/qsort; open jalangi_trace.html
 
-    ./srcipts/server
+    ./scripts/server
     node src/js/instrument/esnstrument.js tests/tizen/annex/js/annex.js
     ./scripts/rrserver http://127.0.0.1:8000/tests/tizen/annex/index_jalangi_.html
 

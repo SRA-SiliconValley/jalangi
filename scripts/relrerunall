@@ -22,9 +22,9 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export JALANGI_HOME=$DIR/..
 
-export CMD='node '
-echo $CMD
+export CMD='cover run '
 
+rm -rf .coverage_data
 rm inputs.js
 touch inputs.js
 
@@ -37,4 +37,11 @@ do
     cp $i inputs.js
     $CMD $1.js
 done
+
+    echo "***************** Done testing ********************"
+    sleep 2
+    cover combine
+    cover report html
+    cp cover_html/index.html jalangi/out/out.html
+    cp cover_html/*.* jalangi/out/
 

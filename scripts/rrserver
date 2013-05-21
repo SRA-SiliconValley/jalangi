@@ -14,7 +14,9 @@
 
 # Author: Koushik Sen
 
-
+pkill -f "python -m SimpleHTTPServer"
+pkill -f "node src/js/commands/socket.js"
+sleep 1
 python -m SimpleHTTPServer &
 rm -rf jalangi_trace*
 rm -rf jalangi_taint*

@@ -23,8 +23,8 @@ if (typeof window === "undefined") {
 }
 
 
-var s = $7.readInput(30);
-var s1 = $7.readInput("");
+var s = J$.readInput(30);
+var s1 = J$.readInput("");
 if (s === 73) {
     if (String.fromCharCode(s,69) === s1) {
         console.log(s);

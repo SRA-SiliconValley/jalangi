@@ -36,7 +36,7 @@ function swap(arr, i, j) {
 var arr = [];
 
 for(var i=0; i<4; i++) {
-    arr[i] = $7.readInput(i);
+    arr[i] = J$.readInput(i);
 }
 
 function main() {

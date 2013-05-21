@@ -100,7 +100,7 @@
                     ret = new ConcolicValue(obj, s);
                     getSetFields(iidToFieldTypes,s, obj);
                     for (i in obj) {
-                        if (HOP(obj, i) && i !== "*$7*" && i !== "*$7I*" && i !== "*$7C*") {
+                        if (HOP(obj, i) && i !== "*J$*" && i !== "*J$I*" && i !== "*J$C*") {
                             updateType(ret, i, obj[i], creationLocation, s);
                         }
                     }

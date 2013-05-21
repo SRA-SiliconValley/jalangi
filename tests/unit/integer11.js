@@ -3,9 +3,9 @@ if (typeof window === "undefined") {
     require(process.cwd()+'/inputs');
 }
 
-//var a = $7.readInput(1);
-//var b = $7.readInput(1);
-//var c = $7.readInput(1);
+//var a = J$.readInput(1);
+//var b = J$.readInput(1);
+//var c = J$.readInput(1);
 
 
 
@@ -37,5 +37,5 @@ function testme(a, b, c) {
     }
 }
 
-testme($7.readInput(""), $7.readInput(1), $7.readInput(1));
+testme(J$.readInput(""), J$.readInput(1), J$.readInput(1));
 

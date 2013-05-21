@@ -24,7 +24,7 @@ if (typeof window === "undefined") {
 }
 
 
-var o = $7.readInput();
+var o = J$.readInput();
 
 if (o.x) {
     if (o.x.y === 3) {

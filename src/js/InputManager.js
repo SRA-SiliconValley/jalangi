@@ -16,8 +16,8 @@
 
 // Author: Koushik Sen
 
-if (typeof $7 === 'undefined') {
-    $7 = {};
+if (typeof J$ === 'undefined') {
+    J$ = {};
 }
 
 if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
@@ -27,7 +27,7 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
 
 (function(sandbox){
 
-    var PREFIX1 = "$7";
+    var PREFIX1 = "J$";
     var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
 
     var inputs = {};
@@ -119,6 +119,6 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
     if (sandbox.addAxiom === undefined) {
         sandbox.addAxiom = function() {};
     }
-}($7));
+}(J$));
 
 }

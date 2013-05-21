@@ -27,7 +27,7 @@
     var FILESUFFIX1 = "_jalangi_";
     var COVERAGE_FILE_NAME = "jalangi_coverage";
     var SMAP_FILE_NAME = "jalangi_sourcemap.js";
-    var PREFIX1 = "$7";
+    var PREFIX1 = "J$";
     var RP = PREFIX1+"_";
 
 //    var N_LOG_LOAD = 0,
@@ -231,8 +231,8 @@
 
     var filename;
 
-// $7_i in expression context will replace it by an AST
-// {$7_i} will replace the body of the block statement with an array of statements passed as argument
+// J$_i in expression context will replace it by an AST
+// {J$_i} will replace the body of the block statement with an array of statements passed as argument
 
     function replaceInStatement(code) {
         var asts = arguments;
@@ -1289,7 +1289,7 @@
         sandbox.instrumentCode = instrumentCode;
         sandbox.instrumentFile = instrumentFile;
     }
-}((typeof $7 === 'undefined')? undefined:$7));
+}((typeof J$ === 'undefined')? undefined:J$));
 
 
 

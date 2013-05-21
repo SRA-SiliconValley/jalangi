@@ -26,8 +26,8 @@ module.exports = (function(){
             isInit = true;
             require(process.cwd()+"/jalangi_sourcemap");
         }
-        if ($7.iids) {
-            if ((ret = $7.iids[iid])) {
+        if (J$.iids) {
+            if ((ret = J$.iids[iid])) {
 
                 return "("+ret[0]+":"+ret[1]+":"+ret[2]+")";
             }

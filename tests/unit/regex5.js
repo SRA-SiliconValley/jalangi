@@ -5,7 +5,7 @@ if (typeof window === "undefined") {
 
 function isEasyChairQuery()
 {
-    var str = $7.readInput("");
+    var str = J$.readInput("");
     console.log("Input: "+str.toString());
 
 // (1) check that str contains "/" followed by anything not

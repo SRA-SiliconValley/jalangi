@@ -21,8 +21,8 @@ if (typeof window === "undefined") {
     require(process.cwd()+'/inputs');
 }
 
-var a = $7.readInput(1);
-var b = $7.readInput(1);
+var a = J$.readInput(1);
+var b = J$.readInput(1);
 
 
 if (7 - b*2 === 3) {

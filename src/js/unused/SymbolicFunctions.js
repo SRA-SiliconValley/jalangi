@@ -24,7 +24,7 @@ module.exports = (function(){
             f === Number ||
             f === Boolean ||
             f === RegExp ||
-            f === $7.readInput) {
+            f === J$.readInput) {
             return f;
         } else if (f === RegExp.prototype.test) {
             return regexp_test;
@@ -65,9 +65,9 @@ module.exports = (function(){
         return function() {
             var len = arguments.length;
             for (var i = 0; i<len; i++) {
-                arguments[i] = $7.getConcrete(arguments[i]);
+                arguments[i] = J$.getConcrete(arguments[i]);
             }
-            return f.apply($7.getConcrete(this),arguments);
+            return f.apply(J$.getConcrete(this),arguments);
         }
     }
 
@@ -77,44 +77,44 @@ module.exports = (function(){
 
     function regexp_test (str) {
         // this is a regexp object
-        var concrete = $7.getConcrete(str);
+        var concrete = J$.getConcrete(str);
         var newSym;
 
         if (str !== concrete && str.symbolic && str.symbolic.isCompound && str.symbolic.isCompound()) {
-            newSym = $7.readInput(concrete,true);
-            $7.addAxiom($7.B(0,"==",newSym,str));  // installing an axiom
+            newSym = J$.readInput(concrete,true);
+            J$.addAxiom(J$.B(0,"==",newSym,str));  // installing an axiom
         } else {
             newSym = str;
         }
-        return $7.B(0, "regexin", newSym, this);
+        return J$.B(0, "regexin", newSym, this);
     }
 
     function string_indexOf(str) {
         var result, first, tmp1, tmp2;
-        str = $7.getConcrete(str);
-        first = $7.getConcrete(this);
+        str = J$.getConcrete(str);
+        first = J$.getConcrete(this);
         result =  first.indexOf(str);
 
         if (this !== first) {
             var reg = new RegExp(".*"+regex_escape(str)+".*");
-            var ret = $7.readInput(result,true);
+            var ret = J$.readInput(result,true);
 
-            var S1 = $7.readInput("",true);
-            var S2 = $7.readInput("",true);
-            tmp1 = $7.B(0,"+",S1,str);
-            tmp1 = $7.B(0,"+",tmp1,S2);
-            tmp1 = $7.B(0,"==",this,tmp1);
-            tmp2 = $7.B(0,"==",ret,$7.G(0,S1,"length", true));
-            tmp1 = $7.B(0,"&&",tmp2,tmp1);
+            var S1 = J$.readInput("",true);
+            var S2 = J$.readInput("",true);
+            tmp1 = J$.B(0,"+",S1,str);
+            tmp1 = J$.B(0,"+",tmp1,S2);
+            tmp1 = J$.B(0,"==",this,tmp1);
+            tmp2 = J$.B(0,"==",ret,J$.G(0,S1,"length", true));
+            tmp1 = J$.B(0,"&&",tmp2,tmp1);
             tmp2 = regexp_test.call(reg,S1);
-            tmp2 = $7.U(0,"!",tmp2);
-            var trueF = $7.B(0,"&&",tmp1,tmp2);
-            tmp1 = $7.B(0,"==",ret,-1);
+            tmp2 = J$.U(0,"!",tmp2);
+            var trueF = J$.B(0,"&&",tmp1,tmp2);
+            tmp1 = J$.B(0,"==",ret,-1);
             tmp2 = regexp_test.call(reg,this);
-            tmp2 = $7.U(0,"!",tmp2);
-            var falseF = $7.B(0,"&&",tmp1,tmp2);
-            tmp1 = $7.B(0,"||",trueF,falseF);
-            $7.addAxiom(tmp1);
+            tmp2 = J$.U(0,"!",tmp2);
+            var falseF = J$.B(0,"&&",tmp1,tmp2);
+            tmp1 = J$.B(0,"||",trueF,falseF);
+            J$.addAxiom(tmp1);
             return ret;
         }
         return result;
@@ -122,33 +122,33 @@ module.exports = (function(){
 
     function string_substring(start, end) {
         var result, first, tmp1, tmp2;
-        first = $7.getConcrete(this);
-        result =  first.substring($7.getConcrete(start), $7.getConcrete(end));
+        first = J$.getConcrete(this);
+        result =  first.substring(J$.getConcrete(start), J$.getConcrete(end));
 
         // assuming start >= 0 and end >= start and end === undefined or end <= this.length
 
         if (this !== first) {
             if (end === undefined) {
-                end = $7.G(0, this, "length", true);
+                end = J$.G(0, this, "length", true);
             }
-            var ret = $7.readInput(result,true);
-            var S1 = $7.readInput("",true);
-            var S2 = $7.readInput("",true);
+            var ret = J$.readInput(result,true);
+            var S1 = J$.readInput("",true);
+            var S2 = J$.readInput("",true);
 
-            tmp2 = $7.B(0,"<=", start, end);
-            tmp1 = $7.B(0,"+",S1,ret);
-            tmp1 = $7.B(0,"+",tmp1,S2);
-            tmp1 = $7.B(0,"===",this,tmp1); // this === S1 + ret + S2
-            tmp1 = $7.B(0,"&&", tmp2, tmp1);
+            tmp2 = J$.B(0,"<=", start, end);
+            tmp1 = J$.B(0,"+",S1,ret);
+            tmp1 = J$.B(0,"+",tmp1,S2);
+            tmp1 = J$.B(0,"===",this,tmp1); // this === S1 + ret + S2
+            tmp1 = J$.B(0,"&&", tmp2, tmp1);
 
-            tmp2 = $7.B(0,"===",start, $7.G(0,S1,"length", true)); // start === S1.length
-            tmp1 = $7.B(0,"&&",tmp2,tmp1);
+            tmp2 = J$.B(0,"===",start, J$.G(0,S1,"length", true)); // start === S1.length
+            tmp1 = J$.B(0,"&&",tmp2,tmp1);
 
-            tmp2 = $7.B(0, "-", end, start);
-            tmp2 = $7.B(0, "===", tmp2, $7.G(0,ret,"length", true));
+            tmp2 = J$.B(0, "-", end, start);
+            tmp2 = J$.B(0, "===", tmp2, J$.G(0,ret,"length", true));
 
-            tmp1 = $7.B(0,"&&",tmp1,tmp2);
-            $7.addAxiom(tmp1);
+            tmp1 = J$.B(0,"&&",tmp1,tmp2);
+            J$.addAxiom(tmp1);
             return ret;
         }
         return result;
@@ -157,30 +157,30 @@ module.exports = (function(){
 
     function string_lastIndexOf(str) {
         var result, first, tmp1, tmp2;
-        str = $7.getConcrete(str);
-        first = $7.getConcrete(this);
+        str = J$.getConcrete(str);
+        first = J$.getConcrete(this);
         result =  first.lastIndexOf(str);
 
         if (this !== first) {
             var reg = new RegExp(".*"+regex_escape(str)+".*");
-            var ret = $7.readInput(result,true);
+            var ret = J$.readInput(result,true);
 
-            var S1 = $7.readInput("",true);
-            var S2 = $7.readInput("",true);
-            tmp1 = $7.B(0,"+",S1,str);
-            tmp1 = $7.B(0,"+",tmp1,S2);
-            tmp1 = $7.B(0,"==",this,tmp1);
-            tmp2 = $7.B(0,"==",ret,$7.G(0,S1,"length", true));
-            tmp1 = $7.B(0,"&&",tmp2,tmp1);
+            var S1 = J$.readInput("",true);
+            var S2 = J$.readInput("",true);
+            tmp1 = J$.B(0,"+",S1,str);
+            tmp1 = J$.B(0,"+",tmp1,S2);
+            tmp1 = J$.B(0,"==",this,tmp1);
+            tmp2 = J$.B(0,"==",ret,J$.G(0,S1,"length", true));
+            tmp1 = J$.B(0,"&&",tmp2,tmp1);
             tmp2 = regexp_test.call(reg,S2);
-            tmp2 = $7.U(0,"!",tmp2);
-            var trueF = $7.B(0,"&&",tmp1,tmp2);
-            tmp1 = $7.B(0,"==",ret,-1);
+            tmp2 = J$.U(0,"!",tmp2);
+            var trueF = J$.B(0,"&&",tmp1,tmp2);
+            tmp1 = J$.B(0,"==",ret,-1);
             tmp2 = regexp_test.call(reg,this);
-            tmp2 = $7.U(0,"!",tmp2);
-            var falseF = $7.B(0,"&&",tmp1,tmp2);
-            tmp1 = $7.B(0,"||",trueF,falseF);
-            $7.addAxiom(tmp1);
+            tmp2 = J$.U(0,"!",tmp2);
+            var falseF = J$.B(0,"&&",tmp1,tmp2);
+            tmp1 = J$.B(0,"||",trueF,falseF);
+            J$.addAxiom(tmp1);
             return ret;
         }
         return result;

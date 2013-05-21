@@ -18,7 +18,7 @@
 
 (function(module){
     function CoverageEngine(executionIndex) {
-        var PREFIX1 = "$7";
+        var PREFIX1 = "J$";
         var TRACE_FILE_NAME = "jalangi_trace";
         var TAINT_SUMMARY = "jalangi_taint";
         var ConcolicValue = require('./../../ConcolicValue');

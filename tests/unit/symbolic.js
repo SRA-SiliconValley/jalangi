@@ -23,10 +23,10 @@ if (typeof window === "undefined") {
 }
 
     var x = {v:2};
-x.v = $7.readInput(x.v);
+x.v = J$.readInput(x.v);
 
 var y = {v:3};
-y.v = $7.readInput(y.v);
+y.v = J$.readInput(y.v);
 
 var z = {c:0};
 for (var i=0; i< 10; i++) {

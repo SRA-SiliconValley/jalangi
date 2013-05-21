@@ -21,12 +21,12 @@ global.test = function(f) {
     var TEST_FILE_NAME = process.cwd()+'/jalangi_tests';
 
     try {
-        if ($7) {
+        if (J$) {
             var args = [];
             var len = f.length;
             var str = "global."+f.name+"(";
             for (var i = 0; i<len ; ++i) {
-                args[i] = $7.readInput(arguments[i+1]);
+                args[i] = J$.readInput(arguments[i+1]);
                 if (i!==0) {
                     str += ",";
                 }

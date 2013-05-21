@@ -21,7 +21,7 @@ if (typeof window === "undefined") {
     require(process.cwd()+'/inputs');
 }
 
-function whatDoIExpect(s) {
+function whatIs(s) {
     var j = s.lastIndexOf("sun");
     var i = s.indexOf("am")
     if (i >= 0) {
@@ -36,5 +36,9 @@ function whatDoIExpect(s) {
 }
 
 
-whatDoIExpect($7.readInput(""));
+// whatIs("");
+// whatIs("am");
+// whatIs("amsun");
+
+whatIs(J$.readInput(""));
 

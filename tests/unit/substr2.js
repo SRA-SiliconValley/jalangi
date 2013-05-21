@@ -23,8 +23,8 @@ if (typeof window === "undefined") {
 }
 
 
-var area = $7.readInput("");
-var area2 = $7.readInput("");
+var area = J$.readInput("");
+var area2 = J$.readInput("");
 
 
 area += "World";

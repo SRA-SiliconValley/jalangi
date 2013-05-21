@@ -142,7 +142,7 @@
                 }
             }
             if (start === -1) {
-                throw new Error("$7.addAxiom('begin') not found");
+                throw new Error("J$.addAxiom('begin') not found");
             }
             if (start === len) {
                 return;
@@ -218,7 +218,7 @@
     }
 
     function updateSolution() {
-        solution = combine($7.inputs, solution);
+        solution = combine(J$.inputs, solution);
         var f = getFormulaFromBDD(pathConstraint);
         var concrete = f.substitute(solution);
         if (concrete === SymbolicBool.false) {
@@ -262,7 +262,7 @@
         if ((c instanceof BDD.Node)) {
             c = getFormulaFromBDD(c);
         }
-//        solution = combine($7.inputs, solution);
+//        solution = combine(J$.inputs, solution);
         var concrete = c.substitute(solution);
         if (concrete === SymbolicBool.true) {
             return true;

@@ -117,9 +117,9 @@
         }
 
         function makeConcolicString(idx, val, slength, stype) {
-            installAxiom($7.B(0,">=", slength, 0));
+            installAxiom(J$.B(0,">=", slength, 0));
             if (idx.indexOf("x")===0) {
-                installAxiom($7.B(0,"<=", slength, MAX_STRING_LENGTH));  // add this axiom only for input symbolic values
+                installAxiom(J$.B(0,"<=", slength, MAX_STRING_LENGTH));  // add this axiom only for input symbolic values
             }
             return new ConcolicValue(val, new SymbolicStringExpression(idx, slength, stype));
         }
@@ -138,7 +138,7 @@
             }
             if (base_s instanceof SymbolicObject && !(offset in base_c)) {
                 base_s.addField(offset);
-                ret = $7.readInput(undefined, false, base_s.getSymbolForField(offset));
+                ret = J$.readInput(undefined, false, base_s.getSymbolForField(offset));
                 base_c[offset] = ret;
                 return ret;
             } else if (getSymbolic(offset)) {
@@ -167,16 +167,16 @@
 
         function regexp_test (str) {
             // this is a regexp object
-            var concrete = $7.getConcrete(str);
+            var concrete = J$.getConcrete(str);
             var newSym;
 
             if (str !== concrete && str.symbolic && str.symbolic.isCompound && str.symbolic.isCompound()) {
-                newSym = $7.readInput(concrete,true);
-                $7.addAxiom($7.B(0,"==",newSym,str));  // installing an axiom
+                newSym = J$.readInput(concrete,true);
+                J$.addAxiom(J$.B(0,"==",newSym,str));  // installing an axiom
             } else {
                 newSym = str;
             }
-            return $7.B(0, "regexin", newSym, this);
+            return J$.B(0, "regexin", newSym, this);
         }
 
         function string_fromCharCode (result) {
@@ -193,18 +193,18 @@
             if (!flag) {
                 return result;
             }
-            var newSym = $7.readInput(getConcrete(result), true);
-            $7.addAxiom(new ConcolicValue(true, new FromCharCodePredicate(ints, getSymbolic(newSym))));
+            var newSym = J$.readInput(getConcrete(result), true);
+            J$.addAxiom(new ConcolicValue(true, new FromCharCodePredicate(ints, getSymbolic(newSym))));
             return newSym;
         }
 
 
 //        function number_parseInt(result, str) {
-//            var concrete = $7.getConcrete(str);
+//            var concrete = J$.getConcrete(str);
 //            var newSym;
 //
 //            if (str !== concrete) {
-//                newSym = $7.readInput(result, true);
+//                newSym = J$.readInput(result, true);
 //                installAxiom(new ConcolicValue(true,new ToStringPredicate(getSymbolic(newSym), getSymbolic(str))));
 //                return newSym;
 //            } else {
@@ -214,29 +214,29 @@
 
         function string_indexOf(result, str) {
             var first, tmp1, tmp2;
-            str = $7.getConcrete(str);
-            first = $7.getConcrete(this);
+            str = J$.getConcrete(str);
+            first = J$.getConcrete(this);
 
             if (this !== first) {
                 var reg = new RegExp(".*"+regex_escape(str)+".*");
-                var ret = $7.readInput(result,true);
+                var ret = J$.readInput(result,true);
 
-                var S1 = $7.readInput("",true);
-                var S2 = $7.readInput("",true);
-                tmp1 = $7.B(0,"+",S1,str);
-                tmp1 = $7.B(0,"+",tmp1,S2);
-                tmp1 = $7.B(0,"==",this,tmp1);
-                tmp2 = $7.B(0,"==",ret,$7.G(0,S1,"length", true));
-                tmp1 = $7.B(0,"&&",tmp2,tmp1);
+                var S1 = J$.readInput("",true);
+                var S2 = J$.readInput("",true);
+                tmp1 = J$.B(0,"+",S1,str);
+                tmp1 = J$.B(0,"+",tmp1,S2);
+                tmp1 = J$.B(0,"==",this,tmp1);
+                tmp2 = J$.B(0,"==",ret,J$.G(0,S1,"length", true));
+                tmp1 = J$.B(0,"&&",tmp2,tmp1);
                 tmp2 = regexp_test.call(reg,S1);
-                tmp2 = $7.U(0,"!",tmp2);
-                var trueF = $7.B(0,"&&",tmp1,tmp2);
-                tmp1 = $7.B(0,"==",ret,-1);
+                tmp2 = J$.U(0,"!",tmp2);
+                var trueF = J$.B(0,"&&",tmp1,tmp2);
+                tmp1 = J$.B(0,"==",ret,-1);
                 tmp2 = regexp_test.call(reg,this);
-                tmp2 = $7.U(0,"!",tmp2);
-                var falseF = $7.B(0,"&&",tmp1,tmp2);
-                tmp1 = $7.B(0,"||",trueF,falseF);
-                $7.addAxiom(tmp1);
+                tmp2 = J$.U(0,"!",tmp2);
+                var falseF = J$.B(0,"&&",tmp1,tmp2);
+                tmp1 = J$.B(0,"||",trueF,falseF);
+                J$.addAxiom(tmp1);
                 return ret;
             }
             return result;
@@ -244,32 +244,32 @@
 
         function string_substring(result, start, end) {
             var first, tmp1, tmp2;
-            first = $7.getConcrete(this);
+            first = J$.getConcrete(this);
 
             // assuming start >= 0 and end >= start and end === undefined or end <= this.length
 
             if (this !== first) {
                 if (end === undefined) {
-                    end = $7.G(0, this, "length", true);
+                    end = J$.G(0, this, "length", true);
                 }
-                var ret = $7.readInput(result,true);
-                var S1 = $7.readInput("",true);
-                var S2 = $7.readInput("",true);
+                var ret = J$.readInput(result,true);
+                var S1 = J$.readInput("",true);
+                var S2 = J$.readInput("",true);
 
-                tmp2 = $7.B(0,"<=", start, end);
-                tmp1 = $7.B(0,"+",S1,ret);
-                tmp1 = $7.B(0,"+",tmp1,S2);
-                tmp1 = $7.B(0,"===",this,tmp1); // this === S1 + ret + S2
-                tmp1 = $7.B(0,"&&", tmp2, tmp1);
+                tmp2 = J$.B(0,"<=", start, end);
+                tmp1 = J$.B(0,"+",S1,ret);
+                tmp1 = J$.B(0,"+",tmp1,S2);
+                tmp1 = J$.B(0,"===",this,tmp1); // this === S1 + ret + S2
+                tmp1 = J$.B(0,"&&", tmp2, tmp1);
 
-                tmp2 = $7.B(0,"===",start, $7.G(0,S1,"length", true)); // start === S1.length
-                tmp1 = $7.B(0,"&&",tmp2,tmp1);
+                tmp2 = J$.B(0,"===",start, J$.G(0,S1,"length", true)); // start === S1.length
+                tmp1 = J$.B(0,"&&",tmp2,tmp1);
 
-                tmp2 = $7.B(0, "-", end, start);
-                tmp2 = $7.B(0, "===", tmp2, $7.G(0,ret,"length", true));
+                tmp2 = J$.B(0, "-", end, start);
+                tmp2 = J$.B(0, "===", tmp2, J$.G(0,ret,"length", true));
 
-                tmp1 = $7.B(0,"&&",tmp1,tmp2);
-                $7.addAxiom(tmp1);
+                tmp1 = J$.B(0,"&&",tmp1,tmp2);
+                J$.addAxiom(tmp1);
                 return ret;
             }
             return result;
@@ -278,29 +278,29 @@
 
         function string_lastIndexOf(result, str) {
             var first, tmp1, tmp2;
-            str = $7.getConcrete(str);
-            first = $7.getConcrete(this);
+            str = J$.getConcrete(str);
+            first = J$.getConcrete(this);
 
             if (this !== first) {
                 var reg = new RegExp(".*"+regex_escape(str)+".*");
-                var ret = $7.readInput(result,true);
+                var ret = J$.readInput(result,true);
 
-                var S1 = $7.readInput("",true);
-                var S2 = $7.readInput("",true);
-                tmp1 = $7.B(0,"+",S1,str);
-                tmp1 = $7.B(0,"+",tmp1,S2);
-                tmp1 = $7.B(0,"==",this,tmp1);
-                tmp2 = $7.B(0,"==",ret,$7.G(0,S1,"length", true));
-                tmp1 = $7.B(0,"&&",tmp2,tmp1);
+                var S1 = J$.readInput("",true);
+                var S2 = J$.readInput("",true);
+                tmp1 = J$.B(0,"+",S1,str);
+                tmp1 = J$.B(0,"+",tmp1,S2);
+                tmp1 = J$.B(0,"==",this,tmp1);
+                tmp2 = J$.B(0,"==",ret,J$.G(0,S1,"length", true));
+                tmp1 = J$.B(0,"&&",tmp2,tmp1);
                 tmp2 = regexp_test.call(reg,S2);
-                tmp2 = $7.U(0,"!",tmp2);
-                var trueF = $7.B(0,"&&",tmp1,tmp2);
-                tmp1 = $7.B(0,"==",ret,-1);
+                tmp2 = J$.U(0,"!",tmp2);
+                var trueF = J$.B(0,"&&",tmp1,tmp2);
+                tmp1 = J$.B(0,"==",ret,-1);
                 tmp2 = regexp_test.call(reg,this);
-                tmp2 = $7.U(0,"!",tmp2);
-                var falseF = $7.B(0,"&&",tmp1,tmp2);
-                tmp1 = $7.B(0,"||",trueF,falseF);
-                $7.addAxiom(tmp1);
+                tmp2 = J$.U(0,"!",tmp2);
+                var falseF = J$.B(0,"&&",tmp1,tmp2);
+                tmp1 = J$.B(0,"||",trueF,falseF);
+                J$.addAxiom(tmp1);
                 return ret;
             }
             return result;
@@ -401,14 +401,14 @@
 
         function symbolicIntToString(num) {
             var concrete = getConcrete(num);
-            var newSym = $7.readInput(""+concrete, true);
+            var newSym = J$.readInput(""+concrete, true);
             installAxiom(new ConcolicValue(true,new ToStringPredicate(getSymbolic(num), getSymbolic(newSym))));
             return newSym;
         }
 
         function symbolicStringToInt(str) {
             var concrete = getConcrete(str);
-            var newSym = $7.readInput(+concrete, true);
+            var newSym = J$.readInput(+concrete, true);
             installAxiom(new ConcolicValue(true,new ToStringPredicate(getSymbolic(newSym), getSymbolic(str))));
             return newSym;
         }
@@ -770,7 +770,7 @@
                     }
                 }
                 if (start === -1) {
-                    throw new Error("$7.addAxiom('begin') not found");
+                    throw new Error("J$.addAxiom('begin') not found");
                 }
                 if (start === len) {
                     return;

@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-$7 = {};
+J$ = {};
 
 
 (function(sandbox) {
@@ -175,5 +175,5 @@ $7 = {};
 //    sandbox.makeSymbolic = makeSymbolic;
 //    sandbox.addAxiom = addAxiom;
 //    sandbox.endExecution = endExecution;
-}($7));
+}(J$));
 

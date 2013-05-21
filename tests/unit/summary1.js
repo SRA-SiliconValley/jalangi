@@ -25,17 +25,17 @@ if (typeof window === "undefined") {
 
 var x, y;
 
-x = $7.readInput(1);
-y = $7.readInput(1);
+x = J$.readInput(1);
+y = J$.readInput(1);
 
-$7.addAxiom("begin");
+J$.addAxiom("begin");
 
-$7.addAxiom("begin");
-$7.addAxiom(x > 20);
-$7.addAxiom(x < 30);
-$7.addAxiom("and");
-$7.addAxiom(x === 100);
-$7.addAxiom("or");
+J$.addAxiom("begin");
+J$.addAxiom(x > 20);
+J$.addAxiom(x < 30);
+J$.addAxiom("and");
+J$.addAxiom(x === 100);
+J$.addAxiom("or");
 
 
 if (x > 50) {

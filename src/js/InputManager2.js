@@ -16,8 +16,8 @@
 
 // Author: Koushik Sen
 
-if (typeof $7 === 'undefined') {
-    $7 = {};
+if (typeof J$ === 'undefined') {
+    J$ = {};
 }
 
 (function(sandbox){
@@ -104,4 +104,4 @@ if (typeof $7 === 'undefined') {
     sandbox.getCurrentSolutionIndex = getCurrentSolutionIndex;
     sandbox.setCurrentSolution = setCurrentSolution;
     sandbox.setCurrentSolutionIndex = setCurrentSolutionIndex;
-}($7));
+}(J$));

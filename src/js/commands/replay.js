@@ -18,7 +18,7 @@
 
 require('./../analysis');
 try {
-    $7.replay();
+    J$.replay();
 } finally {
-    $7.endExecution();
+    J$.endExecution();
 }

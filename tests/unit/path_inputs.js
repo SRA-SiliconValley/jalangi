@@ -22,14 +22,14 @@ if (typeof window === "undefined") {
     require(process.cwd()+'/inputs');
 }
 
-var a = $7.readInput(1);
+var a = J$.readInput(1);
 if (a) {
-    var b = $7.readInput(2);
+    var b = J$.readInput(2);
     if (b === 100) {
         console.log("Done 1");
     }
 } else {
-    var c = $7.readInput("");
+    var c = J$.readInput("");
     if (c === "Hello") {
         console.log("Done 2");
     }

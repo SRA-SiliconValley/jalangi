@@ -24,7 +24,7 @@ if (typeof window === "undefined") {
 
 var pattern = /((00|\+)44|0)7[0-9]{9}/;
 
-var phonenumber = $7.readInput('07123456789');
+var phonenumber = J$.readInput('07123456789');
 
 
 if (pattern.test(phonenumber) ) {

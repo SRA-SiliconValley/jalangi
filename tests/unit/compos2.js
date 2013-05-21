@@ -40,7 +40,7 @@ function f2(x) {
     }
 }
 
-x = $7.readInput(1);
+x = J$.readInput(1);
 
 function main() {
     f1(x);

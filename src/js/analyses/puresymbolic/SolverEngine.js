@@ -23,7 +23,7 @@
     function SolverEngine() {
         var fs = require('fs');
         var FileLineReader = require('./../../utils/FileLineReader');
-        var PREFIX1 = "$7";
+        var PREFIX1 = "J$";
         var FORMULA_FILE_NAME = "jalangi_formula";
         var SOLUTION_FILE_NAME = "jalangi_solution";
         var INPUTS_FILE_NAME = "jalangi_inputs";

@@ -23,7 +23,7 @@ if (typeof window === "undefined") {
 }
 
 
-var area = $7.readInput("");
+var area = J$.readInput("");
 
 //if (area.length > 6 && (area.indexOf("bb") < area.lastIndexOf("bb"))) {
 //    console.log("OK");

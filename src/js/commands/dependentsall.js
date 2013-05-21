@@ -172,7 +172,7 @@
     while(processSiblings()){
 
     }
-    fs.writeFileSync("jalangi_next.js", "window[\"$7prefix\"] = "+ JSON.stringify(next),"utf8");
+    fs.writeFileSync("jalangi_next.js", "window[\"J$prefix\"] = "+ JSON.stringify(next),"utf8");
 
 
 }());

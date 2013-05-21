@@ -22,7 +22,7 @@ if (typeof window === "undefined") {
 }
 
 var a = [3 , 5, "r", 9];
-var i = $7.readInput(0);
+var i = J$.readInput(0);
 
 if ( a[i] === 5) {
     console.log("at 1 "+ i);

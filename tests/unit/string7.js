@@ -23,7 +23,7 @@ if (typeof window === "undefined") {
 }
 
 
-var s = $7.readInput("Hello");
+var s = J$.readInput("Hello");
 
 
 if (!s) {

@@ -21,7 +21,7 @@ if (typeof window === "undefined") {
     require(process.cwd()+'/inputs');
 }
 
-var a = $7.readInput(1);
+var a = J$.readInput(1);
 
 console.log("a = "+ a);
 

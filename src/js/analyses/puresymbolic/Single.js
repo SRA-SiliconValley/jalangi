@@ -20,7 +20,7 @@
 
     var EVAL_ORG = eval;
 
-    var PREFIX1 = "$7";
+    var PREFIX1 = "J$";
     var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
     var  N_LOG_FUNCTION_LIT = 12;
 
@@ -66,7 +66,7 @@
         if (!flag) {
             return String.fromCharCode.apply(this, arguments);
         }
-        var newSym = $7.readInput("", true);
+        var newSym = J$.readInput("", true);
         pc.addAxiom(new FromCharCodePredicate(ints, newSym));
         return newSym;
     }
@@ -76,7 +76,7 @@
         var newSym;
 
         if (isSymbolic(str) && str.isCompound && str.isCompound()) {
-            newSym = $7.readInput("",true);
+            newSym = J$.readInput("",true);
             pc.addAxiom(B(0,"==",newSym,str));
         } else {
             newSym = str;
@@ -99,7 +99,7 @@
         } else if (f === String.fromCharCode) {
             return string_fromCharCode;
         } else if (f === pc.addAxiom ||
-            f === $7.readInput) {
+            f === J$.readInput) {
             return f;
         } else {
             if (!sfuns) {
@@ -174,14 +174,14 @@
 
     function getCurrentSolution() {
         if (!currentSolution) {
-            currentSolution = $7.getCurrentSolution();
+            currentSolution = J$.getCurrentSolution();
         }
         return currentSolution;
     }
 
     function getCurrentSolutionIndex() {
         if (!currentSolutionIndex) {
-            currentSolutionIndex = $7.getCurrentSolutionIndex();
+            currentSolutionIndex = J$.getCurrentSolutionIndex();
         }
         return currentSolutionIndex;
     }
@@ -194,7 +194,7 @@
     }
 
     function getFullSolution(newInputs) {
-        var oldInputs = $7.inputs;
+        var oldInputs = J$.inputs;
         if (newInputs === undefined) {
             newInputs = getCurrentSolution();
         }
@@ -275,7 +275,7 @@
 
         } else {
             throw new Error("Unknown symbolic type "+val+ " with path constraint "+
-                pathConstraint + " inputs "+JSON.stringify($7.inputs));
+                pathConstraint + " inputs "+JSON.stringify(J$.inputs));
         }
     }
 
@@ -418,7 +418,7 @@
 
 
     function invokeEval(base, f, args) {
-        return f.call(base,$7.instrumentCode(args[0],true));
+        return f.call(base,J$.instrumentCode(args[0],true));
     }
 
 
@@ -574,14 +574,14 @@
 
     function symbolicIntToString(num) {
         //var c = num.substitute(getFullSolution(sandbox.getCurrentSolution()));
-        var newSym = $7.readInput("", true);
+        var newSym = J$.readInput("", true);
         pc.addAxiom(new ToStringPredicate(num, newSym));
         return newSym;
     }
 
     function symbolicStringToInt(str) {
 //        var s = str.substitute(getFullSolution(sandbox.getCurrentSolution()));
-        var newSym = $7.readInput(0, true);
+        var newSym = J$.readInput(0, true);
         pc.addAxiom(new ToStringPredicate(newSym, str));
         return newSym;
     }

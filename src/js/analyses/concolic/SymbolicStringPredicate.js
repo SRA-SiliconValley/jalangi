@@ -203,16 +203,16 @@
             var classpath = __dirname+"/../../../../jout/production/jalangijava/:"+__dirname+"/../../../../thirdparty/javalib/automaton.jar ";
             s1 = (typeof this.left === 'string')?this.left.length:this.left.getField("length");
             s2 = (typeof this.right === 'string' || this.right instanceof RegExp)?this.right.length:this.right.getField("length");
-//        s1 = $7.G(0,this.left,"length", true);
-//        s2 = $7.G(0,this.right,"length", true);
+//        s1 = J$.G(0,this.left,"length", true);
+//        s2 = J$.G(0,this.right,"length", true);
 
             if (mode === "integer") {
                 switch(this.op) {
                     case SymbolicStringPredicate.EQ:
-                        formula = $7.B(0,"==",s1,s2);
+                        formula = J$.B(0,"==",s1,s2);
                         return formula.symbolic.getFormulaString(freeVars,mode, assignments);
                     case SymbolicStringPredicate.NE:
-                        //formula = $7.B(0,"!=",s1,s2);
+                        //formula = J$.B(0,"!=",s1,s2);
                         //return formula.symbolic.getFormulaString(freeVars,mode, assignments);
                         return "TRUE";
                     case SymbolicStringPredicate.IN:

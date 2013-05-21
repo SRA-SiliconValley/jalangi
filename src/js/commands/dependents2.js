@@ -119,7 +119,7 @@
                     candidates.push(cov_arr[i]);
                     var suffix = pad(outputp,6);
                     console.log("Adding "+prefix_arr[i].join(','))
-                    fs.writeFileSync("jalangi_next"+suffix+".js", "window[\"$7prefix\"] = "+ JSON.stringify(prefix_arr[i]),"utf8");
+                    fs.writeFileSync("jalangi_next"+suffix+".js", "window[\"J$prefix\"] = "+ JSON.stringify(prefix_arr[i]),"utf8");
                     outputp++;
                 }
             }

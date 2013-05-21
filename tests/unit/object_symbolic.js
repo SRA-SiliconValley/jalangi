@@ -24,8 +24,8 @@ if (typeof window === "undefined") {
 }
 
 
-var o = $7.readInput({});
-var x = $7.readInput(1);
+var o = J$.readInput({});
+var x = J$.readInput(1);
 
 if (o.x) {
     console.log("1: "+o.x);

@@ -24,8 +24,8 @@ if (typeof window === "undefined") {
 
 
 
-var x = $7.readInput('77');
-var y = $7.readInput('');
+var x = J$.readInput('77');
+var y = J$.readInput('');
 
 switch(x) {
     case y:

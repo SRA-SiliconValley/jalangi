@@ -77,7 +77,7 @@ var N = 4, i;
 var array = [];
 for(i=0; i<N; i++) {
     array[i] = i;
-    array[i] = $7.readInput(array[i]);
+    array[i] = J$.readInput(array[i]);
 }
 
 function dosort()

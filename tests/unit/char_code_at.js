@@ -23,7 +23,7 @@ if (typeof window === "undefined") {
 }
 
 
-var s = $7.readInput("");
+var s = J$.readInput("");
 if (s.charCodeAt(1) === 72 && s.charCodeAt(3) === 69) {
         console.log(s);
 }

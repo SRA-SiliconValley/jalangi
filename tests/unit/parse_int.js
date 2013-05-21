@@ -21,8 +21,8 @@ if (typeof window === "undefined") {
     require(process.cwd()+'/inputs');
 }
 
-var a = $7.readInput(0);
-var b = $7.readInput("0");
+var a = J$.readInput(0);
+var b = J$.readInput("0");
 
 var x = parseInt(a);
 var y = parseInt(b);

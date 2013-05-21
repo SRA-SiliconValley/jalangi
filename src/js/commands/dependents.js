@@ -149,7 +149,7 @@
 //                }
 //            }
                 var suffix = pad(outputp,6);
-                fs.writeFileSync("jalangi_next"+suffix+".js", "window[\"$7prefix\"] = "+ JSON.stringify(prefix),"utf8");
+                fs.writeFileSync("jalangi_next"+suffix+".js", "window[\"J$prefix\"] = "+ JSON.stringify(prefix),"utf8");
                 outputp++;
                 return true;
             } else {

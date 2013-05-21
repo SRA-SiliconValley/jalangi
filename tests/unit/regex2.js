@@ -24,7 +24,7 @@ if (typeof window === "undefined") {
 
 
 var s1 = "hello.";
-var s2 = "my"+$7.readInput("world ");
+var s2 = "my"+J$.readInput("world ");
 
 if (s2.indexOf(s1)>0) {
     console.log("Found "+s1+" in " + s2);

@@ -80,7 +80,7 @@ function dosort()
     var array = [];
     for(i=0; i<N; i++) {
         array[i] = Math.floor(Math.random()*73);
-        array[i] = $7.readInput(array[i]);
+        array[i] = J$.readInput(array[i]);
     }
     console.log(array.join(' '));
     document.write(array.join(' ')+"<br>");

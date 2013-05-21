@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-$7 = {};
+J$ = {};
 
 if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
     require('./symbolic')
@@ -33,7 +33,7 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
 
     var EVAL_ORG = eval;
 
-    var PREFIX1 = "$7";
+    var PREFIX1 = "J$";
     var SPECIAL_PROP = "*"+PREFIX1+"*";
     var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
     var SPECIAL_PROP3 = "*"+PREFIX1+"C*";
@@ -152,9 +152,9 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
         return function() {
             var len = arguments.length;
             for (var i = 0; i<len; i++) {
-                arguments[i] = $7.getConcrete(arguments[i]);
+                arguments[i] = J$.getConcrete(arguments[i]);
             }
-            return f.apply($7.getConcrete(this),arguments);
+            return f.apply(J$.getConcrete(this),arguments);
         }
     }
 
@@ -165,8 +165,8 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
             f === Number ||
             f === Boolean ||
             f === RegExp ||
-            f === $7.addAxiom ||
-            f === $7.readInput) {
+            f === J$.addAxiom ||
+            f === J$.readInput) {
             return [f, true];
         } else if (f === Function.prototype.apply ||
             f === Function.prototype.call ||
@@ -1614,7 +1614,7 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
     sandbox.log = log;
 
 
-}($7));
+}(J$));
 
 }
 
@@ -1623,7 +1623,7 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
 //@TODO: associate iid with source line and column
 
 //@todo:@assumption arguments.callee is available
-//@todo:@assumptions SPECIAL_PROP = "*$7*" is added to every object, but its enumeration is avoided in instrumented code
+//@todo:@assumptions SPECIAL_PROP = "*J$*" is added to every object, but its enumeration is avoided in instrumented code
 //@todo:@assumptions get and set of objects in ES5 could be problem
 //@todo:@assumptions ReferenceError when accessing an undeclared uninitialized variable won't be thrown
 //@todo:@assumption window.x is not initialized in node.js replay mode when var x = e is done in the global scope, but handled using syncValues

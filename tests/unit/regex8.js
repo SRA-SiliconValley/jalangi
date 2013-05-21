@@ -52,7 +52,7 @@ function isValidQuery(str)
 
 
 
-var str = $7.readInput(""); // this input
+var str = J$.readInput(""); // this input
 console.log("Input: "+str.toString());
 
 if (isValidQuery(str)) {

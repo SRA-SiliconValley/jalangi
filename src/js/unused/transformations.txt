@@ -23,70 +23,70 @@ defining its application on different ast types. We use two auxiliary operators
 
 
 B''' => try {
-        $7.Fe(iid1, arguments.callee);
-        $7.R(iid1, "foo", foo);  // for each function defined in the scope
+        J$.Fe(iid1, arguments.callee);
+        J$.R(iid1, "foo", foo);  // for each function defined in the scope
         B''
-    } catch($7e) {
-        throw $7e;
+    } catch(J$e) {
+        throw J$e;
     } finally {
-        $7.Fr(iid1);
+        J$.Fr(iid1);
     }
 
 pgm' => try {
-                $7.Se(iid1, script name);
+                J$.Se(iid1, script name);
                 pgm''
-            } catch($7e) {
-                throw $7e;
+            } catch(J$e) {
+                throw J$e;
             } finally {
-                $7.Sr(iid1);
+                J$.Sr(iid1);
             }
 
 
 (x)'' => x // if x is in scope and not an argument and there is no 'eval' or 'with' in the scope
 
-(x)'' => $7.R(iid1, "x", x)
+(x)'' => J$.R(iid1, "x", x)
 
-(x)'' => $7.I(typeof x === "undefined")?$7.R(iid1, "x", undefined):$7.R(iid1, "x", x) // x is in global scope
+(x)'' => J$.I(typeof x === "undefined")?J$.R(iid1, "x", undefined):J$.R(iid1, "x", x) // x is in global scope
 
-(e.f)'' => $7.G(iid1, e'', "f")
+(e.f)'' => J$.G(iid1, e'', "f")
 
-(e1[e2])'' => $7.G(iid1, e1'', e2'')
+(e1[e2])'' => J$.G(iid1, e1'', e2'')
 
 (others)'' => others'
 
 (var (x = e)*)' => var (x = e'')*
 
-(new eval(args))' => $7.L(iid1, eval($7.instrumentCode(args'',true)), N_LOG_OBJECT_NEW)
+(new eval(args))' => J$.L(iid1, eval(J$.instrumentCode(args'',true)), N_LOG_OBJECT_NEW)
 
-(new e.f(args))' => $7.L(iid1, $7.M(iid1, e'', "f", true)(args''), N_LOG_OBJECT_NEW)
+(new e.f(args))' => J$.L(iid1, J$.M(iid1, e'', "f", true)(args''), N_LOG_OBJECT_NEW)
 
-(new e1[e2](args))' => $7.L(iid1, $7.M(iid1, e1'', e2'', true)(args''), N_LOG_OBJECT_NEW)
+(new e1[e2](args))' => J$.L(iid1, J$.M(iid1, e1'', e2'', true)(args''), N_LOG_OBJECT_NEW)
 
-(new e(args))' => $7.L(iid1, $7.F(iid1, e'', true)(args''), N_LOG_OBJECT_NEW)
+(new e(args))' => J$.L(iid1, J$.F(iid1, e'', true)(args''), N_LOG_OBJECT_NEW)
 
-(eval(args))' => $7.L(iid1, eval($7.instrumentCode(args'',true)), N_LOG_RETURN)
+(eval(args))' => J$.L(iid1, eval(J$.instrumentCode(args'',true)), N_LOG_RETURN)
 
-(e.f(args))' => $7.L(iid1, $7.M(iid1, e'', "f", false)(args''), N_LOG_RETURN)
+(e.f(args))' => J$.L(iid1, J$.M(iid1, e'', "f", false)(args''), N_LOG_RETURN)
 
-(e1[e2](args))' => $7.L(iid1, $7.M(iid1, e1'', e2'', false)(args''), N_LOG_RETURN)
+(e1[e2](args))' => J$.L(iid1, J$.M(iid1, e1'', e2'', false)(args''), N_LOG_RETURN)
 
-(e(args))' => $7.L(iid1, $7.F(iid1, e'', false)(args''), N_LOG_RETURN)
+(e(args))' => J$.L(iid1, J$.F(iid1, e'', false)(args''), N_LOG_RETURN)
 
 (e.f)' => e''.f
 
 (e1[e2])' => e1''[e2'']
 
-(x = e)' => x = $7.W(iid1, "x", e'')
+(x = e)' => x = J$.W(iid1, "x", e'')
 
-(e1.f)' = e => $7.P(iid1, e1'', "f", e'')
+(e1.f)' = e => J$.P(iid1, e1'', "f", e'')
 
-(e1[e2])' = e => $7.P(iid1, e1'', e2'', e'')
+(e1[e2])' = e => J$.P(iid1, e1'', e2'', e'')
 
-(x += e)' => x = $7.W(iid1, "x", x''+e'')
+(x += e)' => x = J$.W(iid1, "x", x''+e'')
 
-(e1.f += e)'  => $7.A(iid1, e1'', "f", "+")(e'')
+(e1.f += e)'  => J$.A(iid1, e1'', "f", "+")(e'')
 
-(e1[e2] += e)'  => $7.A(iid1, e1'', e2'', "+")(e'')
+(e1[e2] += e)'  => J$.A(iid1, e1'', e2'', "+")(e'')
 
 (C ? e1 : e2)' => C''? e1'' : e2''
 
@@ -104,11 +104,11 @@ pgm' => try {
 
 (do B while (C))' => do B'' while (C'')
 
-(for (x in e1) B)' =>  for (x in e1'') if (x !== "*$7*") B''
+(for (x in e1) B)' =>  for (x in e1'') if (x !== "*J$*") B''
 
 (if (C) B1 else B2)' => if (C'') B1'' else B2''
 
-(function(args) B)' => $7.L(iid1, function(args) B''', N_LOG_FUNCTION_LIT);
+(function(args) B)' => J$.L(iid1, function(args) B''', N_LOG_FUNCTION_LIT);
 
 (function x(args) B)' => function x(args) B''';
 
@@ -128,11 +128,11 @@ pgm' => try {
 
 (e--)' => (e -= 1)'+1
 
-({props})' =>  $7.L(iid1, {props''}, N_LOG_OBJECT_LIT)
+({props})' =>  J$.L(iid1, {props''}, N_LOG_OBJECT_LIT)
 
-([elements])' =>  $7.L(iid1, [elements''], N_LOG_ARRAY_LIT)
+([elements])' =>  J$.L(iid1, [elements''], N_LOG_ARRAY_LIT)
 
-(regex)' =>  $7.L(iid1, regex, N_LOG_REXEXP_LIT)
+(regex)' =>  J$.L(iid1, regex, N_LOG_REXEXP_LIT)
 
 (stmt)' => stmt''
 

@@ -17,7 +17,7 @@
 // Author: Koushik Sen
 
 (function(sandbox){
-    var prefix1 = "$7";
+    var prefix1 = "J$";
     var fileSuffix1 = "_jalangi_";
     var COVERAGE_FILE_NAME = "jalangi_coverage";
 
@@ -367,7 +367,7 @@
                 }
             },
             "call" : function(expr, args) {
-                // do not instrument argument of $7.I
+                // do not instrument argument of J$.I
                 if (isDotIExpr(expr)) {
                     return [this[0], walk(expr), args];
                 }  else {
@@ -511,6 +511,6 @@
 //    console.log(ast_to_string(ast));
 //        var new_code = uglify.uglify.gen_code(["toplevel", ast], { beautify: true }).toString();
 //    console.log(new_code);
-}((typeof $7 === 'undefined')? undefined:$7));
+}((typeof J$ === 'undefined')? undefined:J$));
 
 

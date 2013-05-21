@@ -23,8 +23,8 @@ if (typeof window === "undefined") {
 }
 
 
-var v = $7.readInput(1);
-var w = $7.readInput(false);
+var v = J$.readInput(1);
+var w = J$.readInput(false);
 
 if (v && w) {
     console.log("Then");

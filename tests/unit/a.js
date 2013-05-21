@@ -25,9 +25,9 @@ console.log(this === global);
 
 function bar(val) {
     console.log("val this "+val);
-    val["*$7*"] = {};
-    val["*$7*"]["*$7*"] = 1;
-    console.log(val["*$7*"]["*$7*"]);
+    val["*J$*"] = {};
+    val["*J$*"]["*J$*"] = 1;
+    console.log(val["*J$*"]["*J$*"]);
 }
 
 function foo() {

@@ -24,9 +24,9 @@ if (typeof window === "undefined") {
 
 var pattern = /((00|\+)44|0)7[0-9]{9}/;
 
-var area = $7.readInput("");
+var area = J$.readInput("");
 
-var rest = $7.readInput("");
+var rest = J$.readInput("");
 
 var phonenumber = "44"+area;
 

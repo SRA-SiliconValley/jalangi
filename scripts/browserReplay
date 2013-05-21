@@ -21,12 +21,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd jalangi_tmp
 echo $DIR
 
-node $DIR/../src/js/instrument/esnstrument.js $DIR/../$1.js
+node $DIR/../src/js/instrument/esnstrument.js ../$1.js
 touch inputs.js
 echo --------------- Recording execution of $JALANGI_HOME/$1.js ---------------
 export JALANGI_MODE=record
 export JALANGI_ANALYSIS=none
-node $DIR/../$1_jalangi_.js
+node ../$1_jalangi_.js
 cd ..
 cp jalangi_tmp/jalangi_trace jalangi_trace
 node $DIR/../src/js/commands/createReplay.js jalangi_trace

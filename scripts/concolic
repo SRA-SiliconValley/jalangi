@@ -45,7 +45,7 @@ echo $CMD
 pwd
 
 echo --------------- Instrumenting $1.js --------------
-$CMD $JALANGI_HOME/src/js/instrument/esnstrument.js $JALANGI_HOME/$1.js
+$CMD $JALANGI_HOME/src/js/instrument/esnstrument.js ../$1.js
 echo "*************** run $JALANGI_HOME/$1.js ****************" >> jalangi_test_results
 
 i=0
@@ -69,14 +69,14 @@ do
 
     echo --------------- Running without any instrumentation $JALANGI_HOME/$1.js --------
     rm jalangi_trace 2> /dev/null
-    $CMD $JALANGI_HOME/$1.js &> jalangi_normal
+    $CMD ../$1.js &> jalangi_normal
     cat jalangi_normal
 
     echo --------------- Recording execution of $JALANGI_HOME/$1.js ---------------
     rm jalangi_trace 2> /dev/null
     export JALANGI_MODE=record
     export JALANGI_ANALYSIS=none
-    $CMD $JALANGI_HOME/$1_jalangi_.js &> jalangi_record
+    $CMD ../$1_jalangi_.js &> jalangi_record
     cat jalangi_record
 
     echo --------------- Replaying $JALANGI_HOME/$1.js ---------------

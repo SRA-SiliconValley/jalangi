@@ -44,7 +44,7 @@ else
 fi
 
 echo --------------- Instrumenting $1.js --------------
-$CMD $JALANGI_HOME/src/js/instrument/esnstrument.js $JALANGI_HOME/$1.js
+$CMD $JALANGI_HOME/src/js/instrument/esnstrument.js ../$1.js
 echo "*************** run $JALANGI_HOME/$1.js ****************" >> jalangi_test_results
 
 i=0
@@ -69,7 +69,7 @@ do
     rm jalangi_trace 2> /dev/null
     export JALANGI_MODE=analysis
     export JALANGI_ANALYSIS=analyses/concolic/SymbolicEngine
-    $CMD $JALANGI_HOME/$1_jalangi_.js
+    $CMD ../$1_jalangi_.js
 
     declare -i iter=$(sed -n 1p jalangi_tail 2>/dev/null)
     i=$((i+1))

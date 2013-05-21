@@ -32,13 +32,13 @@ rm -rf .coverage_data
 rm inputs.js
 touch inputs.js
 echo "***************** Running tests/$1.js on jalangi_inputs0 ********************"
-$CMD $JALANGI_HOME/$1.js
+$CMD ../$1.js
 
 for i in jalangi_inputs*
 do
     echo "***************** Running tests/$1.js on $i ********************"
     cp $i inputs.js
-    $CMD $JALANGI_HOME/$1.js
+    $CMD ../$1.js
 done
 
 if [ "$USE_NODE_COVER" == "true" ]

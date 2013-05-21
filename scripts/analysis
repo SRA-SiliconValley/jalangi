@@ -15,10 +15,10 @@
 # Author: Koushik Sen
 
 
-rm -rf jalangi_tmp
-mkdir jalangi_tmp
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export JALANGI_HOME=$DIR/..
+rm -rf jalangi_tmp
+mkdir jalangi_tmp
 cd jalangi_tmp
 
 if [ "$USE_NODE_COVER" == "true" ]
@@ -44,7 +44,7 @@ echo $CMD
 
 
 echo --------------- Instrumenting $2.js --------------
-$CMD $JALANGI_HOME/src/js/instrument/esnstrument.js $JALANGI_HOME/$2.js
+$CMD $JALANGI_HOME/src/js/instrument/esnstrument.js ../$2.js
 
 touch inputs.js
 
@@ -52,7 +52,7 @@ echo --------------- Recording execution of $JALANGI_HOME/$2.js ---------------
 rm jalangi_trace 2> /dev/null
 export JALANGI_MODE=record
 export JALANGI_ANALYSIS=none
-$CMD $JALANGI_HOME/$2_jalangi_.js
+$CMD ../$2_jalangi_.js
 
 echo --------------- Replaying $JALANGI_HOME/$2.js with $1---------------
 export JALANGI_MODE=replay

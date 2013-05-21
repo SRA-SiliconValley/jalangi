@@ -1,13 +1,11 @@
 #!/bin/bash
 
-echo $PATH
 export PATH=$PATH:/usr/local/bin
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )"
 cd $DIR
 echo "" > jalangi/out/out.html
 
-scripts/relconcolic tests/unit/integer11 6
-rm jalangi/out/out.html
-touch jalangi/out/out.html
+scripts/relrerunall tests/unit/integer11
+
 
 

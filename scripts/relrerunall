@@ -21,27 +21,30 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export JALANGI_HOME=$DIR/..
+cd jalangi_tmp
+pwd
 
 export CMD='cover run '
 
+cp ../.coverignore .
 rm -rf .coverage_data
 rm inputs.js
 touch inputs.js
 
 echo "***************** Running ($1.js:1:1) on (inputs.js:1:1) ********************"
-$CMD $1.js
+$CMD ../$1.js
 
 for i in jalangi_inputs*
 do
     echo "***************** Running ($1.js:1:1) on ($i:1:1) ********************"
     cp $i inputs.js
-    $CMD $1.js
+    $CMD ../$1.js
 done
 
     echo "***************** Done testing ********************"
     sleep 2
     cover combine
     cover report html
-    cp cover_html/index.html jalangi/out/out.html
-    cp cover_html/*.* jalangi/out/
+    cp cover_html/index.html ../jalangi/out/out.html
+    cp cover_html/*.* ../jalangi/out/
 

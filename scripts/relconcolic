@@ -20,14 +20,14 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export JALANGI_HOME=$DIR/..
+rm -rf jalangi_tmp
+mkdir jalangi_tmp
+cd jalangi_tmp
 
 export CMD='node '
-echo $CMD
-
-rm jalangi_* 2> /dev/null
 
 echo --------------- Instrumenting $1.js --------------
-$CMD $JALANGI_HOME/src/js/instrument/esnstrument.js $1.js
+$CMD $JALANGI_HOME/src/js/instrument/esnstrument.js ../$1.js
 
 i=0
 iter=1
@@ -52,7 +52,7 @@ do
     rm jalangi_trace 2> /dev/null
     export JALANGI_MODE=record
     export JALANGI_ANALYSIS=none
-    $CMD $1_jalangi_.js
+    $CMD ../$1_jalangi_.js
 
     echo --------------- Replaying $1.js ---------------
     export JALANGI_MODE=replay

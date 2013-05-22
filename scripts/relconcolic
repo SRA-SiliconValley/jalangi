@@ -73,10 +73,10 @@ else
     echo "***************** $1.js Failed!!!" >> $JALANGI_HOME/jalangi_sym_test_results
 fi
 
-echo "***************** Generated (inputs.js:1:1) for ($1.js:1:1) ********************"
+echo "***************** Generated (jalangi_tmp/inputs.js:1:1) for ($1.js:1:1) ********************"
 for i in jalangi_inputs*
 do
-    echo "***************** Generated ($i:1:1) for ($1.js:1:1) ********************"
+    echo "***************** Generated (jalangi_tmp/$i:1:1) for ($1.js:1:1) ********************"
 done
 
 

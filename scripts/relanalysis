@@ -39,7 +39,7 @@ export JALANGI_MODE=record
 export JALANGI_ANALYSIS=none
 $CMD ../$2_jalangi_.js
 
-echo --------------- Replaying $2.js with $1---------------
+echo --------------- Replaying $2.js with jalangi_tmp/$1---------------
 export JALANGI_MODE=replay
 export JALANGI_ANALYSIS=$1
 $CMD $JALANGI_HOME/src/js/commands/replay.js

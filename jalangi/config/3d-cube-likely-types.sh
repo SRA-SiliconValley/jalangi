@@ -9,5 +9,5 @@ scripts/relanalysis analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/3
 
 sleep 1
 #export DYLD_LIBRARY_PATH=/opt/local/lib
-dot -Tpng jalangi_types.dot -o jalangi/out/jalangi_types.png
+dot -Tpng jalangi_tmp/jalangi_types.dot -o jalangi/out/jalangi_types.png
 echo "<img src=\"jalangi_types.png\"></img>" > jalangi/out/out.html

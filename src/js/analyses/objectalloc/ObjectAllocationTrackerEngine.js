@@ -43,14 +43,13 @@
 
         function getSetFields(map, key) {
             if (!HOP(map, key)) {
-                return map[key] = {nObjects: 1, maxLastAccessTime: 0, averageLastAccessTime:0};
+                return map[key] = {nObjects: 0, maxLastAccessTime: 0, averageLastAccessTime:0, isWritten: false};
             }
             var ret = map[key];
-            ret.nObjects++;
             return ret;
         }
 
-        function updateObjectInfo(base, offset, value, updateLocation) {
+        function updateObjectInfo(base, offset, value, updateLocation, isWritten) {
             var sym, iid;
             sym = getSymbolic(base);
             if (sym) {
@@ -62,6 +61,9 @@
                 var max = sym.lastAccessTime - sym.originTime;
                 if (max > objectInfo.maxLastAccessTime) {
                     objectInfo.maxLastAccessTime = max;
+                }
+                if (isWritten) {
+                    objectInfo.isWritten = true;
                 }
             }
         }
@@ -76,7 +78,8 @@
                     }
                     s = type+"("+creationLocation+")";
                     ret = new ConcolicValue(obj, {loc: s, originTime: instrCounter, lastAccessTime: instrCounter});
-                    getSetFields(iidToObjectInfo, s);
+                    var objectInfo = getSetFields(iidToObjectInfo, s);
+                    objectInfo.nObjects++;
                 }
             }
             return ret;
@@ -107,7 +110,7 @@
 
         this.putFieldPre = function(iid, base, offset, val) {
             instrCounter++;
-            updateObjectInfo(base, offset, val, iid);
+            updateObjectInfo(base, offset, val, iid, true);
         }
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
@@ -122,7 +125,7 @@
 
         this.getField = function(iid, base, offset, val) {
             if (getConcrete(val) !== undefined) {
-                updateObjectInfo(base, offset, val, iid);
+                updateObjectInfo(base, offset, val, iid, false);
             }
             return val;
         }
@@ -169,7 +172,8 @@
                 var str = typeInfoWithLocation(iid);
                 str = str + " " + objectInfo.nObjects +
                     " times\n      with max last access time since creation = "+objectInfo.maxLastAccessTime+ " instructions "+
-                    "\n      and average last access time since creation = "+(objectInfo.averageLastAccessTime/objectInfo.nObjects)+" instructions ";
+                    "\n      and average last access time since creation = "+(objectInfo.averageLastAccessTime/objectInfo.nObjects)+" instructions "+
+                    (objectInfo.isWritten?"":"\n      and seems to be Read Only");
                 console.log(str);
             }
 

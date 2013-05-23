@@ -31,14 +31,24 @@ rm -rf .coverage_data
 rm inputs.js
 touch inputs.js
 
+#echo "***************** Running ($1.js:1:1) on (jalangi_tmp/inputs.js:1:1) ********************"
+$CMD ../$1.js &>/dev/null
+
+for i in jalangi_inputs*
+do
+#    echo "***************** Running ($1.js:1:1) on (jalangi_tmp/$i:1:1) ********************"
+    cp $i inputs.js
+    $CMD ../$1.js &>/dev/null
+done
+
 echo "***************** Running ($1.js:1:1) on (jalangi_tmp/inputs.js:1:1) ********************"
-$CMD ../$1.js
+node ../$1.js
 
 for i in jalangi_inputs*
 do
     echo "***************** Running ($1.js:1:1) on (jalangi_tmp/$i:1:1) ********************"
     cp $i inputs.js
-    $CMD ../$1.js
+    node ../$1.js
 done
 
     echo "***************** Done testing ********************"

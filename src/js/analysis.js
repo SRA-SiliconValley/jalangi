@@ -468,6 +468,9 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
             rrEngine = null;
             val = sEngine.invokeFun(iid, f, base, args, val, isConstructor);
             rrEngine = tmp_rrEngine;
+            if (rrEngine) {
+                rrEngine.RR_updateRecordedObject(val);
+            }
         }
         printValueForTesting(2, iid,val);
         return val;
@@ -552,6 +555,9 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
 
         if (sEngine && sEngine.literal) {
             val = sEngine.literal(iid, val);
+            if (rrEngine) {
+                rrEngine.RR_updateRecordedObject(val);
+            }
         }
 
         return val;
@@ -574,6 +580,9 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
         }
         if (sEngine && sEngine.read) {
             val = sEngine.read(iid, name, val);
+            if (rrEngine) {
+                rrEngine.RR_updateRecordedObject(val);
+            }
         }
         printValueForTesting(3, iid, val);
         return val;
@@ -628,6 +637,9 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
             rrEngine = null;
             val = sEngine.getField(iid, base, offset, val);
             rrEngine = tmp_rrEngine;
+            if (rrEngine) {
+                rrEngine.RR_updateRecordedObject(val);
+            }
         }
         printValueForTesting(1, iid,val);
         return val;
@@ -748,6 +760,9 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
 
         if (sEngine && sEngine.binary) {
             result_c = sEngine.binary(iid, op, left, right, result_c);
+            if (rrEngine) {
+                rrEngine.RR_updateRecordedObject(result_c);
+            }
         }
         return result_c;
     }
@@ -785,6 +800,9 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
 
         if (sEngine && sEngine.unary) {
             result_c = sEngine.unary(iid, op, left, result_c);
+            if (rrEngine) {
+                rrEngine.RR_updateRecordedObject(result_c);
+            }
         }
         return result_c;
     }
@@ -841,6 +859,9 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
 
         if (sEngine && sEngine.conditional) {
             lastVal = sEngine.conditional(iid, left, ret);
+            if (rrEngine) {
+                rrEngine.RR_updateRecordedObject(lastVal);
+            }
         } else {
             lastVal = left_c;
         }
@@ -873,6 +894,7 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
 
         var literalId = 2;
         var setLiteralId;
+        var updateRecordedObject;
 
         /*
          type enumerations are
@@ -951,6 +973,14 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
             var objectMap = [];
             //var objectMapIndex = [];
 
+
+            updateRecordedObject = function(obj) {
+                var val = getConcrete(obj);
+                if (val !== obj && val !== undefined && val !== null && HOP(val, SPECIAL_PROP)) {
+                    var id = val[SPECIAL_PROP][SPECIAL_PROP];
+                    objectMap[id] = obj;
+                }
+            }
 
             setLiteralId = function(val) {
                 var id;
@@ -1148,7 +1178,7 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
             }
         }
 
-
+        this.RR_updateRecordedObject = updateRecordedObject;
 
         this.RR_evalBegin = function() {
             evalFrames.push(frame);
@@ -1409,12 +1439,12 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
                         }
                     }
                     if (ret[F_FUNNAME] === N_LOG_FUNCTION_ENTER) {
-                        f = syncValue(ret, undefined,0);
+                        f = getConcrete(syncValue(ret, undefined,0));
                         ret = traceInfo.getNext();
                         var dis = syncValue(ret, undefined, 0);
                         f.call(dis);
                     } else if (ret[F_FUNNAME] === N_LOG_SCRIPT_ENTER) {
-                        var path = syncValue(ret, undefined,0);
+                        var path = getConcrete(syncValue(ret, undefined,0));
                         if (isBrowserReplay) {
                             load(path);
                             return;

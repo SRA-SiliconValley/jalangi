@@ -21,6 +21,7 @@
     var PredValues = require('./PredValues');
     var BDD = require('./BDD');
     var SymbolicBool = require('./../concolic/SymbolicBool');
+    var getIIDInfo = require('./../../utils/IIDInfo');
 
     var pc = single.getPC();
 
@@ -162,7 +163,7 @@
                 pred = pc.getPC().and(pred);
 
                 if (!pred.isZero()) {
-                    pc.pushPC(pred, []);
+                    pc.pushPC(pred);
                     if (op !== undefined) {
                         value = single.B(iid, op, left.values[i].value, right.values[j].value);
                     } else {
@@ -187,7 +188,7 @@
             pred = pc.getPC().and(left.values[i].pred);
 
             if (!pred.isZero()) {
-                pc.pushPC(pred, []);
+                pc.pushPC(pred);
                 value = single.U(iid, op, left.values[i].value);
                 ret = addValue(ret, pc.getPC(), value);
                 pc.popPC();
@@ -216,7 +217,7 @@
                 if (!pred.isZero()) {
                     var base = left.values[i].value;
                     var offset = right.values[i].value;
-                    pc.pushPC(pred, []);
+                    pc.pushPC(pred);
                     var oldValue = single.G(iid, base, offset);
                     single.P(iid, base, offset, update(oldValue, val));
                     pc.popPC();
@@ -241,13 +242,14 @@
 
                 if (!pred.isZero()) {
                     pathIndex = [];
-                    pc.pushPC(pred, []);
+                    pc.pushPC(pred);
                     value = single.invokeFun(iid, base.values[i].value, f.values[i].value, args, isConstructor);
-                    ret = addValue(ret, pc.getPC(), value);
+                    ret = addValue(ret, pred, value);
                     pc.popPC();
                 }
             }
         }
+        //console.log("after invokeFun at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
         return ret;
     }
 
@@ -267,13 +269,14 @@
         pathIndex = pc.getIndex();
 
         if (ret2) {
-            console.log("backtrack");
+            console.log("backtrack "+iid);
         }
 
+        console.log("after tracing a path at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
         pc.popPC();
-        pc.pushPC(pathIndex.pc, pathIndex, true, returnVal);
+        pc.pushPC(null, pathIndex, true, returnVal);
         return ret2;
     }
 

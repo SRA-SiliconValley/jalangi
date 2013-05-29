@@ -68,12 +68,18 @@
 
     function pushPC(pc, pi, isNotFirst, returnVal) {
         pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, first:first, returnVal: returnValue });
-        pathConstraint = pc;
-        pathIndex = pi;
         index = 0;
         formulaStack = [];
         formulaStack.count = 0;
-        solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
+        if (pi) {
+            pathIndex = pi;
+            solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
+            pathConstraint = pathIndex.length>0? pathIndex[pathIndex.length-1].pc: BDD.one;
+        } else {
+            pathIndex = [];
+            solution = null;
+            pathConstraint = pc;
+        }
         first = !isNotFirst;
         returnValue = returnVal;
     }
@@ -329,7 +335,7 @@
                 addAxiom(falseBranch, true);
             } else if (makeConcrete(trueBranch, true)) {
                 if (tmp = getSolution(falseBranch, true)) {
-                    setNext({done:false, branch:true, solution: tmp, pc: trueBranch});
+                    setNext({done:false, branch:true, solution: tmp, pc: falseBranch});
                     console.log("Solution "+JSON.stringify(tmp));
                 } else {
                     setNext({done:true, branch:true, solution: null, pc: null});
@@ -370,7 +376,7 @@
         while(pathIndex.length > 0) {
             elem = pathIndex.pop();
             if (!elem.done) {
-                pathIndex.push({done: true, branch: !elem.branch, solution: elem.solution});
+                pathIndex.push({done: true, branch: !elem.branch, solution: elem.solution, pc: elem.pc});
                 break;
             }
         }
@@ -384,7 +390,7 @@
         }
         if (!noWrite) {
             solver.writeInputs(solution, []);
-            console.log("-------------");
+            //console.log("-------------");
             //console.log("nLiterals "+literalToFormulas.length+" "+JSON.stringify(literalToFormulas));
         }
         return pathIndex.length > 0;

@@ -269,6 +269,7 @@
     function invokeFun(iid, base, f, args, isConstructor) {
         var g, invoke, val;
 
+        console.log("    Calling "+ f.name);
         var f_m = getSymbolicFunctionToInvoke(f, isConstructor);
 
         invoke = f_m || f === undefined || HOP(f,SPECIAL_PROP2) || typeof f !== "function";
@@ -285,6 +286,8 @@
         }  else {
             val = undefined;
         }
+        console.log("    Returning "+ f.name);
+
         return val;
     }
 

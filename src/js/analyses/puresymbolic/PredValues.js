@@ -54,6 +54,7 @@
                    sb = sb + "{ pred: "+this.values[i].pred.toString()+"\n, value: "+ this.values[i].value+"},\n";
             }
             sb = sb +"]\n";
+            return sb;
         }
     }
 

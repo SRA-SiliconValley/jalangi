@@ -26,7 +26,7 @@
 
 
 if (typeof window === "undefined") {
-    require('../../src/js/InputManager');
+    require('../../src/js/InputManager2');
     require(process.cwd()+'/inputs');
 }
 
@@ -55,24 +55,6 @@ function partition(array, begin, end, pivot)
     return store;
 }
 
-
-function qsort(array, begin, end)
-{
-    if(end-1>begin) {
-        var pivot=begin;
-
-        pivot=partition(array, begin, end, pivot);
-
-        qsort(array, begin, pivot);
-        qsort(array, pivot+1, end);
-    }
-}
-
-function quick_sort(array)
-{
-    qsort(array, 0, array.length);
-}
-
 var N = 4, i;
 var array = [];
 for(i=0; i<N; i++) {
@@ -83,13 +65,8 @@ for(i=0; i<N; i++) {
 function dosort()
 {
     console.log("Input: "+array.join(' '));
-    quick_sort(array);
+    partition(array, 0, array.length, 0);
     console.log("Output: "+array.join(' '));
-    for(i=0; i<N-1; i++) {
-        if(array[i] > array[i+1]) {
-            console.log("********************* Error in sorting: "+array.join(" "));
-        }
-    }
 }
 
 dosort();

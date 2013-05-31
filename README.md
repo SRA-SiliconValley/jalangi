@@ -35,17 +35,81 @@ We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS 10.7 and high
 
 ### Other Scripts
 
+Run no analysis and check if record and replay executions produce same output on some unit tests located under tests/unit/.
     ./scripts/testunits
+Run no analysis and check if record and replay executions produce same output on the sunspider benchmarks located under tests/sunspider1/.
     ./scripts/testsp
+Run likely type inference analysis on the sunspider benchmarks located under tests/sunspider1/.
     ./scripts/testsp_likelytype
+Run tracker of origin of null and undefined on the sunspider benchmarks located under tests/sunspider1/.
     ./scripts/testsp_tracknull
-    ./scripts/funtest tests/unit/demo1 4
-    ./scripts/funtest tests/unit/demo2 10
+Run a simple heap profiler on the sunspider benchmarks located under tests/sunspider1/.
+    ./scripts/testsp_heapprofiling
+Record an execution of tests/unit/qsort.js and create jalangi_trace.html which when loaded in a browser replays the execution.
     ./scripts/browserReplay tests/unit/qsort; open jalangi_trace.html
 
+
+### Concolic testing
+
+To perform concolic testing of some JavaScript code present in file, say testme.js, insert the following 4 lines at the top of the file.
+In the code, use J$.readInput(arg) to indicate the inputs to the program.  Then run the following command to perform concolic testing:
+
+    ./scripts/concolic testme 100000
+
+The third argument bounds the total number of inputs.  The command generates a set of input files in the directory jalangi_tmp.  The input
+files start with the prefic jalangi_inputs.  Once the inputs are generated, you can run testme.js on those inputs by ginving the following
+command:
+
+    ./scripts/rerunall testme
+
+For example, open the file tests/unit/qsort.js and check how inputs are specified.  Then run
+
+    ./scripts/concolic tests/unit/qsort 100
+    ./scripts/rerunall tests/unit/qsort 100
+
+
+Open the file tests/unit/regex8.js and check how string inputs are specified.  Then run
+
+    ./scripts/concolic tests/unit/regex8 100
+    ./scripts/rerunall tests/unit/regex8 100
+
+
+### Dynamic analysis
+
+The JavaScript code in src/js/analyses/objectalloc/ObjectAllocationTrackerEngine.js implements a simple analysis that reports the number of objects created during
+an execution along with some auxiliary information.  The analysis can be performed on a file testme.js by invoking the following command:
+
+    ./scripts/analysis analyses/objectalloc/ObjectAllocationTrackerEngine testme
+
+For example, try running the analysis on a sunspider benchmark by calling
+
+    ./scripts/analysis analyses/objectalloc/ObjectAllocationTrackerEngine tests/sunspider1/crypto-aes
+
+Similarly, you can a likely type inference analysis on the same program by calling and you will notice some warnings.
+
+    ./scripts/analysis analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-aes
+
+
+### Record and replay a web app.
+
+First start a HTTP server by running
+
     ./scripts/server
+
+Then instrument the JavaScript files that you want to analyze.  You also need to modify index.html so that it loads some library files and the instrumented files.
+
     node src/js/instrument/esnstrument.js tests/tizen/annex/js/annex.js
+
+Finally launch the jalangi server and the html page by running
+
     ./scripts/rrserver http://127.0.0.1:8000/tests/tizen/annex/index_jalangi_.html
+
+You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  You can run a dynamic analysis on the trace file.
+
+    export JALANGI_MODE=replay
+    export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine
+    node src/js/commands/replay.js jalangi_trace1
+
 
 
 

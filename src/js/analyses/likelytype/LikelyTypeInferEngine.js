@@ -496,6 +496,7 @@
 
             dot = dot + "}\n";
             require('fs').writeFileSync("jalangi_types.dot", dot);
+            console.log("Generate "+process.cwd()+"/jalangi_types.dot.  Install graphviz and run \"dot -Tpng jalangi_types.dot -o jalangi_types.png; open jalangi_types.png\" to visualize the inferred types.");
             return dot;
         }
 
@@ -544,7 +545,9 @@
 
         this.endExecution = function() {
             var tableAndRoots = equiv(iidToFieldTypes);
-            console.log(generateDOT(tableAndRoots[0], tableAndRoots[1], iidToFieldTypes, iidToSignature));
+            //console.log(
+                generateDOT(tableAndRoots[0], tableAndRoots[1], iidToFieldTypes, iidToSignature)
+            //);
             analyze(iidToFieldTypes, tableAndRoots[0]);
             analyze(iidToSignature, tableAndRoots[0]);
             //console.log(JSON.stringify(iidToFieldTypes, null, '\t'));

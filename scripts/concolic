@@ -99,6 +99,8 @@ done
 
 iter=$((iter+1))
 
+echo "Tests created in the directory `pwd`.  Tests are located in files with names starting with jalang_inputs.  To run tests execute ./rerunall $1."
+
 if [ $iter -eq $2 ]
 then
     echo "$1.js passed" >> $JALANGI_HOME/jalangi_sym_test_results

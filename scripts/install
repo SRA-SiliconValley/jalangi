@@ -92,7 +92,7 @@ else
     exit 1;
 fi
 
-./cvc3/bin/cvc3 < ../scripts/formula.cvc3 || { echo "cvc3 installation failed!"; exit 1; }
+./cvc3/bin/cvc3 < ../scripts/formula.cvc3 || { echo "cvc3 installation failed! Make sure that you have libgmp installed in your machine.  This is a common cause for the failure."; exit 1; }
 
 mkdir javalib
 cd javalib

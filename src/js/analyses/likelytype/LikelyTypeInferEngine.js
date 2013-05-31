@@ -496,7 +496,7 @@
 
             dot = dot + "}\n";
             require('fs').writeFileSync("jalangi_types.dot", dot);
-            console.log("Generate "+process.cwd()+"/jalangi_types.dot.  Install graphviz and run \"dot -Tpng jalangi_types.dot -o jalangi_types.png; open jalangi_types.png\" to visualize the inferred types.");
+            console.log("Generated "+process.cwd()+"/jalangi_types.dot.  Install graphviz and run \"dot -Tpng jalangi_types.dot -o jalangi_types.png; open jalangi_types.png\" to visualize the inferred types.");
             return dot;
         }
 

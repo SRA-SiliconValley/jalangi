@@ -10,6 +10,8 @@ you will find several analyses:
   * concolic testing,
   * an analysis to track origins of nulls and undefined,
   * an analysis to infer likely types of objects fields and functions.
+  * an analysis to profile object allocation and usage
+  * an experimental pure symbolic execution engine (currently undocumented)
 
 An evaluation of Jalangi on the SunSpider benchmark suite and on five web applications shows that
 Jalangi has an average slowdown of 26X during recording and 30X slowdown during replay and analysis. The slowdowns are comparable with slowdowns reported for similar
@@ -23,7 +25,7 @@ We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS 10.7 and high
   * Latest version of Node.js available at http://nodejs.org/.  We have tested Jalangi with Node v0.8.22 and v0.10.3.
   * Sun's JDK 1.6 or higher.  We have tested Jalangi with Java 1.6.0_43.
   * Command-line git.
-  * libgmp (http://gmplib.org/) is required vy cvc3.  Concolic testing uses cvc3 and automaton.jar for constraint solving. The installation script checks if cvc3 and automaton.jar are installed properly.
+  * libgmp (http://gmplib.org/) is required by cvc3.  Concolic testing uses cvc3 and automaton.jar for constraint solving. The installation script checks if cvc3 and automaton.jar are installed properly.
 
 ### Installation
 
@@ -76,13 +78,13 @@ command:
 For example, open the file tests/unit/qsort.js and check how inputs are specified.  Then run
 
     ./scripts/concolic tests/unit/qsort 100
-    ./scripts/rerunall tests/unit/qsort 100
+    ./scripts/rerunall tests/unit/qsort
 
 
 Open the file tests/unit/regex8.js and check how string inputs are specified.  Then run
 
     ./scripts/concolic tests/unit/regex8 100
-    ./scripts/rerunall tests/unit/regex8 100
+    ./scripts/rerunall tests/unit/regex8
 
 
 ### Dynamic analysis
@@ -92,20 +94,20 @@ an execution along with some auxiliary information.  The analysis can be perform
 
     ./scripts/analysis analyses/objectalloc/ObjectAllocationTrackerEngine testme
 
-For example, try running the analysis on a sunspider benchmark by calling
+For example, try running the analysis on a sunspider benchmark by issuing the following command.
 
     ./scripts/analysis analyses/objectalloc/ObjectAllocationTrackerEngine tests/sunspider1/crypto-aes
 
-Similarly, you can a likely type inference analysis on the same program by calling and you will notice some warnings.
+Similarly, you can run a likely type inference analysis on another sunspider benchmark by calling the following command and you will notice some warnings.
 
-    ./scripts/analysis analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-aes
+    ./scripts/analysis analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-sha1
 
 
 ### Record and replay a web app.
 
-First start a HTTP server by running
+First start a HTTP server by running the following command.  The command starts a simple Python based http server.
 
-    ./scripts/server
+    ./scripts/server &
 
 Then instrument the JavaScript files that you want to analyze.  You also need to modify index.html so that it loads some library files and the instrumented files.
 
@@ -115,7 +117,7 @@ Finally launch the jalangi server and the html page by running
 
     ./scripts/rrserver http://127.0.0.1:8000/tests/tizen/annex/index_jalangi_.html
 
-You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  You can run a dynamic analysis on the trace file.
+You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  You can run a dynamic analysis on the trace file by issuing the following commands.
 
     export JALANGI_MODE=replay
     export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine

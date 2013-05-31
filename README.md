@@ -26,6 +26,7 @@ We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS 10.7 and high
   * Sun's JDK 1.6 or higher.  We have tested Jalangi with Java 1.6.0_43.
   * Command-line git.
   * libgmp (http://gmplib.org/) is required by cvc3.  Concolic testing uses cvc3 and automaton.jar for constraint solving. The installation script checks if cvc3 and automaton.jar are installed properly.
+  * Chrome browser if you need to test web apps.
 
 ### Installation
 
@@ -59,7 +60,7 @@ Run a simple heap profiler on the sunspider benchmarks located under tests/sunsp
 
 Record an execution of tests/unit/qsort.js and create jalangi_trace.html which when loaded in a browser replays the execution.
 
-    ./scripts/browserReplay tests/unit/qsort; open jalangi_trace1.html
+    ./scripts/browserReplay tests/unit/qsort; path-to-chrome-browser jalangi_trace1.html
 
 
 ### Concolic testing
@@ -108,6 +109,8 @@ You can run origin of null and undefined tracker on a toy example by issuing the
 
 ### Record and replay a web app.
 
+***
+
 First start a HTTP server by running the following command.  The command starts a simple Python based http server.
 
     ./scripts/server &
@@ -123,11 +126,26 @@ Finally launch the jalangi server and the html page by running
 You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  You can run a dynamic analysis on the trace file by issuing the following commands.
 
     export JALANGI_MODE=replay
+    export JALANGI_ANALYSIS=analyses/objectalloc/ObjectAllocationTrackerEngine
+    node src/js/commands/replay.js jalangi_trace1
+
+***
+
+    node src/js/instrument/esnstrument.js tests/tizen/calculator/js/calc.js
+    ./scripts/rrserver http://127.0.0.1:8000/tests/tizen/calculator/index_jalangi_.html
+
+    export JALANGI_MODE=replay
     export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine
     node src/js/commands/replay.js jalangi_trace1
 
+***
 
+    node src/js/instrument/esnstrument.js tests/tizen/go/js/go.js
+    ./scripts/rrserver http://127.0.0.1:8000/tests/tizen/go/index.html
 
+    export JALANGI_MODE=replay
+    export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine
+    node src/js/commands/replay.js jalangi_trace1
 
 
 

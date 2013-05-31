@@ -36,16 +36,27 @@ We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS 10.7 and high
 ### Other Scripts
 
 Run no analysis and check if record and replay executions produce same output on some unit tests located under tests/unit/.
+
     ./scripts/testunits
+
 Run no analysis and check if record and replay executions produce same output on the sunspider benchmarks located under tests/sunspider1/.
+
     ./scripts/testsp
+
 Run likely type inference analysis on the sunspider benchmarks located under tests/sunspider1/.
+
     ./scripts/testsp_likelytype
+
 Run tracker of origin of null and undefined on the sunspider benchmarks located under tests/sunspider1/.
+
     ./scripts/testsp_tracknull
+
 Run a simple heap profiler on the sunspider benchmarks located under tests/sunspider1/.
+
     ./scripts/testsp_heapprofiling
+
 Record an execution of tests/unit/qsort.js and create jalangi_trace.html which when loaded in a browser replays the execution.
+
     ./scripts/browserReplay tests/unit/qsort; open jalangi_trace.html
 
 

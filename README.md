@@ -9,8 +9,8 @@ you will find several analyses:
 
   * concolic testing,
   * an analysis to track origins of nulls and undefined,
-  * an analysis to infer likely types of objects fields and functions.
-  * an analysis to profile object allocation and usage
+  * an analysis to infer likely types of objects fields and functions,
+  * an analysis to profile object allocation and usage,
   * an experimental pure symbolic execution engine (currently undocumented)
 
 An evaluation of Jalangi on the SunSpider benchmark suite and on five web applications shows that
@@ -59,7 +59,7 @@ Run a simple heap profiler on the sunspider benchmarks located under tests/sunsp
 
 Record an execution of tests/unit/qsort.js and create jalangi_trace.html which when loaded in a browser replays the execution.
 
-    ./scripts/browserReplay tests/unit/qsort; open jalangi_trace.html
+    ./scripts/browserReplay tests/unit/qsort; open jalangi_trace1.html
 
 
 ### Concolic testing
@@ -102,6 +102,9 @@ Similarly, you can run a likely type inference analysis on another sunspider ben
 
     ./scripts/analysis analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-sha1
 
+You can run origin of null and undefined tracker on a toy example by issuing the following command.
+
+    ./scripts/analysis analyses/trackundefinednull/UndefinedNullTrackingEngine tests/unit/track_undef_null
 
 ### Record and replay a web app.
 

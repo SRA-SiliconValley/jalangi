@@ -29,4 +29,4 @@ export JALANGI_ANALYSIS=none
 node ../$1_jalangi_.js
 cd ..
 cp jalangi_tmp/jalangi_trace jalangi_trace
-node $DIR/../src/js/commands/createReplay.js jalangi_trace
+node $DIR/../src/js/commands/createReplay.js jalangi_trace1

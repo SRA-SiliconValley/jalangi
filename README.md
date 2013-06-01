@@ -65,13 +65,19 @@ Record an execution of tests/unit/qsort.js and create jalangi_trace.html which w
 
 ### Concolic testing
 
-To perform concolic testing of some JavaScript code present in file, say testme.js, insert the following 4 lines at the top of the file.
+To perform concolic testing of some JavaScript code present in a file, say testme.js, insert the following 4 lines at the top of the file.
+
+    if (typeof window === "undefined") {
+        require('../../src/js/InputManager');
+        require(process.cwd()+'/inputs');
+    }
+
 In the code, use J$.readInput(arg) to indicate the inputs to the program.  Then run the following command to perform concolic testing:
 
     ./scripts/concolic testme 100000
 
-The third argument bounds the total number of inputs.  The command generates a set of input files in the directory jalangi_tmp.  The input
-files start with the prefic jalangi_inputs.  Once the inputs are generated, you can run testme.js on those inputs by ginving the following
+The third argument bounds the total number of test inputs.  The command generates a set of input files in the directory jalangi_tmp.  The input
+files start with the prefix jalangi_inputs.  Once the inputs are generated, you can run testme.js on those inputs by giving the following
 command:
 
     ./scripts/rerunall testme
@@ -95,7 +101,7 @@ an execution along with some auxiliary information.  The analysis can be perform
 
     ./scripts/analysis analyses/objectalloc/ObjectAllocationTrackerEngine testme
 
-For example, try running the analysis on a sunspider benchmark by issuing the following command.
+For example, try running the analysis on a sunspider benchmark by issuing the following command:
 
     ./scripts/analysis analyses/objectalloc/ObjectAllocationTrackerEngine tests/sunspider1/crypto-aes
 
@@ -103,11 +109,11 @@ Similarly, you can run a likely type inference analysis on another sunspider ben
 
     ./scripts/analysis analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-sha1
 
-You can run origin of null and undefined tracker on a toy example by issuing the following command.
+You can run origin of null and undefined tracker on a toy example by issuing the following command:
 
     ./scripts/analysis analyses/trackundefinednull/UndefinedNullTrackingEngine tests/unit/track_undef_null
 
-### Record and replay a web app.
+### Record and replay a web application.
 
 ***
 

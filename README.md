@@ -11,6 +11,7 @@ you will find several analyses:
   * an analysis to track origins of nulls and undefined,
   * an analysis to infer likely types of objects fields and functions,
   * an analysis to profile object allocation and usage,
+  * a simple form of taint analysis,
   * an experimental pure symbolic execution engine (currently undocumented)
 
 An evaluation of Jalangi on the SunSpider benchmark suite and on five web applications shows that
@@ -108,6 +109,10 @@ For example, try running the analysis on a sunspider benchmark by issuing the fo
 Similarly, you can run a likely type inference analysis on another sunspider benchmark by calling the following command and you will notice some warnings.
 
     ./scripts/analysis analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-sha1
+
+Run the following to perform a simple form of taint analysis.
+
+    ./scripts/analysis analyses/simpletaint/SimpleTaintEngine tests/sunspider1/crypto-sha1
 
 You can run origin of null and undefined tracker on a toy example by issuing the following command:
 

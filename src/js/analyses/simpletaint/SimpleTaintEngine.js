@@ -22,6 +22,7 @@
         var TRACE_FILE_NAME = "jalangi_trace";
         var TAINT_SUMMARY = "jalangi_taint";
         var ConcolicValue = require('./../../ConcolicValue');
+        var getIIDInfo = require('./../../utils/IIDInfo');
         var taintedConditionals = {};
 
         if (!(this instanceof SimpleTaintEngine)) {
@@ -82,6 +83,12 @@
             var suffix = fileName.substring(TRACE_FILE_NAME.length);
             var fs = require('fs');
             fs.writeFileSync(TAINT_SUMMARY+suffix, JSON.stringify([taintedConditionals, this.prefix]),"utf8");
+            console.log("Listing tainted conditionals:")
+            for (var iid in taintedConditionals) {
+                if (taintedConditionals.hasOwnProperty(iid)) {
+                    console.log("Branch at "+getIIDInfo(iid));
+                }
+            }
         }
     }
 

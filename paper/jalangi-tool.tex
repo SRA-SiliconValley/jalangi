@@ -297,10 +297,10 @@ f1(12);
 {\scriptsize
 \begin{lstlisting}
   J$.U(iid, op, oprnd); // wrapper for unary operations
-  J$.B(iid, op, left, right); // wrapper for binary operation
+  J$.B(iid, op, left, right); // wrapper for binary operations
   J$.C(iid, cond); // wrapper for conditional branches
-  J$.C1(iid, key); // wrapper for key of switch
-  J$.C2(iid, case); // wrapper for case label of switch
+  J$.C1(iid, key); // wrapper for the key of a switch statement
+  J$.C2(iid, case); // wrapper for a case label of a switch
   J$._();  // returns last value passed to J$.C
 
   J$.H(iid, val); // wrapper for hash used in for-in
@@ -322,7 +322,7 @@ f1(12);
   J$.Ra();  // callback for grabbing return value
 
   J$.makeSymbolic(symbol, val);  // make a value symbolic
-  J$.addAxiom(formula, branch);  // adds a constraint to path
+  J$.addAxiom(formula, branch);  // adds a constraint to the path constraint
   J$.endExecution(); // callback at the end of an execution
 
 \end{lstlisting}

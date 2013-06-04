@@ -20,8 +20,8 @@
 \newcommand \dsl [1] {\ensuremath{{\tt #1}}\xspace}
 \newcommand \usl [1] {\mbox{\underline{\tt #1}}\xspace}
 \newcommand \Sync{\dsl{sync}}
-\newcommand \Actual{{\tt getConcrete()}}
-\newcommand \Shadow{{\tt getSymbolic()}}
+\newcommand \Actual{{\tt getConcrete}}
+\newcommand \Shadow{{\tt getSymbolic}}
 \newcommand \Enter{\dsl{enter}}
 \newcommand \Exit{\dsl{exit}}
 \newcommand \analysis{\usl{anlys}}
@@ -111,7 +111,8 @@ writing heavy-weight dynamic analyses for JavaScript.  In this paper,
 we briefly describe the framework and its usage scenarios.  The
 framework provides a few useful abstractions and an API that
 significantly simplifies implementation of dynamic analyses for
-JavaScript.
+JavaScript.  A detailed description of the techniques underlying
+\jalangi{} can be found in~\cite{SBGKfse13}.
 
 \jalangi{} works on any browser or \texttt{node.js}.  We achieve
 browser independence through selective source
@@ -121,7 +122,7 @@ analysis in \jalangi{} works in two-phases.  In the first phase, an
 instrumented JavaScript application is executed and recorded on a user
 selected platform (e.g. mobile chrome running on Android).  In the
 second phase, the recorded data is utilized to perform a user
-specified dynamic analysis on a desktop environment.
+specified dynamic analysis in a desktop environment.
 
 \jalangi{} allows easy implementation of a dynamic analysis through
 the support of \emph{shadow values} and \emph{shadow execution}.
@@ -152,7 +153,7 @@ In \jalangi{}, we have implemented several dynamic analyses:
   the field of a null value, the shadow value of the literal is
   reported to the user.  Such a report helps the programmer to easily
   identify the origin of the null value.
-\item Detecting Likely Type Inconsistencies: The dynamic analysis
+\item Detecting Likely Type Inconsistencies: the dynamic analysis
   computes the types of object and function values created at each
   definition site in the program.  If an object or a function value
   defined at a program location has been observed to assume more than
@@ -165,12 +166,12 @@ In \jalangi{}, we have implemented several dynamic analyses:
   It reports if the objects created at a given allocation site are
   read-only or a constant.  It also reports the maximum and average
   difference between the object creation time and the most recent
-  access time to the object.  If an allocation site creates too many
+  access time of the object.  If an allocation site creates too many
   contant objects, then it could lead to memory inefficiency.  We have
   found such a problem in one of the web applications in our benchmark
   suite.
 \item Dynamic taint
-  analysis~\cite{songndss05,Clause:2007:DGD:1273463.1273490}: A
+  analysis~\cite{songndss05}: a
   dynamic taint analysis is a form of information flow analysis which
   checks if information can flow from a specific set of memory
   locations, called sources, to another set of memory locations,
@@ -203,7 +204,7 @@ on an actual platform (e.g. a mobile browser) and then replay the
 execution for the purpose of debugging on a desktop JavaScript engine,
 such as node.js or a JavaScript engine embedded in an IDE.  Moreover,
 during replay, since we avoid the execution un-instrumented code and
-native code, we can easily implement various dynamic analysis that
+native code, we can easily implement various dynamic analyses that
 depend on shadow values and shadow executions.
 
 A trivial way to perform faithful record-replay of an execution is to
@@ -233,11 +234,11 @@ be recorded, \jalangi{} maintains a shadow memory during the recording
 phase.  The shadow memory is updated along with the actual memory
 during the execution of instrumented code.  Execution of
 un-instrumented and native code does not update the shadow memory.
-During the load of memory in the recording phase, if \jalangi{} finds
-any difference between the value of the actual memory being loaded and
-the value stored in the corresponding shadow memory, \jalangi{}
-records the value of such memory loads. This ensures that correct
-values are available during the replay phase.
+During the load of a memory location in the recording phase, if
+\jalangi{} finds any difference between the value of the actual memory
+being loaded and the value stored in the corresponding shadow memory,
+\jalangi{} records the value of such memory loads. This ensures that
+correct values are available during the replay phase.
 
 In shadow execution, \jalangi{} allows the replacement of any value
 used in the execution by an \emph{annotated value}.  The annotated
@@ -251,9 +252,9 @@ stores the actual value and the field \texttt{symbolic} stores the
 shadow value, i.e. extra information about the actual value.  A value,
 say $v$, in JavaScript can be associated with shadow value, say $s$,
 by simply replacing $v$ by \texttt{new ConcolicValue}$(v, s)$.  The
-projection function $v.\Actual$ returns the actual value of $v$, if
+projection function $\Actual(v)$ returns the actual value of $v$, if
 $v$ is an annotated value and returns $v$ otherwise.  Similarly, the
-projection function $v.\Shadow$ returns the shadow value associated
+projection function $\Shadow(v)$ returns the shadow value associated
 with $v$ if $v$ is an annotated value and returns \texttt{undefined}
 otherwise.
 
@@ -262,8 +263,8 @@ otherwise.
 \label{sec:implementation}
 
 \jalangi{} is available at
-\url{https://github.com/SRA-SiliconValley/jalangi}.  The tool is
-itself implemented in JavaScript.  
+\url{https://github.com/SRA-SiliconValley/jalangi}.  We have
+implemented \jalangi{} implemented in JavaScript.
 
 \begin{table*}
 \begin{minipage}{0.28\textwidth}
@@ -411,7 +412,7 @@ stand-alone application (realized with node.js for example). This
 enables us to perform heavy-weight debugging or analysis of a recorded
 execution outside a browser.
 
-\section{A Quick Guide to Jalangi Installation and Usage}
+\section{A Quick Guide to Jalangi}
 \label{sec:usage}
 
 \jalangi{} is a command-line tool.  We also have a prototype Eclipse
@@ -473,8 +474,8 @@ if (typeof window === "undefined") {
 \end{verbatim}
 
 In the code, an input can be specified by calling \texttt{
-  J\$.readInput(arg)}. Then concolic testing can be performed by
-calling the script \texttt{./scripts/concolic} as follows.
+  J\$.readInput(arg)}. Concolic testing can be performed by calling
+the script \texttt{./scripts/concolic} as follows.
 
 \begin{verbatim}
 ./scripts/concolic testme 100000
@@ -492,7 +493,7 @@ command:
 \end{verbatim}
 
 For example, one can generate inputs for the code in the file
-tests/unit/qsort.js by running the following commands.
+tests/unit/regex8.js by running the following commands.
 
 \begin{verbatim}
 ./scripts/concolic tests/unit/regex8 100
@@ -527,6 +528,11 @@ benchmark can be performed by calling the following command.
 ./scripts/analysis analyses/likelytype/LikelyType
 InferEngine tests/sunspider1/crypto-sha1
 \end{verbatim}
+\jalangi{} has taken care of various nasty details of JavaScript.  One
+can easily implement a dynamic analysis in the \jalangi{} framework
+without worrying about the ugly details of JavaScript.  We expect that
+\jalangi{} will facilitate future research on dynamic analysis of
+JavaScript. 
 
 % \subsubsection*{Record and replay a web application}
 % \label{sec:record-replay-web}

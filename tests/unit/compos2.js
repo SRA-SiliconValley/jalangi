@@ -40,9 +40,9 @@ function f2(x) {
     }
 }
 
-x = J$.readInput(1);
 
 function main() {
+    x = J$.readInput(1);
     f1(x);
     f2(x);
     if (y + z > 3) {

@@ -35,11 +35,11 @@ function swap(arr, i, j) {
 
 var arr = [];
 
-for(var i=0; i<4; i++) {
-    arr[i] = J$.readInput(i);
-}
 
 function main() {
+    for(var i=0; i<4; i++) {
+        arr[i] = J$.readInput(i);
+    }
     var i, maxm = arr[0];
     for(i=1; i<4; i++) {
         maxm = max(maxm, arr[i]);

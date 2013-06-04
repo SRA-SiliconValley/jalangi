@@ -374,10 +374,6 @@
     }
 
 
-    function endExecution() {
-        pc.generateInputs();
-    }
-
     sandbox.U = U; // Unary operation
     sandbox.B = B; // Binary operation
     sandbox.C = C; // Condition
@@ -405,8 +401,6 @@
 
     sandbox.makeSymbolic = makeSymbolic;
     sandbox.addAxiom = pc.addAxiom;
-    sandbox.endExecution = endExecution;
-
 
 }(module.exports));
 

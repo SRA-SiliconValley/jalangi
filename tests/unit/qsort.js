@@ -75,13 +75,13 @@ function quick_sort(array)
 
 var N = 4, i;
 var array = [];
-for(i=0; i<N; i++) {
-    array[i] = i;
-    array[i] = J$.readInput(array[i]);
-}
 
 function dosort()
 {
+    for(i=0; i<N; i++) {
+        array[i] = i;
+        array[i] = J$.readInput(array[i]);
+    }
     console.log("Input: "+array.join(' '));
     quick_sort(array);
     console.log("Output: "+array.join(' '));

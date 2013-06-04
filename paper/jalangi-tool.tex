@@ -154,22 +154,27 @@ In \jalangi{}, we have implemented several dynamic analyses:
   reported to the user.  Such a report helps the programmer to easily
   identify the origin of the null value.
 \item Detecting Likely Type Inconsistencies: the dynamic analysis
-  computes the types of object and function values created at each
-  definition site in the program.  If an object or a function value
-  defined at a program location has been observed to assume more than
-  one type, then the analysis reports the program location along with
-  the observed types.  Sometimes these kind of type inconsistencies
-  could point us to a potential bug in the program.  We have noticed
-  such issues in two SunSpider benchmark programs.
-\item Simple Object Allocation Profiler: This dynamic analysis records
-  the number of objects created at an allocation site in the program.
-  It reports if the objects created at a given allocation site are
-  read-only or a constant.  It also reports the maximum and average
-  difference between the object creation time and the most recent
-  access time of the object.  If an allocation site creates too many
-  contant objects, then it could lead to memory inefficiency.  We have
-  found such a problem in one of the web applications in our benchmark
-  suite.
+  checks if an object created at a given program location can assume
+  multiple inconsistent type.
+% computes the types of object and function values created at each
+%   definition site in the program.  If an object or a function value
+%   defined at a program location has been observed to assume more than
+%   one type, then the analysis reports the program location along with
+%   the observed types.  
+  Sometimes these kind of type inconsistencies could point us to a
+  potential bug in the program.  We have noticed such issues in two
+  SunSpider benchmark programs.
+\item Simple Object Allocation Profiler: This dynamic analysis
+  computes the number of objects created at a given allocation site
+  and how often the object has been accessed.% records
+  % the number of objects created at an allocation site in the program.
+  % It reports if the objects created at a given allocation site are
+  % read-only or a constant.  It also reports the maximum and average
+  % difference between the object creation time and the most recent
+  % access time of the object
+  .  If an allocation site creates too many contant objects, then it
+  could lead to memory inefficiency.  We have found such a problem in
+  one of the web applications in our benchmark suite.
 \item Dynamic taint
   analysis~\cite{songndss05}: a
   dynamic taint analysis is a form of information flow analysis which

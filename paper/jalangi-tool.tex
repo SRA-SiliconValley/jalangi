@@ -59,7 +59,7 @@ literate={\$}{{\textcolor{blue}{\$}}}1
 \conferenceinfo{Under Submission}{Do Not Distribute}
 
 \title{Jalangi: A Tool Framework for Concolic Testing, Selective
-  Record-Replay, and Dynamic Analysis of JavaScript Programs}
+  Record-Replay, and Dynamic Analysis of JavaScript}
 \numberofauthors{2}
 
 \author{
@@ -417,7 +417,7 @@ stand-alone application (realized with node.js for example). This
 enables us to perform heavy-weight debugging or analysis of a recorded
 execution outside a browser.
 
-\section{A Quick Guide to Jalangi}
+\section{A Quick Guide to Jalangi Installation and Usage}
 \label{sec:usage}
 
 \jalangi{} is a command-line tool.  We also have a prototype Eclipse
@@ -533,9 +533,14 @@ benchmark can be performed by calling the following command.
 ./scripts/analysis analyses/likelytype/LikelyType
 InferEngine tests/sunspider1/crypto-sha1
 \end{verbatim}
+
+
+\section{Conclusion}
+\label{sec:conclusion}
+
 \jalangi{} has taken care of various nasty details of JavaScript.  One
 can easily implement a dynamic analysis in the \jalangi{} framework
-without worrying about the ugly details of JavaScript.  We expect that
+without worrying about the ugly corners of JavaScript.  We expect that
 \jalangi{} will facilitate future research on dynamic analysis of
 JavaScript. 
 

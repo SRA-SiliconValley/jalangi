@@ -77,11 +77,28 @@
     }
 
     function Se(iid, val) {
-        single.Se(iid, val);
+//        single.Se(iid, val);
     }
 
     function Sr(iid) {
-        single.Sr(iid);
+//        var ret2, pathIndex, first = pc.isFirst();
+//        if (!first) {
+//            ret2 = pc.generateInputs();
+//        } else {
+//            ret2 = pc.generateInputs(true);
+//        }
+//        pathIndex = pc.getIndex();
+//
+//        if (ret2) {
+//            console.log("backtrack "+iid);
+//        }
+//
+//        console.log("************* after tracing a path at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
+//
+//        pc.popPC();
+//        pc.pushPC(null, pathIndex, true, undefined);
+//        return ret2;
+//        single.Sr(iid);
     }
 
     function I(val) {

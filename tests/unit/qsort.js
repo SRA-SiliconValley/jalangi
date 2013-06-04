@@ -76,8 +76,8 @@ function quick_sort(array)
 var N = 4, i;
 var array = [];
 
-function dosort()
-{
+//function dosort()
+//{
     for(i=0; i<N; i++) {
         array[i] = i;
         array[i] = J$.readInput(array[i]);
@@ -90,6 +90,6 @@ function dosort()
             console.log("********************* Error in sorting: "+array.join(" "));
         }
     }
-}
-
-dosort();
+//}
+//
+//dosort();

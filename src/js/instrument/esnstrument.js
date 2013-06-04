@@ -657,6 +657,24 @@
 
     var labelCounter = 0;
 
+    function wrapScriptBodyWithTryCatch(node, body) {
+        printIidToLoc(node);
+        var l = labelCounter++;
+        var ret = replaceInStatement(
+            "function n() { jalangiLabel"+l+": while(true) { try {"+RP+"1} catch("+PREFIX1+
+                "e) { console.log("+PREFIX1+"e); console.log("+
+                PREFIX1+"e.stack); throw "+PREFIX1+
+                "e; } finally { if ("+logScriptExitFunName+"("+
+                RP+"2)) continue jalangiLabel"+l+";\n else \n  break jalangiLabel"+l+";\n }\n }}", body,
+            getIid()
+        );
+        //console.log(JSON.stringify(ret));
+
+        ret = ret[0].body.body;
+        transferLoc(ret[0], node);
+        return ret;
+    }
+
     function wrapFunBodyWithTryCatch(node, body) {
         printIidToLoc(node);
         var l = labelCounter++;
@@ -675,19 +693,19 @@
         return ret;
     }
 
-    function wrapScriptBodyWithTryCatch(node, body) {
-        printIidToLoc(node);
-        var ret = replaceInStatement("try {"+RP+"1} catch("+PREFIX1+
-                "e) { console.log("+PREFIX1+"e); console.log("+
-                PREFIX1+"e.stack); throw "+PREFIX1+
-                "e; } finally { "+logScriptExitFunName+"("+
-                RP+"2); }",
-            body,
-            getIid()
-        );
-        transferLoc(ret[0], node);
-        return ret;
-    }
+//    function wrapScriptBodyWithTryCatch(node, body) {
+//        printIidToLoc(node);
+//        var ret = replaceInStatement("try {"+RP+"1} catch("+PREFIX1+
+//                "e) { console.log("+PREFIX1+"e); console.log("+
+//                PREFIX1+"e.stack); throw "+PREFIX1+
+//                "e; } finally { "+logScriptExitFunName+"("+
+//                RP+"2); }",
+//            body,
+//            getIid()
+//        );
+//        transferLoc(ret[0], node);
+//        return ret;
+//    }
 
     function prependScriptBody(node, body) {
         var path = require('path');
@@ -727,7 +745,7 @@
         var body = createCallAsScriptEnterStatement(node, modFile).
             concat(syncDefuns(node, scope, true)).
             concat(body0);
-        return wrapScriptBodyWithTryCatch(node, body);
+        return body;
     }
 
 
@@ -1031,8 +1049,9 @@
 
     var visitorOps = {
         "Program": function(node) {
+            var body = wrapScriptBodyWithTryCatch(node, node.body)
             if (!tryCatch) {
-                var ret = prependScriptBody(node, node.body);
+                var ret = prependScriptBody(node, body);
                 node.body = ret;
 
             }

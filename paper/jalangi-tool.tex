@@ -269,7 +269,7 @@ otherwise.
 
 \jalangi{} is available at
 \url{https://github.com/SRA-SiliconValley/jalangi}.  We have
-implemented \jalangi{} implemented in JavaScript.
+implemented \jalangi{} in JavaScript.
 
 \begin{table*}
 \begin{minipage}{0.28\textwidth}
@@ -515,8 +515,7 @@ A template for an analysis is provided in the file
 implemented from the template by defining the various callback
 functions in the template.  A simple analysis can be found in the file
 \texttt{src/js/simpletaint/SimpleTaintEngine.js}.  An analysis file
-name must end with \texttt{Engine.js}.  The JavaScript code in
-\texttt{src/js/analyses/objectalloc/ObjectAllocationTrackerEngine.js}
+name must end with \texttt{Engine.js}.  The JavaScript code in \texttt{ObjectAllocationTrackerEngine.js} under \texttt{src/js/analyses/objectalloc/}
 implements the object allocation profiler. The analysis can be
 performed on a file, say \texttt{tests/sunspider1/crypto-aes.js}, by
 invoking the following command:
@@ -538,9 +537,9 @@ InferEngine tests/sunspider1/crypto-sha1
 \section{Conclusion}
 \label{sec:conclusion}
 
-\jalangi{} has taken care of various nasty details of JavaScript.  One
+\jalangi{} has taken care of various challenging details of JavaScript.  One
 can easily implement a dynamic analysis in the \jalangi{} framework
-without worrying about the ugly corners of JavaScript.  We expect that
+without worrying about the worrysome corners of JavaScript.  We expect that
 \jalangi{} will facilitate future research on dynamic analysis of
 JavaScript. 
 

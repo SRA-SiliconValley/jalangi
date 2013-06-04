@@ -42,14 +42,14 @@ fi
 
 echo $CMD
 
-echo --------------- Instrumenting $1.js --------------
-$CMD $JALANGI_HOME/src/js/instrument/esnstrument.js $JALANGI_HOME/$1.js
+echo --------------- Instrumenting $2.js --------------
+$CMD $JALANGI_HOME/src/js/instrument/esnstrument.js ../$2.js
 
 
 i=0
 iter=1
 
-while [[ $i -le $iter &&  $i -le $2 ]]
+while [[ $i -le $iter &&  $i -le $3 ]]
 do
 
     rm inputs.js 2> /dev/null
@@ -60,18 +60,19 @@ do
     echo "*********************************************************************************"
 
     export JALANGI_MODE=symbolic
-    $CMD $JALANGI_HOME/$1_jalangi_.js
+    export JALANGI_ANALYSIS=$1
+    $CMD ../$2_jalangi_.js
 
     declare -i iter=$(sed -n 1p jalangi_tail 2>/dev/null)
     i=$((i+1))
 
 done
 
-if [ $iter -eq $2 ]
+if [ $iter -eq $3 ]
 then
-    echo "$1.js $2 passed" >> $JALANGI_HOME/jalangi_sym_test_results
+    echo "$2.js $3 passed" >> $JALANGI_HOME/jalangi_sym_test_results
 else
-    echo "***************** $1.js $2 Failed!!!" >> $JALANGI_HOME/jalangi_sym_test_results
+    echo "***************** $2.js $3 Failed!!!" >> $JALANGI_HOME/jalangi_sym_test_results
 fi
 
 if [ "$USE_NODE_COVER" == "true" ]

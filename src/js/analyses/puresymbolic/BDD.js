@@ -232,5 +232,5 @@
 
     BDD.Node = Node;
 
-    console.log("Initialized BDD module.")
+    //console.log("Initialized BDD module.")
 })(module.exports);

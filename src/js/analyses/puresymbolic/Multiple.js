@@ -359,7 +359,9 @@
 
     function C2(iid, left) {
         if (pc.isRetracing()) {
-            return pc.branchBoth(null, null);
+            var ret = pc.branchBoth(null, null);
+            switchLeft = ret.lastVal;
+            return ret.branch;
         }
 
         left = B(iid, "===", switchLeft, left);
@@ -371,12 +373,14 @@
             pred1 = pred1.or(left.values[i].pred.and( ret));
             pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
-        return pc.branchBoth(pc.getPC().and(pred2), pc.getPC().and(pred1));
+        return pc.branchBoth(pc.getPC().and(pred2), pc.getPC().and(pred1), switchLeft);
     }
 
     function C(iid, left) {
         if (pc.isRetracing()) {
-            return pc.branchBoth(null, null);
+            var ret = pc.branchBoth(null, null);
+            lastVal = ret.lastVal;
+            return ret.branch;
         }
 
         lastVal = left;
@@ -388,7 +392,7 @@
             pred1 = pred1.or(left.values[i].pred.and( ret));
             pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
-        return pc.branchBoth(pc.getPC().and(pred2), pc.getPC().and(pred1));
+        return pc.branchBoth(pc.getPC().and(pred2), pc.getPC().and(pred1), lastVal);
     }
 
 

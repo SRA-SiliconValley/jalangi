@@ -329,27 +329,27 @@
     }
 
 
-    function branchBoth(falseBranch, trueBranch) {
+    function branchBoth(falseBranch, trueBranch, lastVal) {
         var v, ret, tmp;
         if ((v = getNext()) !== undefined) {
-            ret = v.branch;
+            ret = v;
             //addAxiom(ret?trueBranch:falseBranch, true);
         } else {
             if (makeConcrete(falseBranch, true)) {
                 if (tmp = getSolution(trueBranch, true)) {
-                    setNext({done:false, branch:false, solution: tmp, pc: trueBranch});
+                    setNext({done:false, branch:false, solution: tmp, pc: trueBranch, lastVal: lastVal});
                     console.log("Solution then "+JSON.stringify(tmp));
                 } else {
-                    setNext({done:true, branch:false, solution: null, pc: null});
+                    setNext({done:true, branch:false, solution: null, pc: null, lastVal: lastVal});
                 }
                 ret = false;
                 addAxiom(falseBranch, true);
             } else if (makeConcrete(trueBranch, true)) {
                 if (tmp = getSolution(falseBranch, true)) {
-                    setNext({done:false, branch:true, solution: tmp, pc: falseBranch});
+                    setNext({done:false, branch:true, solution: tmp, pc: falseBranch, lastVal: lastVal});
                     console.log("Solution else "+JSON.stringify(tmp));
                 } else {
-                    setNext({done:true, branch:true, solution: null, pc: null});
+                    setNext({done:true, branch:true, solution: null, pc: null, lastVal: lastVal});
                 }
                 ret = true;
                 addAxiom(trueBranch, true);
@@ -387,7 +387,7 @@
         while(pathIndex.length > 0) {
             elem = pathIndex.pop();
             if (!elem.done) {
-                pathIndex.push({done: true, branch: !elem.branch, solution: elem.solution, pc: elem.pc});
+                pathIndex.push({done: true, branch: !elem.branch, solution: elem.solution, pc: elem.pc, lastVal: elem.lastVal});
                 break;
             }
         }

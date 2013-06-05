@@ -138,7 +138,7 @@ execution can perform symbolic execution or dynamic taint propagation.
 In \jalangi{}, we have implemented several dynamic analyses:
 
 \begin{itemize}
-\item Concolic Testing~\cite{dart,cute}: concolic testing performs
+\item Concolic Testing~\cite{dart,cute}: Concolic testing performs
   symbolic execution along a concrete execution path, generates a
   logical formula denoting a constraint on the input values, and
   solves a constraint to generate new test inputs that would execute
@@ -146,14 +146,14 @@ In \jalangi{}, we have implemented several dynamic analyses:
   of concolic testing supports constraints over integer, string, and
   object types and \emph{novel type constraints.}
 \item Tracking origins of \texttt{null} and
-  \texttt{undefined}~\cite{Bond:2007:TBA:1297027.1297057}: this
+  \texttt{undefined}~\cite{Bond:2007:TBA:1297027.1297057}: This
   analysis records source code locations where null and undefined
   values come into existence and reports them if they cause an error.
   Whenever there is an error due to such literals, such as accessing
   the field of a null value, the shadow value of the literal is
   reported to the user.  Such a report helps the programmer to easily
   identify the origin of the null value.
-\item Detecting Likely Type Inconsistencies: the dynamic analysis
+\item Detecting Likely Type Inconsistencies: The dynamic analysis
   checks if an object created at a given program location can assume
   multiple inconsistent type.
 % computes the types of object and function values created at each
@@ -176,7 +176,7 @@ In \jalangi{}, we have implemented several dynamic analyses:
   could lead to memory inefficiency.  We have found such a problem in
   one of the web applications in our benchmark suite.
 \item Dynamic taint
-  analysis~\cite{songndss05}: a
+  analysis~\cite{songndss05}: A
   dynamic taint analysis is a form of information flow analysis which
   checks if information can flow from a specific set of memory
   locations, called sources, to another set of memory locations,
@@ -208,7 +208,7 @@ phases enables one to record an execution of a JavaScript application
 on an actual platform (e.g. a mobile browser) and then replay the
 execution for the purpose of debugging on a desktop JavaScript engine,
 such as node.js or a JavaScript engine embedded in an IDE.  Moreover,
-during replay, since we avoid the execution un-instrumented code and
+during replay, since we avoid the execution of un-instrumented code and
 native code, we can easily implement various dynamic analyses that
 depend on shadow values and shadow executions.
 
@@ -280,7 +280,9 @@ implemented \jalangi{} in JavaScript.
 var a = {x:1, y:2};
 
 function f2 (c) {
- if (c > 5 ) a.y = a.x + c;
+ if (c > 5 ) 
+   a.y = a.x + c;
+ return c;
 }
 
 f1(12);

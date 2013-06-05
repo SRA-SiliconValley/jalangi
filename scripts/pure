@@ -72,8 +72,10 @@ if [ $iter -eq $3 ]
 then
     echo "$2.js $3 passed" >> $JALANGI_HOME/jalangi_sym_test_results
 else
-    echo "***************** $2.js $3 Failed!!!" >> $JALANGI_HOME/jalangi_sym_test_results
+    echo "***************** $2.js $3 Failed!!! # of tests $iter" >> $JALANGI_HOME/jalangi_sym_test_results
 fi
+
+echo "Generated $iter tests"
 
 if [ "$USE_NODE_COVER" == "true" ]
 then

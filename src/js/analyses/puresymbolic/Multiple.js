@@ -76,29 +76,30 @@
         };
     }
 
-    function Se(iid, val) {
-//        single.Se(iid, val);
+    var scriptCount = 0;
+
+    function Se(iid,val) {
+        scriptCount++;
     }
 
     function Sr(iid) {
-//        var ret2, pathIndex, first = pc.isFirst();
-//        if (!first) {
-//            ret2 = pc.generateInputs();
-//        } else {
-//            ret2 = pc.generateInputs(true);
-//        }
-//        pathIndex = pc.getIndex();
-//
-//        if (ret2) {
-//            console.log("backtrack "+iid);
-//        }
-//
-//        console.log("************* after tracing a path at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
-//
-//        pc.popPC();
-//        pc.pushPC(null, pathIndex, true, undefined);
-//        return ret2;
-//        single.Sr(iid);
+        scriptCount--;
+        var ret2, first = pc.isFirst();
+        if (!first || scriptCount === 0) {
+            ret2 = pc.generateInputs();
+            console.log("Generated input");
+        } else {
+            ret2 = pc.generateInputs(true);
+        }
+
+        if (ret2) {
+            console.log("backtrack "+iid);
+        }
+
+        console.log("************* after tracing a path at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
+
+        pc.resetPC();
+        return ret2;
     }
 
     function I(val) {
@@ -370,7 +371,7 @@
             pred1 = pred1.or(left.values[i].pred.and( ret));
             pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
-        return pc.branchBoth(pred2, pred1);
+        return pc.branchBoth(pc.getPC().and(pred2), pc.getPC().and(pred1));
     }
 
     function C(iid, left) {
@@ -387,7 +388,7 @@
             pred1 = pred1.or(left.values[i].pred.and( ret));
             pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
-        return pc.branchBoth(pred2, pred1);
+        return pc.branchBoth(pc.getPC().and(pred2), pc.getPC().and(pred1));
     }
 
 

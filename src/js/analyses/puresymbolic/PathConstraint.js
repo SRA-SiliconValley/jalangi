@@ -38,11 +38,10 @@
     } catch (e) {
         pathIndex = [];
     }
-    var solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
-
     var index = 0;
     var formulaStack = [];
     formulaStack.count = 0;
+    var solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
     var first = true;
     var returnValue;
 
@@ -95,6 +94,18 @@
 
         return pcStack.pop();
     }
+
+    function resetPC(returnVal) {
+        //pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, first:first, returnVal: returnValue });
+        index = 0;
+        formulaStack = [];
+        formulaStack.count = 0;
+        solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
+        pathConstraint = pathIndex.length>0? pathIndex[pathIndex.length-1].pc: BDD.one;
+        first = false;
+        returnValue = returnVal;
+    }
+
 
     function isFirst() {
         return first;
@@ -327,7 +338,7 @@
             if (makeConcrete(falseBranch, true)) {
                 if (tmp = getSolution(trueBranch, true)) {
                     setNext({done:false, branch:false, solution: tmp, pc: trueBranch});
-                    console.log("Solution "+JSON.stringify(tmp));
+                    console.log("Solution then "+JSON.stringify(tmp));
                 } else {
                     setNext({done:true, branch:false, solution: null, pc: null});
                 }
@@ -336,7 +347,7 @@
             } else if (makeConcrete(trueBranch, true)) {
                 if (tmp = getSolution(falseBranch, true)) {
                     setNext({done:false, branch:true, solution: tmp, pc: falseBranch});
-                    console.log("Solution "+JSON.stringify(tmp));
+                    console.log("Solution else "+JSON.stringify(tmp));
                 } else {
                     setNext({done:true, branch:true, solution: null, pc: null});
                 }
@@ -399,6 +410,7 @@
     sandbox.addAxiom = addAxiom;
     sandbox.popPC = popPC;
     sandbox.pushPC = pushPC;
+    sandbox.resetPC = resetPC;
     sandbox.getPC = getPC;
     sandbox.isFirst = isFirst;
     sandbox.getIndex = getIndex;

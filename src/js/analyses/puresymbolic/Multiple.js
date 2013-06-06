@@ -22,6 +22,8 @@
     var BDD = require('./BDD');
     var SymbolicBool = require('./../concolic/SymbolicBool');
     var getIIDInfo = require('./../../utils/IIDInfo');
+    var PREFIX1 = "J$";
+    var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
 
     var pc = single.getPC();
 
@@ -31,6 +33,11 @@
         }
         return value;
     }
+
+    function HOP(obj, prop) {
+        return Object.prototype.hasOwnProperty.call(obj, prop);
+    }
+
 
     function addValue(ret, pred, value) {
         var i, len, tPred;
@@ -87,7 +94,7 @@
         var ret2, first = pc.isFirst();
         if (!first || scriptCount === 0) {
             ret2 = pc.generateInputs();
-            console.log("Generated input");
+            console.log("Written an input");
         } else {
             ret2 = pc.generateInputs(true);
         }
@@ -96,7 +103,7 @@
             console.log("backtrack "+iid);
         }
 
-        console.log("************* after tracing a path at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
+        //console.log("************* after tracing a path at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
 
         pc.resetPC();
         return ret2;
@@ -252,7 +259,7 @@
         base = makePredValues(BDD.one, base);
         f = makePredValues(BDD.one, f);
 
-        var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret, pathIndex, ret2;
+        var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret, pathIndex, tmp, f2;
         for (i=0; i<leni; ++i) {
             for (j=0; j<lenj; ++j) {
                 pred = base.values[i].pred.and(f.values[i].pred);
@@ -261,9 +268,14 @@
                 if (!pred.isZero()) {
                     pathIndex = [];
                     pc.pushPC(pred);
-                    value = single.invokeFun(iid, base.values[i].value, f.values[i].value, args, isConstructor);
+                    f2 = f.values[i].value;
+                    value = single.invokeFun(iid, base.values[i].value, f2, args, isConstructor);
                     ret = addValue(ret, pred, value);
+                    tmp = pc.getPC();
                     pc.popPC();
+                    if (!HOP(f2,SPECIAL_PROP2)) {
+                        pc.addAxiom(tmp, true);
+                    }
                 }
             }
         }
@@ -287,10 +299,10 @@
         pathIndex = pc.getIndex();
 
         if (ret2) {
-            console.log("backtrack "+iid);
+            console.log("backtrack "+getIIDInfo(iid));
         }
 
-        console.log("after tracing a path at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
+//        console.log("after tracing a path at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
         pc.popPC();
@@ -359,7 +371,7 @@
 
     function C2(iid, left) {
         if (pc.isRetracing()) {
-            var ret = pc.branchBoth(null, null);
+            var ret = pc.branchBoth(iid, null, null);
             switchLeft = ret.lastVal;
             return ret.branch;
         }
@@ -373,12 +385,12 @@
             pred1 = pred1.or(left.values[i].pred.and( ret));
             pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
-        return pc.branchBoth(pc.getPC().and(pred2), pc.getPC().and(pred1), switchLeft);
+        return pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), switchLeft);
     }
 
     function C(iid, left) {
         if (pc.isRetracing()) {
-            var ret = pc.branchBoth(null, null);
+            var ret = pc.branchBoth(iid, null, null);
             lastVal = ret.lastVal;
             return ret.branch;
         }
@@ -392,7 +404,7 @@
             pred1 = pred1.or(left.values[i].pred.and( ret));
             pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
-        return pc.branchBoth(pc.getPC().and(pred2), pc.getPC().and(pred1), lastVal);
+        return pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), lastVal);
     }
 
 

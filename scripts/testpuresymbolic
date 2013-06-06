@@ -24,7 +24,7 @@ rm -rf .coverage_data_old
 export USE_NODE_COVER=false
 export USE_TIME=false
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export ANALYSIS_SCRIPT="$DIR/pure analyses/puresymbolic/Single2"
+export ANALYSIS_SCRIPT="$DIR/pure analyses/puresymbolic/Multiple"
 
 $DIR/sym
 

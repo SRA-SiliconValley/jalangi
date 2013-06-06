@@ -23,6 +23,7 @@
     var SymbolicBool = require('./../concolic/SymbolicBool');
     var Symbolic = require('./../concolic/Symbolic');
     var SolverEngine = require('./SolverEngine');
+    var getIIDInfo = require('./../../utils/IIDInfo');
     var BDD = require('./BDD');
     var solver = new SolverEngine();
     var PATH_FILE_NAME = 'jalangi_path';
@@ -46,7 +47,6 @@
     var returnValue;
 
     var pcStack = [];
-//    pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack});
 
 
     function isSymbolicString(s) {
@@ -76,7 +76,7 @@
             pathConstraint = pathIndex.length>0? pathIndex[pathIndex.length-1].pc: BDD.one;
         } else {
             pathIndex = [];
-            solution = null;
+//            solution = null;
             pathConstraint = pc;
         }
         first = !isNotFirst;
@@ -317,6 +317,7 @@
             } else if (makeConcrete(val, true)) {
                 if (tmp = getSolution(val, false)) {
                     setNext({done:false, branch:true, solution: tmp});
+                    console.log("Solution (else) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(val));
                 } else {
                     setNext({done:true, branch:true, solution: tmp});
                 }
@@ -329,7 +330,7 @@
     }
 
 
-    function branchBoth(falseBranch, trueBranch, lastVal) {
+    function branchBoth(iid, falseBranch, trueBranch, lastVal) {
         var v, ret, tmp;
         if ((v = getNext()) !== undefined) {
             ret = v;
@@ -338,18 +339,21 @@
             if (makeConcrete(falseBranch, true)) {
                 if (tmp = getSolution(trueBranch, true)) {
                     setNext({done:false, branch:false, solution: tmp, pc: trueBranch, lastVal: lastVal});
-                    console.log("Solution then "+JSON.stringify(tmp));
+                    console.log("At "+getIIDInfo(iid)+" solution (then) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(trueBranch));
                 } else {
                     setNext({done:true, branch:false, solution: null, pc: null, lastVal: lastVal});
+                    console.log("At "+getIIDInfo(iid)+" no solution (then) for pc = "+getFormulaFromBDD(trueBranch));
+
                 }
                 ret = false;
                 addAxiom(falseBranch, true);
             } else if (makeConcrete(trueBranch, true)) {
                 if (tmp = getSolution(falseBranch, true)) {
                     setNext({done:false, branch:true, solution: tmp, pc: falseBranch, lastVal: lastVal});
-                    console.log("Solution else "+JSON.stringify(tmp));
+                    console.log("At "+getIIDInfo(iid)+" solution (else) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(falseBranch));
                 } else {
                     setNext({done:true, branch:true, solution: null, pc: null, lastVal: lastVal});
+                    console.log("At "+getIIDInfo(iid)+" no solution (else) for pc = "+getFormulaFromBDD(falseBranch));
                 }
                 ret = true;
                 addAxiom(trueBranch, true);

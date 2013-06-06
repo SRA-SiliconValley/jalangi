@@ -100,7 +100,7 @@
         }
 
         if (ret2) {
-            console.log("backtrack "+iid);
+            console.log("backtrack "+getIIDInfo(iid));
         }
 
         //console.log("************* after tracing a path at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
@@ -260,24 +260,29 @@
         f = makePredValues(BDD.one, f);
 
         var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret, pathIndex, tmp, f2;
-        for (i=0; i<leni; ++i) {
-            for (j=0; j<lenj; ++j) {
-                pred = base.values[i].pred.and(f.values[i].pred);
-                pred = pc.getPC().and(pred);
+        pushSwitchKey();
+        try {
+            for (i=0; i<leni; ++i) {
+                for (j=0; j<lenj; ++j) {
+                    pred = base.values[i].pred.and(f.values[i].pred);
+                    pred = pc.getPC().and(pred);
 
-                if (!pred.isZero()) {
-                    pathIndex = [];
-                    pc.pushPC(pred);
-                    f2 = f.values[i].value;
-                    value = single.invokeFun(iid, base.values[i].value, f2, args, isConstructor);
-                    ret = addValue(ret, pred, value);
-                    tmp = pc.getPC();
-                    pc.popPC();
-                    if (!HOP(f2,SPECIAL_PROP2)) {
-                        pc.addAxiom(tmp, true);
+                    if (!pred.isZero()) {
+                        pathIndex = [];
+                        pc.pushPC(pred);
+                        f2 = f.values[i].value;
+                        value = single.invokeFun(iid, base.values[i].value, f2, args, isConstructor);
+                        ret = addValue(ret, pred, value);
+                        tmp = pc.getPC();
+                        pc.popPC();
+                        if (!HOP(f2,SPECIAL_PROP2)) {
+                            pc.addAxiom(tmp, true);
+                        }
                     }
                 }
             }
+        } finally {
+            popSwitchKey();
         }
         //console.log("after invokeFun at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
         return ret;
@@ -293,6 +298,7 @@
         var ret2, pathIndex, first = pc.isFirst(), aggrRet = pc.getReturnVal();
         if (!first) {
             ret2 = pc.generateInputs();
+            console.log("Written an input");
         } else {
             ret2 = pc.generateInputs(true);
         }
@@ -359,6 +365,15 @@
 
     var lastVal;
     var switchLeft;
+    var switchKeyStack = [];
+
+    function pushSwitchKey() {
+        switchKeyStack.push(switchLeft);
+    }
+
+    function popSwitchKey() {
+        switchLeft = switchKeyStack.pop();
+    }
 
     function last() {
         return lastVal;

@@ -41,6 +41,7 @@ $ANALYSIS_SCRIPT tests/unit/object_lit 1
 $ANALYSIS_SCRIPT tests/unit/object_tracking 1
 $ANALYSIS_SCRIPT tests/unit/op_assign 1
 $ANALYSIS_SCRIPT tests/unit/switch 1
+$ANALYSIS_SCRIPT tests/unit/switch2 1
 $ANALYSIS_SCRIPT tests/unit/string 1
 $ANALYSIS_SCRIPT tests/unit/vars 1
 $ANALYSIS_SCRIPT tests/unit/while 1

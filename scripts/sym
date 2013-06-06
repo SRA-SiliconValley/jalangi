@@ -41,4 +41,5 @@ $ANALYSIS_SCRIPT tests/unit/regex7 3
 $ANALYSIS_SCRIPT tests/unit/regex8 9
 $ANALYSIS_SCRIPT tests/unit/regex9 2
 $ANALYSIS_SCRIPT tests/unit/switchs1 5
+$ANALYSIS_SCRIPT tests/unit/switch-complex 4
 $ANALYSIS_SCRIPT tests/unit/qsort 24

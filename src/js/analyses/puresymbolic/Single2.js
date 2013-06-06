@@ -274,17 +274,21 @@
 
         invoke = f_m || f === undefined || HOP(f,SPECIAL_PROP2) || typeof f !== "function";
         g = f_m || f ;
-
-        if (g === EVAL_ORG){
-            val = invokeEval(base, g, args);
-        } else if (invoke) {
-            if (isConstructor) {
-                val = callAsConstructor(g, args);
-            } else {
-                val = g.apply(base, args);
+        pushSwitchKey();
+        try {
+            if (g === EVAL_ORG){
+                val = invokeEval(base, g, args);
+            } else if (invoke) {
+                if (isConstructor) {
+                    val = callAsConstructor(g, args);
+                } else {
+                    val = g.apply(base, args);
+                }
+            }  else {
+                val = undefined;
             }
-        }  else {
-            val = undefined;
+        } finally {
+            popSwitchKey();
         }
         //console.log("    Returning "+ f.name);
 
@@ -770,6 +774,15 @@
 
     var lastVal;
     var switchLeft;
+    var switchKeyStack = [];
+
+    function pushSwitchKey() {
+        switchKeyStack.push(switchLeft);
+    }
+
+    function popSwitchKey() {
+        switchLeft = switchKeyStack.pop();
+    }
 
     function last() {
         return lastVal;

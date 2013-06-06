@@ -468,6 +468,7 @@ J$ = {};
                 g = arr[0] || f_c ;
             }
 
+            pushSwitchKey();
             try {
                 if (g === EVAL_ORG){
                     val = invokeEval(base, g, args);
@@ -484,6 +485,7 @@ J$ = {};
                     val = undefined;
                 }
             } finally {
+                popSwitchKey();
                 isInstrumentedCaller = false;
             }
 
@@ -838,6 +840,15 @@ J$ = {};
 
         var lastVal;
         var switchLeft;
+        var switchKeyStack = [];
+
+        function pushSwitchKey() {
+            switchKeyStack.push(switchLeft);
+        }
+
+        function popSwitchKey() {
+            switchLeft = switchKeyStack.pop();
+        }
 
         function last() {
             return lastVal;

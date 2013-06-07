@@ -315,8 +315,10 @@
 //        console.log("after tracing a path at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
-        pc.popPC();
-        pc.pushPC(null, pathIndex, true, returnVal);
+        if (ret2) {
+            pc.popPC();
+            pc.pushPC(null, pathIndex, true, returnVal);
+        }
         return ret2;
     }
 

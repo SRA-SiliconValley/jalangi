@@ -148,7 +148,7 @@
             formulaStack.push("begin");
             formulaStack.count ++;
         } else if (val === "and" || val === "or") {
-            val = (val  === "and");
+            val = (val  === "and")?"&&":"||";
             var i, start = -1, len;
             formulaStack.count--;
             len = formulaStack.length;
@@ -166,31 +166,25 @@
             }
 
             i = start;
-            var c1 = formulaStack[i];
+            var c1 = getFormulaFromBDD(formulaStack[i]);
             var c2;
             while(i < len-1) {
                 i++;
-                c2 = formulaStack[i];
-                c1 = val?c1.and(c2):c1.or(c2);
+                c2 = getFormulaFromBDD(formulaStack[i]);
+                c1 = new SymbolicBool(val, c1, c2);
             }
             formulaStack.splice(start-1,len - start+1);
-            formulaStack.push(c1);
+            formulaStack.push(getBDDFromFormula(c1));
 
         } else if (val === 'ignore') {
             formulaStack.pop();
         } else {
+            if (!(val instanceof BDD.Node)) {
+                throw new Error(val+" must of type Node");
+            }
             if (branch !== undefined) {
-                if (!(val instanceof BDD.Node)) {
-                    throw new Error(val+" must of type Node");
-                }
                 if (!branch){
                     val = val.not();
-                }
-            } else if (!isSymbolic(val)) {
-                if (val) {
-                    val = SymbolicBool.true;
-                } else {
-                    val = SymbolicBool.false;
                 }
             }
             formulaStack.push(val);
@@ -198,9 +192,6 @@
 
         if (formulaStack.count===0 && formulaStack.length > 0 ) {
             var tmp = formulaStack.pop();
-            if (!(tmp instanceof BDD.Node)) {
-                tmp = getBDDFromFormula(tmp);
-            }
             pathConstraint = pathConstraint.and(tmp);
         }
     }
@@ -302,7 +293,7 @@
     function branch(val) {
         var v, ret, tmp;
         if (!(val instanceof BDD.Node)) {
-            val = getBDDFromFormula(val);
+            throw new Error(val+" must of type Node");
         }
         if ((v = getNext()) !== undefined) {
             addAxiom(val, ret = v.branch);
@@ -373,11 +364,11 @@
 
         var concrete = makeConcrete(val, true);
         if (typeof concrete === 'boolean') {
-            addAxiom(val);
+            J$.addAxiom(val);
         } else if (isSymbolicNumber(val)) {
-            addAxiom(val.subtractLong(concrete).setop("=="));
+            J$.addAxiom(val.subtractLong(concrete).setop("=="));
         } else if (isSymbolicString(val)) {
-            addAxiom(new SymbolicStringPredicate("==", val, concrete));
+            J$.addAxiom(new SymbolicStringPredicate("==", val, concrete));
         } else {
             throw new Error("Unknown symbolic type "+val+ " with path constraint "+ getPC());
         }

@@ -198,6 +198,7 @@
             var newInputs, count, MAX_COUNT = 100, negatedSolution = "TRUE", extra, allTrue;
 
             if (formula) {
+                console.log("*****************  Solving "+formula);
                     count = 0;
                     extra = null;
                     while(count < MAX_COUNT) {

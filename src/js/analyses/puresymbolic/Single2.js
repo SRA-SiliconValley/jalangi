@@ -64,7 +64,7 @@
             return String.fromCharCode.apply(this, arguments);
         }
         var newSym = J$.readInput("", true);
-        pc.addAxiom(new FromCharCodePredicate(ints, newSym));
+        J$.addAxiom(new FromCharCodePredicate(ints, newSym));
         return newSym;
     }
 
@@ -72,12 +72,12 @@
         // this is a regexp object
         var newSym;
 
-//        if (isSymbolic(str) && str.isCompound && str.isCompound()) {
+        if (isSymbolic(str) && str.isCompound && str.isCompound()) {
             newSym = J$.readInput("",true);
             J$.addAxiom(J$.B(0,"==",newSym,str));
-//        } else {
-//            newSym = str;
-//        }
+        } else {
+            newSym = str;
+        }
         return J$.B(0, "regexin", newSym, this);
     }
 
@@ -191,8 +191,8 @@
 
     function makeSymbolicString(idx) {
         var ret = new SymbolicStringExpression(idx);
-        pc.addAxiom(B(0, ">=", ret.getLength(), 0));
-        pc.addAxiom(B(0, "<=", ret.getLength(), MAX_STRING_LENGTH));
+        J$.addAxiom(B(0, ">=", ret.getLength(), 0));
+        J$.addAxiom(B(0, "<=", ret.getLength(), MAX_STRING_LENGTH));
         return ret;
     }
 
@@ -435,14 +435,14 @@
     function symbolicIntToString(num) {
         //var c = num.substitute(getFullSolution(sandbox.getCurrentSolution()));
         var newSym = J$.readInput("", true);
-        pc.addAxiom(new ToStringPredicate(num, newSym));
+        J$.addAxiom(new ToStringPredicate(num, newSym));
         return newSym;
     }
 
     function symbolicStringToInt(str) {
 //        var s = str.substitute(getFullSolution(sandbox.getCurrentSolution()));
         var newSym = J$.readInput(0, true);
-        pc.addAxiom(new ToStringPredicate(newSym, str));
+        J$.addAxiom(new ToStringPredicate(newSym, str));
         return newSym;
     }
 
@@ -806,7 +806,7 @@
         left = B(iid, "===", switchLeft, left);
 
         if (isSymbolic(left)) {
-            return pc.branch(makePredicate(left));
+            return pc.branch(pc.getBDDFromFormula(makePredicate(left)));
         } else {
             return left;
         }
@@ -817,10 +817,28 @@
 
         lastVal = left;
         if (isSymbolic(left)) {
-            return pc.branch(makePredicate(left));
+            return pc.branch(pc.getBDDFromFormula(makePredicate(left)));
         } else {
             return left;
         }
+    }
+
+
+    function addAxiom(left) {
+        if (left === "begin" || left === "and" || left === "or" || left === "ignore") {
+            pc.addAxiom(left);
+            return;
+        }
+
+        if (isSymbolic(left)) {
+            left = makePredicate(left);
+        } else if (left) {
+            left = SymbolicBool.true;
+        } else {
+            left = SymbolicBool.false;
+        }
+        var ret = pc.getBDDFromFormula(left);
+        pc.addAxiom(ret, true);
     }
 
     function endExecution() {
@@ -854,7 +872,7 @@
 
     sandbox.invokeFun = invokeFun;
     sandbox.makeSymbolic = makeSymbolic;
-    sandbox.addAxiom = pc.addAxiom;
+    sandbox.addAxiom = addAxiom;
     sandbox.endExecution = endExecution;
 
     sandbox.getPC = getPC;

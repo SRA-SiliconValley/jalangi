@@ -148,7 +148,7 @@
             formulaStack.push("begin");
             formulaStack.count ++;
         } else if (val === "and" || val === "or") {
-            val = (val==='and')?"&&":"||";
+            val = (val  === "and");
             var i, start = -1, len;
             formulaStack.count--;
             len = formulaStack.length;
@@ -171,7 +171,7 @@
             while(i < len-1) {
                 i++;
                 c2 = formulaStack[i];
-                c1 = new SymbolicBool(val, c1, c2);
+                c1 = val?c1.and(c2):c1.or(c2);
             }
             formulaStack.splice(start-1,len - start+1);
             formulaStack.push(c1);

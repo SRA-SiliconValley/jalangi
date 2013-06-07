@@ -236,12 +236,12 @@
         var i, j, leni = left.values.length, lenj = right.values.length, pred;
         for (i=0; i<leni; ++i) {
             for (j=0; j<lenj; ++j) {
-                pred = left.values[i].pred.and(right.values[i].pred);
+                pred = left.values[i].pred.and(right.values[j].pred);
                 pred = pc.getPC().and(pred);
 
                 if (!pred.isZero()) {
                     var base = left.values[i].value;
-                    var offset = right.values[i].value;
+                    var offset = right.values[j].value;
                     pc.pushPC(pred);
                     var oldValue = single.G(iid, base, offset);
                     single.P(iid, base, offset, update(oldValue, val));
@@ -259,24 +259,28 @@
         base = makePredValues(BDD.one, base);
         f = makePredValues(BDD.one, f);
 
-        var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret, pathIndex, tmp, f2;
+        var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret, tmp, f2;
         pushSwitchKey();
         try {
             for (i=0; i<leni; ++i) {
                 for (j=0; j<lenj; ++j) {
-                    pred = base.values[i].pred.and(f.values[i].pred);
+                    pred = base.values[i].pred.and(f.values[j].pred);
                     pred = pc.getPC().and(pred);
 
                     if (!pred.isZero()) {
-                        pathIndex = [];
-                        pc.pushPC(pred);
-                        f2 = f.values[i].value;
-                        value = single.invokeFun(iid, base.values[i].value, f2, args, isConstructor);
-                        ret = addValue(ret, pred, value);
-                        tmp = pc.getPC();
-                        pc.popPC();
-                        if (!HOP(f2,SPECIAL_PROP2)) {
-                            pc.addAxiom(tmp, true);
+                        f2 = f.values[j].value;
+                        if (f2 === J$.addAxiom) {
+                            value = single.invokeFun(iid, base.values[i].value, f2, args, isConstructor);
+                            ret = addValue(ret, pred, value);
+                        } else {
+                            pc.pushPC(pred);
+                            value = single.invokeFun(iid, base.values[i].value, f2, args, isConstructor);
+                            ret = addValue(ret, pred, value);
+                            tmp = pc.getPC();
+                            pc.popPC();
+                            if (!HOP(f2,SPECIAL_PROP2)) {
+                                pc.addAxiom(tmp, true);
+                            }
                         }
                     }
                 }
@@ -422,6 +426,26 @@
         return pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), lastVal);
     }
 
+    function addAxiom(left) {
+        if (pc.isRetracing()) {
+            return;
+        }
+
+        if (left === "begin" || left === "and" || left === "or" || left === "ignore") {
+            pc.addAxiom(left);
+            return;
+        }
+
+        left = makePredValues(BDD.one, left);
+        var i, leni = left.values.length, pred1 = BDD.zero, ret;
+        for (i=0; i<leni; ++i) {
+            ret = makePredicate(left.values[i].value);
+            ret = pc.getBDDFromFormula(ret);
+            pred1 = pred1.or(left.values[i].pred.and( ret));
+        }
+        pc.addAxiom(pc.getPC().and(pred1), true);
+    }
+
 
     sandbox.U = U; // Unary operation
     sandbox.B = B; // Binary operation
@@ -449,7 +473,7 @@
     sandbox.Ra = Ra;
 
     sandbox.makeSymbolic = makeSymbolic;
-    sandbox.addAxiom = pc.addAxiom;
+    sandbox.addAxiom = addAxiom;
 
 }(module.exports));
 

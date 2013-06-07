@@ -18,6 +18,7 @@
 
 (function(sandbox) {
 
+    var PredValues = require('./PredValues');
     var EVAL_ORG = eval;
 
     var PREFIX1 = "J$";
@@ -71,13 +72,21 @@
         // this is a regexp object
         var newSym;
 
-        if (isSymbolic(str) && str.isCompound && str.isCompound()) {
+//        if (isSymbolic(str) && str.isCompound && str.isCompound()) {
             newSym = J$.readInput("",true);
-            pc.addAxiom(B(0,"==",newSym,str));
+            J$.addAxiom(J$.B(0,"==",newSym,str));
+//        } else {
+//            newSym = str;
+//        }
+        return J$.B(0, "regexin", newSym, this);
+    }
+
+    function getSingle(f) {
+        if (f instanceof PredValues) {
+            return f.values[0].value;
         } else {
-            newSym = str;
+            return f;
         }
-        return B(0, "regexin", newSym, this);
     }
 
     var sfuns;
@@ -94,7 +103,7 @@
             return regexp_test;
         } else if (f === String.fromCharCode) {
             return string_fromCharCode;
-        } else if (f === pc.addAxiom ||
+        } else if (f === J$.addAxiom ||
             f === J$.readInput) {
             return f;
         } else {
@@ -102,7 +111,7 @@
                 sfuns = require('./SymbolicFunctions2_jalangi_')
             }
             if (f === String.prototype.indexOf) {
-                return sfuns.string_indexOf;
+                return getSingle(sfuns.string_indexOf);
             } else if (f === String.prototype.charCodeAt) {
                 return sfuns.string_charCodeAt;
             } else if (f === String.prototype.charAt) {

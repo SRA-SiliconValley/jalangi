@@ -34,9 +34,9 @@
         return function() {
             var len = arguments.length;
             for (var i = 0; i<len; i++) {
-                arguments[i] = pc.concretize(arguments[i]);
+                arguments[i] = pc.concretize(getSingle(arguments[i]));
             }
-            return f.apply(pc.concretize(this),arguments);
+            return f.apply(pc.concretize(getSingle(this)),arguments);
         }
     }
 
@@ -44,7 +44,7 @@
         return function() {
             var len = arguments.length;
             for (var i = 0; i<len; i++) {
-                arguments[i] = pc.concretize(arguments[i]);
+                arguments[i] = pc.concretize(getSingle(arguments[i]));
             }
             return f.apply(this, arguments);
         }
@@ -72,12 +72,12 @@
         // this is a regexp object
         var newSym;
 
-        if (isSymbolic(str) && str.isCompound && str.isCompound()) {
+//        if (isSymbolic(str) && str.isCompound && str.isCompound()) {
             newSym = J$.readInput("",true);
             J$.addAxiom(J$.B(0,"==",newSym,str));
-        } else {
-            newSym = str;
-        }
+//        } else {
+//            newSym = str;
+//        }
         return J$.B(0, "regexin", newSym, this);
     }
 
@@ -113,17 +113,17 @@
             if (f === String.prototype.indexOf) {
                 return getSingle(sfuns.string_indexOf);
             } else if (f === String.prototype.charCodeAt) {
-                return sfuns.string_charCodeAt;
+                return getSingle(sfuns.string_charCodeAt);
             } else if (f === String.prototype.charAt) {
-                return sfuns.string_charAt;
+                return getSingle(sfuns.string_charAt);
             } else if (f === String.prototype.lastIndexOf) {
-                return sfuns.string_lastIndexOf;
+                return getSingle(sfuns.string_lastIndexOf);
             }  else if (f === String.prototype.substring) {
-                return sfuns.string_substring;
+                return getSingle(sfuns.string_substring);
             } else if (f === String.prototype.substr) {
-                return sfuns.string_substr;
+                return getSingle(sfuns.string_substr);
             } else if (f === parseInt) {
-                return sfuns.builtin_parseInt;
+                return getSingle(sfuns.builtin_parseInt);
             } else if (f === String.prototype.replace) {
                 return create_concrete_invoke(f);
             }

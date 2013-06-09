@@ -321,13 +321,34 @@
     }
 
 
+    function isSatisfiable(pred) {
+        updateSolution();
+        var f = getFormulaFromBDD(pred);
+        var concrete = f.substitute(solution);
+        if (concrete === SymbolicBool.false) {
+            return false;
+        } else if (concrete === SymbolicBool.true) {
+            return true;
+        } else if (isSymbolic(concrete)) {
+            var tmp = solver.generateInputs(concrete);
+            if (tmp) {
+                solution = combine(solution, tmp);
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            throw new Error("Should not be reachable "+concrete);
+        }
+    }
+
     function branchBoth(iid, falseBranch, trueBranch, lastVal) {
         var v, ret, tmp;
         if ((v = getNext()) !== undefined) {
             ret = v;
             //addAxiom(ret?trueBranch:falseBranch, true);
         } else {
-            if (makeConcrete(falseBranch, true)) {
+            if (isSatisfiable(falseBranch)) {
                 if (tmp = getSolution(trueBranch, true)) {
                     setNext({done:false, branch:false, solution: tmp, pc: trueBranch, lastVal: lastVal});
                     console.log("At "+getIIDInfo(iid)+" solution (then) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(trueBranch));
@@ -338,7 +359,7 @@
                 }
                 ret = false;
                 addAxiom(falseBranch, true);
-            } else if (makeConcrete(trueBranch, true)) {
+            } else if (isSatisfiable(trueBranch)) {
                 if (tmp = getSolution(falseBranch, true)) {
                     setNext({done:false, branch:true, solution: tmp, pc: falseBranch, lastVal: lastVal});
                     console.log("At "+getIIDInfo(iid)+" solution (else) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(falseBranch));

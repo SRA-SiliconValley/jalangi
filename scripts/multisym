@@ -2,6 +2,7 @@ $ANALYSIS_SCRIPT tests/unit/bool_symbolic 3
 $ANALYSIS_SCRIPT tests/unit/or 3
 $ANALYSIS_SCRIPT tests/unit/and 3
 $ANALYSIS_SCRIPT tests/unit/path_inputs 4
+$ANALYSIS_SCRIPT tests/unit/summary1 2
 $ANALYSIS_SCRIPT tests/unit/integer1 5
 $ANALYSIS_SCRIPT tests/unit/integer2 2
 $ANALYSIS_SCRIPT tests/unit/integer3 3
@@ -37,3 +38,5 @@ $ANALYSIS_SCRIPT tests/unit/qsort 28
 $ANALYSIS_SCRIPT tests/unit/compos1 4
 $ANALYSIS_SCRIPT tests/unit/compos2 4
 $ANALYSIS_SCRIPT tests/unit/compos3 8
+$ANALYSIS_SCRIPT tests/unit/compos4 3
+$ANALYSIS_SCRIPT tests/unit/compos5 5

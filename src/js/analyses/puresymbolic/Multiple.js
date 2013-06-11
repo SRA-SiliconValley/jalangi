@@ -181,7 +181,7 @@
         left = makePredValues(BDD.one, left);
         right = makePredValues(BDD.one, right);
 
-        var i, j, leni = left.values.length, lenj = right.values.length, pred, value, ret;
+        var i, j, leni = left.values.length, lenj = right.values.length, pred, value, ret, newPC = BDD.zero;
         for (i=0; i<leni; ++i) {
             for (j=0; j<lenj; ++j) {
                 pred = left.values[i].pred.and(right.values[j].pred);
@@ -195,12 +195,14 @@
                         value = single.G(iid, left.values[i].value, right.values[j].value);
                     }
                     ret = addValue(ret, pc.getPC(), value);
+                    newPC = newPC.or(pc.getPC());
                     pc.popPC();
                 }
             }
         }
+        pc.setPC(pc.getPC().and(newPC));
         return ret;
-    };
+    }
 
     function U(iid, op, left) {
         if (pc.isRetracing()) {
@@ -208,7 +210,7 @@
         }
         left = makePredValues(BDD.one, left);
 
-        var i, leni = left.values.length, pred, value, ret;
+        var i, leni = left.values.length, pred, value, ret, newPC = BDD.zero;
         for (i=0; i<leni; ++i) {
             pred = pc.getPC().and(left.values[i].pred);
 
@@ -216,11 +218,13 @@
                 pc.pushPC(pred);
                 value = single.U(iid, op, left.values[i].value);
                 ret = addValue(ret, pc.getPC(), value);
+                newPC = newPC.or(pc.getPC());
                 pc.popPC();
             }
         }
+        pc.setPC(pc.getPC().and(newPC));
         return ret;
-    };
+    }
 
     function G(iid, base, offset) {
         return B(iid, undefined, base, offset);
@@ -233,7 +237,7 @@
         left = makePredValues(BDD.one, left);
         right = makePredValues(BDD.one, right);
 
-        var i, j, leni = left.values.length, lenj = right.values.length, pred;
+        var i, j, leni = left.values.length, lenj = right.values.length, pred, newPC = BDD.zero;
         for (i=0; i<leni; ++i) {
             for (j=0; j<lenj; ++j) {
                 pred = left.values[i].pred.and(right.values[j].pred);
@@ -245,11 +249,13 @@
                     pc.pushPC(pred);
                     var oldValue = single.G(iid, base, offset);
                     single.P(iid, base, offset, update(oldValue, val));
+                    newPC = newPC.or(pc.getPC());
                     pc.popPC();
                 }
             }
         }
-    };
+        pc.setPC(pc.getPC().and(newPC));
+    }
 
 
     function invokeFun(iid, base, f, args, isConstructor) {
@@ -299,7 +305,7 @@
     }
 
     function Fr(iid) {
-        var ret2, pathIndex, first = pc.isFirst(), aggrRet = pc.getReturnVal();
+        var ret2, pathIndex, first = pc.isFirst(), aggrRet = pc.getReturnVal(), aggrPC = pc.getAggregatePC()?pc.getAggregatePC():BDD.zero;
         if (!first) {
             ret2 = pc.generateInputs();
             console.log("Written an input");
@@ -316,8 +322,13 @@
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
         if (ret2) {
+            aggrPC = aggrPC.or(pc.getPC());
             pc.popPC();
-            pc.pushPC(null, pathIndex, true, returnVal);
+            pc.pushPC(null, pathIndex, true, returnVal, aggrPC);
+        } else {
+            aggrPC = aggrPC.or(pc.getPC());
+            pc.popPC();
+            pc.pushPC(pc.getPC().and(aggrPC));
         }
         return ret2;
     }
@@ -328,7 +339,9 @@
     }
 
     function Ra() {
-        return returnVal;
+        var ret = returnVal;
+        returnVal = undefined;
+        return ret;
     }
 
     var Symbolic = require('./../concolic/Symbolic');

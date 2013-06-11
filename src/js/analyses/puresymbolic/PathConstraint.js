@@ -45,6 +45,7 @@
     var solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
     var first = true;
     var returnValue;
+    var aggregatePC;
 
     var pcStack = [];
 
@@ -65,8 +66,8 @@
         return val.type === Symbolic;
     }
 
-    function pushPC(pc, pi, isNotFirst, returnVal) {
-        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, first:first, returnVal: returnValue });
+    function pushPC(pc, pi, isNotFirst, returnVal, aggrPC) {
+        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, first:first, returnVal: returnValue, aggrPC: aggregatePC });
         index = 0;
         formulaStack = [];
         formulaStack.count = 0;
@@ -81,6 +82,7 @@
         }
         first = !isNotFirst;
         returnValue = returnVal;
+        aggregatePC = aggrPC;
     }
 
     function popPC() {
@@ -91,11 +93,12 @@
         solution = pcStack[pcStack.length-1].solution;
         first = pcStack[pcStack.length-1].first;
         returnValue = pcStack[pcStack.length-1].returnVal;
+        aggregatePC = pcStack[pcStack.length-1].aggrPC;
 
         return pcStack.pop();
     }
 
-    function resetPC(returnVal) {
+    function resetPC(returnVal, aggrPC) {
         //pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, first:first, returnVal: returnValue });
         index = 0;
         formulaStack = [];
@@ -104,6 +107,7 @@
         pathConstraint = pathIndex.length>0? pathIndex[pathIndex.length-1].pc: BDD.one;
         first = false;
         returnValue = returnVal;
+        aggregatePC = aggrPC;
     }
 
 
@@ -115,8 +119,16 @@
         return returnValue;
     }
 
+    function getAggregatePC() {
+        return aggregatePC;
+    }
+
     function getPC() {
         return pathConstraint;
+    }
+
+    function setPC(c) {
+        pathConstraint = c;
     }
 
     function getIndex() {
@@ -428,6 +440,7 @@
     sandbox.pushPC = pushPC;
     sandbox.resetPC = resetPC;
     sandbox.getPC = getPC;
+    sandbox.setPC = setPC;
     sandbox.isFirst = isFirst;
     sandbox.getIndex = getIndex;
     sandbox.setIndex = setIndex;
@@ -438,6 +451,7 @@
     sandbox.getFormulaFromBDD = getFormulaFromBDD;
     sandbox.getBDDFromFormula = getBDDFromFormula;
     sandbox.getReturnVal = getReturnVal;
+    sandbox.getAggregatePC = getAggregatePC;
     sandbox.isRetracing = isRetracing;
 
 }(module.exports));

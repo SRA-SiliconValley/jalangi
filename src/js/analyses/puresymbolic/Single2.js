@@ -350,7 +350,9 @@
     }
 
     function Ra() {
-        return returnVal;
+        var ret = returnVal;
+        returnVal = undefined;
+        return ret;
     }
 
     function T(iid, val, type) {

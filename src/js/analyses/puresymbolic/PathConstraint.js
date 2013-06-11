@@ -66,23 +66,17 @@
         return val.type === Symbolic;
     }
 
-    function pushPC(pc, pi, isNotFirst, returnVal, aggrPC) {
+    function pushPC(pc) {
         pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, first:first, returnVal: returnValue, aggrPC: aggregatePC });
+
         index = 0;
         formulaStack = [];
         formulaStack.count = 0;
-        if (pi) {
-            pathIndex = pi;
-            solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
-            pathConstraint = pathIndex.length>0? pathIndex[pathIndex.length-1].pc: BDD.one;
-        } else {
-            pathIndex = [];
-//            solution = null;
-            pathConstraint = pc;
-        }
-        first = !isNotFirst;
-        returnValue = returnVal;
-        aggregatePC = aggrPC;
+        pathIndex = [];
+        pathConstraint = pc;
+        first = true;
+        returnValue = undefined;
+        aggregatePC = undefined;
     }
 
     function popPC() {
@@ -98,16 +92,23 @@
         return pcStack.pop();
     }
 
-    function resetPC(returnVal, aggrPC) {
-        //pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, first:first, returnVal: returnValue });
+    function resetPC(returnVal, isLast) {
         index = 0;
         formulaStack = [];
         formulaStack.count = 0;
+        if (first) {
+            aggregatePC = pathConstraint;
+        } else {
+            aggregatePC = aggregatePC.or(pathConstraint);
+        }
         solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
-        pathConstraint = pathIndex.length>0? pathIndex[pathIndex.length-1].pc: BDD.one;
+        if (isLast) {
+            pathConstraint = aggregatePC;
+        } else {
+            pathConstraint = pathIndex.length>0? pathIndex[pathIndex.length-1].pc: BDD.one;
+        }
         first = false;
         returnValue = returnVal;
-        aggregatePC = aggrPC;
     }
 
 
@@ -119,24 +120,12 @@
         return returnValue;
     }
 
-    function getAggregatePC() {
-        return aggregatePC;
-    }
-
     function getPC() {
         return pathConstraint;
     }
 
     function setPC(c) {
         pathConstraint = c;
-    }
-
-    function getIndex() {
-        return pathIndex;
-    }
-
-    function setIndex(idx) {
-        pathIndex = idx;
     }
 
     function getNext() {
@@ -442,8 +431,6 @@
     sandbox.getPC = getPC;
     sandbox.setPC = setPC;
     sandbox.isFirst = isFirst;
-    sandbox.getIndex = getIndex;
-    sandbox.setIndex = setIndex;
     sandbox.concretize = concretize;
     sandbox.branch = branch;
     sandbox.branchBoth = branchBoth;
@@ -451,7 +438,6 @@
     sandbox.getFormulaFromBDD = getFormulaFromBDD;
     sandbox.getBDDFromFormula = getBDDFromFormula;
     sandbox.getReturnVal = getReturnVal;
-    sandbox.getAggregatePC = getAggregatePC;
     sandbox.isRetracing = isRetracing;
 
 }(module.exports));

@@ -102,10 +102,7 @@
         if (ret2) {
             console.log("backtrack "+getIIDInfo(iid));
         }
-
-        //console.log("************* after tracing a path at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
-
-        pc.resetPC();
+        pc.resetPC(undefined, !ret2);
         return ret2;
     }
 
@@ -265,7 +262,7 @@
         base = makePredValues(BDD.one, base);
         f = makePredValues(BDD.one, f);
 
-        var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret, tmp, f2;
+        var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret, tmp, f2, newPC = BDD.zero;
         pushSwitchKey();
         try {
             for (i=0; i<leni; ++i) {
@@ -278,19 +275,18 @@
                         if (f2 === J$.addAxiom) {
                             value = single.invokeFun(iid, base.values[i].value, f2, args, isConstructor);
                             ret = addValue(ret, pred, value);
+                            newPC = newPC.or(pc.getPC());
                         } else {
                             pc.pushPC(pred);
                             value = single.invokeFun(iid, base.values[i].value, f2, args, isConstructor);
-                            ret = addValue(ret, pred, value);
-                            tmp = pc.getPC();
+                            ret = addValue(ret, pc.getPC(), value);
+                            newPC = newPC.or(pc.getPC());
                             pc.popPC();
-                            if (!HOP(f2,SPECIAL_PROP2)) {
-                                pc.addAxiom(tmp, true);
-                            }
                         }
                     }
                 }
             }
+            pc.setPC(pc.getPC().and(newPC));
         } finally {
             popSwitchKey();
         }
@@ -305,31 +301,19 @@
     }
 
     function Fr(iid) {
-        var ret2, pathIndex, first = pc.isFirst(), aggrRet = pc.getReturnVal(), aggrPC = pc.getAggregatePC()?pc.getAggregatePC():BDD.zero;
+        var ret2, pathIndex, first = pc.isFirst(), aggrRet = pc.getReturnVal();
         if (!first) {
             ret2 = pc.generateInputs();
             console.log("Written an input");
         } else {
             ret2 = pc.generateInputs(true);
         }
-        pathIndex = pc.getIndex();
-
         if (ret2) {
             console.log("backtrack "+getIIDInfo(iid));
         }
 
-//        console.log("after tracing a path at "+getIIDInfo(iid)+" pc = "+pc.getFormulaFromBDD(pc.getPC()));
-
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
-        if (ret2) {
-            aggrPC = aggrPC.or(pc.getPC());
-            pc.popPC();
-            pc.pushPC(null, pathIndex, true, returnVal, aggrPC);
-        } else {
-            aggrPC = aggrPC.or(pc.getPC());
-            pc.popPC();
-            pc.pushPC(pc.getPC().and(aggrPC));
-        }
+        pc.resetPC(returnVal, !ret2);
         return ret2;
     }
 

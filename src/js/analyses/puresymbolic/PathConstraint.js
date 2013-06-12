@@ -84,7 +84,7 @@
         pathIndex = pcStack[pcStack.length-1].path;
         index = pcStack[pcStack.length-1].index;
         formulaStack = pcStack[pcStack.length-1].formulaStack;
-        solution = pcStack[pcStack.length-1].solution;
+//        solution = pcStack[pcStack.length-1].solution;
         first = pcStack[pcStack.length-1].first;
         returnValue = pcStack[pcStack.length-1].returnVal;
         aggregatePC = pcStack[pcStack.length-1].aggrPC;
@@ -101,11 +101,11 @@
         } else {
             aggregatePC = aggregatePC.or(pathConstraint);
         }
-        solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
-        if (isLast) {
+        if (pathIndex.length<=0) {
             pathConstraint = aggregatePC;
         } else {
-            pathConstraint = pathIndex.length>0? pathIndex[pathIndex.length-1].pc: BDD.one;
+            solution = pathIndex[pathIndex.length-1].solution;
+            pathConstraint = pathIndex[pathIndex.length-1].pc;
         }
         first = false;
         returnValue = returnVal;
@@ -413,9 +413,7 @@
 
         fs.writeFileSync(PATH_FILE_NAME,JSON.stringify(pathIndex),"utf8");
 
-        if (!solution) {
-            updateSolution();
-        }
+        updateSolution();
         if (!noWrite) {
             solver.writeInputs(solution, []);
             //console.log("-------------");

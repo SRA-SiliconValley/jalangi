@@ -40,3 +40,4 @@ $ANALYSIS_SCRIPT tests/unit/compos2 4
 $ANALYSIS_SCRIPT tests/unit/compos3 8
 $ANALYSIS_SCRIPT tests/unit/compos4 3
 $ANALYSIS_SCRIPT tests/unit/compos5 5
+$ANALYSIS_SCRIPT tests/unit/compos6 1

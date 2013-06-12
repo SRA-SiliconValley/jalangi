@@ -30,107 +30,6 @@
 
     //-------------------------------------- Symbolic functions -----------------------------------------------------------
 
-    function create_concrete_invoke(f) {
-        return function() {
-            var len = arguments.length;
-            for (var i = 0; i<len; i++) {
-                arguments[i] = pc.concretize(getSingle(arguments[i]));
-            }
-            return f.apply(pc.concretize(getSingle(this)),arguments);
-        }
-    }
-
-    function create_concrete_invoke_cons(f) {
-        return function() {
-            var len = arguments.length;
-            for (var i = 0; i<len; i++) {
-                arguments[i] = pc.concretize(getSingle(arguments[i]));
-            }
-            return f.apply(this, arguments);
-        }
-    }
-
-    function string_fromCharCode () {
-        var ints = [];
-        var i, len=arguments.length, flag = false;;
-        for (i=0; i < len; i++) {
-            if (arguments[i] instanceof SymbolicLinear) {
-                flag = true;
-            }
-            ints[i] = arguments[i];
-
-        }
-        if (!flag) {
-            return String.fromCharCode.apply(this, arguments);
-        }
-        var newSym = J$.readInput("", true);
-        J$.addAxiom(new FromCharCodePredicate(ints, newSym));
-        return newSym;
-    }
-
-    function regexp_test (str) {
-        // this is a regexp object
-        var newSym;
-
-//        if (isSymbolic(str) && str.isCompound && str.isCompound()) {
-            newSym = J$.readInput("",true);
-            J$.addAxiom(J$.B(0,"==",newSym,str));
-//        } else {
-//            newSym = str;
-//        }
-        return J$.B(0, "regexin", newSym, this);
-    }
-
-    function getSingle(f) {
-        if (f instanceof PredValues) {
-            return f.values[0].value;
-        } else {
-            return f;
-        }
-    }
-
-    var sfuns;
-
-    function getSymbolicFunctionToInvoke (f, isConstructor) {
-        if (f === Array ||
-            f === Error ||
-            f === String ||
-            f === Number ||
-            f === Boolean ||
-            f === RegExp) {
-            return create_concrete_invoke_cons(f);
-        } else if (f === RegExp.prototype.test) {
-            return regexp_test;
-        } else if (f === String.fromCharCode) {
-            return string_fromCharCode;
-        } else if (f === J$.addAxiom ||
-            f === J$.readInput) {
-            return f;
-        } else {
-            if (!sfuns) {
-                sfuns = require('./SymbolicFunctions2_jalangi_')
-            }
-            if (f === String.prototype.indexOf) {
-                return getSingle(sfuns.string_indexOf);
-            } else if (f === String.prototype.charCodeAt) {
-                return getSingle(sfuns.string_charCodeAt);
-            } else if (f === String.prototype.charAt) {
-                return getSingle(sfuns.string_charAt);
-            } else if (f === String.prototype.lastIndexOf) {
-                return getSingle(sfuns.string_lastIndexOf);
-            }  else if (f === String.prototype.substring) {
-                return getSingle(sfuns.string_substring);
-            } else if (f === String.prototype.substr) {
-                return getSingle(sfuns.string_substr);
-            } else if (f === parseInt) {
-                return getSingle(sfuns.builtin_parseInt);
-            } else if (f === String.prototype.replace) {
-                return create_concrete_invoke(f);
-            }
-        }
-        return null;
-    }
-
     var Symbolic = require('./../concolic/Symbolic');
     var SymbolicBool = require('./../concolic/SymbolicBool');
     var SymbolicLinear = require('./../concolic/SymbolicLinear');
@@ -205,11 +104,6 @@
         return Array.prototype.slice.call(a, start || 0);
     }
 
-    function isNative(f) {
-        return f.toString().indexOf('[native code]') > -1 || f.toString().indexOf('[object ') === 0;
-    }
-
-
     function printValueForTesting(loc, iid, val) {
         return;
         var type = typeof val;
@@ -226,6 +120,112 @@
 
 
     //----------------------------------- Begin concolic execution ---------------------------------
+
+    function create_concrete_invoke(f) {
+        return function() {
+            var len = arguments.length;
+            for (var i = 0; i<len; i++) {
+                arguments[i] = pc.concretize(getSingle(arguments[i]));
+            }
+            return f.apply(pc.concretize(getSingle(this)),arguments);
+        }
+    }
+
+    function create_concrete_invoke_cons(f) {
+        return function() {
+            var len = arguments.length;
+            for (var i = 0; i<len; i++) {
+                arguments[i] = pc.concretize(getSingle(arguments[i]));
+            }
+            return f.apply(this, arguments);
+        }
+    }
+
+    function string_fromCharCode () {
+        var ints = [];
+        var i, len=arguments.length, flag = false;;
+        for (i=0; i < len; i++) {
+            if (arguments[i] instanceof SymbolicLinear) {
+                flag = true;
+            }
+            ints[i] = arguments[i];
+
+        }
+        if (!flag) {
+            return String.fromCharCode.apply(this, arguments);
+        }
+        var newSym = J$.readInput("", true);
+        J$.addAxiom(new FromCharCodePredicate(ints, newSym));
+        return newSym;
+    }
+
+    function regexp_test (str) {
+        // this is a regexp object
+        var newSym;
+
+//        if (isSymbolic(str) && str.isCompound && str.isCompound()) {
+        newSym = J$.readInput("",true);
+        J$.addAxiom(J$.B(0,"==",newSym,str));
+//        } else {
+//            newSym = str;
+//        }
+        return J$.B(0, "regexin", newSym, this);
+    }
+
+    function getSingle(f) {
+        if (f instanceof PredValues) {
+            return f.values[0].value;
+        } else {
+            return f;
+        }
+    }
+
+    var sfuns;
+
+    function getSymbolicFunctionToInvoke (f, isConstructor) {
+        if (f === Array ||
+            f === Error ||
+            f === String ||
+            f === Number ||
+            f === Boolean ||
+            f === RegExp) {
+            return create_concrete_invoke_cons(f);
+        } else if (f === RegExp.prototype.test) {
+            return regexp_test;
+        } else if (f === String.fromCharCode) {
+            return string_fromCharCode;
+        } else if (f === J$.addAxiom ||
+            f === J$.readInput) {
+            return f;
+        } else {
+            if (!sfuns) {
+                sfuns = require('./SymbolicFunctions2_jalangi_')
+            }
+            if (f === String.prototype.indexOf) {
+                return getSingle(sfuns.string_indexOf);
+            } else if (f === String.prototype.charCodeAt) {
+                return getSingle(sfuns.string_charCodeAt);
+            } else if (f === String.prototype.charAt) {
+                return getSingle(sfuns.string_charAt);
+            } else if (f === String.prototype.lastIndexOf) {
+                return getSingle(sfuns.string_lastIndexOf);
+            }  else if (f === String.prototype.substring) {
+                return getSingle(sfuns.string_substring);
+            } else if (f === String.prototype.substr) {
+                return getSingle(sfuns.string_substr);
+            } else if (f === parseInt) {
+                return getSingle(sfuns.builtin_parseInt);
+            } else if (f === String.prototype.replace) {
+                return create_concrete_invoke(f);
+            }
+        }
+        return null;
+    }
+
+    function isNative(f) {
+        return f.toString().indexOf('[native code]') > -1 || f.toString().indexOf('[object ') === 0;
+    }
+
 
     function callAsNativeConstructorWithEval(Constructor, args) {
         var a = [];

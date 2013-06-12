@@ -111,6 +111,7 @@ java -cp ./jout/production/jalangijava/:./thirdparty/javalib/automaton.jar Regex
 
 node src/js/instrument/esnstrument.js src/js/analyses/concolic/SymbolicFunctions.js
 node src/js/instrument/esnstrument.js src/js/analyses/puresymbolic/SymbolicFunctions2.js
+node src/js/instrument/esnstrument.js src/js/analyses/puresymbolic/SymbolicFunctions3.js
 
 echo "****************************"
 echo "Installation successful."

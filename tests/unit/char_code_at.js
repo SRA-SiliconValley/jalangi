@@ -18,7 +18,7 @@
 
 
 if (typeof window === "undefined") {
-    require('../../src/js/InputManager');
+    require('../../src/js/InputManager2');
     require(process.cwd()+'/inputs');
 }
 

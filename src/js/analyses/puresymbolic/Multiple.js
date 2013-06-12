@@ -24,6 +24,7 @@
     var getIIDInfo = require('./../../utils/IIDInfo');
     var PREFIX1 = "J$";
     var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
+    var EVAL_ORG = eval;
 
     var pc = single.getPC();
 
@@ -68,6 +69,195 @@
     function makeSymbolic(idx, val) {
         return single.makeSymbolic(idx, val);
     }
+
+    //----------------------------------------------- Symbolic funs ----------------------------------------------------
+
+    function create_concrete_invoke(f) {
+        return function() {
+            var len = arguments.length;
+            for (var i = 0; i<len; i++) {
+                arguments[i] = pc.concretize(getSingle(arguments[i]));
+            }
+            return f.apply(pc.concretize(getSingle(this)),arguments);
+        }
+    }
+
+    function create_concrete_invoke_cons(f) {
+        return function() {
+            var len = arguments.length;
+            for (var i = 0; i<len; i++) {
+                arguments[i] = pc.concretize(getSingle(arguments[i]));
+            }
+            return f.apply(this, arguments);
+        }
+    }
+
+    function string_fromCharCode () {
+        var ints = [];
+        var i, len=arguments.length, flag = false;;
+        for (i=0; i < len; i++) {
+            if (arguments[i] instanceof SymbolicLinear) {
+                flag = true;
+            }
+            ints[i] = arguments[i];
+
+        }
+        if (!flag) {
+            return String.fromCharCode.apply(this, arguments);
+        }
+        var newSym = J$.readInput("", true);
+        J$.addAxiom(new FromCharCodePredicate(ints, newSym));
+        return newSym;
+    }
+
+    function regexp_test (str) {
+        // this is a regexp object
+        var newSym;
+
+//        if (isSymbolic(str) && str.isCompound && str.isCompound()) {
+        newSym = J$.readInput("",true);
+        J$.addAxiom(J$.B(0,"==",newSym,str));
+//        } else {
+//            newSym = str;
+//        }
+        return J$.B(0, "regexin", newSym, this);
+    }
+
+    function getSingle(f) {
+        if (f instanceof PredValues) {
+            return f.values[0].value;
+        } else {
+            return f;
+        }
+    }
+
+    var sfuns;
+
+    function getSymbolicFunctionToInvoke (f, isConstructor) {
+        if (f === Array ||
+            f === Error ||
+            f === String ||
+            f === Number ||
+            f === Boolean ||
+            f === RegExp) {
+            return create_concrete_invoke_cons(f);
+        } else if (f === RegExp.prototype.test) {
+            return regexp_test;
+        } else if (f === String.fromCharCode) {
+            return string_fromCharCode;
+        } else if (f === J$.addAxiom ||
+            f === J$.readInput) {
+            return f;
+        } else {
+            if (!sfuns) {
+                sfuns = require('./SymbolicFunctions3_jalangi_')
+            }
+            if (f === String.prototype.indexOf) {
+                return getSingle(sfuns.string_indexOf);
+            } else if (f === String.prototype.charCodeAt) {
+                return getSingle(sfuns.string_charCodeAt);
+            } else if (f === String.prototype.charAt) {
+                return getSingle(sfuns.string_charAt);
+            } else if (f === String.prototype.lastIndexOf) {
+                return getSingle(sfuns.string_lastIndexOf);
+            }  else if (f === String.prototype.substring) {
+                return getSingle(sfuns.string_substring);
+            } else if (f === String.prototype.substr) {
+                return getSingle(sfuns.string_substr);
+            } else if (f === parseInt) {
+                return getSingle(sfuns.builtin_parseInt);
+            } else if (f === String.prototype.replace) {
+                return create_concrete_invoke(f);
+            }
+        }
+        return null;
+    }
+
+    function isNative(f) {
+        return f.toString().indexOf('[native code]') > -1 || f.toString().indexOf('[object ') === 0;
+    }
+
+
+    function callAsNativeConstructorWithEval(Constructor, args) {
+        var a = [];
+        for (var i = 0; i < args.length; i++)
+            a[i] = 'args[' + i + ']';
+        var eval = EVAL_ORG;
+        return eval('new Constructor(' + a.join() + ')');
+    }
+
+    function callAsNativeConstructor (Constructor, args) {
+        if (args.length === 0) {
+            return new Constructor();
+        }
+        if (args.length === 1) {
+            return new Constructor(args[0]);
+        }
+        if (args.length === 2) {
+            return new Constructor(args[0], args[1]);
+        }
+        if (args.length === 3) {
+            return new Constructor(args[0], args[1], args[2]);
+        }
+        if (args.length === 4) {
+            return new Constructor(args[0], args[1], args[2], args[3]);
+        }
+        if (args.length === 5) {
+            return new Constructor(args[0], args[1], args[2], args[3], args[4]);
+        }
+        return callAsNativeConstructorWithEval(Constructor, args);
+    }
+
+    function callAsConstructor(Constructor, args) {
+        if (isNative(Constructor)) {
+            return callAsNativeConstructor(Constructor,args);
+        } else {
+            var Temp = function(){}, inst, ret;
+            Temp.prototype = Constructor.prototype;
+            inst = new Temp;
+            ret = Constructor.apply(inst, args);
+            return Object(ret) === ret ? ret : inst;
+        }
+    }
+
+
+    function invokeEval(base, f, args) {
+        return f.call(base,J$.instrumentCode(args[0],true));
+    }
+
+
+    function singleInvokeFun(iid, base, f, args, isConstructor) {
+        var g, invoke, val;
+
+        //console.log("    Calling "+ f.name);
+        var f_m = getSymbolicFunctionToInvoke(f, isConstructor);
+
+        invoke = f_m || f === undefined || HOP(f,SPECIAL_PROP2) || typeof f !== "function";
+        g = f_m || f ;
+        pushSwitchKey();
+        try {
+            if (g === EVAL_ORG){
+                val = invokeEval(base, g, args);
+            } else if (invoke) {
+                if (isConstructor) {
+                    val = callAsConstructor(g, args);
+                } else {
+                    val = g.apply(base, args);
+                }
+            }  else {
+                val = undefined;
+            }
+        } finally {
+            popSwitchKey();
+        }
+        //console.log("    Returning "+ f.name);
+
+        return val;
+    }
+
+    //--------------------------- End Symbolic Funs --------------------------------------------------------------------
+
+
 
     function F(iid, f, isConstructor) {
         return function() {
@@ -273,12 +463,12 @@
                     if (!pred.isZero()) {
                         f2 = f.values[j].value;
                         if (f2 === J$.addAxiom) {
-                            value = single.invokeFun(iid, base.values[i].value, f2, args, isConstructor);
+                            value = singleInvokeFun(iid, base.values[i].value, f2, args, isConstructor);
                             ret = addValue(ret, pred, value);
                             newPC = newPC.or(pc.getPC());
                         } else {
                             pc.pushPC(pred);
-                            value = single.invokeFun(iid, base.values[i].value, f2, args, isConstructor);
+                            value = singleInvokeFun(iid, base.values[i].value, f2, args, isConstructor);
                             ret = addValue(ret, pc.getPC(), value);
                             newPC = newPC.or(pc.getPC());
                             pc.popPC();

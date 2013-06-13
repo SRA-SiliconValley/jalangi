@@ -72,25 +72,82 @@
 
     //----------------------------------------------- Symbolic funs ----------------------------------------------------
 
-    function create_concrete_invoke(f) {
-        return function() {
-            var len = arguments.length;
-            for (var i = 0; i<len; i++) {
-                arguments[i] = pc.concretize(getSingle(arguments[i]));
+    function nextIndices(indices, maxIndices) {
+        var len = indices.length, i;
+        indices[len-1] = indices[len-1]+1;
+        for(i=len-1; i>=0; --i) {
+            if (indices[i]===maxIndices[i]) {
+                if (i===0) {
+                    return false;
+                } else {
+                    indices[i] = 0;
+                    indices[i-1] = indices[i-1] + 1;
+                }
+            } else {
+                break;
             }
-            return f.apply(pc.concretize(getSingle(this)),arguments);
+        }
+        return true;
+    }
+
+    function create_concrete_invoke(f, isCons) {
+        return function() {
+            var len = arguments.length, ret, pred, newPC, value;
+            var indices = [], args = [], maxIndices = [], cArgs = [];
+            for (var i = 0; i<len; i++) {
+                args[i] = makePredValues(BDD.one, arguments[i]);
+                indices[i] = 0;
+                maxIndices[i] = args[i].values.length;
+            }
+            newPC = BDD.zero;
+
+            do {
+                pred = pc.getPC();
+                ret = undefined;
+                for (i=0; i<len; ++i) {
+                    pred = pred.and(args[i].values[indices[i]].pred);
+                }
+                if (!pred.isZero()) {
+                    pc.pushPC(pred);
+                    for (i=0; i<len; ++i) {
+                        cArgs[i] = pc.concretize(args[i].values[indices[i]].value);
+                    }
+                    if (isCons) {
+                        value = f.apply(getSingle(this),cArgs);
+                    } else {
+                        value = f.apply(pc.concretize(getSingle(this)),cArgs);
+                    }
+                    ret = addValue(ret, pc.getPC(), value);
+                    newPC = newPC.or(pc.getPC());
+                    pc.popPC();
+                }
+            } while(nextIndices(indices, maxIndices));
+
+            pc.setPC(pc.getPC().and(newPC));
+            return ret;
         }
     }
 
-    function create_concrete_invoke_cons(f) {
-        return function() {
-            var len = arguments.length;
-            for (var i = 0; i<len; i++) {
-                arguments[i] = pc.concretize(getSingle(arguments[i]));
-            }
-            return f.apply(this, arguments);
-        }
-    }
+
+//    function create_concrete_invoke(f) {
+//        return function() {
+//            var len = arguments.length;
+//            for (var i = 0; i<len; i++) {
+//                arguments[i] = pc.concretize(getSingle(arguments[i]));
+//            }
+//            return f.apply(pc.concretize(getSingle(this)),arguments);
+//        }
+//    }
+//
+//    function create_concrete_invoke_cons(f) {
+//        return function() {
+//            var len = arguments.length;
+//            for (var i = 0; i<len; i++) {
+//                arguments[i] = pc.concretize(getSingle(arguments[i]));
+//            }
+//            return f.apply(this, arguments);
+//        }
+//    }
 
     function string_fromCharCode () {
         var ints = [];
@@ -114,12 +171,8 @@
         // this is a regexp object
         var newSym;
 
-//        if (isSymbolic(str) && str.isCompound && str.isCompound()) {
         newSym = J$.readInput("",true);
         J$.addAxiom(J$.B(0,"==",newSym,str));
-//        } else {
-//            newSym = str;
-//        }
         return J$.B(0, "regexin", newSym, this);
     }
 
@@ -140,7 +193,7 @@
             f === Number ||
             f === Boolean ||
             f === RegExp) {
-            return create_concrete_invoke_cons(f);
+            return create_concrete_invoke(f, true);
         } else if (f === RegExp.prototype.test) {
             return regexp_test;
         } else if (f === String.fromCharCode) {

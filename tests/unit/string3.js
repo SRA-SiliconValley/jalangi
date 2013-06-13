@@ -31,8 +31,9 @@ s2 = "!"+s2;
 s = s + s2;
 
 if (s === "Si\"mple World!!!") {
-    console.log(s);
+    console.log("1");
 } else {
-    console.log(s+" None");
+    console.log("2");
 }
+console.log("3");
 

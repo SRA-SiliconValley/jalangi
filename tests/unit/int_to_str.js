@@ -31,9 +31,10 @@ if (s > 100) {
     if (s.length < 20) {
 
         if (s === s1) {
-            console.log(s);
+            console.log("1");
         } else {
-            console.log(s+" None");
+            console.log("2");
         }
     }
 }
+console.log("3");

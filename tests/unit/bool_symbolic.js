@@ -27,7 +27,8 @@ var v = J$.readInput(1);
 var w = J$.readInput(false);
 
 if (v && w) {
-    console.log("Then");
+    console.log("1");
 } else {
-    console.log("Else");
+    console.log("2");
 }
+console.log("3");

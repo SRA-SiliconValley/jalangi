@@ -28,6 +28,10 @@ var phonenumber = J$.readInput('07123456789');
 
 
 if (pattern.test(phonenumber) ) {
-    console.log("Valid number");
+    console.log("1");
+} else {
+    console.log("2");
+
 }
+console.log("3");
 

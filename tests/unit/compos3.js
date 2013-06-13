@@ -46,8 +46,11 @@ function partition(array, begin, end, pivot)
     var ix;
     for(ix=begin; ix<end-1; ++ix) {
         if(array[ix]<=piv) {
+            console.log("1");
             array.swap(store, ix);
             ++store;
+        } else {
+            console.log("2");
         }
     }
     array.swap(end-1, store);
@@ -64,9 +67,8 @@ function dosort()
         array[i] = i;
         array[i] = J$.readInput(array[i]);
     }
-    console.log("Input: "+array.join(' '));
     partition(array, 0, array.length, 0);
-    console.log("Output: "+array.join(' '));
 }
 
 dosort();
+console.log("3");

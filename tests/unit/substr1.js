@@ -28,8 +28,11 @@ var area = J$.readInput("");
 
 area += "World";
 
-console.log(area);
 
 if (area.substr(1,3) === "POW") {
-    console.log("OK");
+    console.log("1");
+} else {
+    console.log("2");
+
 }
+console.log("3");

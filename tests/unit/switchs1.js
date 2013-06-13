@@ -29,16 +29,17 @@ var y = J$.readInput('');
 
 switch(x) {
     case y:
-        console.log("This is y");
+        console.log("1");
         break;
     case '77':
     case '88':
-        console.log("77 or 88");
+        console.log("2");
         break;
     case 'None':
-        console.log("None");
+        console.log("3");
         break;
     default:
-        console.log("Default");
+        console.log("4");
         break;
 }
+console.log("5");

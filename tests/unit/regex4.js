@@ -33,6 +33,10 @@ var phonenumber = "44"+area;
 phonenumber = "+"+phonenumber+rest;
 
 if (pattern.test(phonenumber) ) {
-    console.log("Valid number");
+    console.log("1");
+} else {
+    console.log("2");
+
 }
+console.log("3");
 

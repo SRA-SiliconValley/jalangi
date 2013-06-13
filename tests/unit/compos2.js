@@ -26,16 +26,20 @@ var x, y = 1, z;
 
 function f1(x) {
     if (x>0){
+        console.log("1");
         z = 2;
     } else {
+        console.log("2");
         z = -4;
     }
 }
 
 function f2(x) {
     if (x==10){
+        console.log("3");
         z = 5;
     } else {
+        console.log("4");
         y = -1;
     }
 }
@@ -46,11 +50,12 @@ function main() {
     f1(x);
     f2(x);
     if (y + z > 3) {
-        console.log("Hello");
+        console.log("5");
     }
 }
 
 main();
 
+console.log("6");
 
 

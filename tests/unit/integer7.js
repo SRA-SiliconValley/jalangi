@@ -25,7 +25,9 @@ var a = J$.readInput(2);
 var b = J$.readInput(1);
 
 if ( a*b == 4) {
-        console.log("at 1 a = "+a+" b = "+b);
+    console.log("1");
 } else {
-    console.log("at 3 a = "+a+" b = "+b);
+    console.log("2");
 }
+console.log("3");
+

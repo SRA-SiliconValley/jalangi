@@ -25,5 +25,6 @@ var x = J$.readInput(0);
 var y = J$.readInput(0);
 
 if (x > 0 && y > 0) {
-    console.log("OK");
+    console.log("1");
 }
+console.log("2");

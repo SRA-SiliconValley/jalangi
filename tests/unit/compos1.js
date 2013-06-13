@@ -24,7 +24,13 @@ if (typeof window === "undefined") {
 
 
 function max(a, b) {
-    return a>b? a: b;
+    if (a>b) {
+        console.log("1");
+        return a;
+    } else {
+        console.log("2");
+        return b;
+    }
 }
 
 function swap(arr, i, j) {
@@ -48,5 +54,6 @@ function main() {
 
 main();
 
+console.log("3");
 
 

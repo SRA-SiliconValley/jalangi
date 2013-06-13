@@ -104,4 +104,5 @@ if (typeof J$ === 'undefined') {
     sandbox.getCurrentSolutionIndex = getCurrentSolutionIndex;
     sandbox.setCurrentSolution = setCurrentSolution;
     sandbox.setCurrentSolutionIndex = setCurrentSolutionIndex;
+    sandbox.addAxiom = function(c) {};
 }(J$));

@@ -33,12 +33,14 @@ function regex_escape (text) {
 function myIndexOf(s1, s2) {
     var reg = new RegExp(".*"+regex_escape(s2)+".*");
     if (reg.test(s1)) {
+        console.log("1");
         var t1 = J$.readInput("", true);
         var t2 = J$.readInput("", true);
         J$.addAxiom(s1 === t1 + s2 + t2);
         J$.addAxiom(!reg.test(t1));
         return t1.length;
     } else {
+        console.log("2");
         return -1;
     }
 }
@@ -46,16 +48,20 @@ function myIndexOf(s1, s2) {
 function myLastIndexOf(s1, s2) {
     var reg = new RegExp(".*"+regex_escape(s2)+".*");
     if (reg.test(s1)) {
+        console.log("3");
         var t1 = J$.readInput("", true);
         var t2 = J$.readInput("", true);
         J$.addAxiom(s1 === t1 + s2 + t2);
         J$.addAxiom(!reg.test(t2));
         return t1.length;
     } else {
+        console.log("4");
         return -1;
     }
 }
 
 if (area.length > 6 && (myIndexOf(area, "bb") < myLastIndexOf(area, "bb"))) {
-    console.log("OK");
+    console.log("5");
 }
+
+console.log("6");

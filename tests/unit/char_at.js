@@ -25,6 +25,6 @@ if (typeof window === "undefined") {
 
 var s = J$.readInput("");
 if (s.charAt(1) === "M" && s.charAt(3) === "A") {
-    console.log(s);
+    console.log("reached goal");
 }
 

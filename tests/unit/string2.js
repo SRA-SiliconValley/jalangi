@@ -30,9 +30,10 @@ s += " World!";
 if (s.length < 20) {
 
     if (s === "Simple World!") {
-        console.log(s);
+        console.log("1");
     } else {
-        console.log(s+" None");
+        console.log("2");
     }
 }
+console.log("3");
 

@@ -26,11 +26,12 @@ var b = J$.readInput(1);
 
 
 if (7 - b*2 === 3) {
-    console.log("at 1 a = "+a+" b = "+b);
+    console.log("1");
 } else if (-b) {
-    console.log("at 2 a = "+a+" b = "+b);
+    console.log("2");
 } else if (+b) {
-    console.log("at 3 a = "+a+" b = "+b);
+    console.log("9");
 } else {
-    console.log("at 4 a = "+a+" b = "+b);
+    console.log("3");
 }
+console.log("4");

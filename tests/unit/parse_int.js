@@ -29,8 +29,9 @@ var y = parseInt(b);
 
 if ( 2*x === y) {
     if (x > y + 10) {
-        console.log("at 1 a = "+a+" b = "+b);
+        console.log("1");
     }
 } else {
-    console.log("at 3 a = "+a+" b = "+b);
+    console.log("2");
 }
+console.log("3");

@@ -27,8 +27,9 @@ var s = J$.readInput("Hello");
 
 
 if (!s) {
-    console.log(s);
+    console.log("1");
 } else {
-    console.log(s+" None");
+    console.log("2");
 }
+console.log("3");
 

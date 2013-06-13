@@ -30,6 +30,13 @@ var area = J$.readInput("");
 //}
 if (area.length > 6) {
     if ((area.indexOf("bb") < area.lastIndexOf("bb"))) {
-        console.log("OK");
+        console.log("1");
+    } else {
+        console.log("2");
+
     }
+} else {
+    console.log("3");
+
 }
+console.log("4");

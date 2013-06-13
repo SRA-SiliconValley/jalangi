@@ -25,10 +25,11 @@ var a = J$.readInput(1);
 var b = J$.readInput(1);
 
 if ( (b === 3) == 1) {
-    console.log("OK");
+    console.log("1");
     if (a > 10) {
-        console.log("at 1 a = "+a+" b = "+b);
+        console.log("2");
     }
 } else {
-    console.log("at 3 a = "+a+" b = "+b);
+    console.log("3");
 }
+console.log("4");

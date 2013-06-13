@@ -27,6 +27,10 @@ var s1 = "hello.";
 var s2 = J$.readInput("world ");
 
 if (s2.indexOf(s1)>0) {
-    console.log("Found "+s1+" in " + s2);
+    console.log("1");
+} else {
+    console.log("2");
+
 }
+console.log("3");
 

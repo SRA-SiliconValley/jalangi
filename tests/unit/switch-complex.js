@@ -30,8 +30,10 @@ var y = J$.readInput('');
 function foo(y) {
     switch(y) {
         case "a":
+            console.log("1");
             return "77";
         default:
+            console.log("2");
             return "99";
     }
 }
@@ -42,9 +44,10 @@ function bar() {
 
 switch(bar()) {
     case foo(y):
-        console.log("77 or 88");
+        console.log("3");
         break;
     default:
-        console.log("Default");
+        console.log("4");
         break;
 }
+console.log("5");

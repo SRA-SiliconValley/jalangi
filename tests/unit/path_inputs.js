@@ -26,11 +26,17 @@ var a = J$.readInput(1);
 if (a) {
     var b = J$.readInput(2);
     if (b === 100) {
-        console.log("Done 1");
+        console.log("1");
+    } else {
+        console.log("2");
     }
 } else {
     var c = J$.readInput("");
     if (c === "Hello") {
-        console.log("Done 2");
+        console.log("3");
+    } else {
+        console.log("4");
     }
 }
+console.log("5");
+

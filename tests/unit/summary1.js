@@ -39,9 +39,10 @@ J$.addAxiom("or");
 
 
 if (x > 50) {
-    console.log("x should be 100 "+x);
+    console.log("1");
 } else if (x > 2) {
-    console.log("x should lie in (20, 30) "+x);
+    console.log("2");
 } else {
-    console.log("x should be 1 "+x);
+    console.log("5");
 }
+console.log("3");

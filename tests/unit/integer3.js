@@ -27,9 +27,11 @@ var b = J$.readInput(1);
 b = 3*b + 1*a - 0*a;
 
 if (b === 3) {
-    console.log("at 1 a = "+a+" b = "+b);
+    console.log("1");
 } else if (b === 7) {
-    console.log("at 2 a = "+a+" b = "+b);
+    console.log("2");
 } else {
-    console.log("at 3 a = "+a+" b = "+b);
+    console.log("3");
 }
+console.log("4");
+

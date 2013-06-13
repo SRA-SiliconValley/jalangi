@@ -16,14 +16,14 @@
 
 // Author: Koushik Sen
 
-(function(sandbox) {
+(function (sandbox) {
     var single = require('./Single2');
     var PredValues = require('./PredValues');
     var BDD = require('./BDD');
     var SymbolicBool = require('./../concolic/SymbolicBool');
     var getIIDInfo = require('./../../utils/IIDInfo');
     var PREFIX1 = "J$";
-    var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
+    var SPECIAL_PROP2 = "*" + PREFIX1 + "I*";
     var EVAL_ORG = eval;
 
     var pc = single.getPC();
@@ -46,7 +46,7 @@
         if (value instanceof PredValues) {
             len = value.values.length;
 
-            for (i=0; i<len; ++i) {
+            for (i = 0; i < len; ++i) {
                 tPred = pred.and(value.values[i].pred);
                 if (!tPred.isZero()) {
                     if (!ret) {
@@ -74,14 +74,14 @@
 
     function nextIndices(indices, maxIndices) {
         var len = indices.length, i;
-        indices[len-1] = indices[len-1]+1;
-        for(i=len-1; i>=0; --i) {
-            if (indices[i]===maxIndices[i]) {
-                if (i===0) {
+        indices[len - 1] = indices[len - 1] + 1;
+        for (i = len - 1; i >= 0; --i) {
+            if (indices[i] === maxIndices[i]) {
+                if (i === 0) {
                     return false;
                 } else {
                     indices[i] = 0;
-                    indices[i-1] = indices[i-1] + 1;
+                    indices[i - 1] = indices[i - 1] + 1;
                 }
             } else {
                 break;
@@ -90,11 +90,11 @@
         return true;
     }
 
-    function create_concrete_invoke(f, isCons) {
-        return function() {
+    function create_concrete_invoke(f, noConcretizeThis, noConcretizeArgs) {
+        return function () {
             var len = arguments.length, ret, pred, newPC, value;
             var indices = [], args = [], maxIndices = [], cArgs = [];
-            for (var i = 0; i<len; i++) {
+            for (var i = 0; i < len; i++) {
                 args[i] = makePredValues(BDD.one, arguments[i]);
                 indices[i] = 0;
                 maxIndices[i] = args[i].values.length;
@@ -104,24 +104,28 @@
             do {
                 pred = pc.getPC();
                 ret = undefined;
-                for (i=0; i<len; ++i) {
+                for (i = 0; i < len; ++i) {
                     pred = pred.and(args[i].values[indices[i]].pred);
                 }
                 if (!pred.isZero()) {
                     pc.pushPC(pred);
-                    for (i=0; i<len; ++i) {
-                        cArgs[i] = pc.concretize(args[i].values[indices[i]].value);
+                    for (i = 0; i < len; ++i) {
+                        if (noConcretizeArgs) {
+                            cArgs[i] = args[i].values[indices[i]].value;
+                        } else {
+                            cArgs[i] = pc.concretize(args[i].values[indices[i]].value);
+                        }
                     }
-                    if (isCons) {
-                        value = f.apply(getSingle(this),cArgs);
+                    if (noConcretizeThis) {
+                        value = f.apply(getSingle(this), cArgs);
                     } else {
-                        value = f.apply(pc.concretize(getSingle(this)),cArgs);
+                        value = f.apply(pc.concretize(getSingle(this)), cArgs);
                     }
                     ret = addValue(ret, pc.getPC(), value);
                     newPC = newPC.or(pc.getPC());
                     pc.popPC();
                 }
-            } while(nextIndices(indices, maxIndices));
+            } while (nextIndices(indices, maxIndices));
 
             pc.setPC(pc.getPC().and(newPC));
             return ret;
@@ -149,10 +153,11 @@
 //        }
 //    }
 
-    function string_fromCharCode () {
+    function string_fromCharCode() {
         var ints = [];
-        var i, len=arguments.length, flag = false;;
-        for (i=0; i < len; i++) {
+        var i, len = arguments.length, flag = false;
+        ;
+        for (i = 0; i < len; i++) {
             if (arguments[i] instanceof SymbolicLinear) {
                 flag = true;
             }
@@ -167,12 +172,12 @@
         return newSym;
     }
 
-    function regexp_test (str) {
+    function regexp_test(str) {
         // this is a regexp object
         var newSym;
 
-        newSym = J$.readInput("",true);
-        J$.addAxiom(J$.B(0,"==",newSym,str));
+        newSym = J$.readInput("", true);
+        J$.addAxiom(J$.B(0, "==", newSym, str));
         return J$.B(0, "regexin", newSym, this);
     }
 
@@ -186,7 +191,7 @@
 
     var sfuns;
 
-    function getSymbolicFunctionToInvoke (f, isConstructor) {
+    function getSymbolicFunctionToInvoke(f, isConstructor) {
         if (f === Array ||
             f === Error ||
             f === String ||
@@ -197,7 +202,7 @@
         } else if (f === RegExp.prototype.test) {
             return regexp_test;
         } else if (f === String.fromCharCode) {
-            return string_fromCharCode;
+            return create_concrete_invoke(string_fromCharCode, true, true);
         } else if (f === J$.addAxiom ||
             f === J$.readInput) {
             return f;
@@ -213,7 +218,7 @@
                 return getSingle(sfuns.string_charAt);
             } else if (f === String.prototype.lastIndexOf) {
                 return getSingle(sfuns.string_lastIndexOf);
-            }  else if (f === String.prototype.substring) {
+            } else if (f === String.prototype.substring) {
                 return getSingle(sfuns.string_substring);
             } else if (f === String.prototype.substr) {
                 return getSingle(sfuns.string_substr);
@@ -239,7 +244,7 @@
         return eval('new Constructor(' + a.join() + ')');
     }
 
-    function callAsNativeConstructor (Constructor, args) {
+    function callAsNativeConstructor(Constructor, args) {
         if (args.length === 0) {
             return new Constructor();
         }
@@ -263,9 +268,10 @@
 
     function callAsConstructor(Constructor, args) {
         if (isNative(Constructor)) {
-            return callAsNativeConstructor(Constructor,args);
+            return callAsNativeConstructor(Constructor, args);
         } else {
-            var Temp = function(){}, inst, ret;
+            var Temp = function () {
+            }, inst, ret;
             Temp.prototype = Constructor.prototype;
             inst = new Temp;
             ret = Constructor.apply(inst, args);
@@ -275,7 +281,7 @@
 
 
     function invokeEval(base, f, args) {
-        return f.call(base,J$.instrumentCode(args[0],true));
+        return f.call(base, J$.instrumentCode(args[0], true));
     }
 
 
@@ -285,11 +291,11 @@
         //console.log("    Calling "+ f.name);
         var f_m = getSymbolicFunctionToInvoke(f, isConstructor);
 
-        invoke = f_m || f === undefined || HOP(f,SPECIAL_PROP2) || typeof f !== "function";
-        g = f_m || f ;
+        invoke = f_m || f === undefined || HOP(f, SPECIAL_PROP2) || typeof f !== "function";
+        g = f_m || f;
         pushSwitchKey();
         try {
-            if (g === EVAL_ORG){
+            if (g === EVAL_ORG) {
                 val = invokeEval(base, g, args);
             } else if (invoke) {
                 if (isConstructor) {
@@ -297,7 +303,7 @@
                 } else {
                     val = g.apply(base, args);
                 }
-            }  else {
+            } else {
                 val = undefined;
             }
         } finally {
@@ -311,16 +317,15 @@
     //--------------------------- End Symbolic Funs --------------------------------------------------------------------
 
 
-
     function F(iid, f, isConstructor) {
-        return function() {
+        return function () {
             var base = this;
             return invokeFun(iid, base, f, arguments, isConstructor);
         }
     }
 
     function M(iid, base, offset, isConstructor) {
-        return function() {
+        return function () {
             var f = G(iid, base, offset);
             return invokeFun(iid, base, f, arguments, isConstructor);
         };
@@ -328,7 +333,7 @@
 
     var scriptCount = 0;
 
-    function Se(iid,val) {
+    function Se(iid, val) {
         scriptCount++;
     }
 
@@ -342,7 +347,7 @@
         }
 
         if (ret2) {
-            console.log("backtrack "+getIIDInfo(iid));
+            console.log("backtrack " + getIIDInfo(iid));
         }
         pc.resetPC(undefined, !ret2);
         return ret2;
@@ -378,9 +383,9 @@
     }
 
 
-    function A(iid,base,offset,op) {
-        var oprnd1 = G(iid,base, offset);
-        return function(oprnd2) {
+    function A(iid, base, offset, op) {
+        var oprnd1 = G(iid, base, offset);
+        return function (oprnd2) {
             var val = B(iid, op, oprnd1, oprnd2);
             return P(iid, base, offset, val);
         };
@@ -395,7 +400,7 @@
 
         var i, len, pred, notPc = pc.getPC().not();
         len = newValue.values.length;
-        for (i=0; i<len; ++i) {
+        for (i = 0; i < len; ++i) {
             pred = newValue.values[i].pred.and(pc.getPC());
             if (!pred.isZero()) {
                 ret = addValue(ret, pred, newValue.values[i].value);
@@ -403,7 +408,7 @@
         }
 
         len = oldValue.values.length;
-        for (i=0; i<len; ++i) {
+        for (i = 0; i < len; ++i) {
             pred = notPc.and(oldValue.values[i].pred);
             if (!pred.isZero()) {
                 ret = addValue(ret, pred, oldValue.values[i].value);
@@ -421,8 +426,8 @@
         right = makePredValues(BDD.one, right);
 
         var i, j, leni = left.values.length, lenj = right.values.length, pred, value, ret, newPC = BDD.zero;
-        for (i=0; i<leni; ++i) {
-            for (j=0; j<lenj; ++j) {
+        for (i = 0; i < leni; ++i) {
+            for (j = 0; j < lenj; ++j) {
                 pred = left.values[i].pred.and(right.values[j].pred);
                 pred = pc.getPC().and(pred);
 
@@ -450,7 +455,7 @@
         left = makePredValues(BDD.one, left);
 
         var i, leni = left.values.length, pred, value, ret, newPC = BDD.zero;
-        for (i=0; i<leni; ++i) {
+        for (i = 0; i < leni; ++i) {
             pred = pc.getPC().and(left.values[i].pred);
 
             if (!pred.isZero()) {
@@ -477,8 +482,8 @@
         right = makePredValues(BDD.one, right);
 
         var i, j, leni = left.values.length, lenj = right.values.length, pred, newPC = BDD.zero;
-        for (i=0; i<leni; ++i) {
-            for (j=0; j<lenj; ++j) {
+        for (i = 0; i < leni; ++i) {
+            for (j = 0; j < lenj; ++j) {
                 pred = left.values[i].pred.and(right.values[j].pred);
                 pred = pc.getPC().and(pred);
 
@@ -507,8 +512,8 @@
         var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret, tmp, f2, newPC = BDD.zero;
         pushSwitchKey();
         try {
-            for (i=0; i<leni; ++i) {
-                for (j=0; j<lenj; ++j) {
+            for (i = 0; i < leni; ++i) {
+                for (j = 0; j < lenj; ++j) {
                     pred = base.values[i].pred.and(f.values[j].pred);
                     pred = pc.getPC().and(pred);
 
@@ -550,7 +555,7 @@
             ret2 = pc.generateInputs(true);
         }
         if (ret2) {
-            console.log("backtrack "+getIIDInfo(iid));
+            console.log("backtrack " + getIIDInfo(iid));
         }
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
@@ -586,25 +591,23 @@
     function makePredicate(left_s) {
         var ret = left_s;
         if (!isSymbolic(left_s)) {
-            return (!!left_s)?SymbolicBool.true:SymbolicBool.false;
+            return (!!left_s) ? SymbolicBool.true : SymbolicBool.false;
         } else if (left_s instanceof SymbolicLinear) {
             if (left_s.op === SymbolicLinear.UN) {
                 ret = left_s.setop("!=");
             }
             return ret;
         } else if (left_s instanceof SymbolicStringExpression) {
-            ret = new SymbolicStringPredicate("!=",left_s,"");
+            ret = new SymbolicStringPredicate("!=", left_s, "");
             return ret;
-        } else if (left_s instanceof SymbolicStringPredicate  ||
+        } else if (left_s instanceof SymbolicStringPredicate ||
             left_s instanceof ToStringPredicate ||
             left_s instanceof FromCharCodePredicate ||
             left_s instanceof SymbolicBool) {
             return ret;
         }
-        throw new Error("Unknown symbolic value "+left_s);
+        throw new Error("Unknown symbolic value " + left_s);
     }
-
-
 
 
     var lastVal;
@@ -638,10 +641,10 @@
         left = B(iid, "===", switchLeft, left);
 
         var i, leni = left.values.length, pred1 = BDD.zero, pred2 = BDD.zero, ret;
-        for (i=0; i<leni; ++i) {
+        for (i = 0; i < leni; ++i) {
             ret = makePredicate(left.values[i].value);
             ret = pc.getBDDFromFormula(ret);
-            pred1 = pred1.or(left.values[i].pred.and( ret));
+            pred1 = pred1.or(left.values[i].pred.and(ret));
             pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
         return pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), switchLeft);
@@ -657,10 +660,10 @@
         lastVal = left;
         left = makePredValues(BDD.one, left);
         var i, leni = left.values.length, pred1 = BDD.zero, pred2 = BDD.zero, ret;
-        for (i=0; i<leni; ++i) {
+        for (i = 0; i < leni; ++i) {
             ret = makePredicate(left.values[i].value);
             ret = pc.getBDDFromFormula(ret);
-            pred1 = pred1.or(left.values[i].pred.and( ret));
+            pred1 = pred1.or(left.values[i].pred.and(ret));
             pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
         return pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), lastVal);
@@ -678,10 +681,10 @@
 
         left = makePredValues(BDD.one, left);
         var i, leni = left.values.length, pred1 = BDD.zero, ret;
-        for (i=0; i<leni; ++i) {
+        for (i = 0; i < leni; ++i) {
             ret = makePredicate(left.values[i].value);
             ret = pc.getBDDFromFormula(ret);
-            pred1 = pred1.or(left.values[i].pred.and( ret));
+            pred1 = pred1.or(left.values[i].pred.and(ret));
         }
         pc.addAxiom(pc.getPC().and(pred1), true);
     }

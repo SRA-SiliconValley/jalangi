@@ -68,16 +68,16 @@ do
 
 done
 
-#if [ $iter -eq $3 ]
-#then
-#    echo "$2.js $3 passed" >> $JALANGI_HOME/jalangi_sym_test_results
-#else
-#    echo "***************** $2.js $3 Failed!!! # of tests $iter" >> $JALANGI_HOME/jalangi_sym_test_results
-#fi
+if [ $iter -eq $3 ]
+then
+    echo "$2.js $3 passed" >> $JALANGI_HOME/jalangi_sym_test_results
+else
+    echo "***************** $2.js $3 Failed!!! # of tests $iter" >> $JALANGI_HOME/jalangi_sym_test_results
+fi
 
-($DIR/rerunall $2 > test)
-declare -i x=$(cat test | grep -v "Running" | sort -n -r | uniq | sed -n 1p)
-declare -i y=$(cat test | grep -v "Running" | sort -n -r | uniq | wc -l)
+($DIR/purererun $2 > test)
+declare -i x=$(cat test | grep "^[0-9][0-9]*$" | sort -n -r | uniq | sed -n 1p)
+declare -i y=$(cat test | grep "^[0-9][0-9]*$" | sort -n -r | uniq | wc -l)
 
 if [ $x -eq $y ]
 then

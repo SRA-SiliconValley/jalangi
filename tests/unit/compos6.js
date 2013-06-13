@@ -30,9 +30,9 @@ function f1(x) {
 
 function f2(x) {
     if (x>10){
-        console.log("1");
+        console.log("9");
     } else {
-        console.log("2");
+        console.log("1");
     }
 }
 
@@ -40,7 +40,7 @@ function f2(x) {
 x = J$.readInput(-2);
 f1(x);
 f2(x);
-console.log("3");
+console.log("2");
 
 
 

@@ -36,8 +36,8 @@ function myIndexOf(s1, s2) {
     var reg = new RegExp(".*"+regex_escape(s2)+".*");
     if (reg.test(s1)) {
         console.log("3");
-        var t1 = J$.readInput("", true);
-        var t2 = J$.readInput("", true);
+        var t1 = J$.readInput("");
+        var t2 = J$.readInput("");
         J$.addAxiom(s1 === t1 + s2 + t2);
         J$.addAxiom(!reg.test(t1));
         return t1.length;
@@ -49,7 +49,6 @@ function myIndexOf(s1, s2) {
 
 if (myIndexOf(s2, s1) > 0) {
     console.log("1");
-//    console.log("Found "+s1+" in " + s2);
 } else {
     console.log("2");
 

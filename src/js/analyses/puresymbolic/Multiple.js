@@ -284,7 +284,6 @@
         var ret2, first = pc.isFirst();
         if (!first || scriptCount === 0) {
             ret2 = pc.generateInputs();
-            console.log("Written an input");
         } else {
             ret2 = pc.generateInputs(true);
         }
@@ -494,7 +493,6 @@
         var ret2, pathIndex, first = pc.isFirst(), aggrRet = pc.getReturnVal();
         if (!first) {
             ret2 = pc.generateInputs();
-            console.log("Written an input");
         } else {
             ret2 = pc.generateInputs(true);
         }

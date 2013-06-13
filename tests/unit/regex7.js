@@ -24,7 +24,6 @@ if (typeof window === "undefined") {
 
 
 var area = J$.readInput("");
-console.log(area.toString());
 
 if (area.length > 6 && (area.indexOf("bb") < area.lastIndexOf("bb"))) {
     console.log("1");

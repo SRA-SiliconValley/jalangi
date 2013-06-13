@@ -415,6 +415,7 @@
 
         updateSolution();
         if (!noWrite) {
+            console.log("Writing the input "+JSON.stringify(solution));
             solver.writeInputs(solution, []);
             //console.log("-------------");
             //console.log("nLiterals "+literalToFormulas.length+" "+JSON.stringify(literalToFormulas));

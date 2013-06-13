@@ -24,7 +24,6 @@ if (typeof window === "undefined") {
 
 
 var area = J$.readInput("");
-console.log(area.toString());
 
 function regex_escape (text) {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
@@ -34,8 +33,8 @@ function myIndexOf(s1, s2) {
     var reg = new RegExp(".*"+regex_escape(s2)+".*");
     if (reg.test(s1)) {
         console.log("1");
-        var t1 = J$.readInput("", true);
-        var t2 = J$.readInput("", true);
+        var t1 = J$.readInput("");
+        var t2 = J$.readInput("");
         J$.addAxiom(s1 === t1 + s2 + t2);
         J$.addAxiom(!reg.test(t1));
         return t1.length;
@@ -49,8 +48,8 @@ function myLastIndexOf(s1, s2) {
     var reg = new RegExp(".*"+regex_escape(s2)+".*");
     if (reg.test(s1)) {
         console.log("3");
-        var t1 = J$.readInput("", true);
-        var t2 = J$.readInput("", true);
+        var t1 = J$.readInput("");
+        var t2 = J$.readInput("");
         J$.addAxiom(s1 === t1 + s2 + t2);
         J$.addAxiom(!reg.test(t2));
         return t1.length;

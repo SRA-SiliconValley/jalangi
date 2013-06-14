@@ -13,7 +13,7 @@ $ANALYSIS_SCRIPT tests/unit/integer7 2
 $ANALYSIS_SCRIPT tests/unit/str_to_int 3
 $ANALYSIS_SCRIPT tests/unit/int_to_str 3
 $ANALYSIS_SCRIPT tests/unit/from_char_code 3
-$ANALYSIS_SCRIPT tests/unit/char_code_at 3
+$ANALYSIS_SCRIPT tests/unit/char_code_at 9
 $ANALYSIS_SCRIPT tests/unit/char_at 5
 $ANALYSIS_SCRIPT tests/unit/parse_int 3
 $ANALYSIS_SCRIPT tests/unit/string1 2

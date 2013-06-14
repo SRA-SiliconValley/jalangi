@@ -100,10 +100,10 @@
                 maxIndices[i] = args[i].values.length;
             }
             newPC = BDD.zero;
+            ret = undefined;
 
             do {
                 pred = pc.getPC();
-                ret = undefined;
                 for (i = 0; i < len; ++i) {
                     pred = pred.and(args[i].values[indices[i]].pred);
                 }

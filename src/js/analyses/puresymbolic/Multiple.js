@@ -349,7 +349,7 @@
         if (ret2) {
             console.log("backtrack " + getIIDInfo(iid));
         }
-        pc.resetPC(undefined, !ret2);
+        pc.resetPC(undefined);
         return ret2;
     }
 

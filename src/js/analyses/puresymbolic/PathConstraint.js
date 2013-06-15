@@ -92,7 +92,7 @@
         return pcStack.pop();
     }
 
-    function resetPC(returnVal, isLast) {
+    function resetPC(returnVal) {
         index = 0;
         formulaStack = [];
         formulaStack.count = 0;

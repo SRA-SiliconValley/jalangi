@@ -102,99 +102,46 @@ Swaroop Kalasapur, Tasneem Brutch,  and Simon Gibbs\\
 
 \section{Introduction}
 
-JavaScript is widely used for writing client-side web applications and
-is getting increasingly popular for writing mobile applications.
-However, unlike C, C++, and Java, there are not that many tools
-available for analysis and testing of JavaScript applications.  We
-have developed a simple yet powerful framework, called \jalangi{}, for
-writing heavy-weight dynamic analyses for JavaScript.  In this paper,
-we briefly describe the framework and its usage scenarios.  The
-framework provides a few useful abstractions and an API that
-significantly simplifies implementation of dynamic analyses for
-JavaScript.  A detailed description of the techniques underlying
-\jalangi{} can be found in~\cite{SBGKfse13}.
+JavaScript is the language of choice for writing client-side web
+applications and is getting increasingly popular for writing mobile
+applications (e.g. web apps for Tizen OS and iOS), desktop apps
+(e.g. apps for Windows 8 and Gnome Desktop), and server-side
+applications (e.g. node.js).  However, there are not that many tools
+available for analysis, testing, and debugging of JavaScript
+applications.  We have developed a simple yet powerful framework,
+called \jalangi{}, for writing heavy-weight dynamic analyses for
+JavaScript.  In this paper, we briefly describe the framework and its
+usage scenarios.  The framework provides a few useful abstractions and
+an API that significantly simplifies implementation of dynamic
+analyses for JavaScript.  A detailed description of the techniques
+underlying \jalangi{} can be found in~\cite{SBGKfse13}.
 
 \jalangi{} works on any browser or \texttt{node.js}.  We achieve
 browser independence through selective source
-instrumentation. \emph{An attractive feature of \jalangi{} is that it
-  can operate even if certain source files are not instrumented.}  An
-analysis in \jalangi{} works in two-phases.  In the first phase, an
-instrumented JavaScript application is executed and recorded on a user
-selected platform (e.g. mobile chrome running on Android).  In the
-second phase, the recorded data is utilized to perform a user
-specified dynamic analysis in a desktop environment.
+instrumentation. \jalangi{} can operate even if certain source files
+are not instrumented.  An analysis in \jalangi{} works in two-phases.
+In the first phase, an instrumented JavaScript application is executed
+and recorded on a user selected platform (e.g. mobile chrome running
+on Android).  In the second phase, the recorded data is utilized to
+perform a user specified dynamic analysis in a desktop environment.
 
 \jalangi{} allows easy implementation of a dynamic analysis through
 the support of \emph{shadow values} and \emph{shadow execution}.
 \emph{Shadow values} enable us to associate a shadow value with any
-value used in the program.  A shadow value can contain useful
-information about the actual value (e.g. taint information or symbolic
-representation of the actual value).  The framework supports
-\emph{shadow execution} on shadow values, a technique in which an
-analysis can update the shadow values and analysis state, on each
-operation performed by the actual execution.  For example, a shadow
-execution can perform symbolic execution or dynamic taint propagation.
-
-In \jalangi{}, we have implemented several dynamic analyses:
-
-\begin{itemize}
-\item Concolic Testing~\cite{dart,cute}: Concolic testing performs
-  symbolic execution along a concrete execution path, generates a
-  logical formula denoting a constraint on the input values, and
-  solves a constraint to generate new test inputs that would execute
-  the program along previously unexplored paths.  Our implementation
-  of concolic testing supports constraints over integer, string, and
-  object types and \emph{novel type constraints.}
-\item Tracking origins of \texttt{null} and
-  \texttt{undefined}~\cite{Bond:2007:TBA:1297027.1297057}: This
-  analysis records source code locations where null and undefined
-  values come into existence and reports them if they cause an error.
-  Whenever there is an error due to such literals, such as accessing
-  the field of a null value, the shadow value of the literal is
-  reported to the user.  Such a report helps the programmer to easily
-  identify the origin of the null value.
-\item Detecting Likely Type Inconsistencies: The dynamic analysis
-  checks if an object created at a given program location can assume
-  multiple inconsistent type.
-% computes the types of object and function values created at each
-%   definition site in the program.  If an object or a function value
-%   defined at a program location has been observed to assume more than
-%   one type, then the analysis reports the program location along with
-%   the observed types.  
-  Sometimes these kind of type inconsistencies could point us to a
-  potential bug in the program.  We have noticed such issues in two
-  SunSpider benchmark programs.
-\item Simple Object Allocation Profiler: This dynamic analysis
-  computes the number of objects created at a given allocation site
-  and how often the object has been accessed.% records
-  % the number of objects created at an allocation site in the program.
-  % It reports if the objects created at a given allocation site are
-  % read-only or a constant.  It also reports the maximum and average
-  % difference between the object creation time and the most recent
-  % access time of the object
-  .  If an allocation site creates too many contant objects, then it
-  could lead to memory inefficiency.  We have found such a problem in
-  one of the web applications in our benchmark suite.
-\item Dynamic taint
-  analysis~\cite{songndss05}: A
-  dynamic taint analysis is a form of information flow analysis which
-  checks if information can flow from a specific set of memory
-  locations, called sources, to another set of memory locations,
-  called sinks.  We have implemented a simple form of dynamic taint
-  analysis in \jalangi{}.  In the analysis, we treat read of any field
-  of any object, which has not previously been written by the
-  instrumented source, as a source of taint.  We treat any read of a
-  memory location that could change the control-flow of the program as
-  a sink.  We attach taint information with the shadow value of an
-  actual value.
-\end{itemize}
+value used in the program.  In \jalangi{}, we have implemented several
+dynamic analyses using shadow values and execution: 1) concolic
+testing, 2) pure symbolic execution, 3) tracking origins of
+\texttt{null} and
+\texttt{undefined}~\cite{Bond:2007:TBA:1297027.1297057}, 4) detecting
+likely type inconsistencies, 5) a simple object allocation profiler,
+and 6) a simple dynamic taint analysis.
 
 \section{Technical Details}
 \label{sec:technical-details}
 
 In this section, we briefly summarize \jalangi{}'s underlying
 techniques.  A detailed discussion of the techniques could be found
-in~\cite{SBGKfse13}.  We assume that the user of \jalangi{} selects a
+in~\cite{SBGKfse13}.  \jalangi{} assumes that the user selects a
 subset of the JavaScript source in a web application for
 record-replay.  \jalangi{} instruments the user-selected source for
 record-replay.  During the \emph{recording} phase, the application is
@@ -208,8 +155,8 @@ phases enables one to record an execution of a JavaScript application
 on an actual platform (e.g. a mobile browser) and then replay the
 execution for the purpose of debugging on a desktop JavaScript engine,
 such as node.js or a JavaScript engine embedded in an IDE.  Moreover,
-during replay, since we avoid the execution of un-instrumented code and
-native code, we can easily implement various dynamic analyses that
+during replay, since we avoid the execution of un-instrumented code
+and native code, we can easily implement various dynamic analyses that
 depend on shadow values and shadow executions.
 
 A trivial way to perform faithful record-replay of an execution is to
@@ -262,6 +209,68 @@ $v$ is an annotated value and returns $v$ otherwise.  Similarly, the
 projection function $\Shadow(v)$ returns the shadow value associated
 with $v$ if $v$ is an annotated value and returns \texttt{undefined}
 otherwise.
+
+\section{Dynamic Analyses}
+\label{sec:dynamic-analyses}
+
+In \jalangi{}, we have implemented the following dynamic analyses:
+
+\begin{itemize}
+\item Concolic testing~\cite{dart,cute}: Concolic testing performs
+  symbolic execution along a concrete execution path, generates a
+  logical formula denoting a constraint on the input values, and
+  solves a constraint to generate new test inputs that would execute
+  the program along previously unexplored paths.  Our implementation
+  of concolic testing supports constraints over integer, string, and
+  object types and \emph{novel type constraints.}  We introduced type
+  constraints to handle the dynamic nature of JavaScript---the type of
+  an input variable could be different for different feasible
+  execution paths of the program.
+\item Pure symbolic execution: Pure symbolic execution executes the
+  program symbolically and never restarts the program for the purpose
+  of backtracking.  It checkpoints the state before executing a branch
+  statement, executes one branch, and later backtracks with the
+  checkpointed state to explore the other branch.  For small programs,
+  pure symbolic execution avoids time wastage due to repeated
+  restarts.
+\item Tracking origins of \texttt{null} and
+  \texttt{undefined}~\cite{Bond:2007:TBA:1297027.1297057}: This
+  analysis records source code locations where null and undefined
+  values come into existence and reports them if they cause an error.
+  Whenever there is an error due to such literals, such as accessing
+  the field of a null value, the shadow value of the literal is
+  reported to the user.  Such a report helps the programmer to easily
+  identify the origin of the null value.
+\item Detecting Likely Type Inconsistencies: The dynamic analysis
+  checks if an object created at a given program location can assume
+  multiple inconsistent type.  It computes the types of object and
+  function values created at each definition site in the program.  If
+  an object or a function value defined at a program location has been
+  observed to assume more than one type during the execution, the
+  analysis reports the program location along with the observed types.
+  Sometimes these kind of type inconsistencies could point us to a
+  potential bug in the program.  We have noticed such issues in two
+  SunSpider benchmark programs.
+\item Simple Object Allocation Profiler: This dynamic analysis records
+  the number of objects created at a given allocation site and how
+  often the object has been accessed.  It reports if the objects
+  created at a given allocation site are read-only or a constant.  It
+  also reports the maximum and average difference between the object
+  creation time and the most recent access time of the object .  If an
+  allocation site creates too many contant objects, then it could lead
+  to memory inefficiency.  We have found such a problem in one of the
+  web applications in our benchmark suite.
+\item Dynamic taint analysis~\cite{songndss05}: A dynamic taint
+  analysis is a form of information flow analysis which checks if
+  information can flow from a specific set of memory locations, called
+  sources, to another set of memory locations, called sinks.  We have
+  implemented a simple form of dynamic taint analysis in \jalangi{}.
+  In the analysis, we treat read of any field of any object, which has
+  not previously been written by the instrumented source, as a source
+  of taint.  We treat any read of a memory location that could change
+  the control-flow of the program as a sink.  We attach taint
+  information with the shadow value of an actual value.
+\end{itemize}
 
 
 \section{Implementation}
@@ -408,132 +417,97 @@ operations in JavsScript.  The selective record-replay engine of
 instrument any code that is created and evaluated at runtime.  For
 example, we modify any call to \texttt{eval(s)} to
 \texttt{eval(instrumentCode(s))}.
-
 During recording phase, \jalangi{} generates a \texttt{trace} array
 which contains all recorded values needed for replay.  \jalangi{}
-serializes the \texttt{trace} array in JSON format.  \jalangi{} stores
-the serialized array in a file, or sends it to a server for storage.
-Replay uses the serialized array stored in the file to initialize the
-\texttt{trace} array. Replay can be performed through an IDE or a
-stand-alone application (realized with node.js for example). This
-enables us to perform heavy-weight debugging or analysis of a recorded
-execution outside a browser.
+serializes the \texttt{trace} array in JSON format.  
 
-\section{A Quick Guide to Jalangi Installation and Usage}
-\label{sec:usage}
+\section{Performance of  jalangi}
+\label{sec:performance-jalangi}
 
-\jalangi{} is a command-line tool.  We also have a prototype Eclipse
-plugin to invoke the various \jalangi{} commands from Eclipse.  A
-screencast of \jalangi{} running as an Eclipse plugin is available at
-\url{http://srl.cs.berkeley.edu/~ksen/jalangi.html}.  An extended
-version of the demo in the screencast will be used for demonstration
-at the conference.
+\begin{table}
+{\scriptsize
+\begin{center}
+\begin{tabular}{|l|r|r|r|r|r|r|} \hline
+\multirow{2}{*}{Benchmark} & \multirow{2}{*}{LOC} & \scriptsize{Records} & \scriptsize{SlowR} &
+\multicolumn{3}{|c|}{\scriptsize{ Slowdown in Replay}}\\
+& & & & empty & taint & track \\
+\hline
+3d-cube & 339 & 3670 & 18.33  & 25.16 & 28.67 & 26 \\
+3d-morph& 56 & 6 & 18.2 & 33.2 & 35.83 & 33.6 \\
+3d-raytrace& 443 & 79791 & 38.17 & 29.05 & 30.5 & 35\\
+b-trees& 52 & 146048 & 57.8 & 40 & 42.4 & 42.8\\
+fannkuch& 68 & 246 & 40.6 & 76.4 & 73 & 80.4 \\
+nbody& 170 & 78 & 19 & 25.8& 25.67 & 24.16\\
+nsieve& 39 & 5 & 16.4 & 23.6 & 30 & 24.2\\
+3bit-in-byte& 38 & 1 & 16.6& 29 & 31 & 30.2 \\
+bits-in-byte& 26 & 1 & 25 & 25 & 51.4 & 47 \\
+bitwise-and& 31 & 1 & 12.83 & 21.83 & 29.2 & 26.2\\
+controlflow& 25 & 1 & 20 & 33.2 & 34.6 & 28.33\\
+crypto-md5& 288 & 42 & 12 & 18 & 22.2 & 22\\
+crypto-sha1& 225 & 52 & 13.4& 19.4 & 21 & 21.2\\
+date-tofte& 300 & 32018 & 92.16 & 92.67 & 92.83 & 95.5\\
+date-xparb& 418 & 95715 & 29.83 & 21 & 22.67 & 25.67\\
+math-cordic& 101 & 8 & 29.6 & 35.6 & 45.4 & 40.17\\
+partial-sums& 33 & 5 & 14.6 & 23.4 & 22.16& 23.8\\
+spectral-norm& 51 & 15 & 19.8& 25.2 & 29.2 & 29.4\\
+regexp-dna& 1714 & 42 &2 & 4 & 3.17 & 3.8\\
+string-fasta& 90 & 56947 & 40.17 & 30.33 & 34.5 & 38.6\\
+string-tagcloud& 266 & 117577 & 51.42 & 50.86 & 44 & 42.8\\
+string-unpack& 67 & 193057 & 29.88 & 13.25 & 13.75 & 17\\
+nsieve-bits& 35 & 3 & 20 & 36.6 & 45.4 & 40 \\
+crypto-aes& 425 & 23926  & 19 & 21 & 23.67 & 23 \\
+string-validate& 90 & 60 & 1.5 & 1.5 & 1.4 & 1.5\\
+string-base64& 136 & 40965 & 25 & 27.2 & 29.6 & 29.2\\
+\hline 
+annex& 9663 & 87623 & - & - & - & - \\
+calculator& 787 & 1288 & - & - & - & - \\
+ go& 10,039 & 114609 & - & - & - & - \\
+tenframe& 1491 &4656 & - & - & - & - \\
+shopping& 5397 & 1144 & - & - & - & - \\
+\hline 
+\end{tabular}
+\end{center}}
+\caption{Results: ``Records'' column reports number of values
+  recorded, ``SlowR'' reports
+  slowdown during recording compared to normal execution.}
+\label{tab:results}
+\end{table}
 
-\subsection{Platform Requirements}
-\label{sec:platf-requ}
+We ran \jalangi{}'s record-replay on 26 programs in the JavaScript
+SunSpider (\url{http://www.webkit.org/perf/sunspider/sunspider.html})
+benchmark suite and on five web apps written for the Tizen OS using
+HTML5/JavaScript
+(\url{https://developer.tizen.org/downloads/sample-web-applications}).
+Table~\ref{tab:results} shows the overhead associated with the record
+phase and with the three dynamic analyses: no analysis (denoted by
+\emph{empty}), tracking origins of null and undefined (denoted by
+\emph{track}), and a taint analysis (denoted by \emph{taint}).  We
+also report the number of values we recorded for each benchmark
+program.  The experiments were performed on a laptop with 2.3 GHz
+Intel Core i7 and 8 GB RAM.  We ran the web apps on Chrome 25 and
+performed the replay executions on node.js 0.8.14.
 
-We have tested \jalangi{} on Mac OS X 10.8. \jalangi{} should work on
-Mac OS 10.7 and higher and Ubuntu 11.0 and higher.  \jalangi{} has
-dependencies on the following:
+We didn't measure the slowdown of the web apps because these are
+mostly interactive applications.  For the SunSpider benchmark suite,
+we observed an average slowdown of 26X during the recording phase with
+a minimum of 1.5X and a maximum of 93X.  On the \emph{empty} analysis
+during the replay phase, we observed an average slowdown of 30X with a
+minimum of 1.5X and a maximum of 93X.  \emph{Track} analysis showed an
+average slowdown of 32.75X with a minimum of 1.5X and a maximum of
+96X.
 
-\begin{itemize}
-\item Latest version of Node.js available at
-  \url{http://nodejs.org/}. We have tested \jalangi{} with Node v0.8.22
-  and v0.10.4.
-\item Sun's JDK 1.6 or higher. We have tested \jalangi{} with Java
-  1.6.0\_43.
-\item Command-line git.  We use git to download various dependencies.
-\item libgmp (\url{http://gmplib.org/}) is required by
-  cvc3~\cite{BT07}. Concolic testing uses cvc3 and automaton.jar
-  (\url{http://www.brics.dk/automaton/}) for constraint solving. The
-  installation script checks if cvc3 and automaton.jar are installed
-  properly.
-\item Chrome browser if you need to test web apps.
-\end{itemize}
+\section{Related Work}
+\label{sec:related-work}
 
-\subsection{Installation}
-\label{sec:installation}
-
-\jalangi{} can be downloaded and installed as follows.
-
-\begin{verbatim}
-git clone https://github.com/SRA-SiliconValley/jalangi
-cd jalangi
-./scripts/install
-./scripts/testsym
-\end{verbatim}
-
-\subsection{Usage}
-\label{sec:usage-1}
-
-\subsubsection*{Concolic Testing}
-\label{sec:concolic-testing}
-
-To perform concolic testing of some JavaScript code present in a file,
-say testme.js, one need to insert the following four lines at the top
-of the file.
-
-\begin{verbatim}
-if (typeof window === "undefined") {
-    require('../../src/js/InputManager');
-    require(process.cwd()+'/inputs');
-}
-\end{verbatim}
-
-In the code, an input can be specified by calling \texttt{
-  J\$.readInput(arg)}. Concolic testing can be performed by calling
-the script \texttt{./scripts/concolic} as follows.
-
-\begin{verbatim}
-./scripts/concolic testme 100000
-\end{verbatim}
-
-The third argument bounds the total number of test inputs generated by
-concolic testing. The command generates a set of input files in the
-directory \texttt{jalangi\_tmp}. The input files start with the prefix
-\texttt{jalangi\_inputs}.  Once the inputs are generated,
-\texttt{testme.js} can be run on those inputs by giving the following
-command:
-
-\begin{verbatim}
-./scripts/rerunall testme
-\end{verbatim}
-
-For example, one can generate inputs for the code in the file
-tests/unit/regex8.js by running the following commands.
-
-\begin{verbatim}
-./scripts/concolic tests/unit/regex8 100
-./scripts/rerunall tests/unit/regex8
-\end{verbatim}
-
-\subsubsection*{Dynamic Analysis}
-\label{sec:dynamic-analysis}
-
-\jalangi{} provides a number of builtin dynamic analyses.  The
-analyses can be found under the directory \texttt{src/js/analysis/}.
-A template for an analysis is provided in the file
-\texttt{src/js/analysis/nop/NOPEngine.js}.  A new analysis can be
-implemented from the template by defining the various callback
-functions in the template.  A simple analysis can be found in the file
-\texttt{src/js/simpletaint/SimpleTaintEngine.js}.  An analysis file
-name must end with \texttt{Engine.js}.  The JavaScript code in \texttt{ObjectAllocationTrackerEngine.js} under \texttt{src/js/analyses/objectalloc/}
-implements the object allocation profiler. The analysis can be
-performed on a file, say \texttt{tests/sunspider1/crypto-aes.js}, by
-invoking the following command:
-
-\begin{verbatim}
-./scripts/analysis analyses/objectalloc/Object
-AllocationTrackerEngine tests/sunspider1/crypto-aes
-\end{verbatim}
-
-Similarly, the likely type inference analysis on another sunspider
-benchmark can be performed by calling the following command.
-
-\begin{verbatim}
-./scripts/analysis analyses/likelytype/LikelyType
-InferEngine tests/sunspider1/crypto-sha1
-\end{verbatim}
+To our best knowledge \jalangi{} is the first dynamic analysis
+framework for JavaScript.  There are few tools that could perform
+record-replay of JavaScript programs.
+JSBench~\cite{Richards:2011:ACJ:2048066.2048119} uses record-replay
+mechanisms to create JavaScript benchmarks.
+Mugshot~\cite{Mickens:2010:MDC:1855711.1855722} is captures all events
+to deterministically replay executions of web applications.
+Ripley~\cite{Vikram:2009:RAS:1653662.1653685} replicates execution of
+a client-side JavaScript program on a server side replica.
 
 
 \section{Conclusion}

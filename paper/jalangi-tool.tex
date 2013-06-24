@@ -139,76 +139,70 @@ and 6) a simple dynamic taint analysis.
 \section{Technical Details}
 \label{sec:technical-details}
 
-In this section, we briefly summarize \jalangi{}'s underlying
-techniques.  A detailed discussion of the techniques could be found
-in~\cite{SBGKfse13}.  \jalangi{} assumes that the user selects a
-subset of the JavaScript source in a web application for
-record-replay.  \jalangi{} instruments the user-selected source for
-record-replay.  During the \emph{recording} phase, the application is
-executed with the instrumented files on a platform of the user's
-choice (e.g. a mobile browser or a node.js interpreter).  During
-recording, the entire application is executed, i.e. all instrumented
-and un-instrumented JavaScript files and native codes get executed.
-During the \emph{replay} phase, \jalangi{} only replays the execution
-of the instrumented sections.  This asymmetry of execution in the two
-phases enables one to record an execution of a JavaScript application
-on an actual platform (e.g. a mobile browser) and then replay the
-execution for the purpose of debugging on a desktop JavaScript engine,
-such as node.js or a JavaScript engine embedded in an IDE.  Moreover,
-during replay, since we avoid the execution of un-instrumented code
-and native code, we can easily implement various dynamic analyses that
-depend on shadow values and shadow executions.
+We provide a summary of the technical details of \jalangi{}.  For a 
+more detailed technical discussion, please refer to~\cite{SBGKfse13}.
+The user identifies a subset of a web application, for record and
+replay, which is instrumented by \jalangi{}. The resulting instrumented
+code is executed on a platform of user's choice, during the 
+\emph{recording} phase.  Even though a subset of user-code is 
+instrumented, the entire application is executed during the recording
+phase, inclusive of instrumented and uninstrumented JavaScript code, 
+and native code. However, only the instrumented code is replayed 
+by \jalangi{} during the \emph{replay} phase.  The ability of \jalangi{}
+to execute the JavaScript application in its entirety on user's 
+platform, enables the recorded execution to be replayed on a development
+laptop/desktop JavaScript engine for debugging, inclusive of mobile browser,
+and node.js based systems, or an integrate development system with an
+embedded JavaScript engine.  This approach also enables the implementation
+of dynamic analyses with underlying shadow values, which support shadow
+executions.  
 
-A trivial way to perform faithful record-replay of an execution is to
-record every value loaded from memory during an execution and use
-those values for corresponding memory loads in the replay phase.  This
-approach has two challenges: 1) How do we record values of objects and
-functions?  2) How do we replay an execution when an un-instrumented
-function or a native function, such as the JavaScript event
-dispatcher, calls an instrumented function?  Note that we do not allow
-the execution of un-instrumented and native functions during the
-replay phase.  Therefore, we need an alternative mechanism to execute
-instrumented functions that are being invoked by un-instrumented
-functions during recording.  We address the first challenge by
-associating a unique numerical identifier with every object and
-function and by recording the value of those unique identifiers.  We
-address the second challenge by explicitly recording and calling
-instrumented functions that are being invoked from un-instrumented
-functions or are dispatched by the JavaScript event dispatcher.
+Record and replay can be effectively provided, by recording every
+value loaded from memory during execution, and re-using them during
+the associated memory loads during replay.  This approach, though
+sound, is not without its challenges, such as: (1) How to effectively
+record functions and objects? (2) How to provide for replay, when
+un-instrumented of native function(s) (for example, the JavaScript
+event dispather) call instrumented functions?  The first issue is
+resolved by providing indirect recording, where a unique numerical
+identifier is associated with every object and function, and by
+recording the values of these identifiers.  The second issue is
+addressed by explicit recording and calling of instrumented functions,
+which in turn are called from un-instrumented code, or are executed as
+a result of being dispatched by the event handler of JavaScript.
 
+Furthermore, we observed that the value of a memory load during replay
+can be computed through execution of the instrumented code, without
+the need to record the values of all memory loads.  This was used to
+improve the efficiency of \jalangi{}, by recording only the necessary
+memory loads.  To identify if the value of a memory load must be
+recorded, \jalangi{} keeps track of shadow memory during recording
+phase, which is updated along side actual memory, as the instrumented
+code is executed.  No updates to shadow memory result from the
+execition of native and un-instrumented coe.  To ensure availability
+of correct values during the replay phase, \jalangi{} stores the value
+of memory loads only if a difference is found in the value stored in a
+memory location during the recording phase (i.e. if a difference is
+found between the values of the actual memory being loaded and its
+associated value stored in the shadow memory.)
 
-In \jalangi{}, we avoid recording of every load of memory.  \emph{This
-  is based on the observation that if we can compute the value of a
-  memory load during the replay phase by solely executing the
-  instrumented code, then we do not need to record the value of the
-  load.}  In order to determine if the value of a memory load needs to
-be recorded, \jalangi{} maintains a shadow memory during the recording
-phase.  The shadow memory is updated along with the actual memory
-during the execution of instrumented code.  Execution of
-un-instrumented and native code does not update the shadow memory.
-During the load of a memory location in the recording phase, if
-\jalangi{} finds any difference between the value of the actual memory
-being loaded and the value stored in the corresponding shadow memory,
-\jalangi{} records the value of such memory loads. This ensures that
-correct values are available during the replay phase.
+In \jalangi{}, any value used in execution during the replay phase may
+be replaced by an \emph{annotated value}, which may provide additional
+information for the actual value used.  An example would be extra
+taint information needed to support taint analysis, or it may be
+information related to actual values in symbolic execution, which may
+be provided in the form of a symbolic expression.  \jalangi{} uses
+objects of type \texttt{ConcolicValue}, to denote annotated values.
+Two fields are identified with objects of type \texttt{ConcolicValue}:
+(1) The \texttt{concrete} field is used to store the actual value; (2)
+The shadow value giving additional information about the actual value,
+is stored in the field \texttt{symbolic}.  For example, a value $v$ in
+JavaScript may be associated with its corresponding shadow value $s$,
+through replacement of $v$ with \texttt{new ConcolicValue}$(v, s)$.
+The projection $\Shadow(v)$, would similarly return the associated
+shadow value of $v$, where $v$ would otherwise return
+\texttt{undefined}.
 
-In shadow execution, \jalangi{} allows the replacement of any value
-used in the execution by an \emph{annotated value}.  The annotated
-value can carry extra information about the actual value.  For
-example, an annotated value can carry taint information in a taint
-analysis or a symbolic expression describing the actual value in
-symbolic execution.  In \jalangi{}, we denote an annotated value using
-an object of type \texttt{ConcolicValue}.  An object of type
-\texttt{ConcolicValue} has two fields: the field \texttt{concrete}
-stores the actual value and the field \texttt{symbolic} stores the
-shadow value, i.e. extra information about the actual value.  A value,
-say $v$, in JavaScript can be associated with shadow value, say $s$,
-by simply replacing $v$ by \texttt{new ConcolicValue}$(v, s)$.  The
-projection function $\Actual(v)$ returns the actual value of $v$, if
-$v$ is an annotated value and returns $v$ otherwise.  Similarly, the
-projection function $\Shadow(v)$ returns the shadow value associated
-with $v$ if $v$ is an annotated value and returns \texttt{undefined}
-otherwise.
 
 \section{Dynamic Analyses}
 \label{sec:dynamic-analyses}

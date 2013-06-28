@@ -105,6 +105,11 @@ Swaroop Kalasapur, Tasneem Brutch, and Simon Gibbs\\
   applicable to other dynamic languages.
 \end{abstract}
 
+\category{D.2.5}{Software Engineering}{Testing and Debugging}
+
+\keywords{JavaScript;  Dynamic Analysis;  Concolic Testing; Record and
+Replay}
+
 \section{Introduction}
 
 JavaScript is the most popular programming language for client-side
@@ -281,7 +286,7 @@ To simplify exposition of our techniques (and to avoid explanation of
 the nuances of JavaScript), we use a simple JavaScript-like imperative
 language.  The syntax of this language is shown below.
 
-{\small
+{\scriptsize
 \[
 \begin{array}{rll}
 v, v1, v2, & v3, \ldots \mbox{ are variable identifiers}\\
@@ -716,7 +721,7 @@ un-instrumented or native code.
 \lstset{language=JavaScript}
 \begin{figure}
   
-{\small 
+{\scriptsize 
 \begin{lstlisting}[mathescape]
 function AnnotatedValue(actual, shadow) {
   this.actual = actual;
@@ -850,7 +855,7 @@ along with record-replay is shown in Figure~\ref{fig:instr3}.
 
 \lstset{language=JavaScript}
 \begin{figure}
- {\small 
+ {\scriptsize
 \begin{lstlisting}[mathescape]
 function syncRecord(rec, tv) {
 M: var v = $\Actual$(tv), result = rec.val
@@ -916,7 +921,7 @@ analysis could report the line number of code where the \texttt{null}
 or \texttt{undefined} value originated.
 
 \begin{figure}
- {\small 
+ {\scriptsize
 \begin{lstlisting}
 anlys = {
   literal: function(c) {
@@ -1541,10 +1546,242 @@ tries to fill this gap by providing a dynamic analysis framework in
 which one could easily prototype and build sophisticated
 browser-independent dynamic program analyses for JavaScript.
 
+\newpage
 {\small
-\bibliographystyle{abbrv}
-\bibliography{jalangi}
+\begin{thebibliography}{10}
+
+\bibitem{Anderson:2005:TTI:2144892.2144917}
+C.~Anderson, P.~Giannini, and S.~Drossopoulou.
+\newblock Towards type inference for javascript.
+\newblock In {\em 19th European conference on Object-Oriented Programming},
+  ECOOP'05, pages 428--452, 2005.
+
+\bibitem{warr}
+S.~Andrica and G.~Candea.
+\newblock Warr: A tool for high-fidelity web application record and replay.
+\newblock In {\em Dependable Systems Networks (DSN)}, pages 403--410, 2011.
+
+\bibitem{Artzi:2011:FAT:1985793.1985871}
+S.~Artzi, J.~Dolby, S.~H. Jensen, A.~M{\o}ller, and F.~Tip.
+\newblock A framework for automated testing of javascript web applications.
+\newblock In {\em 33rd International Conference on Software Engineering},
+  ICSE'11, pages 571--580. ACM, 2011.
+
+\bibitem{BT07}
+C.~Barrett and C.~Tinelli.
+\newblock {CVC3}.
+\newblock In {\em $19^{th}$ International Conference on Computer Aided
+  Verification (CAV '07)}, volume 4590 of {\em LNCS}, pages 298--302, 2007.
+
+\bibitem{Bjorner:2009:PFA:1532891.1532927}
+N.~Bj{\o}rner, N.~Tillmann, and A.~Voronkov.
+\newblock Path feasibility analysis for string-manipulating programs.
+\newblock In {\em Tools and Algorithms for the Construction and Analysis of
+  Systems}, pages 307--321, 2009.
+
+\bibitem{Bond:2007:TBA:1297027.1297057}
+M.~D. Bond, N.~Nethercote, S.~W. Kent, S.~Z. Guyer, and K.~S. McKinley.
+\newblock Tracking bad apples: reporting the origin of null and undefined value
+  errors.
+\newblock In {\em ACM SIGPLAN conference on Object-oriented programming systems
+  and applications}, OOPSLA '07, pages 405--422, 2007.
+
+\bibitem{Bruening:2003:IAD:776261.776290}
+D.~Bruening, T.~Garnett, and S.~Amarasinghe.
+\newblock An infrastructure for adaptive dynamic optimization.
+\newblock In {\em Code generation and optimization: feedback-directed and
+  runtime optimization}, CGO '03, pages 265--275, 2003.
+
+\bibitem{hobbs}
+M.~Burrows, S.~Freund, and J.~Wiener.
+\newblock Run-time type checking for binary programs.
+\newblock In {\em Compiler Construction}, volume 2622 of {\em LNCS}, pages
+  90--105. Springer, 2003.
+
+\bibitem{Clause:2007:DGD:1273463.1273490}
+J.~Clause, W.~Li, and A.~Orso.
+\newblock Dytan: a generic dynamic taint analysis framework.
+\newblock In {\em International symposium on Software testing and analysis},
+  pages 196--206. ACM, 2007.
+
+\bibitem{Cornelis03ataxonomy}
+F.~Cornelis, A.~Georges, M.~Christiaens, M.~Ronsse, T.~Ghesquiere, and K.~D.
+  Bosschere.
+\newblock A taxonomy of execution replay systems.
+\newblock In {\em International Conference on Advances in Infrastructure for
+  Electronic Business, Education, Science, Medicine, and Mobile Technologies on
+  the Internet}, 2003.
+
+\bibitem{Dionne96ataxonomy}
+C.~Dionne, M.~Feeley, and J.~Desbiens.
+\newblock A taxonomy of distributed debuggers based on execution replay.
+\newblock In {\em International Conference on Parallel and Distributed
+  Processing Techniques and Applications}, pages 203--214, 1996.
+
+\bibitem{manuicse13}
+A.~Feldthaus, M.~Schaefer, M.~Sridharan, J.~Dolby, and F.~Tip.
+\newblock Efficient construction of approximate call graphs for javascript ide
+  services.
+\newblock In {\em International Conference on Software Engineering}, ICSE '13,
+  2013.
+
+\bibitem{dart}
+P.~Godefroid, N.~Klarlund, and K.~Sen.
+\newblock {{DART}: Directed Automated Random Testing}.
+\newblock In {\em PLDI'05}, June 2005.
+
+\bibitem{Jensen:2010:IAL:1882094.1882114}
+S.~H. Jensen, A.~M{\o}ller, and P.~Thiemann.
+\newblock Interprocedural analysis with lazy propagation.
+\newblock In {\em 17th international conference on Static analysis}, SAS'10,
+  pages 320--339, 2010.
+
+\bibitem{scarpe}
+S.~Joshi and A.~Orso.
+\newblock Scarpe: A technique and tool for selective capture and replay of
+  program executions.
+\newblock In {\em Software Maintenance, 2007}, pages 234--243, 2007.
+
+\bibitem{Luk:2005:PBC:1065010.1065034}
+C.-K. Luk, R.~Cohn, R.~Muth, H.~Patil, A.~Klauser, G.~Lowney, S.~Wallace, V.~J.
+  Reddi, and K.~Hazelwood.
+\newblock Pin: building customized program analysis tools with dynamic
+  instrumentation.
+\newblock In {\em ACM SIGPLAN conference on Programming language design and
+  implementation}, PLDI '05, pages 190--200. ACM, 2005.
+
+\bibitem{Mesbah:2009:IAT:1555001.1555037}
+A.~Mesbah and A.~van Deursen.
+\newblock Invariant-based automatic testing of ajax user interfaces.
+\newblock In {\em 31st International Conference on Software Engineering}, ICSE
+  '09, pages 210--220. IEEE, 2009.
+
+\bibitem{Mickens:2010:MDC:1855711.1855722}
+J.~Mickens, J.~Elson, and J.~Howell.
+\newblock Mugshot: deterministic capture and replay for javascript
+  applications.
+\newblock In {\em 7th USENIX conference on Networked systems design and
+  implementation}, NSDI'10, pages 11--11, 2010.
+
+\bibitem{Narayanasamy:2006:ALO:1140277.1140303}
+S.~Narayanasamy, C.~Pereira, H.~Patil, R.~Cohn, and B.~Calder.
+\newblock Automatic logging of operating system effects to guide
+  application-level architecture simulation.
+\newblock In {\em International conference on Measurement and modeling of
+  computer systems}, SIGMETRICS '06/Performance '06, pages 216--227. ACM, 2006.
+
+\bibitem{Nethercote:2007:VFH:1250734.1250746}
+N.~Nethercote and J.~Seward.
+\newblock Valgrind: a framework for heavyweight dynamic binary instrumentation.
+\newblock In {\em ACM SIGPLAN conference on Programming language design and
+  implementation}, PLDI '07, pages 89--100. ACM, 2007.
+
+\bibitem{songndss05}
+J.~Newsome and D.~Song.
+\newblock Dynamic taint analysis for automatic detection, analysis, and
+  signature generation of exploits on commodity software.
+\newblock In {\em 12th Annual Network and Distributed System Security
+  Symposium}, 2005.
+
+\bibitem{Patil:2010:PFD:1772954.1772958}
+H.~Patil, C.~Pereira, M.~Stallcup, G.~Lueck, and J.~Cownie.
+\newblock Pinplay: a framework for deterministic replay and reproducible
+  analysis of parallel programs.
+\newblock In {\em 8th annual IEEE/ACM international symposium on Code
+  generation and optimization}, CGO '10, pages 2--11, 2010.
+
+\bibitem{Pattabiraman:2010:DLD:1913797.1914375}
+K.~Pattabiraman and B.~Zorn.
+\newblock Dodom: Leveraging dom invariants for web 2.0 application robustness
+  testing.
+\newblock In {\em IEEE 21st International Symposium on Software Reliability
+  Engineering}, ISSRE '10, pages 191--200, 2010.
+
+\bibitem{Petrov:2012:RDW:2254064.2254095}
+B.~Petrov, M.~Vechev, M.~Sridharan, and J.~Dolby.
+\newblock Race detection for web applications.
+\newblock In {\em 33rd ACM SIGPLAN conference on Programming Language Design
+  and Implementation}, PLDI '12, pages 251--262. ACM, 2012.
+
+\bibitem{Ratanaworabhan:2010:JCB:1863166.1863169}
+P.~Ratanaworabhan, B.~Livshits, and B.~G. Zorn.
+\newblock Jsmeter: comparing the behavior of javascript benchmarks with real
+  web applications.
+\newblock In {\em USENIX conference on Web application development},
+  WebApps'10, pages 3--3, 2010.
+
+\bibitem{Richards:2011:ACJ:2048066.2048119}
+G.~Richards, A.~Gal, B.~Eich, and J.~Vitek.
+\newblock Automated construction of javascript benchmarks.
+\newblock In {\em ACM international conference on Object oriented programming
+  systems languages and applications}, OOPSLA '11, pages 677--694. ACM, 2011.
+
+\bibitem{Richards:2010:ADB:1806596.1806598}
+G.~Richards, S.~Lebresne, B.~Burg, and J.~Vitek.
+\newblock An analysis of the dynamic behavior of javascript programs.
+\newblock In {\em ACM SIGPLAN conference on Programming language design and
+  implementation}, pages 1--12. ACM, 2010.
+
+\bibitem{Saff:2005:ATF:1101908.1101927}
+D.~Saff, S.~Artzi, J.~H. Perkins, and M.~D. Ernst.
+\newblock Automatic test factoring for java.
+\newblock In {\em 20th IEEE/ACM international Conference on Automated software
+  engineering}, ASE '05, pages 114--123, New York, NY, USA, 2005. ACM.
+
+\bibitem{Saxena:2010:SEF:1849417.1849985}
+P.~Saxena, D.~Akhawe, S.~Hanna, F.~Mao, S.~McCamant, and D.~Song.
+\newblock A symbolic execution framework for javascript.
+\newblock In {\em IEEE Symposium on Security and Privacy}, SP '10, pages
+  513--528. IEEE, 2010.
+
+\bibitem{cute}
+K.~Sen, D.~Marinov, and G.~Agha.
+\newblock {CUTE}: A concolic unit testing engine for {C}.
+\newblock In {\em ESEC/FSE'05}, Sep 2005.
+
+\bibitem{Seward:2005:UVD:1247360.1247362}
+J.~Seward and N.~Nethercote.
+\newblock Using valgrind to detect undefined value errors with bit-precision.
+\newblock In {\em Annual conference on USENIX Annual Technical Conference},
+  ATEC '05, pages 2--2, 2005.
+
+\bibitem{Sridharan:2012:CTP:2367163.2367191}
+M.~Sridharan, J.~Dolby, S.~Chandra, M.~Sch\"{a}fer, and F.~Tip.
+\newblock Correlation tracking for points-to analysis of javascript.
+\newblock In {\em 26th European conference on Object-Oriented Programming},
+  ECOOP'12, pages 435--458, 2012.
+
+\bibitem{Vikram:2009:RAS:1653662.1653685}
+K.~Vikram, A.~Prateek, and B.~Livshits.
+\newblock Ripley: automatically securing web 2.0 applications through
+  replicated execution.
+\newblock In {\em 16th ACM conference on Computer and communications security},
+  pages 173--186. ACM, 2009.
+
+\bibitem{Wei:2012:BAJ:2384716.2384758}
+S.~Wei and B.~G. Ryder.
+\newblock A practical blended analysis for dynamic features in javascript.
+\newblock Technical report, Department of Computer Science, Virginia Tech.,
+  2012.
+
+\bibitem{Yu:2007:JIB:1190216.1190252}
+D.~Yu, A.~Chander, N.~Islam, and I.~Serikov.
+\newblock Javascript instrumentation for browser security.
+\newblock In {\em ACM symposium on Principles of programming languages}, POPL
+  '07, pages 237--249, 2007.
+
+\bibitem{Zhao:2010:1772954.1772960}
+Q.~Zhao, D.~Bruening, and S.~Amarasinghe.
+\newblock Umbra: Efficient and scalable memory shadowing.
+\newblock {\em 8th Annual IEEE/ACM International Symposium on Code Generation
+  and Optimization}, pages 22--31, 2010.
+
+\end{thebibliography}
 }
+% {\small
+% \bibliographystyle{abbrv}
+% \bibliography{jalangi}
+% }
 \end{document}
 
 %UserMem is always updated with the

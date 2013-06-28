@@ -490,6 +490,38 @@ minimum of 1.5X and a maximum of 93X.  \emph{Track} analysis showed an
 average slowdown of 32.75X with a minimum of 1.5X and a maximum of
 96X.
 
+\subsection{Issues Detected by JALANGI Dynamic Analyses}
+\label{sec:issu-detect-dynam}
+
+% The likely type inconsistency checker noticed that the function
+% \texttt{safe\_add(x, y)} in \texttt{crypto-sha1.js} of the SunSpider
+% benchmark suite is mostly called with both of its arguments set to number,
+% but at one location it was invoked with the second argument set to
+% \texttt{undefined}.   We believe that this could be an unintended
+% behavior.   
+
+The likely type inconsistency checker reported that the function
+\texttt{CreateP}  in \texttt{3d-cube.js} of the SunSpider
+benchmark suite is mostly called as a constructor, but at one location
+it was invoked as a function.  As result of the function call, the
+program creates an unnecessary \texttt{V} field in the global object.
+We believe that this call is a possible programming error.
+
+% {\scriptsize
+% \begin{lstlisting}[mathescape]
+% function CreateP(X,Y,Z) {
+%   this.V = [X,Y,Z,1];
+% }
+% \end{lstlisting}
+% }
+ 
+The object allocation profiler noticed that the method
+\texttt{getValue(place, \_board)} in the Annex game webapp creates a
+constant object containing at least 64 numbers thousands of times.  We
+believe that such unnecessary creation of the constant object can be
+avoided by hoisting the object creation outside the method.
+
+
 \section{Related Work}
 \label{sec:related-work}
 

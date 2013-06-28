@@ -152,7 +152,7 @@ by \jalangi{} during the \emph{replay} phase.  The ability of \jalangi{}
 to execute the JavaScript application in its entirety on user's 
 platform, enables the recorded execution to be replayed on a development
 laptop/desktop JavaScript engine for debugging, inclusive of mobile browser,
-and node.js based systems, or an integrate development system with an
+and node.js based systems, or an integrated development system with an
 embedded JavaScript engine.  This approach also enables the implementation
 of dynamic analyses with underlying shadow values, which support shadow
 executions.  
@@ -179,12 +179,12 @@ memory loads.  To identify if the value of a memory load must be
 recorded, \jalangi{} keeps track of shadow memory during recording
 phase, which is updated along side actual memory, as the instrumented
 code is executed.  No updates to shadow memory result from the
-execition of native and un-instrumented coe.  To ensure availability
+execution of native and un-instrumented code.  To ensure availability
 of correct values during the replay phase, \jalangi{} stores the value
 of memory loads only if a difference is found in the value stored in a
 memory location during the recording phase (i.e. if a difference is
 found between the values of the actual memory being loaded and its
-associated value stored in the shadow memory.)
+associated value stored in the shadow memory).
 
 In \jalangi{}, any value used in execution during the replay phase may
 be replaced by an \emph{annotated value}, which may provide additional
@@ -251,7 +251,7 @@ In \jalangi{}, we have implemented the following dynamic analyses:
   created at a given allocation site are read-only or a constant.  It
   also reports the maximum and average difference between the object
   creation time and the most recent access time of the object .  If an
-  allocation site creates too many contant objects, then it could lead
+  allocation site creates too many constant objects, then it could lead
   to memory inefficiency.  We have found such a problem in one of the
   web applications in our benchmark suite.
 \item Dynamic taint analysis~\cite{songndss05}: A dynamic taint
@@ -410,8 +410,7 @@ operations in JavsScript.  The selective record-replay engine of
 \texttt{instrumentCode}.  This enables us also to dynamically
 instrument any code that is created and evaluated at runtime.  For
 example, we modify any call to \texttt{eval(s)} to
-\texttt{eval(instrumentCode(s))}.
-During recording phase, \jalangi{} generates a \texttt{trace} array
+\texttt{eval(instrumentCode(s))}.  During recording phase, \jalangi{} generates a \texttt{trace} array
 which contains all recorded values needed for replay.  \jalangi{}
 serializes the \texttt{trace} array in JSON format.  
 
@@ -470,7 +469,7 @@ shopping& 5397 & 1144 & - & - & - & - \\
 We ran \jalangi{}'s record-replay on 26 programs in the JavaScript
 SunSpider (\url{http://www.webkit.org/perf/sunspider/sunspider.html})
 benchmark suite and on five web apps written for the Tizen OS using
-HTML5/JavaScript
+HTML5/JavaScript.
 (\url{https://developer.tizen.org/downloads/sample-web-applications}).
 Table~\ref{tab:results} shows the overhead associated with the record
 phase and with the three dynamic analyses: no analysis (denoted by
@@ -478,10 +477,10 @@ phase and with the three dynamic analyses: no analysis (denoted by
 \emph{track}), and a taint analysis (denoted by \emph{taint}).  We
 also report the number of values we recorded for each benchmark
 program.  The experiments were performed on a laptop with 2.3 GHz
-Intel Core i7 and 8 GB RAM.  We ran the web apps on Chrome 25 and
+Intel Core i7 and 8 GB RAM, running the web apps on Chrome 25 and
 performed the replay executions on node.js 0.8.14.
 
-We didn't measure the slowdown of the web apps because these are
+We did not measure the slowdown of the web apps because these are
 mostly interactive applications.  For the SunSpider benchmark suite,
 we observed an average slowdown of 26X during the recording phase with
 a minimum of 1.5X and a maximum of 93X.  On the \emph{empty} analysis
@@ -541,7 +540,7 @@ a client-side JavaScript program on a server side replica.
 
 \jalangi{} has taken care of various challenging details of JavaScript.  One
 can easily implement a dynamic analysis in the \jalangi{} framework
-without worrying about the worrysome corners of JavaScript.  We expect that
+since all the worrisome corners of JavaScript are handled.  We expect that
 \jalangi{} will facilitate future research on dynamic analysis of
 JavaScript. 
 

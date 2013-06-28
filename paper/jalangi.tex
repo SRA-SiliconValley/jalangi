@@ -116,7 +116,7 @@ with JavaScript support, which is quite common in modern day devices.
 JavaScript being a dynamic language, also attracts developers through
 its flexible features that do not require explicit memory management,
 static typing and compilation.  With a renewed interest in JavaScript,
-many complex applications such as google docs, gmail, and a variety of
+many complex applications such as Google docs, gmail, and a variety of
 games are being developed using HTML5/JavaScript. However, unlike
 C/C++, Java and C\#, JavaScript is significantly shorthanded in the
 tools landscape. The dynamic and reflective nature of JavaScript makes
@@ -252,7 +252,7 @@ and on several user-interaction rich web applications.  Our evaluation
 results show that \jalangi{} has an average overhead of 26X during
 recording and 30X during replay.  This is better than
 PinPlay~\cite{Patil:2010:PFD:1772954.1772958} by a factor of 2X-3X and
-slower that Valgrind~\cite{Nethercote:2007:VFH:1250734.1250746}.  We
+slower than Valgrind~\cite{Nethercote:2007:VFH:1250734.1250746}.  We
 also found that existing dynamic analyses could easily be implemented
 in \jalangi{}.  We expect to make \jalangi{} open-source by the end of
 April 2013.
@@ -549,7 +549,7 @@ recording or replay.  For a \texttt{recording} execution, $\Sync$
 appends the value loaded from a memory to the \texttt{trace}.  If the
 value of \texttt{v} in $\Sync$ is restricted to primitive types
 (i.e. number, string, boolean, undefined, or null), we can simply do
-\texttt{trace[i] = v}.  However, type of $v$ could be an object or a
+\texttt{trace[i] = v}.  However, the type of \texttt{v} could be an object or a
 function.  To handle objects and functions, $\Sync$ calls
 \texttt{trace[i] = getRecord(v)}, where \texttt{getRecord(v)} returns
 an object whose \texttt{type} field is set to the type of \texttt{v}
@@ -1205,7 +1205,7 @@ execution outside a browser.
 % Concolic testing maintains a symbolic state along with the concrete
 % state of the program.  The symbolic state maps memory locations to
 % symbolic expressions over symbolic input values.
-We have implemented con colic testing as an analysis in \jalangi{}.
+We have implemented concolic testing as an analysis in \jalangi{}.
 We store the symbolic expression corresponding to each concrete value
 in its shadow value.  Concolic execution takes place during the replay
 phase: the shadow execution updates the shadow value of each
@@ -1288,7 +1288,7 @@ the record and the corresponding replay executions of these benchmarks
 in \jalangi{} produced exactly the same sequence of memory loads and
 followed exactly the same execution paths.
 
-\subsection{Performance of  \jalangi{}}
+\subsection{Performance of  JALANGI}
 \label{sec:performance-jalangi}
 
 \begin{table*}
@@ -1456,7 +1456,7 @@ to users.
 \label{sec:conc-test-small}
 
 We ran concolic testing on several programs ported from a concolic
-testing engine for Java.  Even though concolic testing is not focus of
+testing engine for Java.  Even though concolic testing is not the focus of
 this paper, we report the results of running concolic testing on a
 small program (shown in Table~\ref{tab:conc}), which has complex
 string operations involving integers, string length, regular
@@ -1556,7 +1556,7 @@ PIN~\cite{Luk:2005:PBC:1065010.1065034},
 DynamoRIO~\cite{Bruening:2003:IAD:776261.776290} for x86.  \jalangi{}
 tries to fill this gap by providing a dynamic analysis framework in
 which one could easily prototype and build sophisticated
-browser-independent dynamic program analyses for Javascript.
+browser-independent dynamic program analyses for JavaScript.
 
 {\small
 \bibliographystyle{abbrv}

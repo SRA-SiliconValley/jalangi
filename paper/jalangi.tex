@@ -55,7 +55,9 @@
 
 
 
-\conferenceinfo{Under Submission}{Do Not Distribute}
+\conferenceinfo{ESEC/FSE}{'13, August 18-26, 2013, Saint Petersburg, Russia}
+\CopyrightYear{2013}
+\crdata{978-1-4503-2237-9/13/08}
 
 \title{Jalangi: A Selective Record-Replay and Dynamic Analysis
   Framework for JavaScript} \numberofauthors{2}
@@ -92,15 +94,15 @@ Swaroop Kalasapur, Tasneem Brutch, and Simon Gibbs\\
   about JavaScript, which makes it applicable to real-world JavaScript
   programs running on multiple platforms.  We have implemented
   concolic testing, an analysis to track origins of nulls and
-  undefined, a simple form of taint analysis in \jalangi{}, an
-  analysis to detect likely type inconsistencies, and an object
-  allocation profiler.  Our evaluation of \jalangi{} on the SunSpider
-  benchmark suite and on five web applications shows that \jalangi{}
-  has an average slowdown of 26X during recording and 30X slowdown
-  during replay and analysis.  The slowdowns are comparable with
-  slowdowns reported for similar tools, such as PIN and Valgrind for
-  x86 binaries.  We believe that the techniques proposed in this paper
-  are applicable to other dynamic languages.
+  undefined, a simple form of taint analysis, an analysis to detect
+  likely type inconsistencies, and an object allocation profiler in
+  \jalangi{}.  Our evaluation of \jalangi{} on the SunSpider benchmark
+  suite and on five web applications shows that \jalangi{} has an
+  average slowdown of 26X during recording and 30X slowdown during
+  replay and analysis.  The slowdowns are comparable with slowdowns
+  reported for similar tools, such as PIN and Valgrind for x86
+  binaries.  We believe that the techniques proposed in this paper are
+  applicable to other dynamic languages.
 \end{abstract}
 
 \section{Introduction}
@@ -109,9 +111,9 @@ JavaScript is the most popular programming language for client-side
 web programming. Advances in browser technologies and JavaScript
 engines in the recent years have fueled the use of JavaScript in Rich
 Internet Applications, and several mobile platforms including Android,
-iOS, Tizen, Windows8, Blackberry, support applications written in
-HTML5/JavaScript. A key reason behind the popularity of JavaScript
-programs is that the are portable. Once written, JavaScript based
+iOS, Tizen, Windows8, Blackberry, Gnome, support applications written
+in HTML5/JavaScript. A key reason behind the popularity of JavaScript
+programs is that they are portable. Once written, JavaScript based
 applications can be executed on any platform that has a web browser
 with JavaScript support, which is quite common in modern day devices.
 JavaScript being a dynamic language, also attracts developers through
@@ -222,7 +224,8 @@ techniques in \jalangi{}.
   values and shadow execution.
 \end{enumerate}
 
-In \jalangi{}, we have implemented three existing dynamic analyses:
+In \jalangi{}, we have implemented several existing and new dynamic
+analyses:
 
 \begin{itemize}
 \item Concolic testing~\cite{dart,cute}: concolic testing performs
@@ -230,7 +233,7 @@ In \jalangi{}, we have implemented three existing dynamic analyses:
   logical formula denoting a constraint on the input values, and
   solves a constraint to generate new test inputs that would execute
   the program along previously unexplored paths.  Our implementation
-  of concolic testing supports constraints over integral, string, and
+  of concolic testing supports constraints over integer, string, and
   object types and \emph{novel type constraints.}
 \item Tracking origins of \texttt{null} and
   \texttt{undefined}~\cite{Bond:2007:TBA:1297027.1297057}: this
@@ -268,8 +271,7 @@ Our evaluation results show that \jalangi{} has an average overhead of
 PinPlay~\cite{Patil:2010:PFD:1772954.1772958} by a factor of 2X-3X and
 slower than Valgrind~\cite{Nethercote:2007:VFH:1250734.1250746}.  We
 also found that existing dynamic analyses could easily be implemented
-in \jalangi{}.  We expect to make \jalangi{} open-source by the end of
-April 2013.
+in \jalangi{}.  
 
 
 \section{Technical Details}
@@ -606,7 +608,7 @@ type of the value in the sparse array \texttt{trace}.  Otherwise,
 \texttt{undefined}.  If the value of \texttt{v1} in $\Sync$ is
 restricted to primitive types (i.e. number, string, boolean,
 undefined, or null), we can simply do \texttt{trace[i] = v1}.
-However, the type of \texttt{v} could be an object or a function.  To
+However, the type of \texttt{v1} could be an object or a function.  To
 handle objects and functions, $\Sync$ calls \texttt{trace[i] =
   getRecord(v1)}, where \texttt{getRecord(v1)} returns an object whose
 \texttt{type} field is set to the type of \texttt{v1} and \texttt{val}
@@ -990,7 +992,7 @@ trace = [
     //and set myload["*id*"]= 3 
  {type: "function", val: 3}, 
     // record enter(myload) 
-    // where myapp is called by the event dispatcher  
+    //where myapp is called by the event dispatcher  
  {type: "function", val: 3, isFunCall: true}, 
     // sync getField, document["URL"]
  {type:"string",val:"http://127.0.0.1/index.html"}, 
@@ -1041,7 +1043,8 @@ framework is available under Apache 2.0 open-source license at
 implementation, we do not transform JavaScript into the three-address
 code described in Section~\ref{sec:technical-details}.  Rather we
 modify the AST in place by replacing each operation with an equivalent
-function call.
+function call.  We perform instrumentation manually; in future, we
+plan to support automated instrumentation using a proxy.
 
 \subsubsection*{Handling \texttt{eval}}
 \label{sec:handling-texttteval}
@@ -1086,7 +1089,8 @@ We have implemented concolic testing as an analysis in \jalangi{}.
 We store the symbolic expression corresponding to each concrete value
 in its shadow value.  Concolic execution takes place during the replay
 phase: the shadow execution updates the shadow value of each
-value.
+value.  We perform record-replay execution of the program for each
+generated input.
 
 In our implementation of concolic testing, we handle linear integer
 constraints and string constraints involving concatenation, length,
@@ -1145,6 +1149,23 @@ being executed.  If an allocation site creates too many contant
 objects, then it could lead to performance issues.  We have found such
 an issue in one of the web applications in our benchmark suite.
 
+\subsection*{Limitations}
+\label{sec:limitations}
+
+\jalangi{} implementation has the following known limitations which
+can prevent it from doing high-fidelity replay in some scenarios.
+Some of these limitations arise in ECMAScript 5.  \jalangi{} will fail
+to record if a JavaScript engine disallows access to
+\texttt{arguments.callee} at the beginning of a function call.  This
+is a problem if an entire script is made to run in \emph{strict mode}.
+\jalangi{} cannot handle updates made through the \texttt{setter}
+method of an object in ECMAScript 5.  \jalangi{} cannot handle the
+\texttt{with} construct properly.  \jalangi{} cannot track implicit
+type conversion of externally created objects to primitive types.
+\texttt{JSON.stringify} cannot accurately record a floating point
+number, which could lead to imprecision during replay.  We believe
+that these limitations could be addressed in a future release.
+
 
 \section{Evaluation}
 \label{sec:evaluation}
@@ -1158,21 +1179,23 @@ detected during dynamic analyses.
 \subsection{Ease of Writing Dynamic Analyses}
 \label{sec:ease-writing-dynamic}
 
-We have written three dynamic analyses and a condition coverage tool
-on top of \jalangi{}.  The condition coverage tool has 47 lines of
+We have written five dynamic analyses and a condition coverage tool on
+top of \jalangi{}.  The condition coverage tool has 47 lines of
 JavaScript code, the origin tracker for null and undefined has 61
-lines of JavaScript code, taint analysis has 68 lines of code, and
-concolic testing has 2225 lines of code.  In comparison, a concolic
-testing tool for Java with lesser functionalities had more than 20,000
-lines of code.  Even though number of lines of code is not a good
-measure for the ease of writing a dynamic analysis, it provides a
-rough estimate of the complexity of writing an analysis on top of
-\jalangi{}.  We believe that \jalangi{}'s support for shadow values
-and shadow execution in the form of a simple $\analysis$ API
-significantly reduces the barrier to implement various dynamic
-analyses.  An implementor of a dynamic analysis need not worry about
-the quirks and nuances of JavaScript.  In future, we plan to enrich
-\jalangi{} with several other dynamic analyses.
+lines of JavaScript code, taint analysis has 68 lines of code, the
+object allocation tracker has 174 lines of code, the type
+inconsistency checker has 543 lines of code, and concolic testing has
+2225 lines of code.  In comparison, a concolic testing tool for Java
+with lesser functionalities had more than 20,000 lines of code.  Even
+though number of lines of code is not a good measure for the ease of
+writing a dynamic analysis, it provides a rough estimate of the
+complexity of writing an analysis on top of \jalangi{}.  % We believe
+% that \jalangi{}'s support for shadow values and shadow execution in
+% the form of a simple $\analysis$ API significantly reduces the barrier
+% to implement various dynamic analyses.  An implementor of a dynamic
+% analysis need not worry about the quirks and nuances of JavaScript.
+% In future, we plan to enrich \jalangi{} with several other dynamic
+% analyses.
 
 \subsection{Fidelity and Robustness}
 \label{sec:fidelity-robustness}
@@ -1180,18 +1203,19 @@ the quirks and nuances of JavaScript.  In future, we plan to enrich
 By fidelity, we mean the similarity between recording and replay
 executions.  By robustness, we mean the ability of \jalangi{} to
 handle a program without introducing any errors or exceptions of its
-own.  To check fidelity of \jalangi{}, we recoded all memory loads
+own.  To check fidelity of \jalangi{}, we recoded all the memory loads
 both in record and replay phases and checked if the two sequences of
-loads are the same.  We also recorded the execution paths taken by
-both record and replay phases and checked if they are the same.  To
-check robustness, we ran \jalangi{} on several real-world programs.
-
-We managed to run \jalangi{} without any error on all programs that we
-considered for evaluation.  This includes the SunSpider benchmark
-suite for JavaScript and several web apps developed for the Tizen OS.
-We list these benchmarks in the next section.  We also observed that
-the record and the corresponding replay executions of these benchmarks
-in \jalangi{} produced exactly the same sequence of memory loads and
+loads are the same.  % We also recorded the execution paths taken by
+% both record and replay phases and checked if they are the same.  To
+% check robustness, we ran \jalangi{} on several real-world programs.
+Despite the limitations described in the previous section, we managed
+to run \jalangi{} without any error on all programs that we considered
+for evaluation.  % This includes the SunSpider benchmark suite for
+% JavaScript and several web apps developed for the Tizen OS.  We list
+% these benchmarks in the next section.  
+% We also observed that the record and the corresponding replay
+% executions of these benchmarks in 
+and \jalangi{} produced exactly the same sequence of memory loads and
 followed exactly the same execution paths.
 
 \subsection{Performance of  JALANGI}
@@ -1304,12 +1328,13 @@ the replay phase of these benchmark programs, we ran three dynamic
 analyses: no analysis (denoted by \emph{empty}), tracking origins of
 null and undefined (denoted by \emph{track}), and a taint analysis
 (denoted by \emph{taint}).  We report the overhead associated with the
-recording and replay phases in Table~\ref{tab:results}.  We also
-report the number of values we recorded for each benchmark program and
-the number of values that were loaded from the memory during the
-execution.  The experiments were performed on a laptop with 2.3 GHz
-Intel Core i7 and 8 GB RAM.  We ran the web apps on Chrome 25 and
-performed the replay executions on node.js 0.8.14.
+recording and replay phases in Table~\ref{tab:results}.  % We also
+% report the number of values we recorded for each benchmark program and
+% the number of values that were loaded from the memory during the
+% execution. 
+The experiments were performed on a laptop with 2.3 GHz Intel Core i7
+and 8 GB RAM.  We ran the web apps on Chrome 25 and performed the
+replay executions on node.js 0.8.14.
 
 The SunSpider benchmarks have relatively small number of lines of
 code, but they perform CPU intensive computations.  The web apps
@@ -1329,7 +1354,7 @@ dynamic analysis tool for x86.  We didn't make any effort to optimize
 our implementation, but we believe suitable optimizations could
 further reduce the overhead.  For some programs in the SunSpider suite
 we noticed that the number values recorded is quite high and recording
-phase has higher overhead than replay.  This because these programs
+phase has higher overhead than replay.  This is because these programs
 made many expensive native calls.  The return values of those calls
 were recorded.  Replay skipped the execution of those native calls, so
 we noticed lower overhead for replay.
@@ -1341,7 +1366,7 @@ faithful replay.  The column titled ``\% of Loads Recorded'' reports
 the reduction in percentage.  We noticed an average reduction of
 6.52\% and a median reduction of 0.73\%.  Programs doing a lot of
 native calls and performing frequent manipulation of the DOM resulted
-in large recoding of memory loads.
+in large recoding of the memory loads.
 
 % We performed concolic testing on a number of small benchmarks
 % involving integers, strings, and type constraints.  The slowdown
@@ -1369,9 +1394,10 @@ expression matching, and concatenation.  This program is a slight
 variant of the program used as a case study
 in~\cite{Bjorner:2009:PFA:1532891.1532927}.  In concolic testing, we
 only use the theory of linear integers of CVC3~\cite{BT07} and model
-string operations using this theory.  For this program, we generated 9
-input strings corresponding to the 9 distinct execution paths of the
-program.  We noticed an average slowdown of 145X during concolic
+string operations using this theory.  % For this program, we generated 9
+% input strings corresponding to the 9 distinct execution paths of the
+% program.
+We noticed an average slowdown of 145X during concolic
 execution with a maximum slowdown of 613X and a minimum slowdown of
 1.4X.  The recording phases showed a slowdown of 1.2X.  The slowdown
 in the concolic execution phase is mostly due to the calls to the SMT
@@ -1429,21 +1455,26 @@ related to \jalangi{}.
 
 JSBench~\cite{Richards:2011:ACJ:2048066.2048119} is a technique for
 creating JavaScript benchmarks using record-replay mechanisms.
-JSBench captures the interaction of an web application with its
+JSBench captures the interactions of an web application with its
 surrounding execution environment.  It then creates a replayable
 packaged JavaScript benchmark which can execute in the absence of the
-surrounding environment.  JSBench captures the arguments passed and
-value returned from external function calls.  It also captures field
-accesses by external components.  However, JSBench does not capture
-all memory loads or memory loads that could potentially be modified by
-eval or un-instrumented code.  Therefore, JSBench could function
-improperly in the presence of un-instrumented code.  \jalangi{}
-alleviates this problem by maintaining shadow memory. % Another
+surrounding environment. %  JSBench captures the arguments passed and
+% value returned from external function calls.  It also captures field
+% accesses by external components.  However,
+JSBench does not capture all memory loads or memory loads that could
+potentially be modified by eval or un-instrumented code.  Therefore,
+JSBench could function improperly in the presence of un-instrumented
+code.  \jalangi{} alleviates this problem by maintaining shadow
+memory. % Another
 % important differentiator lies in the ability of \jalangi{} to handle
 % closures effectively. Most of the real world applications employ
 % closures, and closures are a frequent cause for developer agony. Since
 % \jalangi{} employes shadow memory mechanism, it has the ability to
 % support closures, unlike JSBench.
+Selective record-replay techniques have been proposed for
+Java~\cite{scarpe,Saff:2005:ATF:1101908.1101927}.  Unlike \jalangi{},
+these techniques statically identify the program locations where
+values need to be recorded.
 
 PinPlay~\cite{Patil:2010:PFD:1772954.1772958}, built on top of dynamic
 instrumentation framework PIN~\cite{Luk:2005:PBC:1065010.1065034} for
@@ -1468,10 +1499,15 @@ Ripley~\cite{Vikram:2009:RAS:1653662.1653685} replicates execution of
 a client-side JavaScript program on a server side replica to
 automatically preserve the integrity of a distributed computation.
 DoDOM~\cite{Pattabiraman:2010:DLD:1913797.1914375} records user
-interaction sequences with web applications repeatedly executes the
+interaction sequences with web applications repeatedly, executes the
 application under the captured sequence of user actions and observes
 its behavior. % Based on the observations, DoDOM extracts a set of
 % invariants on the web application's DOM structure.
+WaRR~\cite{warr} records user interactions with an web application and
+uses the recorded interaction trace to perform high-fidelity replay of
+the web application.  Contrast to these techniques, \jalangi{}
+performs selective record-replay instead of targeting full
+record-replay of an web application.
 
 The idea of shadow values in the context of x86 binaries has been
 previously proposed

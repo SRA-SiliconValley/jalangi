@@ -256,13 +256,13 @@ analyses:
   analysis in \jalangi{}.
 \item Detecting likely type inconsistencies: this dynamic analysis
   checks if an object created at a given program location can assume
-  multiple inconsistent type.  Sometimes these kind of type
+  multiple inconsistent types.  Sometimes these kind of type
   inconsistencies could point us to a potential bug in the program.
   We have noticed such issues in two SunSpider benchmark programs.
 \item Simple object allocation profiler: this dynamic analysis
   computes the number of objects created at a given allocation site
   and how often the object has been accessed.  If an allocation site
-  creates too many contant objects, then it could lead to memory
+  creates too many constant objects, then it could lead to memory
   inefficiency.  We have found such a problem in one of the web
   applications in our benchmark suite.
 \end{itemize}

@@ -56,7 +56,9 @@ literate={\$}{{\textcolor{blue}{\$}}}1
 
 
 
-\conferenceinfo{Under Submission}{Do Not Distribute}
+\conferenceinfo{ESEC/FSE}{'13, August 18-26, 2013, Saint Petersburg, Russia}
+\CopyrightYear{2013}
+\crdata{978-1-4503-2237-9/13/08}
 
 \title{Jalangi: A Tool Framework for Concolic Testing, Selective
   Record-Replay, and Dynamic Analysis of JavaScript}
@@ -99,6 +101,15 @@ Swaroop Kalasapur, Tasneem Brutch,  and Simon Gibbs\\
   reported for similar tools, such as PIN and Valgrind for x86
   binaries.
 \end{abstract}
+
+
+\vspace*{-1ex}
+\category{D.2.5}{Software Engineering}{Testing and Debugging}[symbolic
+execution, testing tools]
+\vspace*{-2ex}
+\terms{Verification}
+\vspace*{-2ex}
+\keywords{JavaScript;  Dynamic Analysis;  Concolic Testing}
 
 \section{Introduction}
 
@@ -193,15 +204,15 @@ taint information needed to support taint analysis, or it may be
 information related to actual values in symbolic execution, which may
 be provided in the form of a symbolic expression.  \jalangi{} uses
 objects of type \texttt{ConcolicValue}, to denote annotated values.
-Two fields are identified with objects of type \texttt{ConcolicValue}:
-(1) The \texttt{concrete} field is used to store the actual value; (2)
-The shadow value giving additional information about the actual value,
-is stored in the field \texttt{symbolic}.  For example, a value $v$ in
-JavaScript may be associated with its corresponding shadow value $s$,
-through replacement of $v$ with \texttt{new ConcolicValue}$(v, s)$.
-The projection $\Shadow(v)$, would similarly return the associated
-shadow value of $v$, where $v$ would otherwise return
-\texttt{undefined}.
+% Two fields are identified with objects of type \texttt{ConcolicValue}:
+% (1) The \texttt{concrete} field is used to store the actual value; (2)
+% The shadow value giving additional information about the actual value,
+% is stored in the field \texttt{symbolic}.  For example, a value $v$ in
+% JavaScript may be associated with its corresponding shadow value $s$,
+% through replacement of $v$ with \texttt{new ConcolicValue}$(v, s)$.
+% The projection $\Shadow(v)$, would similarly return the associated
+% shadow value of $v$, where $v$ would otherwise return
+% \texttt{undefined}.
 
 
 \section{Dynamic Analyses}
@@ -214,9 +225,9 @@ In \jalangi{}, we have implemented the following dynamic analyses:
   symbolic execution along a concrete execution path, generates a
   logical formula denoting a constraint on the input values, and
   solves a constraint to generate new test inputs that would execute
-  the program along previously unexplored paths.  Our implementation
-  of concolic testing supports constraints over integer, string, and
-  object types and \emph{novel type constraints.}  We introduced type
+  the program along previously unexplored paths.  Concolic testing in
+  \jalangi{} supports constraints over integer, string, and object
+  types and \emph{novel type constraints.}  We introduced type
   constraints to handle the dynamic nature of JavaScript---the type of
   an input variable could be different for different feasible
   execution paths of the program.
@@ -230,11 +241,11 @@ In \jalangi{}, we have implemented the following dynamic analyses:
 \item Tracking origins of \texttt{null} and
   \texttt{undefined}~\cite{Bond:2007:TBA:1297027.1297057}: This
   analysis records source code locations where null and undefined
-  values come into existence and reports them if they cause an error.
-  Whenever there is an error due to such literals, such as accessing
-  the field of a null value, the shadow value of the literal is
-  reported to the user.  Such a report helps the programmer to easily
-  identify the origin of the null value.
+  values originate and reports the location when an error occurs dues
+  a null or undefined.  Whenever there is an error due to such
+  literals, such as accessing the field of a null value, the shadow
+  value of the literal is reported to the user.  Such a report helps
+  the programmer to easily identify the origin of the null value.
 \item Detecting Likely Type Inconsistencies: The dynamic analysis
   checks if an object created at a given program location can assume
   multiple inconsistent type.  It computes the types of object and
@@ -275,7 +286,7 @@ In \jalangi{}, we have implemented the following dynamic analyses:
 implemented \jalangi{} in JavaScript.
 
 \begin{table*}
-\begin{minipage}{0.28\textwidth}
+\begin{minipage}{0.24\textwidth}
 \begin{tabular}{|r|}
 \hline\\
 {\scriptsize
@@ -379,7 +390,7 @@ if (typeof window === 'undefined') {
           }
         }
     }
-    J$.F(69,J$.I(typeof f1==='undefined'?J$.R(61,'f1',undefined):J$.R(61,'f1',f1)),false)(J$.T(65,12,22));
+  J$.F(69,J$.I(typeof f1==='undefined'?J$.R(61,'f1',undefined):J$.R(61,'f1',f1)),false)(J$.T(65,12,22))
   } catch (J$e) {
     throw J$e;
   } finally {
@@ -410,9 +421,11 @@ operations in JavsScript.  The selective record-replay engine of
 \texttt{instrumentCode}.  This enables us also to dynamically
 instrument any code that is created and evaluated at runtime.  For
 example, we modify any call to \texttt{eval(s)} to
-\texttt{eval(instrumentCode(s))}.  During recording phase, \jalangi{} generates a \texttt{trace} array
-which contains all recorded values needed for replay.  \jalangi{}
-serializes the \texttt{trace} array in JSON format.  
+\texttt{eval(instrumentCode(s))}.  
+% During recording phase, \jalangi{}
+% generates a \texttt{trace} array which contains all recorded values
+% needed for replay.  \jalangi{} serializes the \texttt{trace} array in
+% JSON format.
 
 \section{Performance of  jalangi}
 \label{sec:performance-jalangi}
@@ -492,33 +505,18 @@ average slowdown of 32.75X with a minimum of 1.5X and a maximum of
 \subsection{Issues Detected by JALANGI Dynamic Analyses}
 \label{sec:issu-detect-dynam}
 
-% The likely type inconsistency checker noticed that the function
-% \texttt{safe\_add(x, y)} in \texttt{crypto-sha1.js} of the SunSpider
-% benchmark suite is mostly called with both of its arguments set to number,
-% but at one location it was invoked with the second argument set to
-% \texttt{undefined}.   We believe that this could be an unintended
-% behavior.   
-
-The likely type inconsistency checker reported that the function
-\texttt{CreateP}  in \texttt{3d-cube.js} of the SunSpider
-benchmark suite is mostly called as a constructor, but at one location
-it was invoked as a function.  As result of the function call, the
+\jalangi{}'s likely type inconsistency checker found that the function
+\texttt{CreateP} in \texttt{3d-cube.js} of the SunSpider benchmark
+suite is mostly used as a constructor, but at one location it was
+called as a function.  As result of the function invocation, the
 program creates an unnecessary \texttt{V} field in the global object.
 We believe that this call is a possible programming error.
 
-% {\scriptsize
-% \begin{lstlisting}[mathescape]
-% function CreateP(X,Y,Z) {
-%   this.V = [X,Y,Z,1];
-% }
-% \end{lstlisting}
-% }
- 
-The object allocation profiler noticed that the method
+\jalangi{}'s object allocation profiler noticed that the method
 \texttt{getValue(place, \_board)} in the Annex game webapp creates a
-constant object containing at least 64 numbers thousands of times.  We
-believe that such unnecessary creation of the constant object can be
-avoided by hoisting the object creation outside the method.
+constant object thousands of times.  We believe that such unnecessary
+creation of the constant object can be avoided by hoisting the
+constant object outside the method.
 
 
 \section{Related Work}
@@ -544,34 +542,65 @@ since all the worrisome corners of JavaScript are handled.  We expect that
 \jalangi{} will facilitate future research on dynamic analysis of
 JavaScript. 
 
-% \subsubsection*{Record and replay a web application}
-% \label{sec:record-replay-web}
-
-% First start a HTTP server by running the following command. The command starts a simple Python based http server.
-
-% \begin{verbatim}
-% python -m SimpleHTTPServer \&
-% \end{verbatim}
-% Then one needs to manually instrument the JavaScript files that
-% require analysis. The \texttt{index.html} also needs to edited so that
-% it loads the \jalangi{} library files and the instrumented files.
-
-% \begin{verbatim}
-% node src/js/instrument/esnstrument.js tests/tizen/annex/js/annex.js
-% \end{verbatim}
-% Finally launch the jalangi server and the html page by running
-
-% \begin{verbatim}
-% ./scripts/rrserver http://127.0.0.1:8000/tests/tizen/annex/index_jalangi_.html
-% \end{verbatim}
-
-% You can now play the game for sometime. Try two moves. This will
-% generate a jalangi\_trace1 in the current directory. You can run a
-% dynamic analysis on the trace file by issuing the following commands.
-
 {\small
-\bibliographystyle{abbrv}
-\bibliography{jalangi}
+\begin{thebibliography}{1}
+\vspace{1ex}
+\bibitem{Bond:2007:TBA:1297027.1297057}
+M.~D. Bond, N.~Nethercote, S.~W. Kent, S.~Z. Guyer, and K.~S. McKinley.
+\newblock Tracking bad apples: reporting the origin of null and undefined value
+  errors.
+\newblock In {\em ACM SIGPLAN conference on Object-oriented programming systems
+  and applications}, OOPSLA '07, pages 405--422, 2007.
+
+\bibitem{dart}
+P.~Godefroid, N.~Klarlund, and K.~Sen.
+\newblock {{DART}: Directed Automated Random Testing}.
+\newblock In {\em PLDI'05}, June 2005.
+
+\bibitem{Mickens:2010:MDC:1855711.1855722}
+J.~Mickens, J.~Elson, and J.~Howell.
+\newblock Mugshot: deterministic capture and replay for JavaScript
+  applications.
+\newblock In {\em 7th USENIX conference on Networked systems design and
+  implementation}, NSDI'10, pages 11--11, 2010.
+
+\bibitem{songndss05}
+J.~Newsome and D.~Song.
+\newblock Dynamic taint analysis for automatic detection, analysis, and
+  signature generation of exploits on commodity software.
+\newblock In {\em 12th Annual Network and Distributed System Security
+  Symposium}, 2005.
+
+\bibitem{Richards:2011:ACJ:2048066.2048119}
+G.~Richards, A.~Gal, B.~Eich, and J.~Vitek.
+\newblock Automated construction of JavaScript benchmarks.
+\newblock In {\em ACM international conference on Object oriented programming
+  systems languages and applications}, OOPSLA '11, pages 677--694. ACM, 2011.
+
+\bibitem{SBGKfse13}
+K.~Sen, S.~Kalasapur, T.~Brutch, and S.~Gibbs.
+\newblock Jalangi: A selective record-replay and dynamic analysis framework for
+  JavaScript.
+\newblock In {\em ESEC/FSE'13}, August 2013.
+\newblock To appear.
+
+\bibitem{cute}
+K.~Sen, D.~Marinov, and G.~Agha.
+\newblock {CUTE}: A concolic unit testing engine for {C}.
+\newblock In {\em ESEC/FSE'05}, Sep 2005.
+
+\bibitem{Vikram:2009:RAS:1653662.1653685}
+K.~Vikram, A.~Prateek, and B.~Livshits.
+\newblock Ripley: automatically securing web 2.0 applications through
+  replicated execution.
+\newblock In {\em 16th ACM conference on Computer and communications security},
+  pages 173--186. ACM, 2009.
+
+\end{thebibliography}
+
+
+% \bibliographystyle{abbrv}
+% \bibliography{jalangi}
 }
 \end{document}
 

@@ -105,10 +105,13 @@ Swaroop Kalasapur, Tasneem Brutch, and Simon Gibbs\\
   applicable to other dynamic languages.
 \end{abstract}
 
-\category{D.2.5}{Software Engineering}{Testing and Debugging}
-
-\keywords{JavaScript;  Dynamic Analysis;  Concolic Testing; Record and
-Replay}
+\vspace*{-1ex}
+\category{D.2.5}{Software Engineering}{Testing and Debugging}[symbolic
+execution, testing tools]
+\vspace*{-2ex}
+\terms{Verification}
+\vspace*{-2ex}
+\keywords{JavaScript;  Dynamic Analysis;  Concolic Testing}
 
 \section{Introduction}
 
@@ -116,7 +119,7 @@ JavaScript is the most popular programming language for client-side
 web programming. Advances in browser technologies and JavaScript
 engines in the recent years have fueled the use of JavaScript in Rich
 Internet Applications, and several mobile platforms including Android,
-iOS, Tizen, Windows8, Blackberry, Gnome, support applications written
+iOS, Tizen, Windows 8, Blackberry, Firefox OS, support applications written
 in HTML5/JavaScript. A key reason behind the popularity of JavaScript
 programs is that they are portable. Once written, JavaScript based
 applications can be executed on any platform that has a web browser
@@ -132,7 +135,7 @@ it hard to analyze it
 statically~\cite{Richards:2010:ADB:1806596.1806598,Wei:2012:BAJ:2384716.2384758,Ratanaworabhan:2010:JCB:1863166.1863169}.
 
 In this paper, we present a dynamic analysis framework, called
-\jalangi{}, for Javacript.  The framework provides a few useful
+\jalangi{}, for JavaScript.  The framework provides a few useful
 abstractions and an API that significantly simplifies implementation
 of dynamic analyses for JavaScript.  The framework works through
 source code instrumentation and allows implementation of various
@@ -169,10 +172,8 @@ techniques in \jalangi{}.
   browser landscape---we do not need to upgrade or rebuild our
   framework whenever there is an update of the underlying browser.  We
   achieve browser independence through selective source
-  instrumentation.  % We instrument JavaScript source code selected by
-  % the user of \jalangi{}.
-  \emph{An attractive feature of \jalangi{} is that it can operate
-    even if certain source files are not instrumented.}
+  instrumentation.  \emph{An attractive feature of \jalangi{} is that
+    it can operate even if certain source files are not instrumented.}
 \item We wanted a framework where dynamic analysis of an actual
   execution on a browser (e.g. a mobile browser) can be performed on a
   desktop or a cloud machine.  This is important when we want to
@@ -183,13 +184,10 @@ techniques in \jalangi{}.
   implemented in a browser without significantly modifying the
   browser. \emph{We address this design constraint through a two-phase
     analysis framework.}  In the first phase, an instrumented
-  JavaScript application is executed and recorded on a user selected platform
-  (e.g. mobile chrome running on Android).  % The execution records
-  % minimal amount of information necessary to replay the execution on a
-  % different machine and sends the information to a server (or a
-  % desktop computer that is running an IDE).  
-  In the second phase, the recorded data is utilized to perform a user
-  specified dynamic analysis on a desktop environment.
+  JavaScript application is executed and recorded on a user selected
+  platform (e.g. mobile Chrome running on Android).  In the second
+  phase, the recorded data is utilized to perform a user specified
+  dynamic analysis on a desktop environment.
 \item A dynamic analyses framework should allow easy implementation of
   a dynamic analysis.  Previous
   research~\cite{Seward:2005:UVD:1247360.1247362,Nethercote:2007:VFH:1250734.1250746,hobbs,Bond:2007:TBA:1297027.1297057,songndss05}
@@ -197,7 +195,7 @@ techniques in \jalangi{}.
   detection techniques have shown that support for shadow values and
   shadow execution could significantly simplify implementation of
   dynamic analyses techniques.  A straight-forward way to implement
-  shadow value would be to replace any value, say \texttt{val}, used
+  shadow values would be to replace any value, say \texttt{val}, used
   in a JavaScript execution by an object, called \emph{annotated}
   value, \texttt{\{actual: val, shadow: "tainted"\}}, where the field
   \texttt{actual} stores the actual value and the field
@@ -205,21 +203,17 @@ techniques in \jalangi{}.
   To accomodate such replacements, we modify every operation (e.g. +,
   *, field access) performed by the JavaScript execution because every
   value, whether primitive or not, could now be wrapped by an object.
-  The modified operations first retrieve the actual values from
-  the annotated values representing the operands of the operation and
-  then perform the operation on the actual values to compute the
-  result of the operation.  % \jalangi{}
-  % then calls a user-defined analysis specific function to create an
-  % annotated value from the actual result of the operation.  The
-  % annotated value is then returned by the modified operation.
-  This simple implementation would work if we can modify every
-  operation performed by a JavaScript engine.  Unfortunately,
-  \jalangi{} instruments only user-specified code. Moreover,
-  \jalangi{} cannot instrument native code.  Therefore, if we call
-  \texttt{array.pop()}, where \texttt{array} is an annotated value and
-  \texttt{pop} is a native function, we will get an exception.
-  \jalangi{} alleviates this problem by using the selective
-  record-replay engine: it only records the execution of the
+  The modified operations first retrieve the actual values from the
+  annotated values representing the operands of the operation and then
+  perform the operation on the actual values to compute the result of
+  the operation.  This simple implementation would work if we could
+  modify every operation performed by a JavaScript engine.
+  Unfortunately, \jalangi{} instruments only user-specified
+  code. Moreover, \jalangi{} cannot instrument native code.
+  Therefore, if we call \texttt{array.pop()}, where \texttt{array} is
+  an annotated value and \texttt{pop} is a native function, we will
+  get an exception.  \jalangi{} alleviates this problem by using the
+  selective record-replay engine: it only records the execution of the
   instrumented code and replays the instrumented code.  Any code that
   is not and can not be instrumented, including native code, is not
   executed during the replay phase.  Since \jalangi{} supports shadow
@@ -289,7 +283,7 @@ language.  The syntax of this language is shown below.
 {\scriptsize
 \[
 \begin{array}{rll}
-v, v1, v2, & v3, \ldots \mbox{ are variable identifiers}\\
+v, v1, v2, &  \ldots \mbox{ are variable identifiers}\\
 f, f1, f2, & \ldots \mbox{ are field identifiers}\\
 p, p1, p2, & \ldots \mbox{ are function parameter identifiers}\\
 \dsl{op} & \mbox{ are operators such as +, -, *, ...} \\
@@ -356,7 +350,7 @@ two key advantages:
   engine, such as node.js or a JavaScript engine embedded in an IDE.
   The replay does not require access to any browser-specific native
   JavaScript libraries such as libraries for manipulating the DOM.
-\item During replay, since we avoid the execution un-instrumented code
+\item During replay, since we avoid execution of un-instrumented code
   and native code, we can easily implement various dynamic analysis
   that depend on shadow values and shadow executions. 
 \end{enumerate}
@@ -436,12 +430,6 @@ values are available during the replay phase.
 & & v1' = v1 = \Sync(\\
 & & \quad\dsl{instrCall}(v2, v3, v4, \ldots))\\
 & & \\
-%     v1 = \dsl{new}(v2, v3,  \ldots) & \Longrightarrow & v2' = v2 =
-%     \Sync(v2, v2')\\
-% & & v3' = v3 = \Sync(v3, v3')\\
-% & & \vdots \\
-% & & v1' = v1 = \Sync(\dsl{I\_new}(v2, v3, \ldots))\\
-% & & \\
   \{f1\colon v1, \ldots\} & \Longrightarrow &\{f1\colon v1' = v1 =\\
 & &\quad  \Sync(v1, v1'), \ldots\} \\
 & & \\
@@ -618,7 +606,7 @@ handle objects and functions, $\Sync$ calls \texttt{trace[i] =
   getRecord(v1)}, where \texttt{getRecord(v1)} returns an object whose
 \texttt{type} field is set to the type of \texttt{v1} and \texttt{val}
 is set to \texttt{v1} if \texttt{v1} is of primitive type.  If type of
-\texttt{v1} is non-null object or function, then we use the unique
+\texttt{v1} is a non-null object or function, then we use the unique
 numerical id of the object or function as its value to be recorded.
 The unique numerical id of a non-null object or function is stored in
 its hidden field \texttt{*id*}.  If the object or function has no
@@ -884,7 +872,7 @@ M:  result = tv
 \end{figure}
 
 The instrumentation assumes that the global variable $\analysis$ could
-point to an user-defined analysis object during the replay phase.
+point to a user-defined analysis object during the replay phase.
 After the execution of a JavaScript statement, the corresponding
 method in the $\analysis$ object is called to perform a user-specific
 analysis.  For example, consider the statement $v1 = v2\ \dsl{op}\
@@ -944,7 +932,7 @@ anlys = {
 }
 \end{lstlisting}
 }
-  \caption{Tracking Origins of undefined and null}
+  \caption{Tracking origins of undefined and null}
   \label{fig:lib3}
 \end{figure}
 
@@ -960,7 +948,7 @@ where the instrumentation was inserted by \jalangi{}.
 The above example shows how one could implement a dynamic analyses
 using \jalangi{}.  In our framework, we have implemented full concolic
 testing and taint analysis using shadow execution.  We believe that
-many other dynamic analyses could be implemented easily using
+many other dynamic analyses can be implemented easily using
 \jalangi{}.
 
 \section{Example}
@@ -1048,8 +1036,8 @@ framework is available under Apache 2.0 open-source license at
 implementation, we do not transform JavaScript into the three-address
 code described in Section~\ref{sec:technical-details}.  Rather we
 modify the AST in place by replacing each operation with an equivalent
-function call.  We perform instrumentation manually; in future, we
-plan to support automated instrumentation using a proxy.
+function call.  We perform instrumentation ahead-of-time; in future, we
+plan to support load-time instrumentation using a proxy.
 
 \subsubsection*{Handling \texttt{eval}}
 \label{sec:handling-texttteval}
@@ -1100,7 +1088,7 @@ generated input.
 In our implementation of concolic testing, we handle linear integer
 constraints and string constraints involving concatenation, length,
 and regular expression matching.  We also handle type constraints and
-a limited set of constraints over pointers.  For example, if the type
+a limited set of constraints over references.  For example, if the type
 of an input variable is unknown, we infer the possible types of the
 variable by observing the operations performed on the variable.
 
@@ -1144,13 +1132,13 @@ programs.
 
 This dynamic analysis records the number of objects created at a given
 allocation site and how often the fields of the objects created at a
-given allocation site has been accessed.  The analysis also tracks if
+given allocation site have been accessed.  The analysis also tracks if
 the objects' fields have been updated, that is the analysis tracks if
 the objects created at a given allocation site are read-only or a
 constant.  The analysis reports the maximum and average difference
 between the object creation time and the most recent access time of
-the object .  Time is reported in terms of the number of instructions
-being executed.  If an allocation site creates too many contant
+the object.  Time is reported in terms of the number of instructions
+being executed.  If an allocation site creates too many constant
 objects, then it could lead to performance issues.  We have found such
 an issue in one of the web applications in our benchmark suite.
 
@@ -1270,7 +1258,7 @@ shopping& 5397 & 1144 & 22.79 & - & - & - & - \\
 \hline 
 \end{tabular}
 \end{center}}
-\caption{Results: ``Records'' column reports number of values of recorded,
+\caption{Results: ``Records'' column reports number of recorded values,
 ``fLoads'' reports \% of loads that were recorded, ``SlowR'' reports
 slowdown during recording compared to normal execution.}
 \label{tab:results}
@@ -1278,7 +1266,7 @@ slowdown during recording compared to normal execution.}
 \begin{minipage}{0.38\textwidth}
 \begin{tabular}{|r|}
 \hline\\
-{\scriptsize
+{\tiny
 \begin{lstlisting}[mathescape]
 function isValidQuery(str)
 {
@@ -1333,13 +1321,10 @@ the replay phase of these benchmark programs, we ran three dynamic
 analyses: no analysis (denoted by \emph{empty}), tracking origins of
 null and undefined (denoted by \emph{track}), and a taint analysis
 (denoted by \emph{taint}).  We report the overhead associated with the
-recording and replay phases in Table~\ref{tab:results}.  % We also
-% report the number of values we recorded for each benchmark program and
-% the number of values that were loaded from the memory during the
-% execution. 
-The experiments were performed on a laptop with 2.3 GHz Intel Core i7
-and 8 GB RAM.  We ran the web apps on Chrome 25 and performed the
-replay executions on node.js 0.8.14.
+recording and replay phases in Table~\ref{tab:results}.  The
+experiments were performed on a laptop with 2.3 GHz Intel Core i7 and
+8 GB RAM.  We ran the web apps on Chrome 25 and performed the replay
+executions on node.js 0.8.14.
 
 The SunSpider benchmarks have relatively small number of lines of
 code, but they perform CPU intensive computations.  The web apps
@@ -1373,11 +1358,6 @@ the reduction in percentage.  We noticed an average reduction of
 native calls and performing frequent manipulation of the DOM resulted
 in large recoding of the memory loads.
 
-% We performed concolic testing on a number of small benchmarks
-% involving integers, strings, and type constraints.  The slowdown
-% noticed in these benchmarks was mostly determined by the cost of
-% invoking the SMT solver.
-
 Based on our evaluation, we are optimistic about the utility of
 \jalangi{} as a tool framework aiding web developers.  We believe that
 the utility offered by \jalangi{} is much more valuable compared to
@@ -1391,22 +1371,19 @@ to users.
 \label{sec:conc-test-small}
 
 We ran concolic testing on several programs ported from a concolic
-testing engine for Java.  Even though concolic testing is not the focus of
-this paper, we report the results of running concolic testing on a
-small program (shown in Table~\ref{tab:conc}), which has complex
+testing engine for Java.  Even though concolic testing is not the
+focus of this paper, we report the results of running concolic testing
+on a small program (shown in Table~\ref{tab:conc}), which has complex
 string operations involving integers, string length, regular
 expression matching, and concatenation.  This program is a slight
 variant of the program used as a case study
 in~\cite{Bjorner:2009:PFA:1532891.1532927}.  In concolic testing, we
 only use the theory of linear integers of CVC3~\cite{BT07} and model
-string operations using this theory.  % For this program, we generated 9
-% input strings corresponding to the 9 distinct execution paths of the
-% program.
-We noticed an average slowdown of 145X during concolic
-execution with a maximum slowdown of 613X and a minimum slowdown of
-1.4X.  The recording phases showed a slowdown of 1.2X.  The slowdown
-in the concolic execution phase is mostly due to the calls to the SMT
-solver.
+string operations using this theory.  We noticed an average slowdown
+of 145X during concolic execution with a maximum slowdown of 613X and
+a minimum slowdown of 1.4X.  The recording phases showed a slowdown of
+1.2X.  The slowdown in the concolic execution phase is mostly due to
+the calls to the SMT solver.
 
 \subsection{Issues Detected by Dynamic Analyses}
 \label{sec:issu-detect-dynam}
@@ -1460,23 +1437,15 @@ related to \jalangi{}.
 
 JSBench~\cite{Richards:2011:ACJ:2048066.2048119} is a technique for
 creating JavaScript benchmarks using record-replay mechanisms.
-JSBench captures the interactions of an web application with its
+JSBench captures the interactions of a web application with its
 surrounding execution environment.  It then creates a replayable
 packaged JavaScript benchmark which can execute in the absence of the
-surrounding environment. %  JSBench captures the arguments passed and
-% value returned from external function calls.  It also captures field
-% accesses by external components.  However,
-JSBench does not capture all memory loads or memory loads that could
-potentially be modified by eval or un-instrumented code.  Therefore,
-JSBench could function improperly in the presence of un-instrumented
-code.  \jalangi{} alleviates this problem by maintaining shadow
-memory. % Another
-% important differentiator lies in the ability of \jalangi{} to handle
-% closures effectively. Most of the real world applications employ
-% closures, and closures are a frequent cause for developer agony. Since
-% \jalangi{} employes shadow memory mechanism, it has the ability to
-% support closures, unlike JSBench.
-Selective record-replay techniques have been proposed for
+surrounding environment.  JSBench does not capture all memory loads or
+memory loads that could potentially be modified by eval or
+un-instrumented code.  Therefore, JSBench could function improperly in
+the presence of un-instrumented code.  \jalangi{} alleviates this
+problem by maintaining shadow memory.  Selective record-replay
+techniques have been proposed for
 Java~\cite{scarpe,Saff:2005:ATF:1101908.1101927}.  Unlike \jalangi{},
 these techniques statically identify the program locations where
 values need to be recorded.
@@ -1487,14 +1456,11 @@ x86, uses ideas similar to shadow
 memory~\cite{Narayanasamy:2006:ALO:1140277.1140303} to reduce the
 number of memory logs.  PinPlay keeps shadow memory, which they call
 UserMem, in sync with the actual memory at the byte and word level.
-%This requires them to keep track of entire memory used by the program.
 In JavaScript it is not possible to keep track of memory at byte and
 word level.  \jalangi{} uses a novel technique based on unique
 identifiers to record and sync objects and functions and uses mock
 objects to mimic behaviors of objects created outside instrumented
 code.  
-% Since \jalangi{} does not track memory at byte or word level,
-% \jalangi{} is more efficient than PinPlay.
 
 Mugshot~\cite{Mickens:2010:MDC:1855711.1855722} is another
 record-replay system for JavaScript that captures all events in a
@@ -1508,11 +1474,11 @@ interaction sequences with web applications repeatedly, executes the
 application under the captured sequence of user actions and observes
 its behavior. % Based on the observations, DoDOM extracts a set of
 % invariants on the web application's DOM structure.
-WaRR~\cite{warr} records user interactions with an web application and
+WaRR~\cite{warr} records user interactions with a web application and
 uses the recorded interaction trace to perform high-fidelity replay of
-the web application.  Contrast to these techniques, \jalangi{}
+the web application.  In contrast to these techniques, \jalangi{}
 performs selective record-replay instead of targeting full
-record-replay of an web application.
+record-replay of a web application.
 
 The idea of shadow values in the context of x86 binaries has been
 previously proposed
@@ -1527,7 +1493,7 @@ dynamic nature of JavaScript.
 In the recent years, several
 static~\cite{Yu:2007:JIB:1190216.1190252,Jensen:2010:IAL:1882094.1882114,Anderson:2005:TTI:2144892.2144917,manuicse13,Wei:2012:BAJ:2384716.2384758,Sridharan:2012:CTP:2367163.2367191}
 and dynamic
-analyses~\cite{Petrov:2012:RDW:2254064.2254095,Richards:2010:ADB:1806596.1806598,Artzi:2011:FAT:1985793.1985871,Mesbah:2009:IAT:1555001.1555037}
+analysis~\cite{Petrov:2012:RDW:2254064.2254095,Richards:2010:ADB:1806596.1806598,Artzi:2011:FAT:1985793.1985871,Mesbah:2009:IAT:1555001.1555037}
 tools for JavaScript have been proposed.  Richards et
 al.~\cite{Richards:2010:ADB:1806596.1806598} observed that dynamic
 features are widely used in JavaScript programs.  These dynamic
@@ -1540,7 +1506,7 @@ race detection~\cite{Petrov:2012:RDW:2254064.2254095}, and security
 analysis~\cite{Vikram:2009:RAS:1653662.1653685}.  However, there
 exists no dynamic analysis framework for JavaScript similar to
 valgrind~\cite{Nethercote:2007:VFH:1250734.1250746},
-PIN~\cite{Luk:2005:PBC:1065010.1065034},
+PIN~\cite{Luk:2005:PBC:1065010.1065034}, or
 DynamoRIO~\cite{Bruening:2003:IAD:776261.776290} for x86.  \jalangi{}
 tries to fill this gap by providing a dynamic analysis framework in
 which one could easily prototype and build sophisticated
@@ -1766,7 +1732,7 @@ S.~Wei and B.~G. Ryder.
 
 \bibitem{Yu:2007:JIB:1190216.1190252}
 D.~Yu, A.~Chander, N.~Islam, and I.~Serikov.
-\newblock Javascript instrumentation for browser security.
+\newblock JavaScript instrumentation for browser security.
 \newblock In {\em ACM symposium on Principles of programming languages}, POPL
   '07, pages 237--249, 2007.
 
@@ -1784,5 +1750,3 @@ Q.~Zhao, D.~Bruening, and S.~Amarasinghe.
 % }
 \end{document}
 
-%UserMem is always updated with the
-%logged value to avoid duplicate logging in the future.

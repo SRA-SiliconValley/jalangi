@@ -1260,7 +1260,8 @@ shopping& 5397 & 1144 & 22.79 & - & - & - & - \\
 \end{center}}
 \caption{Results: ``Records'' column reports number of recorded values,
 ``fLoads'' reports \% of loads that were recorded, ``SlowR'' reports
-slowdown during recording compared to normal execution.}
+slowdown during recording compared to normal execution. \texttt{time}
+system command is used to measure runtime.}
 \label{tab:results}
 \end{minipage}
 \begin{minipage}{0.38\textwidth}
@@ -1324,7 +1325,8 @@ null and undefined (denoted by \emph{track}), and a taint analysis
 recording and replay phases in Table~\ref{tab:results}.  The
 experiments were performed on a laptop with 2.3 GHz Intel Core i7 and
 8 GB RAM.  We ran the web apps on Chrome 25 and performed the replay
-executions on node.js 0.8.14.
+executions on node.js 0.8.14.  We use \texttt{time} system command to
+measure runtime.
 
 The SunSpider benchmarks have relatively small number of lines of
 code, but they perform CPU intensive computations.  The web apps

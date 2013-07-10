@@ -1,0 +1,24 @@
+time scripts/purepopl analyses/puresymbolic/Single2 tests/compos/intBool 1000
+time scripts/purepopl analyses/puresymbolic/Multiple tests/compos/intBool 0
+time scripts/purepopl analyses/puresymbolic/Multiple tests/compos/qsort 0
+time scripts/purepopl analyses/puresymbolic/Single2 tests/compos/qsort 1000
+time scripts/purepopl analyses/puresymbolic/Multiple tests/compos/findMax 0
+time scripts/purepopl analyses/puresymbolic/Single2 tests/compos/findMax 1000
+time scripts/purepopl analyses/puresymbolic/Multiple tests/compos/indexOf 0
+time scripts/purepopl analyses/puresymbolic/Single2 tests/compos/indexOf 1000
+time scripts/purepopl analyses/puresymbolic/Multiple tests/compos/indexOfFull 0
+#time scripts/purepopl analyses/puresymbolic/Single2 tests/compos/indexOfFull 1000
+time scripts/purepopl analyses/puresymbolic/Multiple tests/compos/complexLastIndexOf 0
+time scripts/purepopl analyses/puresymbolic/Single2 tests/compos/complexLastIndexOf 1000
+time scripts/purepopl analyses/puresymbolic/Multiple tests/compos/complexLastIndexOfFull 0
+#time scripts/purepopl analyses/puresymbolic/Single2 tests/compos/complexLastIndexOfFull 1000
+time scripts/purepopl analyses/puresymbolic/Multiple tests/compos/substrTest 0
+time scripts/concolic tests/compos/substrTest 1000
+time scripts/purepopl analyses/puresymbolic/Multiple tests/compos/substrTestFull 0
+time scripts/concolic tests/compos/substrTestFull 1000
+time scripts/purepopl analyses/puresymbolic/Multiple tests/compos/symbolicArrayIndex 0
+time scripts/purepopl analyses/puresymbolic/Single2 tests/compos/symbolicArrayIndex 1000
+time scripts/purepopl analyses/puresymbolic/Multiple tests/compos/rbTree 0
+time scripts/purepopl analyses/puresymbolic/Single2 tests/compos/rbTree 1000
+time scripts/purepopl analyses/puresymbolic/Multiple tests/compos/linkedList 0
+time scripts/purepopl analyses/puresymbolic/Single2 tests/compos/linkedList 1000

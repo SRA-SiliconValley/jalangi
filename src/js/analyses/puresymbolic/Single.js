@@ -238,7 +238,8 @@
         }
 
         if (warn) {
-            console.log("Warning: concretizing a symbolic value "+val);
+            console.log("/");
+            //console.log("Warning: concretizing a symbolic value "+val);
         }
         var concrete = simplify(val);
 

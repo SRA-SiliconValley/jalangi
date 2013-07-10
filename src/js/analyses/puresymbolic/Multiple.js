@@ -348,7 +348,7 @@
         }
 
         if (ret2) {
-            console.log("backtrack " + getIIDInfo(iid));
+            //console.log("backtrack " + getIIDInfo(iid));
         }
         pc.resetPC(undefined);
         return ret2;
@@ -557,7 +557,7 @@
 //            ret2 = pc.generateInputs(true);
         }
         if (ret2) {
-            console.log("backtrack " + getIIDInfo(iid));
+            //console.log("backtrack " + getIIDInfo(iid));
         }
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);

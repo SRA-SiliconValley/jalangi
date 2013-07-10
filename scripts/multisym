@@ -38,8 +38,8 @@ $ANALYSIS_SCRIPT tests/unit/qsort 28
 $ANALYSIS_SCRIPT tests/unit/compos1 4
 $ANALYSIS_SCRIPT tests/unit/compos2 4
 $ANALYSIS_SCRIPT tests/unit/compos3 8
-$ANALYSIS_SCRIPT tests/unit/compos4 3
-$ANALYSIS_SCRIPT tests/unit/compos5 5
+#$ANALYSIS_SCRIPT tests/unit/compos4 3
+#$ANALYSIS_SCRIPT tests/unit/compos5 5
 $ANALYSIS_SCRIPT tests/unit/compos6 1
 $ANALYSIS_SCRIPT tests/unit/testme 7
 $ANALYSIS_SCRIPT tests/unit/testme2 2

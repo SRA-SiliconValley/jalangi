@@ -311,7 +311,7 @@
             } else if (makeConcrete(val, true)) {
                 if (tmp = getSolution(val, false)) {
                     setNext({done:false, branch:true, solution: tmp});
-                    console.log("Solution (else) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(val));
+                    //console.log("Solution (else) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(val));
                 } else {
                     setNext({done:true, branch:true, solution: tmp});
                 }
@@ -354,10 +354,10 @@
             if (isSatisfiable(falseBranch)) {
                 if (tmp = getSolution(trueBranch, true)) {
                     setNext({done:false, branch:false, solution: tmp, pc: trueBranch, lastVal: lastVal});
-                    console.log("At "+getIIDInfo(iid)+" solution (then) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(trueBranch));
+                    //console.log("At "+getIIDInfo(iid)+" solution (then) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(trueBranch));
                 } else {
                     setNext({done:true, branch:false, solution: null, pc: null, lastVal: lastVal});
-                    console.log("At "+getIIDInfo(iid)+" no solution (then) for pc = "+getFormulaFromBDD(trueBranch));
+                    //console.log("At "+getIIDInfo(iid)+" no solution (then) for pc = "+getFormulaFromBDD(trueBranch));
 
                 }
                 ret = false;
@@ -365,10 +365,10 @@
             } else if (isSatisfiable(trueBranch)) {
                 if (tmp = getSolution(falseBranch, true)) {
                     setNext({done:false, branch:true, solution: tmp, pc: falseBranch, lastVal: lastVal});
-                    console.log("At "+getIIDInfo(iid)+" solution (else) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(falseBranch));
+                    //console.log("At "+getIIDInfo(iid)+" solution (else) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(falseBranch));
                 } else {
                     setNext({done:true, branch:true, solution: null, pc: null, lastVal: lastVal});
-                    console.log("At "+getIIDInfo(iid)+" no solution (else) for pc = "+getFormulaFromBDD(falseBranch));
+                    //console.log("At "+getIIDInfo(iid)+" no solution (else) for pc = "+getFormulaFromBDD(falseBranch));
                 }
                 ret = true;
                 addAxiom(trueBranch, true);
@@ -384,7 +384,8 @@
             return val;
         }
 
-        console.log("Warning: concretizing a symbolic value "+val);
+        console.log("/");
+        //console.log("Warning: concretizing a symbolic value "+val);
 
         var concrete = makeConcrete(val, true);
         if (typeof concrete === 'boolean') {
@@ -418,12 +419,12 @@
         updateSolution();
         var ret = pathIndex.length > 0;
         if (ret || forceWrite) {
-            console.log("Writing the input "+JSON.stringify(solution));
+            //console.log("Writing the input "+JSON.stringify(solution));
             solver.writeInputs(solution, []);
             //console.log("-------------");
             //console.log("nLiterals "+literalToFormulas.length+" "+JSON.stringify(literalToFormulas));
         } else {
-            console.log("Not writing the input "+JSON.stringify(solution));
+            //console.log("Not writing the input "+JSON.stringify(solution));
         }
         return ret;
     }

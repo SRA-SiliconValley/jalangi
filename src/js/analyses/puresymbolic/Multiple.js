@@ -340,10 +340,11 @@
     function Sr(iid) {
         scriptCount--;
         var ret2, first = pc.isFirst();
-        if (!first || scriptCount === 0) {
-            ret2 = pc.generateInputs();
-        } else {
+        if (scriptCount === 0) {
             ret2 = pc.generateInputs(true);
+        } else {
+            ret2 = pc.generateInputs();
+//            ret2 = pc.generateInputs(true);
         }
 
         if (ret2) {
@@ -552,14 +553,15 @@
         if (!first) {
             ret2 = pc.generateInputs();
         } else {
-            ret2 = pc.generateInputs(true);
+            ret2 = pc.generateInputs();
+//            ret2 = pc.generateInputs(true);
         }
         if (ret2) {
             console.log("backtrack " + getIIDInfo(iid));
         }
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
-        pc.resetPC(returnVal, !ret2);
+        pc.resetPC(returnVal);
         return ret2;
     }
 

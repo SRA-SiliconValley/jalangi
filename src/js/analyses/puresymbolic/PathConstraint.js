@@ -234,11 +234,13 @@
             concrete = f;
         }
         if (concrete === SymbolicBool.true) {
+            //console.log("Current solution loc 1 "+JSON.stringify(solution));
             return;
         } else if (isSymbolic(concrete)) {
             var tmp = solver.generateInputs(concrete);
             if (tmp) {
                 solution = combine(solution, tmp);
+                //console.log("Current solution loc 2 "+JSON.stringify(solution));
             } else {
                 throw new Error("Not reachable");
             }
@@ -398,7 +400,7 @@
     }
 
 
-    function generateInputs(noWrite) {
+    function generateInputs(forceWrite) {
         var elem;
 
         while(pathIndex.length > 0) {
@@ -414,13 +416,16 @@
         fs.writeFileSync(PATH_FILE_NAME,JSON.stringify(pathIndex),"utf8");
 
         updateSolution();
-        if (!noWrite) {
+        var ret = pathIndex.length > 0;
+        if (ret || forceWrite) {
             console.log("Writing the input "+JSON.stringify(solution));
             solver.writeInputs(solution, []);
             //console.log("-------------");
             //console.log("nLiterals "+literalToFormulas.length+" "+JSON.stringify(literalToFormulas));
+        } else {
+            console.log("Not writing the input "+JSON.stringify(solution));
         }
-        return pathIndex.length > 0;
+        return ret;
     }
 
     sandbox.addAxiom = addAxiom;

@@ -15,7 +15,7 @@
 # Author: Koushik Sen
 
 
-cd jalangi_tmp
+cd jalangi_tmp 2>&1
 
 if [ "$USE_NODE_COVER" == "true" ]
 then

@@ -40,14 +40,14 @@ function swap(arr, i, j) {
 }
 
 var arr = [];
-
+var N = 10
 
 function main() {
-    for(var i=0; i<4; i++) {
+    for(var i=0; i<N; i++) {
         arr[i] = J$.readInput(i);
     }
     var i, maxm = arr[0];
-    for(i=1; i<4; i++) {
+    for(i=1; i<N; i++) {
         maxm = max(maxm, arr[i]);
     }
 }

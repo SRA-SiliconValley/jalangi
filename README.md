@@ -18,6 +18,9 @@ An evaluation of Jalangi on the SunSpider benchmark suite and on five web applic
 Jalangi has an average slowdown of 26X during recording and 30X slowdown during replay and analysis. The slowdowns are comparable with slowdowns reported for similar
 tools, such as PIN and Valgrind for x86 binaries.
 
+A demo of Jalangi integrated with the Tizen IDE is available at http://srl.cs.berkeley.edu/~ksen/jalangi.html.  Note that the IDE plugin is not open-source.
+Slides are available at http://srl.cs.berkeley.edu/~ksen/slides/jalangi-jstools13.pdf and
+our paper on Jalangi is available at http://srl.cs.berkeley.edu/~ksen/papers/jalangi.pdf.
 
 ### Requirements
 

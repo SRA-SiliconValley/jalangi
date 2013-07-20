@@ -64,7 +64,7 @@ Run a simple heap profiler on the sunspider benchmarks located under tests/sunsp
 
 Record an execution of tests/unit/qsort.js and create jalangi_trace.html which when loaded in a browser replays the execution.
 
-    ./scripts/browserReplay tests/unit/qsort; path-to-chrome-browser jalangi_trace1.html
+    ./scripts/browserReplay tests/unit/qsort; path-to-chrome-browser jalangi_trace.html
 
 
 ### Concolic testing

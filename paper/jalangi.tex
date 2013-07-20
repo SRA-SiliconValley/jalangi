@@ -9,8 +9,8 @@
 \usepackage{multirow}
 \usepackage{url}
 
-\floatstyle{boxed}
-\restylefloat{figure}
+% \floatstyle{boxed}
+% \restylefloat{figure}
 \setlength{\floatsep}{0pt}
 \renewcommand{\topfraction}{0.95}
 \renewcommand{\textfraction}{0.05}
@@ -485,11 +485,11 @@ transformations:
   recording phase was not recorded and returns the recorded value
   otherwise.  This ensures that in the replay phase, \jalangi{} gets
   the exact value that is loaded during the recording phase.
-\item We replace $\dsl{call}(v2, v3, v4, \ldots)$ by
-  $\Sync(\dsl{instrCall}(v2, v3, v4, \ldots))$. During the replay
-  phase, function $\dsl{instrCall}$ invokes $\dsl{call}(v2, v3, v4,
-  \ldots)$ if function $v2$ is instrumented.  Otherwise, it explicitly
-  calls any instrumented function that is invoked while executing the
+\item $\dsl{call}(v2, v3, v4, \ldots)$ is replaced by
+  $\Sync$ $( \dsl{instrCall}$ $ (v2, v3, v4, \ldots))$. During replay,
+  function $\dsl{instrCall}$ invokes $\dsl{call}(v2, v3, v4, \ldots)$
+  if function $v2$ is instrumented.  Otherwise, it explicitly calls
+  any instrumented function that is invoked while executing the
   un-instrumented or native function $v2$.  We use the function
   \texttt{replay} defined in Figure~\ref{fig:lib1} to call
   instrumented functions whose callers are not instrumented.
@@ -896,7 +896,7 @@ symbolic execution, $v1$ will be the annotated value \texttt{new
 execution, the symbolic expression corresponding to a concrete value
 is represented as a string in the shadow value.
 
-\subsection{Example Analysis: Tracking Origin of null and undefined Values}
+\subsection{Example Analysis: Tracking Origin of ``null'' and ``undefined'' Values}
 \label{sec:example-analysis}
 
 In Figure~\ref{fig:lib3} we describe a simple dynamic analysis using
@@ -1039,7 +1039,7 @@ modify the AST in place by replacing each operation with an equivalent
 function call.  We perform instrumentation ahead-of-time; in future, we
 plan to support load-time instrumentation using a proxy.
 
-\subsubsection*{Handling \texttt{eval}}
+\subsection{Handling \texttt{eval}}
 \label{sec:handling-texttteval}
 
 \jalangi{} exposes the instrumentation
@@ -1048,7 +1048,7 @@ to dynamically instrument any code that is created and evaluated at
 runtime.  For example, we modify any call to \texttt{eval(s)} to
 \texttt{eval(instrumentCode(s))}.
 
-\subsubsection*{Handling Exceptions}
+\subsection{Handling Exceptions}
 \label{sec:handling-exceptions}
 
 Exceptions do not pose any particular challenge in \jalangi{} except
@@ -1057,7 +1057,7 @@ wrap every function within a try-catch-finally block.  In the catch
 block, we re-throw the exception.  In the finally block, we call any
 analysis specific code corresponding to the function call.
 
-\subsubsection*{Handling AJAX Calls and Event Handlers}
+\subsection{Handling AJAX Calls and Event Handlers}
 \label{sec:handling-exceptions}
 
 Event handlers and handlers of AJAX calls appear as top-level function
@@ -1075,7 +1075,7 @@ is un-instrumented or native.  Similarly, we avoid recording a
 function value at the beginning of the execution of the function, if
 the function is called from an instrumented function.
 
-\subsubsection*{Concolic Testing}
+\subsection{Concolic Testing}
 \label{sec:concolic-testing}
 
 We have implemented concolic testing as an analysis in \jalangi{}.
@@ -1092,7 +1092,7 @@ a limited set of constraints over references.  For example, if the type
 of an input variable is unknown, we infer the possible types of the
 variable by observing the operations performed on the variable.
 
-\subsubsection*{Dynamic Taint Analysis}
+\subsection{Dynamic Taint Analysis}
 \label{sec:taint-analysis}
 
 A dynamic taint analysis is a form information flow analysis which
@@ -1109,7 +1109,7 @@ in the analysis.  For example, if any of the operands of an operation
 is tainted, then we return an annotated value which is marked as
 tainted.
 
-\subsubsection*{Detecting Likely Type Inconsistencies}
+\subsection{Detecting Likely Type Inconsistencies}
 \label{sec:detect-likely-type}
 
 The dynamic analysis checks if an object/function created at a given
@@ -1127,7 +1127,7 @@ kind of type inconsistencies could point us to a potential bug in the
 program.  We have noticed such issues in two SunSpider benchmark
 programs.
 
-\subsubsection*{Simple Object Allocation Profiler}
+\subsection{Simple Object Allocation Profiler}
 \label{sec:simple-object-alloc}
 
 This dynamic analysis records the number of objects created at a given
@@ -1142,7 +1142,7 @@ being executed.  If an allocation site creates too many constant
 objects, then it could lead to performance issues.  We have found such
 an issue in one of the web applications in our benchmark suite.
 
-\subsection*{Limitations}
+\subsection{Limitations}
 \label{sec:limitations}
 
 \jalangi{} implementation has the following known limitations which
@@ -1190,6 +1190,7 @@ complexity of writing an analysis on top of \jalangi{}.  % We believe
 % In future, we plan to enrich \jalangi{} with several other dynamic
 % analyses.
 
+\newpage
 \subsection{Fidelity and Robustness}
 \label{sec:fidelity-robustness}
 
@@ -1216,6 +1217,11 @@ followed exactly the same execution paths.
 
 \begin{table*}
 \begin{minipage}{0.6\textwidth}
+\caption{Results: ``Records'' column reports number of recorded values,
+``fLoads'' reports \% of loads that were recorded, ``SlowR'' reports
+slowdown during recording compared to normal execution. \texttt{time}
+system command is used to measure runtime.}
+\label{tab:results}
 {\scriptsize
 \begin{center}
 \begin{tabular}{|l|r|r|r|r|r|r|r|} \hline
@@ -1258,13 +1264,10 @@ shopping& 5397 & 1144 & 22.79 & - & - & - & - \\
 \hline 
 \end{tabular}
 \end{center}}
-\caption{Results: ``Records'' column reports number of recorded values,
-``fLoads'' reports \% of loads that were recorded, ``SlowR'' reports
-slowdown during recording compared to normal execution. \texttt{time}
-system command is used to measure runtime.}
-\label{tab:results}
 \end{minipage}
 \begin{minipage}{0.38\textwidth}
+\caption{Sample code for evaluating performance of concolic testing}
+\label{tab:conc}
 \begin{tabular}{|r|}
 \hline\\
 {\tiny
@@ -1304,8 +1307,6 @@ function isValidQuery(str)
 }\\
 \hline
 \end{tabular}
-\caption{Sample code for evaluating performance of concolic testing}
-\label{tab:conc}
 \end{minipage}
 \end{table*}
 
@@ -1369,13 +1370,13 @@ during the development phase, and the instrumentation introduced by
 \jalangi{} would not become a part of the actual applications deployed
 to users.
 
-\subsection{Performance of concolic testing}
+\subsection{Performance of Concolic Testing}
 \label{sec:conc-test-small}
 
 We ran concolic testing on several programs ported from a concolic
 testing engine for Java.  Even though concolic testing is not the
 focus of this paper, we report the results of running concolic testing
-on a small program (shown in Table~\ref{tab:conc}), which has complex
+on a small program (shown in Figure~\ref{tab:conc}), which has complex
 string operations involving integers, string length, regular
 expression matching, and concatenation.  This program is a slight
 variant of the program used as a case study
@@ -1429,6 +1430,7 @@ constant object containing at least 64 numbers thousands of times.  We
 believe that such unnecessary creation of the constant object can be
 avoided by hoisting the object creation outside the method.
 
+\vspace*{-2ex}
 \section{Related Work}
 \label{sec:related-work}
 

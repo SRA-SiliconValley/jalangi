@@ -287,6 +287,8 @@ implemented \jalangi{} in JavaScript.
 
 \begin{table*}
 \begin{minipage}{0.24\textwidth}
+\caption{Sample Code Before Instrumentation}
+\label{tab:original}
 \begin{tabular}{|r|}
 \hline\\
 {\scriptsize
@@ -304,10 +306,10 @@ f1(12);
 }\\
 \hline
 \end{tabular}
-\caption{Sample Code Before Instrumentation}
-\label{tab:original}
 \end{minipage}
 \begin{minipage}{0.71\textwidth}
+\caption{Callback Functions from Instrumented Code}
+\label{tab:callbacks}
 \begin{tabular}{|r|}
 \hline\\
 {\scriptsize
@@ -345,12 +347,12 @@ f1(12);
 }\\
 \hline
 \end{tabular}
-\caption{Callback Functions from Instrumented Code}
-\label{tab:callbacks}
 \end{minipage}
 \end{table*}
 
 \begin{table*}
+\caption{After Instrumentation of  Code in Table~\ref{tab:original}}
+\label{tab:instrumented}
 \begin{tabular}{|r|}
 \hline\\
 {\scriptsize
@@ -404,8 +406,6 @@ if (typeof window === 'undefined') {
 }\\
 \hline
 \end{tabular}
-\caption{After Instrumentation of  Code in Table~\ref{tab:original}}
-\label{tab:instrumented}
 \end{table*}
 
 \jalangi{} operates by instrumenting JavaScript code.
@@ -427,10 +427,15 @@ example, we modify any call to \texttt{eval(s)} to
 % needed for replay.  \jalangi{} serializes the \texttt{trace} array in
 % JSON format.
 
+\vspace*{-2ex}
 \section{Performance of  jalangi}
 \label{sec:performance-jalangi}
 
 \begin{table}
+\caption{Results: ``Records'' column reports number of values
+  recorded, ``SlowR'' reports
+  slowdown during recording compared to normal execution.}
+\label{tab:results}
 {\scriptsize
 \begin{center}
 \begin{tabular}{|l|r|r|r|r|r|r|} \hline
@@ -473,10 +478,6 @@ shopping& 5397 & 1144 & - & - & - & - \\
 \hline 
 \end{tabular}
 \end{center}}
-\caption{Results: ``Records'' column reports number of values
-  recorded, ``SlowR'' reports
-  slowdown during recording compared to normal execution.}
-\label{tab:results}
 \end{table}
 
 We ran \jalangi{}'s record-replay on 26 programs in the JavaScript
@@ -519,6 +520,7 @@ creation of the constant object can be avoided by hoisting the
 constant object outside the method.
 
 
+\vspace*{-2ex}
 \section{Related Work}
 \label{sec:related-work}
 
@@ -533,6 +535,7 @@ Ripley~\cite{Vikram:2009:RAS:1653662.1653685} replicates execution of
 a client-side JavaScript program on a server side replica.
 
 
+\vspace*{-2ex}
 \section{Conclusion}
 \label{sec:conclusion}
 

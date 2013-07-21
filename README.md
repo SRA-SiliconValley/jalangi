@@ -32,9 +32,36 @@ We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS 10.7 and high
   * libgmp (http://gmplib.org/) is required by cvc3.  Concolic testing uses cvc3 and automaton.jar for constraint solving. The installation script checks if cvc3 and automaton.jar are installed properly.
   * Chrome browser if you need to test web apps.
 
+If you have a fresh installation of Ubuntu, you can install all the requirements by invoking the following commands from a terminal.
+
+    sudo apt-get update
+    sudo apt-get install python-software-properties python g++ make
+    sudo add-apt-repository ppa:chris-lea/node.js
+    sudo apt-get update
+    sudo apt-get install nodejs
+    sudo add-apt-repository ppa:webupd8team/java
+    sudo apt-get update
+    sudo apt-get install oracle-java7-installer
+    sudo update-java-alternatives -s java-7-oracle
+    sudo apt-get git
+    sudo apt-get libgmp10
+    sudo apt-get chromium-browser
+
 ### Installation
 
     ./scripts/install
+
+If Installation succeeds, you should see the following message:
+
+    ****************************
+    Installation successful.
+    Run ./scripts/testsym to make sure that all tests pass.
+    ****************************
+
+A Lubuntu virtual machine with pre-installed jalangi can be downloaded from http://srl.cs.berkeley.edu/~ksen/jalangi4.zip.
+You need VirtualBox available at https://www.virtualbox.org/ to run the virtual machine.
+Login and password for the jalangi account on the machine are jalangi and jalangi, respectively.
+Open a terminal, go to directory jalangi, and try ./scripts/testsym.
 
 ### Run Tests
 

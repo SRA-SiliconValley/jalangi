@@ -1,22 +1,36 @@
 from optparse import OptionParser
 import sys
-import instrument
+import commands
+import os
 
 class InstrumentCommand:
     name = "Instrument"
     description = "Instrument JavaScript source files"
     def execute(self,params):
-        if len(params) < 1:
-            print "Instrument requires a filename"
-            sys.exit(1)
+       # if len(params) < 1:
+       #     print "Instrument requires a filename"
+       #     sys.exit(1)
         parser = OptionParser()
         (options, args) = parser.parse_args(args=params)
-        (ff,out) = instrument.instrument(args[0])
-        print "Instrument file : {}".format(ff)
+        (ff,out) = commands.instrument(os.path.abspath(args[0]) + ".js")
         print out
-        
 
-COMMANDS = {"instrument" : InstrumentCommand}
+class AnalysisCommand:
+    name = "Analysis"
+    description = "Run a Jalangi Analysis"
+    def execute(self, params):
+        parser = OptionParser()
+        parser.add_option("-a", "--analysis", dest="analysis",
+                          help="Use analysis implemented in ANALYSIS", default="%NOT_SET")
+        (options, args) = parser.parse_args(args=params)
+        if len(args) < 1 or options.analysis == "%NOT_SET":
+            print "Invalid command line"
+            parser.print_help()
+            sys.exit(1)
+        print commands.analysis(options.analysis, os.path.abspath(args[0]))
+        
+COMMANDS = {"instrument" : InstrumentCommand,
+            "analyze" : AnalysisCommand}
 
 def print_help():
     print "The following Jalangi commands are avaliable:"
@@ -28,9 +42,9 @@ def main():
     if len(args) == 1:
         print_help()
         sys.exit(0)
-    command_name = args[1],
-    if not command_name in COMMANDS:
-        print "Unknown command \"{}\"".format(command_name)
+    command_name = args[1]
+    if not command_name in COMMANDS.keys():
+        print "Unknown command {}".format(command_name)
         print_help()
         sys.exit(1)
     command = COMMANDS[command_name]()

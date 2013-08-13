@@ -7,6 +7,9 @@ class JalangiInstall:
     def instrumentation_script(self):
         return self.get_home() + "/src/js/instrument/esnstrument.js"
 
+    def replay_script(self):
+        return self.get_home() + "/src/js/commands/replay.js"
+
     def get_home(self):
         if hasattr(self,"home"):
             return self.home
@@ -45,3 +48,9 @@ class JalangiException(Exception):
 def run_node_script(script, *args):
     """Execute script and returns output string"""
     return subprocess.check_output(["node", script] + [x for x in args]) 
+
+def mkempty(f):
+    """
+    Create f as an empty file
+    """
+    open(f, 'w').close() 

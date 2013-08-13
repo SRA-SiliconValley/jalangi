@@ -54,3 +54,12 @@ def mkempty(f):
     Create f as an empty file
     """
     open(f, 'w').close() 
+
+
+def head(f,n):
+    """Returns either the first n of lines of f or f if fewer lines
+    """
+    from itertools import islice
+    with open(f) as ff:
+        head=list(islice(ff,n))
+    return head

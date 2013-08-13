@@ -1,7 +1,7 @@
 from optparse import OptionParser
 import sys
-import commands
 import os
+import commands
 
 class InstrumentCommand:
     name = "Instrument"
@@ -12,7 +12,7 @@ class InstrumentCommand:
        #     sys.exit(1)
         parser = OptionParser()
         (options, args) = parser.parse_args(args=params)
-        (ff,out) = commands.instrument(os.path.abspath(args[0]) + ".js")
+        (ff,out) = commands.instrument(os.path.abspath(args[0]))
         print out
 
 class AnalysisCommand:
@@ -29,8 +29,25 @@ class AnalysisCommand:
             sys.exit(1)
         print commands.analysis(options.analysis, os.path.abspath(args[0]))
         
+class ConcolicCommand:
+    name = "Conclic testing"
+    description = "Generate test inputs using concolic testing"
+    def execute(self, params):
+        parser = OptionParser()
+        parser.add_option("-i", "--inputs", dest="inputs",
+                          help="Bound on number of inputs (default 1000)", default=1000)
+        (options, args) = parser.parse_args(args=params)
+        if len(args) < 1:
+            print "You must specify a filename"
+            parser.print_help()
+            sys.exit(1)
+        commands.concolic(args[0], int(options.inputs))
+        
+        
+
 COMMANDS = {"instrument" : InstrumentCommand,
-            "analyze" : AnalysisCommand}
+            "analyze" : AnalysisCommand,
+            "concolic" : ConcolicCommand}
 
 def print_help():
     print "The following Jalangi commands are avaliable:"

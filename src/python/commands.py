@@ -18,6 +18,7 @@ import util
 import os
 from tempfile import mkdtemp
 import shutil
+import glob
 
 def analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
     temp_dir = mkdtemp()
@@ -92,10 +93,24 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         #TODO: Calls to diff??
         iters = int(util.head("jalangi_tail",1)[0])
         i = i + 1
-        print i,iters,inputs
 
-    iters = iters + 1
     if iters == inputs:
         print "{}.js passed".format(filee)
     else:
         print "{}.js failed".format(filee)
+
+def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
+    os.chdir("jalangi_tmp")
+    try:
+        shutil.rmtree(".coverage_data")
+        os.remove("inputs.js")
+        util.mkempty("inputs.js")
+    except: pass
+    print "---- Runing tests on {} ----".format(filee)
+    util.run_node_script(os.path.join(os.pardir, filee + ".js"))
+    for i in glob.glob("jalangi_inputs*"):
+        print "Running {} on {}".format(filee, i)
+        shutil.copy(i, "inputs.js")
+        util.run_node_script(os.path.join(os.pardir,filee +".js"))
+    
+

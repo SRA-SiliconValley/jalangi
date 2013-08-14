@@ -58,12 +58,24 @@ class ConcolicCommand:
             parser.print_help()
             sys.exit(1)
         commands.concolic(args[0], int(options.inputs))
-        
-        
+
+class RerunAllCommand:
+    name = "Rerun all test cases"
+    description = "Run all the test cases genereted by the Jalangi concolic tester"
+    def execute(self,params):
+        parser = OptionParser()
+        (_,args) = parser.parse_args(args=params)
+        if len(args) < 1:
+            print "Please specify a filename"
+            sys.exit(1)
+        commands.rerunall(args[0])
+    
 
 COMMANDS = {"instrument" : InstrumentCommand,
             "analyze" : AnalysisCommand,
-            "concolic" : ConcolicCommand}
+            "concolic" : ConcolicCommand,
+            "rerunall" : RerunAllCommand
+}
 
 def print_help():
     print "The following Jalangi commands are avaliable:"

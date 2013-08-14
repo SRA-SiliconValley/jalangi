@@ -27,7 +27,7 @@
 
 if (typeof window === "undefined") {
     require('../../src/js/InputManager');
-    require(process.cwd()+'/inputs.js');
+    require(process.cwd()+'/inputs');
 }
 
 Array.prototype.swap=function swapf(a, b)

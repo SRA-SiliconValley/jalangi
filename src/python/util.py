@@ -1,3 +1,20 @@
+
+# Copyright 2013 Samsung Information Systems America, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Author: Simon Jensen
+
 import os
 import subprocess
 import sys
@@ -29,7 +46,7 @@ class JalangiInstall:
         return self_or_env("use_time", "USE_TIME")
 
 DEFAULT_INSTALL = JalangiInstall()
-        
+
 class JalangiException(Exception):
     """Any error that happens during the Jalangi 
     analysis process
@@ -40,27 +57,12 @@ class JalangiException(Exception):
        trigger -- Exception that caused this error (if any)
        """
     def __init__(self, install, message, trigger=None):
+
         self.install = install
         self.message = message
         self.trigger = trigger
 
-# Copyright 2013 Samsung Information Systems America, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#        http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# Author: Simon Jensen
-
-def run_node_script(script, *args):
+def run_node_script(script, *args, **kwargs):
     """Execute script and returns output string"""
     return subprocess.check_output(["node", script] + [x for x in args]) 
 

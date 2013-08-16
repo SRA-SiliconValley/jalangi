@@ -18,6 +18,7 @@
 import os
 import subprocess
 import sys
+import shutil
 
 class JalangiInstall:
 
@@ -37,13 +38,13 @@ class JalangiInstall:
         if hasattr(self,local):
             return self.getattr(local)
         else:
-            return os.environ[env]
+            return os.environ[env] if env in os.environ else False
 
     def coverage(self):
-        return self_or_env("use_coverage", "USE_COVERAGE")
+        return self.self_or_env("use_coverage", "USE_COVERAGE")
 
     def timed(self):
-        return self_or_env("use_time", "USE_TIME")
+        return self.self_or_env("use_time", "USE_TIME")
 
 DEFAULT_INSTALL = JalangiInstall()
 
@@ -64,7 +65,15 @@ class JalangiException(Exception):
 
 def run_node_script(script, *args, **kwargs):
     """Execute script and returns output string"""
-    return subprocess.check_output(["node", script] + [x for x in args]) 
+    jal = kwargs['jalangi']
+    if jal.timed():
+        cmd = ["time"]
+    else:
+        cmd = []
+    if jal.coverage():
+        cmd = cmd + ["cover", "run"]
+    cmd = cmd + (["node"] if not jal.coverage() else [])
+    return subprocess.check_output(cmd + [script] + [x for x in args]) 
 
 def mkempty(f):
     """
@@ -80,3 +89,7 @@ def head(f,n):
     with open(f) as ff:
         head=list(islice(ff,n))
     return head
+
+def move_coverage(jalangi):
+    if jalangi.coverage():
+        shutil.move(".coverage_data", "..")

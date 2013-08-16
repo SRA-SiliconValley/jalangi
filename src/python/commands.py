@@ -19,6 +19,7 @@ import os
 from tempfile import mkdtemp
 import shutil
 import glob
+import time
 
 def analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
     temp_dir = mkdtemp()
@@ -32,6 +33,7 @@ def analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
     os.putenv("JALANGI_MODE", "replay")
     os.putenv("JALANGI_ANALYSIS", analysis)
     print replay(jalangi)
+    util.move_coverage(jalangi)
 
 def record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
     os.putenv("JALANGI_MODE", "record")
@@ -93,11 +95,13 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         #TODO: Calls to diff??
         iters = int(util.head("jalangi_tail",1)[0])
         i = i + 1
-
+        
+    iters = iters + 1
     if iters == inputs:
         print "{}.js passed".format(filee)
     else:
         print "{}.js failed".format(filee)
+    util.move_coverage(jalangi)
 
 def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
     os.chdir("jalangi_tmp")
@@ -112,3 +116,10 @@ def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
         print "Running {} on {}".format(filee, i)
         shutil.copy(i, "inputs.js")
         util.run_node_script(os.path.join(os.pardir,filee +".js"), jalangi=jalangi)
+    if jalangi.coverage():
+        time.sleep(2)
+        os.system("cover combine")
+        os.system("cover report")
+        os.system("cover report html")
+        print "Test results are in {}".format("cover_html/index.html")
+

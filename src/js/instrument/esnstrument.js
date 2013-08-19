@@ -17,7 +17,6 @@
 // Author: Koushik Sen
 
 (function(sandbox){
-
     if (typeof esprima === 'undefined'){
         esprima = require("esprima");
         escodegen = require('escodegen');
@@ -707,7 +706,15 @@
 //        return ret;
 //    }
 
+    function sanitizePath(path) {
+	if (process.platform == "win32") {
+	    return path.split("\\").join("\\\\")
+	}
+	return path
+    }
+
     function prependScriptBody(node, body) {
+	console.log("ADFADSF")
         var path = require('path');
         var preFile = path.resolve(__dirname,'../analysis.js');
         var inputManagerFile = path.resolve(__dirname,'../InputManager.js');
@@ -715,9 +722,9 @@
 //        var inputFile = path.resolve(process.cwd()+"/inputs.js");
 
         var n_code = 'if (typeof window ==="undefined") {\n' +
-            '    require("'+preFile+'");\n' +
-            '    require("'+inputManagerFile+'");\n' +
-            '    require("'+thisFile+'");\n' +
+            '    require("'+sanitizePath(preFile)+'");\n' +
+            '    require("'+sanitizePath(inputManagerFile)+'");\n' +
+            '    require("'+sanitizePath(thisFile)+'");\n' +
             '    require(process.cwd()+"/inputs.js");\n' +
             '}\n';
         var ret = replaceInStatement(n_code+

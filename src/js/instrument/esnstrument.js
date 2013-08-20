@@ -714,7 +714,6 @@
     }
 
     function prependScriptBody(node, body) {
-	console.log("ADFADSF")
         var path = require('path');
         var preFile = path.resolve(__dirname,'../analysis.js');
         var inputManagerFile = path.resolve(__dirname,'../InputManager.js');

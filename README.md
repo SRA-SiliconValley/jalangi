@@ -63,6 +63,23 @@ You need VirtualBox available at https://www.virtualbox.org/ to run the virtual 
 Login and password for the jalangi account on the machine are jalangi and jalangi, respectively.
 Open a terminal, go to directory jalangi, and try ./scripts/testsym.
 
+### Windows specific steps
+
+Jalangi also runs on Windows, however no automated installation script
+is avaliable yet. To install Jalangi on Windows take the following steps:
+
+  * Install Microsoft Visual Studio 2010 (Express version is fine).
+  * If on 64bit also install Windows 7 64-bit SDK.
+  * Install the following node packages: `ffi, uglify-js, source-map,
+    esprima, estraverse, escodegen, dryice`. Note that you need
+    adminstrator rights on Windows 7 to install globally.
+  * Run the following commands in the Jalangi top leve directory
+		node src/js/instrument/esnstrument.js src/js/analyses/concolic/SymbolicFunctions.js
+		node src/js/instrument/esnstrument.js src/js/analyses/puresymbolic/SymbolicFunctions2.js
+	    node src/js/instrument/esnstrument.js src/js/analyses/puresymbolic/SymbolicFunctions3.js
+
+
+
 ### Run Tests
 
     ./scripts/testsym

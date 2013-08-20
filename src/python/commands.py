@@ -120,6 +120,5 @@ def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
         time.sleep(2)
         os.system("cover combine")
         os.system("cover report")
-        os.system("cover report html")
         print "Test results are in {}".format("cover_html/index.html")
 

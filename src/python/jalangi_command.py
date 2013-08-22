@@ -18,6 +18,8 @@ from optparse import OptionParser
 import sys
 import os
 import commands
+import config_parser
+import util
 
 class InstrumentCommand:
     name = "Instrument"
@@ -69,12 +71,30 @@ class RerunAllCommand:
             print "Please specify a filename"
             sys.exit(1)
         commands.rerunall(args[0])
-    
 
+class RunConfigCommand:
+    name = "config"
+    description = "Run Jalangi based on a configuration file"
+    def execute(self,params):
+        parser = OptionParser()
+        (opt,args) = parser.parse_args(args=params)
+        if len(args) != 1:
+            print "Please specify exactly one configuration file to run"
+            sys.exit(1)
+        try:
+            conf = config_parser.parse_jalangi_conf_file(args[0])
+            commands.run_config(conf) 
+        except util.JalangiException as e:
+            print "Parsing conf file failed: {}".format(e.message)
+            sys.exit(1)
+        
+        
+        
 COMMANDS = {"instrument" : InstrumentCommand,
             "analyze" : AnalysisCommand,
             "concolic" : ConcolicCommand,
-            "rerunall" : RerunAllCommand
+            "rerunall" : RerunAllCommand,
+            "config" : RunConfigCommand
 }
 
 def print_help():

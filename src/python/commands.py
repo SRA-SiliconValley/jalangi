@@ -122,3 +122,8 @@ def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
         os.system("cover report")
         print "Test results are in {}".format("cover_html/index.html")
 
+def run_config(config, jalangi=util.DEFAULT_INSTALL):
+    os.chdir(config.working)
+    if not config.analysis in jalangi.analyses():
+        raise util.JalangiException(jalangi, "Unknown analysis {}".format(config.analysis))
+    analysis(util.get_analysis(config.analysis), os.path.join(config.working,config.mainfile) ,  jalangi)

@@ -20,6 +20,21 @@ import subprocess
 import sys
 import shutil
 
+def get_analysis(a):
+    ka = {"concolic" : "analyses/concolic/SymbolicEngine",
+          "coverage" : "analyses/coverage/CoverageEngine",
+          "empty" : "analyses/empty/EmptyEngine",
+          "likelytype" : "analyses/likelytype/LikelyTypeInferEngine",
+          "nop" : "analyses/nop/NOPEngine",
+          "objectalloc" : "analyses/objectalloc/ObjectAllocationTrackerEngine",
+          "simpletaint" : "analyses/simpletaint/TaintEngine",
+          "trackundefinednull" : "analysis/trackundefinednull/UndefinedNullTrackingEngine",
+          "wrapping" : "analysis/wrapping/WrappingEngine"}
+    if a in ka.keys():
+        return ka[a]
+    return None
+          
+
 class JalangiInstall:
 
     def instrumentation_script(self):
@@ -27,6 +42,9 @@ class JalangiInstall:
 
     def replay_script(self):
         return self.get_home() + "/src/js/commands/replay.js"
+
+    def analyses(self):
+        return os.listdir(self.get_home() + "/src/js/analyses")
 
     def get_home(self):
         if hasattr(self,"home"):

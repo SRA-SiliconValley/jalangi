@@ -32,6 +32,7 @@ npm install esprima || { echo "npm install esprima failed!"; exit 1; }
 npm install estraverse || { echo "npm install estraverse failed!"; exit 1; }
 npm install escodegen || { echo "npm install escodegen failed!"; exit 1; }
 npm install dryice || { echo "npm install dryice failed!"; exit 1; }
+npm install execSync || {echo "npm install execSync failed!"; exit 1; }
 
 
 rm -rf thirdparty

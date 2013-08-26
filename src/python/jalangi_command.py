@@ -83,6 +83,7 @@ class RunConfigCommand:
             sys.exit(1)
         try:
             conf = config_parser.parse_jalangi_conf_file(args[0])
+            print "==== Executing Jalangi using configuration in: {}".format(args[0])
             commands.run_config(conf) 
         except util.JalangiException as e:
             print "Parsing conf file failed: {}".format(e.message)

@@ -127,3 +127,4 @@ def run_config(config, jalangi=util.DEFAULT_INSTALL):
     if not config.analysis in jalangi.analyses():
         raise util.JalangiException(jalangi, "Unknown analysis {}".format(config.analysis))
     analysis(util.get_analysis(config.analysis), os.path.join(config.working,config.mainfile) ,  jalangi)
+    

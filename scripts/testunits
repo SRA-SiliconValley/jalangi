@@ -11,15 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
 # Author: Koushik Sen
-
+#
 
 rm -f jalangi_test_results 2>/dev/null
 export USE_NODE_COVER=false
 export USE_TIME=false
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export ANALYSIS_SCRIPT="$DIR/concolic"
+echo $DIR
+export ANALYSIS_SCRIPT=$DIR/concolic
+echo $ANALYSIS_SCRIPT
 
 $DIR/units
 

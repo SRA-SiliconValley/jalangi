@@ -93,7 +93,9 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         print rep
         #TODO: Echo number of lines??
         #TODO: Calls to diff??
-        iters = int(util.head("jalangi_tail",1)[0])
+        try:
+            iters = int(util.head("jalangi_tail",1)[0])
+        except: pass
         i = i + 1
         
     iters = iters + 1

@@ -14,44 +14,44 @@
 
 # Author: Koushik Sen
 
+export ANALYSIS_SCRIPT="python c:/Users/s.jensen/code/jalangi/src/python/jalangi_command.py concolic"
 
-$ANALYSIS_SCRIPT tests/unit/instrument-test 1
-$ANALYSIS_SCRIPT tests/unit/array_length 1
-$ANALYSIS_SCRIPT tests/unit/assign 1
-$ANALYSIS_SCRIPT tests/unit/async_events 1
-$ANALYSIS_SCRIPT tests/unit/boolean 1
-$ANALYSIS_SCRIPT tests/unit/call_order1 1
-$ANALYSIS_SCRIPT tests/unit/cond 1
-$ANALYSIS_SCRIPT tests/unit/cons_no_arg 1
-$ANALYSIS_SCRIPT tests/unit/delete 1
-$ANALYSIS_SCRIPT tests/unit/do_while 1
-$ANALYSIS_SCRIPT tests/unit/eval_global 1
-$ANALYSIS_SCRIPT tests/unit/eval_opt 1
-$ANALYSIS_SCRIPT tests/unit/eval_scope 1
-$ANALYSIS_SCRIPT tests/unit/field_inc 1
-$ANALYSIS_SCRIPT tests/unit/field_read 1
-$ANALYSIS_SCRIPT tests/unit/for_and_seq 1
-$ANALYSIS_SCRIPT tests/unit/for_in 1
-$ANALYSIS_SCRIPT tests/unit/fun_call 1
-$ANALYSIS_SCRIPT tests/unit/label 1
-$ANALYSIS_SCRIPT tests/unit/local_inc_dec 1
-$ANALYSIS_SCRIPT tests/unit/method_sub 1
-$ANALYSIS_SCRIPT tests/unit/null_instr 1
-$ANALYSIS_SCRIPT tests/unit/object_lit 1
-$ANALYSIS_SCRIPT tests/unit/object_tracking 1
-$ANALYSIS_SCRIPT tests/unit/op_assign 1
-$ANALYSIS_SCRIPT tests/unit/switch 1
-$ANALYSIS_SCRIPT tests/unit/switch2 1
-$ANALYSIS_SCRIPT tests/unit/string 1
-$ANALYSIS_SCRIPT tests/unit/vars 1
-$ANALYSIS_SCRIPT tests/unit/while 1
-$ANALYSIS_SCRIPT tests/unit/scope_rr 1
-$ANALYSIS_SCRIPT tests/unit/exception 1
-
-$ANALYSIS_SCRIPT tests/unit/eval_json_global 1
-$ANALYSIS_SCRIPT tests/unit/symbolic 1
-$ANALYSIS_SCRIPT tests/unit/reference_error 1
-$ANALYSIS_SCRIPT tests/unit/try_catch_finally 1
-$ANALYSIS_SCRIPT tests/unit/args 1
-$ANALYSIS_SCRIPT tests/unit/dsp 1
+$ANALYSIS_SCRIPT tests/unit/instrument-test -i 1
+$ANALYSIS_SCRIPT tests/unit/array_length -i 1
+$ANALYSIS_SCRIPT tests/unit/assign -i 1
+$ANALYSIS_SCRIPT tests/unit/async_events -i 1
+$ANALYSIS_SCRIPT tests/unit/boolean -i 1
+$ANALYSIS_SCRIPT tests/unit/call_order1 -i 1
+$ANALYSIS_SCRIPT tests/unit/cond -i 1
+$ANALYSIS_SCRIPT tests/unit/cons_no_arg -i 1
+$ANALYSIS_SCRIPT tests/unit/delete -i 1
+$ANALYSIS_SCRIPT tests/unit/do_while -i 1
+$ANALYSIS_SCRIPT tests/unit/eval_global -i 1
+$ANALYSIS_SCRIPT tests/unit/eval_opt -i 1
+$ANALYSIS_SCRIPT tests/unit/eval_scope -i 1
+$ANALYSIS_SCRIPT tests/unit/field_inc -i 1
+$ANALYSIS_SCRIPT tests/unit/field_read -i 1
+$ANALYSIS_SCRIPT tests/unit/for_and_seq -i 1
+$ANALYSIS_SCRIPT tests/unit/for_in -i 1
+$ANALYSIS_SCRIPT tests/unit/fun_call -i 1
+$ANALYSIS_SCRIPT tests/unit/label -i 1
+$ANALYSIS_SCRIPT tests/unit/local_inc_dec -i 1
+$ANALYSIS_SCRIPT tests/unit/method_sub -i 1
+$ANALYSIS_SCRIPT tests/unit/null_instr -i 1
+$ANALYSIS_SCRIPT tests/unit/object_lit -i 1
+$ANALYSIS_SCRIPT tests/unit/object_tracking -i 1
+$ANALYSIS_SCRIPT tests/unit/op_assign -i 1
+$ANALYSIS_SCRIPT tests/unit/switch -i 1
+$ANALYSIS_SCRIPT tests/unit/switch2 -i 1
+$ANALYSIS_SCRIPT tests/unit/string -i 1
+$ANALYSIS_SCRIPT tests/unit/vars -i 1
+$ANALYSIS_SCRIPT tests/unit/while -i 1
+$ANALYSIS_SCRIPT tests/unit/scope_rr -i 1
+$ANALYSIS_SCRIPT tests/unit/exception -i 1
+$ANALYSIS_SCRIPT tests/unit/eval_json_global -i 1
+$ANALYSIS_SCRIPT tests/unit/symbolic -i 1
+$ANALYSIS_SCRIPT tests/unit/reference_error -i 1
+$ANALYSIS_SCRIPT tests/unit/try_catch_finally -i 1
+$ANALYSIS_SCRIPT tests/unit/args -i 1
+$ANALYSIS_SCRIPT tests/unit/dsp -i 1
 

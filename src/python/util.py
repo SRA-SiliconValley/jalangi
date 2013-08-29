@@ -91,7 +91,10 @@ def run_node_script(script, *args, **kwargs):
     if jal.coverage():
         cmd = cmd + ["cover", "run"]
     cmd = cmd + (["node"] if not jal.coverage() else [])
-    return subprocess.check_output(cmd + [script] + [x for x in args]) 
+    try:
+        return subprocess.check_output(cmd + [script] + [x for x in args], stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        return e.output
 
 def mkempty(f):
     """

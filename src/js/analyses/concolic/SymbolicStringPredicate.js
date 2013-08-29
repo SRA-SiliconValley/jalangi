@@ -19,13 +19,15 @@
 (function(module){
 
     function execSync(cmd) {
-        var FFI = require("node-ffi");
+       /* var FFI = require("node-ffi");
         var libc = new FFI.Library(null, {
             "system": ["int32", ["string"]]
         });
 
         var run = libc.system;
-        run(cmd);
+        run(cmd);*/
+	es = require('execSync')
+	es.run(cmd)
     }
 
     var stdoutCache = {};
@@ -200,7 +202,12 @@
 
         getFormulaString : function(freeVars, mode, assignments) {
             var sb = "", s1, s2, formula, cmd, length1 = 0, length2 = 0, j;
-            var classpath = __dirname+"/../../../../jout/production/jalangijava/:"+__dirname+"/../../../../thirdparty/javalib/automaton.jar ";
+	    if (process.platform == "win32")
+		var classpath = __dirname+"/../../../../jout/production/jalangijava/;"+__dirname+"/../../../../thirdparty/javalib/automaton.jar ";
+	    else
+		var classpath = __dirname+"/../../../../jout/production/jalangijava/:"+__dirname+"/../../../../thirdparty/javalib/automaton.jar ";
+
+
             s1 = (typeof this.left === 'string')?this.left.length:this.left.getField("length");
             s2 = (typeof this.right === 'string' || this.right instanceof RegExp)?this.right.length:this.right.getField("length");
 //        s1 = J$.G(0,this.left,"length", true);

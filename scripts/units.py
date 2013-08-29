@@ -1,5 +1,7 @@
 from subprocess import check_output, CalledProcessError
 import sys
+import subprocess
+import fnmatch
 
 tests = [
     ("tests/unit/instrument-test", 1),
@@ -42,14 +44,18 @@ tests = [
 
 SCRIPT = "src/python/jalangi_command.py"
 failed = 0
+pat = "*" + sys.argv[1] + "*" if len(sys.argv) > 1 else None
+if pat != None:
+    tests = [(c,e) for (c,e) in tests if fnmatch.fnmatch(c,pat)]
 total = len(tests)
+print "Running {} tests".format(total)
 for (case, expected) in tests:
     try:
-        out = check_output("python {} concolic -i {} {}".format(SCRIPT, expected, case))
+        out = check_output("python {} concolic -i {} {}".format(SCRIPT, expected, case), stderr=subprocess.STDOUT)
     except CalledProcessError as e:
         out = e.output
     if "{}.js passed".format(case) in out:
-        sys.stdout.write('.')
+        print "{} passed".format(case)
     else:
         print "{}.js failed:".format(case)
         print out
@@ -57,4 +63,3 @@ for (case, expected) in tests:
 
 print "\nPass: {}".format(total - failed)
 print "Fail: {}".format(failed)
-    

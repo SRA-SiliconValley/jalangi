@@ -4,6 +4,7 @@ import glob
 from shutil import copyfile
 from subprocess import Popen
 from time import sleep
+import webbrowser
 
 def delete_glob(pat):
     for x in glob.glob(pat):
@@ -21,5 +22,6 @@ except: pass
 
 Popen(['node', 'src/js/commands/socket.js', '127.0.0.1', '8080', sys.argv[1]])
 sleep(2)
-print "Use your browser to access {}".format(sys.argv[1])
+webbrowser.open(sys.argv[1])
+
 

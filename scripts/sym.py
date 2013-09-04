@@ -59,7 +59,8 @@ total = len(tests)
 print "Running {} tests".format(total)
 for (case, expected) in tests:
     try:
-        out = check_output("python {} concolic -i {} {}".format(SCRIPT, expected, case), stderr=subprocess.STDOUT)
+        #out = check_output("python {} concolic -i {} {}".format(SCRIPT, expected, case), stderr=subprocess.STDOUT)
+        out = check_output(["python", SCRIPT, "concolic", "-i", str(expected), case])
     except CalledProcessError as e:
         out = e.output
     if "{}.js passed".format(case) in out:

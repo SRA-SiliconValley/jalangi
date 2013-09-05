@@ -62,7 +62,7 @@ if exists("thirdparty"):
 os.mkdir("thirdparty")
 call_fail(["git", "clone", "--recursive", "git://github.com/Trenker/Browser-UglifyJS.git", "thirdparty/browser-uglifyjs"])
 os.chdir("thirdparty/browser-uglifyjs/lib")
-del_dir("Uglifyjs")
+del_dir("UglifyJS")
 call_fail(["git", "clone", "git://github.com/mishoo/UglifyJS.git"])
 os.chdir("UglifyJS")
 sleep(2)
@@ -120,7 +120,7 @@ else: #windows
 
 os.chdir("cvc3/bin")
 
-if os.system("{} < ../../../scripts/formula.cvc3".format("cvc3.exe" if platform == "win32" else "cvc3")) != 0:
+if os.system("{} < ../../../scripts/formula.cvc3".format("cvc3.exe" if platform == "win32" else "./cvc3")) != 0:
     print "cvc3 installation failed! Make sure that you have libgmp installed in your machine.  This is a common cause for the failure"
     exit(1)
 

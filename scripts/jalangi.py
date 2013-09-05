@@ -17,7 +17,7 @@
 import sys
 import os
 scriptpath = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../src/python/")
-sys.path.append(scriptpath)
+sys.path.insert(0,scriptpath)
 from jalangi_command import main
 if __name__ == "__main__":
     main()

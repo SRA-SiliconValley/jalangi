@@ -105,8 +105,6 @@ Record an execution of tests/unit/qsort.js and create jalangi_trace.html which w
 
 ### Concolic testing
 
-In the foil
-
 To perform concolic testing of some JavaScript code present in a file,
 say testme.js, insert the following 4 lines at the top of the file.
 
@@ -142,26 +140,30 @@ Open the file tests/unit/regex8.js and check how string inputs are specified.  T
 
 ### Dynamic analysis
 
-The JavaScript code in src/js/analyses/objectalloc/ObjectAllocationTrackerEngine.js implements a simple analysis that reports the number of objects created during
-an execution along with some auxiliary information.  The analysis can be performed on a file testme.js by invoking the following command:
+The JavaScript code in
+src/js/analyses/objectalloc/ObjectAllocationTrackerEngine.js
+implements a simple analysis that reports the number of objects
+created during an execution along with some auxiliary information.
+The analysis can be performed on a file testme.js by invoking the
+following command:
 
-    ./scripts/analysis analyses/objectalloc/ObjectAllocationTrackerEngine testme
+    python scripts/jalangi.py analyze -a analyses/objectalloc/ObjectAllocationTrackerEngine testme
 
 For example, try running the analysis on a sunspider benchmark by issuing the following command:
 
-    ./scripts/analysis analyses/objectalloc/ObjectAllocationTrackerEngine tests/sunspider1/crypto-aes
+    python scripts/jalangi.py analyze -a analyses/objectalloc/ObjectAllocationTrackerEngine tests/sunspider1/crypto-aes
 
 Similarly, you can run a likely type inference analysis on another sunspider benchmark by calling the following command and you will notice some warnings.
 
-    ./scripts/analysis analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-sha1
+    python scripts/jalangi.py analyze -a analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-sha1
 
 Run the following to perform a simple form of taint analysis.
 
-    ./scripts/analysis analyses/simpletaint/SimpleTaintEngine tests/sunspider1/crypto-sha1
+	python scripts/jalangi.py analyze -a analyses/simpletaint/SimpleTaintEngine tests/sunspider1/crypto-sha1
 
 You can run origin of null and undefined tracker on a toy example by issuing the following command:
 
-    ./scripts/analysis analyses/trackundefinednull/UndefinedNullTrackingEngine tests/unit/track_undef_null
+    python scripts/jalangi.py analyze -a analyses/trackundefinednull/UndefinedNullTrackingEngine tests/unit/track_undef_null
 
 ### Record and replay a web application.
 
@@ -169,7 +171,7 @@ You can run origin of null and undefined tracker on a toy example by issuing the
 
 First start a HTTP server by running the following command.  The command starts a simple Python based http server.
 
-    ./scripts/server &
+	python scripts/jalangi.py server &
 
 Then instrument the JavaScript files that you want to analyze.  You also need to modify index.html so that it loads some library files and the instrumented files.
 

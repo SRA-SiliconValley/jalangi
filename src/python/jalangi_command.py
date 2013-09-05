@@ -41,11 +41,28 @@ class AnalysisCommand:
         parser.add_option("-a", "--analysis", dest="analysis",
                           help="Use analysis implemented in ANALYSIS", default="%NOT_SET")
         (options, args) = parser.parse_args(args=params)
+        print "!!" , commands, util
         if len(args) < 1 or options.analysis == "%NOT_SET":
             print "Invalid command line"
             parser.print_help()
             sys.exit(1)
         print commands.analysis(options.analysis, os.path.abspath(args[0]))
+
+class ServerCommand:
+    name = "Server"
+    description = "Run a simple HTTP server serving the current directory"
+    def execute(self, params):
+        import SimpleHTTPServer
+        import SocketServer
+        parser = OptionParser()
+        parser.add_option("-p", "--port", dest="port",
+                          help="Which port to use", default="8080")
+        (options, args) = parser.parse_args(args=params)
+        Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+        httpd = SocketServer.TCPServer(("", int(options.port)), Handler)
+        print "serving at port", options.port
+        print "Use Ctrl-C to kill"
+        httpd.serve_forever()
         
 class ConcolicCommand:
     name = "Conclic testing"
@@ -88,6 +105,18 @@ class RunConfigCommand:
         except util.JalangiException as e:
             print "Parsing conf file failed: {}".format(e.message)
             sys.exit(1)
+
+class RRServerCommand:
+    name = "rrserver"
+    description = "Monitor an instrumented web application"
+    def execute(self, params):
+        parser = OptionParser()
+        (opt,args) = parser.parse_args(args=params)
+        if len(args) != 1:
+            print "Please specify one url"
+            sys.exit(1)
+        url = args[0]
+        commands.rrserver(url)
         
         
         
@@ -95,7 +124,9 @@ COMMANDS = {"instrument" : InstrumentCommand,
             "analyze" : AnalysisCommand,
             "concolic" : ConcolicCommand,
             "rerunall" : RerunAllCommand,
-            "config" : RunConfigCommand
+            "config" : RunConfigCommand,
+            "server" : ServerCommand,
+            "rrserver" : RRServerCommand
 }
 
 def print_help():

@@ -24,13 +24,20 @@ our paper on Jalangi is available at http://srl.cs.berkeley.edu/~ksen/papers/jal
 
 ### Requirements
 
-We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS 10.7 and higher and Ubuntu 11.0 and higher.
+We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS
+10.7, Ubuntu 11.0 and higher and Windows 7 or higher.
 
   * Latest version of Node.js available at http://nodejs.org/.  We have tested Jalangi with Node v0.8.22 and v0.10.3.
   * Sun's JDK 1.6 or higher.  We have tested Jalangi with Java 1.6.0_43.
   * Command-line git.
   * libgmp (http://gmplib.org/) is required by cvc3.  Concolic testing uses cvc3 and automaton.jar for constraint solving. The installation script checks if cvc3 and automaton.jar are installed properly.
   * Chrome browser if you need to test web apps.
+  * Python (http://python.org) version 2.7 or higher
+  
+On Windows you need the following extra dependencies:
+
+  * Install Microsoft Visual Studio 2010 (Free express version is fine).
+  * If on 64bit also install Windows 7 64-bit SDK.
 
 If you have a fresh installation of Ubuntu, you can install all the requirements by invoking the following commands from a terminal.
 
@@ -49,47 +56,33 @@ If you have a fresh installation of Ubuntu, you can install all the requirements
 
 ### Installation
 
-    ./scripts/install
+    python ./scripts/install.py
 
 If Installation succeeds, you should see the following message:
 
-    ****************************
-    Installation successful.
-    Run ./scripts/testsym to make sure that all tests pass.
-    ****************************
+    ---> Installation successful.
+    ---> run python scripts/sym.py to make sure all tests pass
 
 A Lubuntu virtual machine with pre-installed jalangi can be downloaded from http://srl.cs.berkeley.edu/~ksen/jalangi4.zip.
 You need VirtualBox available at https://www.virtualbox.org/ to run the virtual machine.
 Login and password for the jalangi account on the machine are jalangi and jalangi, respectively.
 Open a terminal, go to directory jalangi, and try ./scripts/testsym.
 
-### Windows specific steps
-
-Jalangi also runs on Windows, however no automated installation script
-is avaliable yet. To install Jalangi on Windows take the following steps:
-
-  * Install Microsoft Visual Studio 2010 (Free express version is fine).
-  * If on 64bit also install Windows 7 64-bit SDK.
-  * Install the following node packages using npm: `ffi, uglify-js, source-map,
-    esprima, estraverse, escodegen, dryice, execSync`. Note that you need
-    adminstrator rights on Windows 7 to install globally.
-  * Run the following commands in the Jalangi top leve directory
-		node src/js/instrument/esnstrument.js src/js/analyses/concolic/SymbolicFunctions.js
-		node src/js/instrument/esnstrument.js src/js/analyses/puresymbolic/SymbolicFunctions2.js
-	    node src/js/instrument/esnstrument.js src/js/analyses/puresymbolic/SymbolicFunctions3.js
-  * Install windows version of CVC3 into the <jalangi-top-folder>/thirdpart/cvc3
-
 ### Run Tests
 
-    ./scripts/testsym
+    python ./scripts/sym.py
 
 ### Other Scripts
 
 Run no analysis and check if record and replay executions produce same output on some unit tests located under tests/unit/.
 
-    ./scripts/testunits
+    python ./scripts/units.py
 
-Run no analysis and check if record and replay executions produce same output on the sunspider benchmarks located under tests/sunspider1/.
+The remaining commands require a UNIX shell.
+
+Run no analysis and check if record and replay executions produce same
+output on the sunspider benchmarks located under
+tests/sunspider1/.
 
     ./scripts/testsp
 
@@ -112,33 +105,39 @@ Record an execution of tests/unit/qsort.js and create jalangi_trace.html which w
 
 ### Concolic testing
 
-To perform concolic testing of some JavaScript code present in a file, say testme.js, insert the following 4 lines at the top of the file.
+In the foil
+
+To perform concolic testing of some JavaScript code present in a file,
+say testme.js, insert the following 4 lines at the top of the file.
 
     if (typeof window === "undefined") {
         require('../../src/js/InputManager');
         require(process.cwd()+'/inputs');
     }
 
-In the code, use J$.readInput(arg) to indicate the inputs to the program.  Then run the following command to perform concolic testing:
+In the code, use J$.readInput(arg) to indicate the inputs to the
+program.  Then run the following command to perform concolic testing:
 
-    ./scripts/concolic testme 100000
+    python scripts/jalangi.py concolic -i 100000 testme
 
-The third argument bounds the total number of test inputs.  The command generates a set of input files in the directory jalangi_tmp.  The input
-files start with the prefix jalangi_inputs.  Once the inputs are generated, you can run testme.js on those inputs by giving the following
-command:
+The -i argument bounds the total number of test inputs.  The
+command generates a set of input files in the directory jalangi_tmp.
+The input files start with the prefix jalangi_inputs.  Once the inputs
+are generated, you can run testme.js on those inputs by giving the
+following command:
 
-    ./scripts/rerunall testme
+     python scripts/jalangi.py rerunall testme
 
 For example, open the file tests/unit/qsort.js and check how inputs are specified.  Then run
 
-    ./scripts/concolic tests/unit/qsort 100
-    ./scripts/rerunall tests/unit/qsort
+     python scripts/jalangi.py concolic tests/unit/qsort 100
+     python scripts/jalangi.py rerunall tests/unit/qsort
 
 
 Open the file tests/unit/regex8.js and check how string inputs are specified.  Then run
 
-    ./scripts/concolic tests/unit/regex8 100
-    ./scripts/rerunall tests/unit/regex8
+     python scripts/jalangi.py concolic tests/unit/regex8 100
+     python scripts/jalangi.py rerunall tests/unit/regex8
 
 
 ### Dynamic analysis

@@ -149,14 +149,3 @@ call_fail(["node", "src/js/instrument/esnstrument.js", "src/js/analyses/puresymb
 
 print "---> Installation successful."
 print "---> run python scripts/sym.py to make sure all tests pass"
-
-    
-
-
-
-
-
-
-
-
-

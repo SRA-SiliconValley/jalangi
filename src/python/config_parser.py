@@ -43,6 +43,3 @@ def parse_jalangi_conf_file(input_f, jalangi=util.DEFAULT_INSTALL):
     else:
         raise util.JalangiException(jalangi, "Config must specify an analysis to be run")
     return res
-        
-    
-

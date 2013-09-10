@@ -36,11 +36,14 @@ tests = [
     ("tests/unit/while", 1),
     ("tests/unit/scope_rr", 1),
     ("tests/unit/exception", 1 ),
+
     ("tests/unit/eval_json_global", 1),
     ("tests/unit/symbolic", 1),
     ("tests/unit/reference_error", 1),
     ("tests/unit/try_catch_finally", 1),
-    ("tests/unit/args", 1)]
+    ("tests/unit/args", 1),
+    ("tests/unit/dsp",1)
+]
 
 SCRIPT = "src/python/jalangi_command.py"
 failed = 0
@@ -56,6 +59,7 @@ for (case, expected) in tests:
         out = e.output
     if "{}.js passed".format(case) in out:
         print "{} passed".format(case)
+        print out
     else:
         print "{}.js failed:".format(case)
         print out

@@ -9,6 +9,7 @@ def parser_kv_pairs(input_string):
         if l[0] == "#":
             continue
         toks = l.split("=")
+        print toks
         assert len(toks) == 2
         res[toks[0]] = toks[1]
     return res
@@ -17,6 +18,7 @@ class JalangiConfig:
     pass
 
 def parse_jalangi_conf_file(input_f, jalangi=util.DEFAULT_INSTALL):
+    print "!!", input_f
     with open(input_f, 'r') as f:
         content = f.read()
     kv_pairs = parser_kv_pairs(content)

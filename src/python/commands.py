@@ -72,6 +72,7 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
     (instrumented_f, out) = instrument(os.path.join(os.pardir,filee), jalangi=jalangi)
     i = 0
     iters = 0
+    mismatch = False
     while i <= iters and i <= inputs:
         try:                    # Ignore failures on first iteration
             os.remove("inputs.js")
@@ -86,18 +87,29 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
             os.remove("jalangi_trace")
         except:
             pass
-        out = util.run_node_script(os.path.join(os.pardir,filee + ".js"), jalangi=jalangi)
-        (open("jalangi_normal", "w")).write(out)
+        norm = util.run_node_script(os.path.join(os.pardir,filee + ".js"), jalangi=jalangi)
+        #(open("jalangi_normal", "w")).write(norm)
         print "---- Recording execution of {} ----".format(filee)
-        record(os.path.join(os.pardir,filee), instrumented_f)
+        rec = record(os.path.join(os.pardir,filee), instrumented_f)
         print "---- Replaying {} ----".format(filee)
         os.putenv("JALANGI_MODE", "replay")
         os.putenv("JALANGI_ANALYSIS", "analyses/concolic/SymbolicEngine")
         rep = replay()
         (open("jalangi_replay", "w")).write(rep)
         print rep
+        if norm != rep: #TODO: Factor out this.
+            import difflib
+            with open("jalangi_test_results", 'a') as f:
+                f.write("\n")
+                for line in difflib.unified_diff(norm.splitlines(1), rec.splitlines(1), fromfile='normal', tofile='replay'):
+                    f.write(line)
+        if rec != rep:
+            import difflib
+            with open("jalangi_test_results", 'a') as f:
+                f.write("\n")
+                for line in difflib.unified_diff(rec.splitlines(1), rep.splitlines(1), fromfile='replay', tofile='record'):
+                    f.write(line)
         #TODO: Echo number of lines??
-        #TODO: Calls to diff??
         try:
             iters = int(util.head("jalangi_tail",1)[0])
         except: pass
@@ -107,7 +119,7 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
     if iters == inputs:
         print "{}.js passed".format(filee)
     else:
-        print "{}.js failed".format(filee)
+        print "{}.js failed {}".format(filee)
     util.move_coverage(jalangi)
 
 def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
@@ -133,13 +145,19 @@ def run_config(config, jalangi=util.DEFAULT_INSTALL):
     os.chdir(config.working)
     if not config.analysis in jalangi.analyses():
         raise util.JalangiException(jalangi, "Unknown analysis {}".format(config.analysis))
-    analysis(util.get_analysis(config.analysis), os.path.join(config.working,config.mainfile) ,  jalangi)
+    if config.analysis == "concolic":
+        ops = config.parameters.split()
+        if len(ops) == 2 and ops[0] == "-i":
+            concolic( os.path.join(config.working,config.mainfile), int(ops[1]), jalangi)
+        else:
+            concolic( os.path.join(config.working,config.mainfile), 1000, jalangi)
+    else:
+        analysis(util.get_analysis(config.analysis), os.path.join(config.working,config.mainfile) ,  jalangi)
 
 def rrserver(url):
     def delete_glob(pat):
         for x in glob.glob(pat):
             os.remove(x)
-            
     delete_glob("jalangi_trace*")
     delete_glob("jalangi_taint*")
     delete_glob("jalangi_dependency")

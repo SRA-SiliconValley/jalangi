@@ -179,7 +179,7 @@ Then instrument the JavaScript files that you want to analyze.  You also need to
 
 Finally launch the jalangi server and the html page by running
 
-    ./scripts/rrserver http://127.0.0.1:8000/tests/tizen/annex/index_jalangi_.html
+    python scripts/jalangi.py rrserver http://127.0.0.1:8000/tests/tizen/annex/index_jalangi_.html
 
 You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  You can run a dynamic analysis on the trace file by issuing the following commands.
 

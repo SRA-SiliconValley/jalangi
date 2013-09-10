@@ -90,12 +90,36 @@ def run_node_script(script, *args, **kwargs):
         cmd = []
     if jal.coverage():
         cmd = cmd + ["cover", "run"]
-    cmd = cmd + (["node"] if not jal.coverage() else [])
+    cmd = cmd + ([find_node()] if not jal.coverage() else [])
     try:
         return subprocess.check_output(cmd + [script] + [x for x in args], stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         return e.output
 
+def is_node_exe(path):
+    try:
+        subprocess.check_output([path,"-e","42"])
+        return True
+    except: return False
+
+def find_node():
+    try:
+        return find_node.mem
+    except: pass
+    LOCATIONS = [os.environ.get("NODE_EXECUTABLE"),
+                 "node",
+                 "/usr/bin/node",
+                 "/usr/local/bin/node",
+                 "C:/Program Files/nodejs/node.exe",
+                 "C:/Program Files (x86)/nodejs/node.exe"]
+    l = filter(is_node_exe, LOCATIONS)
+    if len(l) == 0:
+        print "Could not find the node.js executable. node.js is required for Jalangi"
+        print "If you have installed node.js in a non-standard location you can set environment variable NODE_EXECUTABLE to the full path of the node executable."
+        exit(1)
+    find_node.mem = l[0]
+    return l[0]
+    
 def mkempty(f):
     """
     Create f as an empty file

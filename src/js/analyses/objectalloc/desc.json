@@ -1,0 +1,6 @@
+{
+    "name" : "Object allocations",
+    "description" : "Track where objects are allocated",
+    "author" : "Koushik Sen",
+    "file" : "ObjectAllocationTrackerEngine"
+}

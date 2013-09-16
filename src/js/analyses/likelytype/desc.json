@@ -1,0 +1,6 @@
+{
+    "name" : "Infer likely types",
+    "description" : "Infers the likely type of variables and object properties based on usage. Warnings for suspicious type mixing is issued. ",
+    "author" : "Koushik Sen",
+    "file" : "LikelyTypeInferEngine"
+}

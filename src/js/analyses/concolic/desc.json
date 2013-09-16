@@ -1,0 +1,7 @@
+{
+    "name" : "Concolic testing",
+    "description" : "Test the program using a concolic testing",
+    "author" : "Koushik Sen",
+    "options" : [["Iterations", "Upper bound on the number of inputs try before terminating"]],
+    "file" : "SymbolicEngine"
+}

@@ -27,4 +27,3 @@ sleep 2
 echo "Opening $1"
 /usr/bin/open -a "/Applications/Google Chrome.app" $1 || chromium-browser $1 || echo "Do you have chrome installed?"
 
-

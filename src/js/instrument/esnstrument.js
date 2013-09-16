@@ -21,7 +21,8 @@
         esprima = require("esprima");
         escodegen = require('escodegen');
     }
-
+    
+    sanitizePath = require("../utils/paths").sanitizePath
 
     var FILESUFFIX1 = "_jalangi_";
     var COVERAGE_FILE_NAME = "jalangi_coverage";
@@ -706,13 +707,6 @@
 //        return ret;
 //    }
 
-    function sanitizePath(path) {
-	if (process.platform == "win32") {
-	    return path.split("\\").join("\\\\")
-	}
-	return path
-    }
-
     function prependScriptBody(node, body) {
         var path = require('path');
         var preFile = path.resolve(__dirname,'../analysis.js');
@@ -1284,7 +1278,7 @@
         writeLine("(function (sandbox) { var iids = sandbox.iids = []; var filename;\n")
         for (i=2; i< args.length; i++) {
             filename = args[i];
-            writeLine("filename = \""+require('path').resolve(process.cwd(),filename)+"\";\n");
+            writeLine("filename = \"" + sanitizePath(require('path').resolve(process.cwd(),filename)) + "\";\n");
             console.log("Instrumenting "+filename+" ...");
             var code = getCode(filename);
             tryCatch = false;

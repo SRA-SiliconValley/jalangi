@@ -65,6 +65,7 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
     try:
         shutil.rmtree("jalangi_tmp")
     except: pass
+    print "!!", filee, inputs
     os.mkdir("jalangi_tmp")
     os.mkdir("jalangi_tmp/out")
     os.putenv("JALANGI_HOME", jalangi.get_home())
@@ -119,7 +120,7 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
     if iters == inputs:
         print "{}.js passed".format(filee)
     else:
-        print "{}.js failed {}".format(filee)
+        print "{}.js failed".format(filee)
     util.move_coverage(jalangi)
 
 def rerunall(filee, jalangi=util.DEFAULT_INSTALL):

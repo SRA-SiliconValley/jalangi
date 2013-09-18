@@ -1,0 +1,6 @@
+{
+    "name" : "Track undefined and null",
+    "description" : "Track the creation and use of undefined and null values. Warnings are issued for suspicious use",
+    "author" : "Koushik Sen",
+    "file" : "UndefinedNullTrackingEngine"
+}

@@ -9,7 +9,6 @@ def parser_kv_pairs(input_string):
         if l[0] == "#":
             continue
         toks = l.split("=")
-        print toks
         assert len(toks) == 2
         res[toks[0]] = toks[1]
     return res

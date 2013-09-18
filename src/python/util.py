@@ -28,8 +28,8 @@ def get_analysis(a):
           "nop" : "analyses/nop/NOPEngine",
           "objectalloc" : "analyses/objectalloc/ObjectAllocationTrackerEngine",
           "simpletaint" : "analyses/simpletaint/TaintEngine",
-          "trackundefinednull" : "analysis/trackundefinednull/UndefinedNullTrackingEngine",
-          "wrapping" : "analysis/wrapping/WrappingEngine"}
+          "trackundefinednull" : "analyses/trackundefinednull/UndefinedNullTrackingEngine",
+          "wrapping" : "analyses/wrapping/WrappingEngine"}
     if a in ka.keys():
         return ka[a]
     return None

@@ -92,7 +92,7 @@ def run_node_script(script, *args, **kwargs):
         cmd = cmd + ["cover", "run"]
     cmd = cmd + ([find_node()] if not jal.coverage() else [])
     try:
-        return subprocess.check_output(cmd + [script] + [x for x in args], stderr=subprocess.STDOUT)
+        return subprocess.check_output(cmd + [script] + [x for x in args], stderr=open(os.devnull, 'wb'))
     except subprocess.CalledProcessError as e:
         return e.output
 

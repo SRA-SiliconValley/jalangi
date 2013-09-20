@@ -20,6 +20,7 @@ export USE_NODE_COVER=false
 export USE_TIME=false
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export ANALYSIS_SCRIPT=$DIR/concolic
+echo $ANALYSIS_SCRIPT
 
 $DIR/sunspider
 

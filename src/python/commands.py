@@ -168,7 +168,7 @@ def rrserver(url):
         copyfile("next.js", "jalangi_next.js")
     except: pass
     import sys
-    Popen(['node', 'src/js/commands/socket.js', '127.0.0.1', '8083', sys.argv[1]])
+    Popen(['node', 'src/js/commands/socket.js', '127.0.0.1', '8000', sys.argv[1]])
     sleep(2)
     webbrowser.open(sys.argv[2])
     

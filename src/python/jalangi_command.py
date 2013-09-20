@@ -110,6 +110,7 @@ class RRServerCommand:
     name = "rrserver"
     description = "Monitor an instrumented web application"
     def execute(self, params):
+	print "Remember to kill any old processes"
         parser = OptionParser()
         (opt,args) = parser.parse_args(args=params)
         if len(args) != 1:

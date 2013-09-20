@@ -50,9 +50,9 @@ If you have a fresh installation of Ubuntu, you can install all the requirements
     sudo apt-get update
     sudo apt-get install oracle-java7-installer
     sudo update-java-alternatives -s java-7-oracle
-    sudo apt-get git
-    sudo apt-get libgmp10
-    sudo apt-get chromium-browser
+    sudo apt-get install git
+    sudo apt-get install libgmp10
+    sudo apt-get install chromium-browser
 
 ### Installation
 
@@ -78,13 +78,13 @@ Run no analysis and check if record and replay executions produce same output on
 
     python ./scripts/units.py
 
-The remaining commands require a UNIX shell.
-
 Run no analysis and check if record and replay executions produce same
 output on the sunspider benchmarks located under
 tests/sunspider1/.
 
-    ./scripts/testsp
+    python scripts/testsp
+
+The remaining commands require a UNIX shell.
 
 Run likely type inference analysis on the sunspider benchmarks located under tests/sunspider1/.
 
@@ -186,6 +186,8 @@ You can now play the game for sometime.  Try two moves.  This will generate a ja
     export JALANGI_MODE=replay
     export JALANGI_ANALYSIS=analyses/objectalloc/ObjectAllocationTrackerEngine
     node src/js/commands/replay.js jalangi_trace1
+
+## Further examples of record and replay
 
 ***
 

@@ -99,7 +99,7 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         print rep
 	wcl = util.count_lines("jalangi_trace")
 	with open("../jalangi_test_results", 'a') as f:
-	    f.write(str(wcl))
+	    f.write("# of lines in jalangi_trace for {}: {}".format(filee,str(wcl)))
 	    f.write("\n")
         if norm != rep: #TODO: Factor out this.
             import difflib

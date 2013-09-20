@@ -95,12 +95,16 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         os.putenv("JALANGI_MODE", "replay")
         os.putenv("JALANGI_ANALYSIS", "analyses/concolic/SymbolicEngine")
         rep = replay()
+	print "!!", rep
         (open("jalangi_replay", "w")).write(rep)
         print rep
-	wcl = util.count_lines("jalangi_trace")
-	with open("../jalangi_test_results", 'a') as f:
-	    f.write("# of lines in jalangi_trace for {}: {}".format(filee,str(wcl)))
-	    f.write("\n")
+	try:
+		wcl = util.count_lines("jalangi_trace")
+	
+		with open("../jalangi_test_results", 'a') as f:
+		    f.write("# of lines in jalangi_trace for {}: {}".format(filee,str(wcl)))
+		    f.write("\n")
+	except: pass	
         if norm != rep: #TODO: Factor out this.
             import difflib
             with open("../jalangi_test_results", 'a') as f:

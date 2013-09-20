@@ -1,4 +1,4 @@
-from subprocess import check_output, CalledProcessError
+from subprocess import call, CalledProcessError
 import sys
 import subprocess
 import fnmatch
@@ -43,9 +43,9 @@ total = len(tests)
 print "Running {} tests".format(total)
 for (case, expected) in tests:
     try:
-        out = check_output(["python", SCRIPT, "analyze", "-a", "analyses/objectalloc/ObjectAllocationTrackerEngine", case])
+        call(["python", SCRIPT, "analyze", "-a", "analyses/objectalloc/ObjectAllocationTrackerEngine", case])
     except CalledProcessError as e:
-        out = e.output
+        pass
 
 
 

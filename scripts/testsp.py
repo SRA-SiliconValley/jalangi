@@ -1,6 +1,6 @@
 from subprocess import check_output, CalledProcessError
 import sys
-import subprocess
+from subprocess import call
 import fnmatch
 import os
 
@@ -43,18 +43,8 @@ total = len(tests)
 print "Running {} tests".format(total)
 for (case, expected) in tests:
     try:
-        out = check_output(["python", SCRIPT, "concolic", "-i", str(expected), case])
+        call(["python", SCRIPT, "concolic", "-i", str(expected), case])
     except CalledProcessError as e:
-        out = e.output
-    if "{}.js passed".format(case) in out:
-        print "{} passed".format(case)
-        print out
-    else:
-        print "{}.js failed:".format(case)
-        print out
-        failed = failed + 1;
-
-print "\nPass: {}".format(total - failed)
-print "Fail: {}".format(failed)
+        pass
 
 

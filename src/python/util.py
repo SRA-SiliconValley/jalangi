@@ -19,6 +19,7 @@ import os
 import subprocess
 import sys
 import shutil
+from tempfile import NamedTemporaryFile
 
 def get_analysis(a):
     ka = {"concolic" : "analyses/concolic/SymbolicEngine",
@@ -91,10 +92,13 @@ def run_node_script(script, *args, **kwargs):
     if jal.coverage():
         cmd = cmd + ["cover", "run"]
     cmd = cmd + ([find_node()] if not jal.coverage() else [])
-    try:
-        return subprocess.check_output(cmd + [script] + [x for x in args], stderr=open(os.devnull, 'wb'))
-    except subprocess.CalledProcessError as e:
-        return e.output
+    with NamedTemporaryFile() as f:
+         try:
+           subprocess.check_call(cmd + [script] + [x for x in args],stdout=f, stderr=open(os.devnull, 'wb'),bufsize=1000)
+	   f.seek(0)
+	   return f.read()
+         except subprocess.CalledProcessError as e:
+ 		return ""
 
 def is_node_exe(path):
     try:

@@ -100,15 +100,15 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         print rep
         if norm != rep: #TODO: Factor out this.
             import difflib
-            with open("jalangi_test_results", 'a') as f:
+            with open("../jalangi_test_results", 'a') as f:
                 f.write("\n")
-                for line in difflib.unified_diff(norm.splitlines(1), rec.splitlines(1), fromfile='normal', tofile='replay'):
+                for line in difflib.unified_diff(norm.splitlines(1), rec.splitlines(1), fromfile='normal.{}'.format(filee), tofile='replay.{}'.format(filee)):
                     f.write(line)
         if rec != rep:
             import difflib
-            with open("jalangi_test_results", 'a') as f:
+            with open("../jalangi_test_results", 'a') as f:
                 f.write("\n")
-                for line in difflib.unified_diff(rec.splitlines(1), rep.splitlines(1), fromfile='replay', tofile='record'):
+                for line in difflib.unified_diff(rec.splitlines(1), rep.splitlines(1), fromfile='replay.{}'.format(filee), tofile='record.{}'.format(filee)):
                     f.write(line)
         #TODO: Echo number of lines??
         try:

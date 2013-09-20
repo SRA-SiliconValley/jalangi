@@ -43,18 +43,9 @@ total = len(tests)
 print "Running {} tests".format(total)
 for (case, expected) in tests:
     try:
-        out = check_output(["python", SCRIPT, "concolic", "-i", str(expected), case])
+        out = check_output(["python", SCRIPT, "analyze", "-a", "analyses/trackundefinednull/UndefinedNullTrackingEngine", case])
     except CalledProcessError as e:
         out = e.output
-    if "{}.js passed".format(case) in out:
-        print "{} passed".format(case)
-        print out
-    else:
-        print "{}.js failed:".format(case)
-        print out
-        failed = failed + 1;
 
-print "\nPass: {}".format(total - failed)
-print "Fail: {}".format(failed)
 
 

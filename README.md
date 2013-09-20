@@ -82,21 +82,19 @@ Run no analysis and check if record and replay executions produce same
 output on the sunspider benchmarks located under
 tests/sunspider1/.
 
-    python scripts/testsp
-
-The remaining commands require a UNIX shell.
+    python scripts/testsp.py
 
 Run likely type inference analysis on the sunspider benchmarks located under tests/sunspider1/.
 
-    ./scripts/testsp_likelytype
+    python scripts/testsp_likelytype.py
 
 Run tracker of origin of null and undefined on the sunspider benchmarks located under tests/sunspider1/.
 
-    ./scripts/testsp_tracknull
+    python scripts/testsp_tracknull.py
 
 Run a simple heap profiler on the sunspider benchmarks located under tests/sunspider1/.
 
-    ./scripts/testsp_heapprofiling
+    python scripts/testsp_heapprofiling.py
 
 Record an execution of tests/unit/qsort.js and create jalangi_trace.html which when loaded in a browser replays the execution.
 

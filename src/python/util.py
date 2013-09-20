@@ -28,8 +28,8 @@ def get_analysis(a):
           "nop" : "analyses/nop/NOPEngine",
           "objectalloc" : "analyses/objectalloc/ObjectAllocationTrackerEngine",
           "simpletaint" : "analyses/simpletaint/TaintEngine",
-          "trackundefinednull" : "analysis/trackundefinednull/UndefinedNullTrackingEngine",
-          "wrapping" : "analysis/wrapping/WrappingEngine"}
+          "trackundefinednull" : "analyses/trackundefinednull/UndefinedNullTrackingEngine",
+          "wrapping" : "analyses/wrapping/WrappingEngine"}
     if a in ka.keys():
         return ka[a]
     return None
@@ -92,7 +92,7 @@ def run_node_script(script, *args, **kwargs):
         cmd = cmd + ["cover", "run"]
     cmd = cmd + ([find_node()] if not jal.coverage() else [])
     try:
-        return subprocess.check_output(cmd + [script] + [x for x in args], stderr=subprocess.STDOUT)
+        return subprocess.check_output(cmd + [script] + [x for x in args], stderr=open(os.devnull, 'wb'))
     except subprocess.CalledProcessError as e:
         return e.output
 

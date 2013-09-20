@@ -56,7 +56,7 @@ class ServerCommand:
         import SocketServer
         parser = OptionParser()
         parser.add_option("-p", "--port", dest="port",
-                          help="Which port to use", default="8080")
+                          help="Which port to use", default="8000")
         (options, args) = parser.parse_args(args=params)
         Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
         httpd = SocketServer.TCPServer(("", int(options.port)), Handler)

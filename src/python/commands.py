@@ -64,8 +64,8 @@ def replay(jalangi=util.DEFAULT_INSTALL):
 def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
     try:
         shutil.rmtree("jalangi_tmp")
+        shutil.remove("jalangi_test_results")
     except: pass
-    print "!!", filee, inputs
     os.mkdir("jalangi_tmp")
     os.mkdir("jalangi_tmp/out")
     os.putenv("JALANGI_HOME", jalangi.get_home())
@@ -168,7 +168,7 @@ def rrserver(url):
         copyfile("next.js", "jalangi_next.js")
     except: pass
     import sys
-    Popen(['node', 'src/js/commands/socket.js', '127.0.0.1', '8080', sys.argv[1]])
+    Popen(['node', 'src/js/commands/socket.js', '127.0.0.1', '8083', sys.argv[1]])
     sleep(2)
     webbrowser.open(sys.argv[2])
     

@@ -135,6 +135,11 @@ def head(f,n):
         head=list(islice(ff,n))
     return head
 
+def count_lines(f):
+    with open(f) as fin:
+	ines = sum(1 for line in fin)
+    return ines
+
 def move_coverage(jalangi):
     if jalangi.coverage():
         shutil.move(".coverage_data", "..")

@@ -2,6 +2,8 @@ from subprocess import check_output, CalledProcessError
 import sys
 import subprocess
 import fnmatch
+import os
+
 
 tests = [
     ("tests/unit/instrument-test", 1),
@@ -48,6 +50,9 @@ tests = [
 SCRIPT = "src/python/jalangi_command.py"
 failed = 0
 pat = "*" + sys.argv[1] + "*" if len(sys.argv) > 1 else None
+try:
+    os.remove("jalangi_test_results")
+except:pass
 if pat != None:
     tests = [(c,e) for (c,e) in tests if fnmatch.fnmatch(c,pat)]
 total = len(tests)

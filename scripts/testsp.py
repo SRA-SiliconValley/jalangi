@@ -2,8 +2,10 @@ from subprocess import check_output, CalledProcessError
 import sys
 import subprocess
 import fnmatch
+import os
 
-tests = [("tests/sunspider1/3d-morph", 1),
+tests = [
+    ("tests/sunspider1/3d-morph", 1),
     ("tests/sunspider1/3d-raytrace", 1),
     ("tests/sunspider1/access-binary-trees", 1),
     ("tests/sunspider1/access-fannkuch", 1),
@@ -28,9 +30,11 @@ tests = [("tests/sunspider1/3d-morph", 1),
     ("tests/sunspider1/crypto-aes", 1),
     ("tests/sunspider1/string-validate-input", 1),
     ("tests/sunspider1/string-base64", 1)]
-
 SCRIPT = "src/python/jalangi_command.py"
 failed = 0
+try:
+    os.remove("jalangi_test_results")
+except :pass
 pat = "*" + sys.argv[1] + "*" if len(sys.argv) > 1 else None
 if pat != None:
     tests = [(c,e) for (c,e) in tests if fnmatch.fnmatch(c,pat)]

@@ -3,9 +3,7 @@ import sys
 import subprocess
 import fnmatch
 
-tests = [
-    ("tests/sunspider1/3d-cube", 1),
-    ("tests/sunspider1/3d-morph", 1),
+tests = [("tests/sunspider1/3d-morph", 1),
     ("tests/sunspider1/3d-raytrace", 1),
     ("tests/sunspider1/access-binary-trees", 1),
     ("tests/sunspider1/access-fannkuch", 1),

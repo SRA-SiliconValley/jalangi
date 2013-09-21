@@ -285,15 +285,18 @@
     }
 
 
+    var pad = "  ";
+
     function singleInvokeFun(iid, base, f, args, isConstructor) {
         var g, invoke, val;
 
-        //console.log("    Calling "+ f.name);
+        console.log(pad + "Calling " + f.name + " " + getIIDInfo(iid));
         var f_m = getSymbolicFunctionToInvoke(f, isConstructor);
 
         invoke = f_m || f === undefined || HOP(f, SPECIAL_PROP2) || typeof f !== "function";
         g = f_m || f;
         pushSwitchKey();
+        pad = pad + "  ";
         try {
             if (g === EVAL_ORG) {
                 val = invokeEval(base, g, args);
@@ -307,9 +310,10 @@
                 val = undefined;
             }
         } finally {
+            pad = pad.substring(2);
             popSwitchKey();
         }
-        //console.log("    Returning "+ f.name);
+        console.log(pad + "Returning " + f.name);
 
         return val;
     }

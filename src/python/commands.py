@@ -64,7 +64,6 @@ def replay(jalangi=util.DEFAULT_INSTALL):
 def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
     try:
         shutil.rmtree("jalangi_tmp")
-        shutil.remove("jalangi_test_results")
     except: pass
     os.mkdir("jalangi_tmp")
     os.mkdir("jalangi_tmp/out")
@@ -96,8 +95,16 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         os.putenv("JALANGI_MODE", "replay")
         os.putenv("JALANGI_ANALYSIS", "analyses/concolic/SymbolicEngine")
         rep = replay()
+	print "!!", rep
         (open("jalangi_replay", "w")).write(rep)
         print rep
+	try:
+		wcl = util.count_lines("jalangi_trace")
+	
+		with open("../jalangi_test_results", 'a') as f:
+		    f.write("# of lines in jalangi_trace for {}: {}".format(filee,str(wcl)))
+		    f.write("\n")
+	except: pass	
         if norm != rep: #TODO: Factor out this.
             import difflib
             with open("../jalangi_test_results", 'a') as f:
@@ -110,7 +117,7 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
                 f.write("\n")
                 for line in difflib.unified_diff(rec.splitlines(1), rep.splitlines(1), fromfile='replay.{}'.format(filee), tofile='record.{}'.format(filee)):
                     f.write(line)
-        #TODO: Echo number of lines??
+	
         try:
             iters = int(util.head("jalangi_tail",1)[0])
         except: pass

@@ -41,7 +41,6 @@ class AnalysisCommand:
         parser.add_option("-a", "--analysis", dest="analysis",
                           help="Use analysis implemented in ANALYSIS", default="%NOT_SET")
         (options, args) = parser.parse_args(args=params)
-        print "!!" , commands, util
         if len(args) < 1 or options.analysis == "%NOT_SET":
             print "Invalid command line"
             parser.print_help()
@@ -110,6 +109,7 @@ class RRServerCommand:
     name = "rrserver"
     description = "Monitor an instrumented web application"
     def execute(self, params):
+	print "Remember to kill any old processes"
         parser = OptionParser()
         (opt,args) = parser.parse_args(args=params)
         if len(args) != 1:

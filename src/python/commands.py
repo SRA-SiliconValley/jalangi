@@ -151,15 +151,21 @@ def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
 
 def run_config(config, jalangi=util.DEFAULT_INSTALL):
     os.chdir(config.working)
-    if not config.analysis in jalangi.analyses():
-        raise util.JalangiException(jalangi, "Unknown analysis {}".format(config.analysis))
     if config.analysis == "concolic":
         ops = config.parameters.split()
         if len(ops) == 2 and ops[0] == "-i":
             concolic( os.path.join(config.working,config.mainfile), int(ops[1]), jalangi)
         else:
             concolic( os.path.join(config.working,config.mainfile), 1000, jalangi)
+    elif config.analysis == "record":
+        script = config.mainfile
+        instrument(script)
+        p = config.parameters
+        rrserver(p)
+        time.sleep(10000)
     else:
+        if not config.analysis in jalangi.analyses():
+            raise util.JalangiException(jalangi, "Unknown analysis {}".format(config.analysis))
         analysis(util.get_analysis(config.analysis), os.path.join(config.working,config.mainfile) ,  jalangi)
 
 def rrserver(url):
@@ -175,8 +181,8 @@ def rrserver(url):
         copyfile("next.js", "jalangi_next.js")
     except: pass
     import sys
-    Popen(['node', 'src/js/commands/socket.js', '127.0.0.1', '8000', sys.argv[1]])
+    Popen(['node', 'src/js/commands/socket.js', '127.0.0.1', '8000', url])
     sleep(2)
-    webbrowser.open(sys.argv[2])
+    webbrowser.open(url)
     
   

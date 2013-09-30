@@ -150,7 +150,10 @@ def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
         print "Test results are in {}".format("cover_html/index.html")
 
 def run_config(config, jalangi=util.DEFAULT_INSTALL):
-    os.chdir(config.working)
+    if (config.working == ""):
+        os.chdir(jalangi.get_home())
+    else:
+        os.chdir(config.working)
     if config.analysis == "concolic":
         ops = config.parameters.split()
         if len(ops) == 2 and ops[0] == "-i":
@@ -163,6 +166,9 @@ def run_config(config, jalangi=util.DEFAULT_INSTALL):
         p = config.parameters
         rrserver(p)
         time.sleep(10000)
+    elif config.analysis == "replay":
+        print util.run_node_script("src/js/commands/createReplay.js", "jalangi_trace1", jalangi=jalangi)
+        webbrowser.open(os.path.abspath("jalangi_trace1.html"))
     else:
         if not config.analysis in jalangi.analyses():
             raise util.JalangiException(jalangi, "Unknown analysis {}".format(config.analysis))

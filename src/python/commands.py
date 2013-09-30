@@ -123,6 +123,8 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         except: pass
         i = i + 1
         
+    for i in glob.glob("jalangi_inputs*"):
+        print "*** Generated (jalangi_tmp/{}:1:1) for ({}.js:1:1)".format(i,filee)
     iters = iters + 1
     if iters == inputs:
         print "{}.js passed".format(filee)
@@ -142,7 +144,7 @@ def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
     for i in glob.glob("jalangi_inputs*"):
         print "Running {} on {}".format(filee, i)
         shutil.copy(i, "inputs.js")
-        util.run_node_script(os.path.join(os.pardir,filee +".js"), jalangi=jalangi)
+        print util.run_node_script(os.path.join(os.pardir,filee +".js"), jalangi=jalangi, savestderr=True)
     if jalangi.coverage():
         time.sleep(2)
         os.system("cover combine")
@@ -169,6 +171,8 @@ def run_config(config, jalangi=util.DEFAULT_INSTALL):
     elif config.analysis == "replay":
         print util.run_node_script("src/js/commands/createReplay.js", "jalangi_trace1", jalangi=jalangi)
         webbrowser.open(os.path.abspath("jalangi_trace1.html"))
+    elif config.analysis == "rerunall":
+        rerunall(os.path.join(config.working,config.mainfile), jalangi)
     else:
         if not config.analysis in jalangi.analyses():
             raise util.JalangiException(jalangi, "Unknown analysis {}".format(config.analysis))

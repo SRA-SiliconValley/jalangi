@@ -85,6 +85,7 @@ class JalangiException(Exception):
 def run_node_script(script, *args, **kwargs):
     """Execute script and returns output string"""
     jal = kwargs['jalangi']
+    saveStdErr = kwargs['savestderr'] if 'savestderr' in kwargs else False
     if jal.timed():
         cmd = ["time"]
     else:
@@ -94,11 +95,13 @@ def run_node_script(script, *args, **kwargs):
     cmd = cmd + ([find_node()] if not jal.coverage() else [])
     with NamedTemporaryFile() as f:
          try:
-           subprocess.check_call(cmd + [script] + [x for x in args],stdout=f, stderr=open(os.devnull, 'wb'),bufsize=1000)
-	   f.seek(0)
-	   return f.read()
+             subprocess.check_call(cmd + [script] + [x for x in args],stdout=f, 
+                                   stderr=f if saveStdErr else open(os.devnull, 'wb'),bufsize=1000)
+             f.seek(0)
+             return f.read()
          except subprocess.CalledProcessError as e:
- 		return ""
+             f.seek(0)
+             return f.read()
 
 def is_node_exe(path):
     try:

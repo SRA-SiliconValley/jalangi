@@ -55,7 +55,7 @@ class JalangiInstall:
 
     def self_or_env(self,local,env):
         if hasattr(self,local):
-            return self.getattr(local)
+            return getattr(self, local)
         else:
             return os.environ[env] if env in os.environ else False
 

@@ -5,3 +5,4 @@ parameters=
 workingdirectory=/home/simonhj/src/jalangi
 resources=
 analysis=rerunall
+cover=true

@@ -87,7 +87,7 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
             os.remove("jalangi_trace")
         except:
             pass
-        norm = util.run_node_script(os.path.join(os.pardir,filee + ".js"), jalangi=jalangi)
+        norm = util.run_node_script(os.path.join(os.pardir,filee + ".js"), jalangi=jalangi, savestderr=True)
         #(open("jalangi_normal", "w")).write(norm)
         print "---- Recording execution of {} ----".format(filee)
         rec = record(os.path.join(os.pardir,filee), instrumented_f)
@@ -124,7 +124,7 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         i = i + 1
         
     for i in glob.glob("jalangi_inputs*"):
-        print "*** Generated (jalangi_tmp/{}:1:1) for ({}.js:1:1)".format(i,filee)
+        print "*** Generated ({}:1:1) for ({}.js:1:1)".format(os.path.abspath(i),filee)
     iters = iters + 1
     if iters == inputs:
         print "{}.js passed".format(filee)
@@ -149,6 +149,9 @@ def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
         time.sleep(2)
         os.system("cover combine")
         os.system("cover report")
+        shutil.copy("cover_html/index.html","../jalangi/out/out.html")
+        for x in glob.glob("cover_html/*.*"):
+            shutil.copy(x,  "../jalangi/out/".format(x))
         print "Test results are in {}".format("cover_html/index.html")
 
 def run_config(config, jalangi=util.DEFAULT_INSTALL):
@@ -156,6 +159,8 @@ def run_config(config, jalangi=util.DEFAULT_INSTALL):
         os.chdir(jalangi.get_home())
     else:
         os.chdir(config.working)
+    if config.cover:
+        jalangi.use_coverage = True
     if config.analysis == "concolic":
         ops = config.parameters.split()
         if len(ops) == 2 and ops[0] == "-i":

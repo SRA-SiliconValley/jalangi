@@ -148,7 +148,7 @@ def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
     if jalangi.coverage():
         time.sleep(2)
         os.system("cover combine")
-        os.system("cover report")
+        os.system("cover report html")
         shutil.copy("cover_html/index.html","../jalangi/out/out.html")
         for x in glob.glob("cover_html/*.*"):
             shutil.copy(x,  "../jalangi/out/".format(x))

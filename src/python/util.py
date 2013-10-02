@@ -91,7 +91,7 @@ def run_node_script(script, *args, **kwargs):
     else:
         cmd = []
     if jal.coverage():
-        cmd = cmd + ["cover", "run"]
+        cmd = cmd + ["cover", "-i", os.path.join(jal.get_home(),".coverignore"), "run"]
     cmd = cmd + ([find_node()] if not jal.coverage() else [])
     with NamedTemporaryFile() as f:
          try:

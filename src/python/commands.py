@@ -39,6 +39,7 @@ def analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
     os.putenv("JALANGI_ANALYSIS", analysis)
     print replay(jalangi)
     util.move_coverage(jalangi)
+    util.handle_dot_files(temp_dir, filee)
 
 def record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
     os.putenv("JALANGI_MODE", "record")
@@ -95,7 +96,6 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         os.putenv("JALANGI_MODE", "replay")
         os.putenv("JALANGI_ANALYSIS", "analyses/concolic/SymbolicEngine")
         rep = replay()
-	print "!!", rep
         (open("jalangi_replay", "w")).write(rep)
         print rep
 	try:
@@ -155,10 +155,12 @@ def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
         print "Test results are in {}".format("cover_html/index.html")
 
 def run_config(config, jalangi=util.DEFAULT_INSTALL):
-    if (config.working == ""):
-        os.chdir(jalangi.get_home())
-    else:
-        os.chdir(config.working)
+    def chdir():
+        if (config.working == ""):
+            os.chdir(jalangi.get_home())
+        else:
+            os.chdir(config.working)
+    chdir()
     if config.cover:
         jalangi.use_coverage = True
     if config.analysis == "concolic":
@@ -182,6 +184,16 @@ def run_config(config, jalangi=util.DEFAULT_INSTALL):
         if not config.analysis in jalangi.analyses():
             raise util.JalangiException(jalangi, "Unknown analysis {}".format(config.analysis))
         analysis(util.get_analysis(config.analysis), os.path.join(config.working,config.mainfile) ,  jalangi)
+    try:
+        put_dot = config.dot
+        chdir()
+        p = os.path.dirname(config.mainfile)
+        dot_files = []
+        for f in glob.glob("{}/*.dot".format(p)):
+            shutil.copy(f,put_dot)
+            dot_files.append(os.path.abspath(f))
+        util.render_dot_files(put_dot, dot_files)
+    except: pass
 
 def rrserver(url):
     def delete_glob(pat):

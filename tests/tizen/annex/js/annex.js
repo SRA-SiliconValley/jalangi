@@ -619,7 +619,7 @@ function getMessage(key, alter) {
     return ret;
 }
 
-$(document).ready(function(){
+(function(){
     license_init("license", "open");
     $('title').html(getMessage('name', 'Annex'));
     $('#open1').html(getMessage('1PlayerGame', '1 Player Game'));
@@ -679,4 +679,4 @@ $(document).ready(function(){
         }).find('.configure_panel_text').html(getMessage('exit','Exit'));
 
     World.playSound('snd_theme');
-});
+})();

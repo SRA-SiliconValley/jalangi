@@ -20,6 +20,7 @@ import subprocess
 import sys
 import shutil
 from tempfile import NamedTemporaryFile
+import glob
 
 def get_analysis(a):
     ka = {"concolic" : "analyses/concolic/SymbolicEngine",
@@ -150,3 +151,23 @@ def count_lines(f):
 def move_coverage(jalangi):
     if jalangi.coverage():
         shutil.move(".coverage_data", "..")
+
+def handle_dot_files(dr, filee):
+    todir = os.path.dirname(filee)
+    for f in glob.glob("*.dot"):
+        shutil.copy(f, todir)
+        
+def render_dot_files(put_dot, dot_files):
+    os.chdir(put_dot)
+    def render_dot_file(f):
+        out_file = os.path.basename(f) + ".png"
+        subprocess.call(["dot","-T", "png"], stdin=open(f, "r"), stdout=open(out_file, "w"))
+        return out_file
+    htmls = ['<img src="{}"/>'.format(render_dot_file(x)) for x in dot_files]
+    with open("out.html", "w") as f:
+        f.write("<br/>".join(htmls))
+        f.write("\n")
+    
+    
+    
+    

@@ -132,6 +132,34 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         print "{}.js failed".format(filee)
     util.move_coverage(jalangi)
 
+
+def symbolic (filee, inputs, analysis, jalangi=util.DEFAULT_INSTALL):
+    try:
+        shutil.rmtree("jalangi_tmp")
+    except: pass
+    os.mkdir("jalangi_tmp")
+    os.putenv("JALANGI_HOME", jalangi.get_home())
+    os.chdir("jalangi_tmp")
+    (instrumented_f, out) = instrument(os.path.join(os.pardir,filee), jalangi=jalangi)
+    i = 0
+    iters = 1
+    while i <= iters and i <= inputs:
+        try:                    # Ignore failures on first iteration
+            os.remove("inputs.js")
+        except:
+            pass
+        if not os.path.isfile("inputs.js"):
+            util.mkempty("inputs.js")
+        os.putenv("JALANGI_MODE", "symbolic")
+        os.putenv("JALANGI_ANALYSIS", analysis)
+        util.run_node_script_std(os.path.join(os.path.dirname(os.path.join(os.pardir,filee) + ".js"),instrumented_f), jalangi=jalangi, savestderr=True)
+        try:
+            iters = int(util.head("jalangi_tail",1)[0])
+        except: pass
+        i = i + 1
+
+    print "Tests Generated = {}".format(iters)
+
 def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
     os.chdir("jalangi_tmp")
     try:

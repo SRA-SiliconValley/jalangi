@@ -1,6 +1,12 @@
-exports.sanitizePath = function(path) {
-    if (process.platform == "win32") {
-	return path.split("\\").join("\\\\")
+(function () {
+    var sanf = function(path) {
+	if (process.platform == "win32") {
+	    return path.split("\\").join("\\\\")
+	}
+	return path
     }
-    return path
-}
+    if (typeof window == 'undefined')
+	exports.sanitizePath = sanf
+    else
+	window.sanitizePath = sanf
+})()

@@ -171,10 +171,9 @@ def run_config(config, jalangi=util.DEFAULT_INSTALL):
             concolic( os.path.join(config.working,config.mainfile), 1000, jalangi)
     elif config.analysis == "record":
         script = config.mainfile
-        instrument(script)
+        print instrument(script)
         p = config.parameters
         rrserver(p)
-        time.sleep(10000)
     elif config.analysis == "replay":
         print util.run_node_script("src/js/commands/createReplay.js", "jalangi_trace1", jalangi=jalangi)
         webbrowser.open(os.path.abspath("jalangi_trace1.html"))

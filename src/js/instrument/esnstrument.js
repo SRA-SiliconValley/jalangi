@@ -21,10 +21,8 @@
         esprima = require("esprima");
         escodegen = require('escodegen');
     }
-    if (typeof require != 'undefined')
-	sanitizePath = require("../utils/paths").sanitizePath
-    else
-	sanitizePath = window.sanitizePath
+    
+    sanitizePath = require("../utils/paths").sanitizePath
 
     var FILESUFFIX1 = "_jalangi_";
     var COVERAGE_FILE_NAME = "jalangi_coverage";

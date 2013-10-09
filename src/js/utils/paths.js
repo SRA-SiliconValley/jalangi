@@ -1,12 +1,6 @@
-(function () {
-    var sanf = function(path) {
-	if (process.platform == "win32") {
-	    return path.split("\\").join("\\\\")
-	}
-	return path
+exports.sanitizePath = function(path) {
+    if (process.platform == "win32") {
+	return path.split("\\").join("\\\\")
     }
-    if (typeof window == 'undefined')
-	exports.sanitizePath = sanf
-    else
-	window.sanitizePath = sanf
-})()
+    return path
+}

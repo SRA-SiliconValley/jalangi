@@ -28,7 +28,7 @@ var o = J$.readInput();
 
 if (o.x) {
     if (o.x.y === 3) {
-        console.log("1: "+o.x.y);
+        console.log("Printing o: "+JSON.stringify(o));
     }
 }
 

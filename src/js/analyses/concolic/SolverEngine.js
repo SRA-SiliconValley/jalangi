@@ -37,8 +37,8 @@
             });
 
             var run = libc.system;*/
-	    es = require('execSync')
-            es.run(cmd);
+    	    es = require('execSync')
+            es.exec(cmd);
         }
 
         function HOP(obj, prop) {
@@ -216,10 +216,10 @@
 
         function invokeSMTSolver(tail, newInputs) {
             //console.log(require('path').resolve(__dirname)+"/../thirdparty/cvc3/bin/cvc3 < "+FORMULA_FILE_NAME+tail+" > "+SOLUTION_FILE_NAME+tail);
-	    if (process.platform == "win32") {
-		execSync(require('path').resolve(__dirname)+"/../../../../thirdparty/cvc3/bin/cvc3.exe < "+FORMULA_FILE_NAME+tail+" > "+SOLUTION_FILE_NAME+tail);
-	    } else
-		execSync(require('path').resolve(__dirname)+"/../../../../thirdparty/cvc3/bin/cvc3 < "+FORMULA_FILE_NAME+tail+" > "+SOLUTION_FILE_NAME+tail);
+    	    if (process.platform == "win32") {
+	    	    execSync(require('path').resolve(__dirname)+"/../../../../thirdparty/cvc3/bin/cvc3.exe < "+FORMULA_FILE_NAME+tail+" > "+SOLUTION_FILE_NAME+tail);
+	        } else
+		        execSync(require('path').resolve(__dirname)+"/../../../../thirdparty/cvc3/bin/cvc3 < "+FORMULA_FILE_NAME+tail+" > "+SOLUTION_FILE_NAME+tail);
             return parseInputs(tail, newInputs);
         }
 

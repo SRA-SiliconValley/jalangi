@@ -47,6 +47,19 @@ class AnalysisCommand:
             sys.exit(1)
         print commands.analysis(options.analysis, os.path.abspath(args[0]))
 
+class TestRecordReplayCommand:
+    name = "Analysis"
+    description = "Run a Jalangi Analysis"
+    def execute(self, params):
+        parser = OptionParser()
+        (options, args) = parser.parse_args(args=params)
+        if len(args) < 1:
+            print "Invalid command line"
+            parser.print_help()
+            sys.exit(1)
+        print commands.testrr(os.path.abspath(args[0]))
+
+
 class ServerCommand:
     name = "Server"
     description = "Run a simple HTTP server serving the current directory"
@@ -140,6 +153,7 @@ class RRServerCommand:
         
 COMMANDS = {"instrument" : InstrumentCommand,
             "analyze" : AnalysisCommand,
+            "testrr" : TestRecordReplayCommand,
             "concolic" : ConcolicCommand,
             "symbolic" : SymbolicCommand,
             "rerunall" : RerunAllCommand,

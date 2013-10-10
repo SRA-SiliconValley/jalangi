@@ -57,6 +57,7 @@ failed = 0
 pat = "*" + sys.argv[1] + "*" if len(sys.argv) > 1 else None
 try:
     os.remove("jalangi_test_results")
+    os.remove("jalangi_sym_test_results")
 except:pass
 if pat != None:
     tests = [(c,e) for (c,e) in tests if fnmatch.fnmatch(c,pat)]

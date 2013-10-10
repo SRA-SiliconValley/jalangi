@@ -32,13 +32,14 @@
         var SymbolicBool = require('../concolic/SymbolicBool');
 
         function execSync(cmd) {
-            var FFI = require("node-ffi");
-            var libc = new FFI.Library(null, {
-                "system": ["int32", ["string"]]
-            });
+            /*   var FFI = require("ffi");
+             var libc = new FFI.Library(null, {
+             "system": ["int32", ["string"]]
+             });
 
-            var run = libc.system;
-            run(cmd);
+             var run = libc.system;*/
+            es = require('execSync')
+            es.exec(cmd);
         }
 
         function HOP(obj, prop) {
@@ -107,7 +108,10 @@
 
         function invokeSMTSolver(newInputs, mode) {
             //console.log("Invoking cvc3 ...");
-            execSync(require('path').resolve(__dirname)+"/../../../../thirdparty/cvc3/bin/cvc3 < "+FORMULA_FILE_NAME+mode+" > "+SOLUTION_FILE_NAME+mode);
+            if (process.platform == "win32") {
+                execSync(require('path').resolve(__dirname)+"/../../../../thirdparty/cvc3/bin/cvc3.exe < "+FORMULA_FILE_NAME+mode+" > "+SOLUTION_FILE_NAME+mode);
+            } else
+                execSync(require('path').resolve(__dirname)+"/../../../../thirdparty/cvc3/bin/cvc3 < "+FORMULA_FILE_NAME+mode+" > "+SOLUTION_FILE_NAME+mode);
             //console.log("done");
             return parseInputs(newInputs, mode);
         }

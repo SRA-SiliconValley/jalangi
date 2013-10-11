@@ -56,11 +56,17 @@ def instrument(filee,output_dir=".",jalangi=util.DEFAULT_INSTALL):
     output = util.run_node_script(jalangi.instrumentation_script(), filee + ".js",  jalangi=jalangi)
     return (os.path.basename(filee) + "_jalangi_.js", output)
 
-def replay(jalangi=util.DEFAULT_INSTALL):
+def replay(f=None, jalangi=util.DEFAULT_INSTALL, analysis=None):
     """
     Invokes the replay.js script and returns the output
     """
-    return util.run_node_script(jalangi.replay_script(), jalangi=jalangi)
+    os.putenv("JALANGI_MODE", "replay")
+    if analysis != None:
+        os.putenv("JALANGI_ANALYSIS", util.get_analysis(analysis))
+    if f != None:
+        return util.run_node_script(jalangi.replay_script(),f, jalangi=jalangi)
+    else:
+        return util.run_node_script(jalangi.replay_script(), jalangi=jalangi)
 
 def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
     try:
@@ -178,6 +184,9 @@ def run_config(config, jalangi=util.DEFAULT_INSTALL):
     elif config.analysis == "replay":
         print util.run_node_script("src/js/commands/createReplay.js", "jalangi_trace1", jalangi=jalangi)
         webbrowser.open(os.path.abspath("jalangi_trace1.html"))
+    elif config.analysis.startswith("replay/"):
+        rm = config.analysis.split("/")[1]
+        print replay(f=config.mainfile, jalangi=jalangi, analysis=rm)
     elif config.analysis == "rerunall":
         rerunall(os.path.join(config.working,config.mainfile), jalangi)
     else:

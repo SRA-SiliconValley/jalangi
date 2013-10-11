@@ -37,7 +37,7 @@ def analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
     print "---- Replaying {} with {}----".format(filee,analysis)
     os.putenv("JALANGI_MODE", "replay")
     os.putenv("JALANGI_ANALYSIS", analysis)
-    print replay(jalangi)
+    print replay(jalangi=jalangi)
     util.move_coverage(jalangi)
     util.handle_dot_files(temp_dir, filee)
 
@@ -64,6 +64,7 @@ def replay(f=None, jalangi=util.DEFAULT_INSTALL, analysis=None):
     if analysis != None:
         os.putenv("JALANGI_ANALYSIS", util.get_analysis(analysis))
     if f != None:
+        print "Hep",f 
         return util.run_node_script(jalangi.replay_script(),f, jalangi=jalangi)
     else:
         return util.run_node_script(jalangi.replay_script(), jalangi=jalangi)
@@ -186,6 +187,7 @@ def run_config(config, jalangi=util.DEFAULT_INSTALL):
         webbrowser.open(os.path.abspath("jalangi_trace1.html"))
     elif config.analysis.startswith("replay/"):
         rm = config.analysis.split("/")[1]
+        util.handle_dot_files(config.working, os.path.abspath(config.mainfile))
         print replay(f=config.mainfile, jalangi=jalangi, analysis=rm)
     elif config.analysis == "rerunall":
         rerunall(os.path.join(config.working,config.mainfile), jalangi)
@@ -193,16 +195,16 @@ def run_config(config, jalangi=util.DEFAULT_INSTALL):
         if not config.analysis in jalangi.analyses():
             raise util.JalangiException(jalangi, "Unknown analysis {}".format(config.analysis))
         analysis(util.get_analysis(config.analysis), os.path.join(config.working,config.mainfile) ,  jalangi)
-    try:
-        put_dot = config.dot
-        chdir()
-        p = os.path.dirname(config.mainfile)
-        dot_files = []
-        for f in glob.glob("{}/*.dot".format(p)):
+    put_dot = config.dot
+    chdir()
+    p = os.path.dirname(config.mainfile)
+    dot_files = []
+    for f in glob.glob(os.path.join(p, "*.dot").format(p)):
+        try: 
             shutil.copy(f,put_dot)
-            dot_files.append(os.path.abspath(f))
-        util.render_dot_files(put_dot, dot_files)
-    except: pass
+        except: pass
+        dot_files.append(os.path.abspath(f))
+    util.render_dot_files(put_dot, dot_files)
 
 def rrserver(url):
     def delete_glob(pat):

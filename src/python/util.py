@@ -155,7 +155,9 @@ def move_coverage(jalangi):
 def handle_dot_files(dr, filee):
     todir = os.path.dirname(filee)
     for f in glob.glob("*.dot"):
-        shutil.copy(f, todir)
+        try:
+            shutil.copy(f, todir)
+        except: pass
         
 def render_dot_files(put_dot, dot_files):
     os.chdir(put_dot)

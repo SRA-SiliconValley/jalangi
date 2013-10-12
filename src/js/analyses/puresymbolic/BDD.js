@@ -210,6 +210,25 @@
         return not(u);
     };
 
+
+
+    BDD.size = function(u)  {
+        var nodes = {size:0};
+        size(u, nodes);
+        return nodes.size;
+    };
+
+    function size (u, nodes) {
+        if (u !== BDD.one && u !== BDD.zero) {
+            if (!Object.prototype.hasOwnProperty.call(nodes, u.id)) {
+                nodes.size = nodes.size + 1;
+                nodes[u.id] = true;
+            }
+            size (u.high, nodes);
+            size (u.low, nodes);
+        }
+    }
+
     BDD.getFormula = function(u, literalToFormulas) {
         if (u === BDD.one) {
             return SymbolicBool.true;

@@ -602,6 +602,10 @@
     }
 
     function wrapConditional(node, test) {
+        if (node === null) {
+            return node;
+        } // to handle for(;;) ;
+
         printCondIidToLoc(node);
         var ret= replaceInExpr(
             logConditionalFunName+"("+RP+"1, "+RP+"2)",

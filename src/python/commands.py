@@ -27,8 +27,11 @@ import webbrowser
 
 
 def analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
-    temp_dir = mkdtemp()
-    os.chdir(temp_dir)
+    try:
+        shutil.rmtree("jalangi_tmp")
+    except: pass
+    os.mkdir("jalangi_tmp")
+    os.chdir("jalangi_tmp")
     #Instrument file first
     (instrumented_f,out) = instrument(filee, jalangi=jalangi)
     util.mkempty("inputs.js")

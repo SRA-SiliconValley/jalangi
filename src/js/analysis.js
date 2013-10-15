@@ -1311,7 +1311,9 @@ J$ = {};
                 trackedVal = trackedFrame[name];
 
                 if (mode === MODE_RECORD) {
-                    if (trackedVal === val || (val !== val && trackedVal !== trackedVal)) {
+                    if (trackedVal === val ||
+                        (val !== val && trackedVal !== trackedVal) ||
+                        (name === "this" && isInstrumentedCaller)) {
                         seqNo++;
                         ret = val;
                     } else {
@@ -1322,7 +1324,11 @@ J$ = {};
                     if (traceInfo.getCurrent() === undefined) {
                         traceInfo.next();
                         skippedReads++;
-                        ret = trackedVal;
+                        if (name === "this" && isInstrumentedCaller) {
+                            ret = val;
+                        } else {
+                            ret = trackedVal;
+                        }
                     } else {
                         ret = trackedFrame[name] = this.RR_L(iid, val, N_LOG_READ);
                     }

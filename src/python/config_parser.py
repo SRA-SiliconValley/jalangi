@@ -48,4 +48,6 @@ def parse_jalangi_conf_file(input_f, jalangi=util.DEFAULT_INSTALL):
         res.cover = False
     if "dot" in kv_pairs:
         res.dot = kv_pairs["dot"]
+    else:
+        res.dot = False
     return res

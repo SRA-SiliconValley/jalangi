@@ -195,16 +195,17 @@ def run_config(config, jalangi=util.DEFAULT_INSTALL):
         if not config.analysis in jalangi.analyses():
             raise util.JalangiException(jalangi, "Unknown analysis {}".format(config.analysis))
         analysis(util.get_analysis(config.analysis), os.path.join(config.working,config.mainfile) ,  jalangi)
-    put_dot = config.dot
-    chdir()
-    p = os.path.dirname(config.mainfile)
-    dot_files = []
-    for f in glob.glob(os.path.join(p, "*.dot").format(p)):
-        try: 
-            shutil.copy(f,put_dot)
-        except: pass
-        dot_files.append(os.path.abspath(f))
-    util.render_dot_files(put_dot, dot_files)
+    if config.dot != False:
+        put_dot = config.dot
+        chdir()
+        p = os.path.dirname(config.mainfile)
+        dot_files = []
+        for f in glob.glob(os.path.join(p, "*.dot").format(p)):
+            try: 
+                shutil.copy(f,put_dot)
+            except: pass
+            dot_files.append(os.path.abspath(f))
+            util.render_dot_files(put_dot, dot_files)
 
 def rrserver(url):
     def delete_glob(pat):

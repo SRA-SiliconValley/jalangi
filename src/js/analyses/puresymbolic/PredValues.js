@@ -17,10 +17,12 @@
 // Author: Koushik Sen
 
 
-(function(module){
+(function (module) {
 
     var SymbolicBool = require('../concolic/SymbolicBool');
     var SolverEngine = require('./SolverEngine');
+    var BDD = require('./BDD');
+
     var solver = new SolverEngine();
 
     function PredValues(pred, value) {
@@ -31,29 +33,42 @@
         if (pred instanceof PredValues) {
             this.values = [];
             var i, len = pred.values.length;
-            for (i=0; i<len; ++i) {
+            for (i = 0; i < len; ++i) {
                 this.values[i] = pred.values[i];
             }
         } else {
             this.values = [];
-            this.values[0] = {pred: pred, value: value};
+            this.values[0] = {pred:pred, value:value};
         }
     }
 
     PredValues.prototype = {
-        constructor: PredValues,
+        constructor:PredValues,
 
-        addValue: function(pred, value) {
-          this.values.push({pred: pred, value: value});
+        addValue:function (pred, value) {
+            var i, len = this.values.length;
+
+            for (i = 0; i < len; ++i) {
+                if (this.values[i].value === value) {
+                    var oldPred = this.values[i].pred;
+                    this.values[i] = {pred:pred.or(this.values[i].pred), value:value};
+                    // console.log("Reduced "+oldPred.toString()+" ***** and ******** "+pred.toString()+" ****** to ******* "+this.values[i].pred.toString()+" for "+value);
+                    console.log("Reduced BDD size "+(BDD.size(oldPred)+BDD.size(pred)-BDD.size(this.values[i].pred))+
+                        " for "+value);
+                    //console.log("Reduced "+oldPred.toString()+" ***** and ******** "+pred.toString()+" ****** to ******* "+this.values[i].pred.toString()+" for "+value);
+                    return;
+                }
+            }
+            this.values.push({pred:pred, value:value});
         },
 
-        toString: function() {
+        toString:function () {
             var i, len = this.values.length, sb = "[";
 
-            for (i=0; i<len; ++i) {
-                   sb = sb + "{ pred: "+this.values[i].pred.toString()+"\n, value: "+ this.values[i].value+"},\n";
+            for (i = 0; i < len; ++i) {
+                sb = sb + "{ pred: " + this.values[i].pred.toString() + "\n, value: " + this.values[i].value + "},\n";
             }
-            sb = sb +"]\n";
+            sb = sb + "]\n";
             return sb;
         }
     }

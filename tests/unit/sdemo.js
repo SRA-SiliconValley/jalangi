@@ -27,9 +27,7 @@ function whatIs(s) {
     if (i >= 0) {
         if (j > 0) {
             if (i + 2  === j) {
-                s = s+ "g";
-                s = "S"+s;
-                console.log("What is s? "+s);
+                console.log("s is "+s);
             }
         }
     }

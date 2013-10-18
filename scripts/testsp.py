@@ -5,32 +5,32 @@ import fnmatch
 import os
 
 tests = [
-    ("tests/sunspider1/3d-cube", 1),
-    ("tests/sunspider1/3d-morph", 1),
-    ("tests/sunspider1/3d-raytrace", 1),
-    ("tests/sunspider1/access-binary-trees", 1),
-    ("tests/sunspider1/access-fannkuch", 1),
-    ("tests/sunspider1/access-nbody", 1),
-    ("tests/sunspider1/access-nsieve", 1),
-    ("tests/sunspider1/bitops-3bit-bits-in-byte", 1),
-    ("tests/sunspider1/bitops-bits-in-byte", 1),
-    ("tests/sunspider1/bitops-bitwise-and", 1),
-    ("tests/sunspider1/controlflow-recursive", 1),
-    ("tests/sunspider1/crypto-md5", 1),
-    ("tests/sunspider1/crypto-sha1", 1),
-    ("tests/sunspider1/date-format-tofte", 1),
-    ("tests/sunspider1/date-format-xparb", 1),
-    ("tests/sunspider1/math-cordic", 1),
-    ("tests/sunspider1/math-partial-sums", 1),
-    ("tests/sunspider1/math-spectral-norm", 1),
-    ("tests/sunspider1/regexp-dna", 1),
-    ("tests/sunspider1/string-fasta", 1),
-    ("tests/sunspider1/string-tagcloud", 1),
-    ("tests/sunspider1/string-unpack-code", 1),
-    ("tests/sunspider1/bitops-nsieve-bits", 1),
-    ("tests/sunspider1/crypto-aes", 1),
-    ("tests/sunspider1/string-validate-input", 1),
-    ("tests/sunspider1/string-base64", 1)]
+    "tests/sunspider1/3d-cube",
+    "tests/sunspider1/3d-morph",
+    "tests/sunspider1/3d-raytrace",
+    "tests/sunspider1/access-binary-trees",
+    "tests/sunspider1/access-fannkuch",
+    "tests/sunspider1/access-nbody",
+    "tests/sunspider1/access-nsieve",
+    "tests/sunspider1/bitops-3bit-bits-in-byte",
+    "tests/sunspider1/bitops-bits-in-byte",
+    "tests/sunspider1/bitops-bitwise-and",
+    "tests/sunspider1/controlflow-recursive",
+    "tests/sunspider1/crypto-md5",
+    "tests/sunspider1/crypto-sha1",
+    "tests/sunspider1/date-format-tofte",
+    "tests/sunspider1/date-format-xparb",
+    "tests/sunspider1/math-cordic",
+    "tests/sunspider1/math-partial-sums",
+    "tests/sunspider1/math-spectral-norm",
+    "tests/sunspider1/regexp-dna",
+    "tests/sunspider1/string-fasta",
+    "tests/sunspider1/string-tagcloud",
+    "tests/sunspider1/string-unpack-code",
+    "tests/sunspider1/bitops-nsieve-bits",
+    "tests/sunspider1/crypto-aes",
+    "tests/sunspider1/string-validate-input",
+    "tests/sunspider1/string-base64"]
 SCRIPT = "src/python/jalangi_command.py"
 failed = 0
 try:
@@ -38,12 +38,12 @@ try:
 except :pass
 pat = "*" + sys.argv[1] + "*" if len(sys.argv) > 1 else None
 if pat != None:
-    tests = [(c,e) for (c,e) in tests if fnmatch.fnmatch(c,pat)]
+    tests = [c for c in tests if fnmatch.fnmatch(c,pat)]
 total = len(tests)
 print "Running {} tests".format(total)
-for (case, expected) in tests:
+for case in tests:
     try:
-        call(["python", SCRIPT, "concolic", "-i", str(expected), case])
+        call(["python", SCRIPT, "testrr", case])
     except CalledProcessError as e:
         pass
 

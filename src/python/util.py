@@ -104,6 +104,18 @@ def run_node_script(script, *args, **kwargs):
              f.seek(0)
              return f.read()
 
+def run_node_script_std(script, *args, **kwargs):
+    """Execute script and print output"""
+    jal = kwargs['jalangi']
+    if jal.timed():
+        cmd = ["time"]
+    else:
+        cmd = []
+    if jal.coverage():
+        cmd = cmd + ["cover", "run"]
+    cmd = cmd + ([find_node()] if not jal.coverage() else [])
+    subprocess.call(cmd + [script] + [x for x in args])
+
 def is_node_exe(path):
     try:
         subprocess.check_output([path,"-e","42"])

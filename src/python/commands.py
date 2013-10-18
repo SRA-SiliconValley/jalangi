@@ -27,19 +27,23 @@ import webbrowser
 
 
 def analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
-    temp_dir = mkdtemp()
-    os.chdir(temp_dir)
+    try:
+        shutil.rmtree("jalangi_tmp")
+    except: pass
+    os.mkdir("jalangi_tmp")
+    os.chdir("jalangi_tmp")
     #Instrument file first
     (instrumented_f,out) = instrument(filee, jalangi=jalangi)
     util.mkempty("inputs.js")
-    print "--- Recording execution of {} ----".format(filee)    
-    print record(filee,instrumented_f)
-    print "---- Replaying {} with {}----".format(filee,analysis)
+    print "---- Recording execution of {} ----".format(filee)
+    os.putenv("JALANGI_MODE", "record")
+    os.putenv("JALANGI_ANALYSIS", "none")
+    util.run_node_script_std(os.path.join(os.path.dirname(filee + ".js"),instrumented_f), jalangi=jalangi)
+    print "---- Replaying {} ----".format(filee)
     os.putenv("JALANGI_MODE", "replay")
     os.putenv("JALANGI_ANALYSIS", analysis)
-    print replay(jalangi=jalangi)
+    util.run_node_script_std(jalangi.replay_script(), jalangi=jalangi)
     util.move_coverage(jalangi)
-    util.handle_dot_files(temp_dir, filee)
 
 def record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
     os.putenv("JALANGI_MODE", "record")
@@ -53,8 +57,8 @@ def instrument(filee,output_dir=".",jalangi=util.DEFAULT_INSTALL):
     returns: A tuple of the filename of the instrumented version and the output of Jalangi
     """
     print "---- Instrumenting {} ----" .format(filee)
-    output = util.run_node_script(jalangi.instrumentation_script(), filee + ".js",  jalangi=jalangi)
-    return (os.path.basename(filee) + "_jalangi_.js", output)
+    util.run_node_script_std(jalangi.instrumentation_script(), filee + ".js",  jalangi=jalangi)
+    return (os.path.basename(filee) + "_jalangi_.js", "")
 
 def replay(f=None, jalangi=util.DEFAULT_INSTALL, analysis=None):
     """
@@ -80,9 +84,8 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
     (instrumented_f, out) = instrument(os.path.join(os.pardir,filee), jalangi=jalangi)
     i = 0
     iters = 0
-    mismatch = False
     while i <= iters and i <= inputs:
-        try:                    # Ignore failures on first iteration
+        try: # Ignore failures on first iteration
             os.remove("inputs.js")
             shutil.copy("jalangi_inputs{}.js".format(i), "inputs.js")
         except:
@@ -90,54 +93,115 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         if not os.path.isfile("inputs.js"):
             util.mkempty("inputs.js")
         print "==== Input {} ====".format(i)
-        print "---- Runing without instrumentation ----"
-        try:
-            os.remove("jalangi_trace")
-        except:
-            pass
-        norm = util.run_node_script(os.path.join(os.pardir,filee + ".js"), jalangi=jalangi, savestderr=True)
-        #(open("jalangi_normal", "w")).write(norm)
         print "---- Recording execution of {} ----".format(filee)
-        rec = record(os.path.join(os.pardir,filee), instrumented_f)
+        os.putenv("JALANGI_MODE", "record")
+        os.putenv("JALANGI_ANALYSIS", "none")
+        util.run_node_script_std(os.path.join(os.path.dirname(os.path.join(os.pardir,filee) + ".js"),instrumented_f), jalangi=jalangi)
         print "---- Replaying {} ----".format(filee)
         os.putenv("JALANGI_MODE", "replay")
         os.putenv("JALANGI_ANALYSIS", "analyses/concolic/SymbolicEngine")
-        rep = replay()
-        (open("jalangi_replay", "w")).write(rep)
-        print rep
-	try:
-		wcl = util.count_lines("jalangi_trace")
-	
-		with open("../jalangi_test_results", 'a') as f:
-		    f.write("# of lines in jalangi_trace for {}: {}".format(filee,str(wcl)))
-		    f.write("\n")
-	except: pass	
-        if norm != rep: #TODO: Factor out this.
-            import difflib
-            with open("../jalangi_test_results", 'a') as f:
-                f.write("\n")
-                for line in difflib.unified_diff(norm.splitlines(1), rec.splitlines(1), fromfile='normal.{}'.format(filee), tofile='replay.{}'.format(filee)):
-                    f.write(line)
-        if rec != rep:
-            import difflib
-            with open("../jalangi_test_results", 'a') as f:
-                f.write("\n")
-                for line in difflib.unified_diff(rec.splitlines(1), rep.splitlines(1), fromfile='replay.{}'.format(filee), tofile='record.{}'.format(filee)):
-                    f.write(line)
-	
+        util.run_node_script_std(jalangi.replay_script(), jalangi=jalangi)
+        
         try:
             iters = int(util.head("jalangi_tail",1)[0])
         except: pass
         i = i + 1
         
     for i in glob.glob("jalangi_inputs*"):
-        print "*** Generated ({}:1:1) for ({}.js:1:1)".format(os.path.abspath(i),filee)
+        print "*** Generated (jalangi_tmp/{}:1:1) for ({}.js:1:1)".format(i,filee)
     iters = iters + 1
     if iters == inputs:
         print "{}.js passed".format(filee)
+        with open("../jalangi_sym_test_results", 'a') as f:
+         f.write("{}.js passed\n".format(filee))
     else:
         print "{}.js failed".format(filee)
+        with open("../jalangi_sym_test_results", 'a') as f:
+         f.write("{}.js failed\n".format(filee))
     util.move_coverage(jalangi)
+
+
+def testrr (filee, jalangi=util.DEFAULT_INSTALL):
+    try:
+        shutil.rmtree("jalangi_tmp")
+    except: pass
+    os.mkdir("jalangi_tmp")
+    os.mkdir("jalangi_tmp/out")
+    os.putenv("JALANGI_HOME", jalangi.get_home())
+    os.chdir("jalangi_tmp")
+    (instrumented_f, out) = instrument(os.path.join(os.pardir,filee), jalangi=jalangi)
+    try:                    # Ignore failures on first iteration
+        os.remove("inputs.js")
+        shutil.copy("jalangi_inputs{}.js".format(i), "inputs.js")
+    except:
+        pass
+    if not os.path.isfile("inputs.js"):
+        util.mkempty("inputs.js")
+    print "---- Runing without instrumentation ----"
+    try:
+        os.remove("jalangi_trace")
+    except:
+        pass
+    norm = util.run_node_script(os.path.join(os.pardir,filee + ".js"), jalangi=jalangi)
+    #(open("jalangi_normal", "w")).write(norm)
+    print "---- Recording execution of {} ----".format(filee)
+    rec = record(os.path.join(os.pardir,filee), instrumented_f)
+    print "---- Replaying {} ----".format(filee)
+    os.putenv("JALANGI_MODE", "replay")
+    os.putenv("JALANGI_ANALYSIS", "none")
+    rep = replay()
+    (open("jalangi_replay", "w")).write(rep)
+    print rep
+    try:
+	    wcl = util.count_lines("jalangi_trace")
+	
+	    with open("../jalangi_test_results", 'a') as f:
+		f.write("# of lines in jalangi_trace for {}: {}".format(filee,str(wcl)))
+		f.write("\n")
+    except: pass	
+    if norm != rep: #TODO: Factor out this.
+        import difflib
+        with open("../jalangi_test_results", 'a') as f:
+            f.write("\n")
+            for line in difflib.unified_diff(norm.splitlines(1), rec.splitlines(1), fromfile='normal.{}'.format(filee), tofile='replay.{}'.format(filee)):
+                f.write(line)
+    if rec != rep:
+        import difflib
+        with open("../jalangi_test_results", 'a') as f:
+            f.write("\n")
+            for line in difflib.unified_diff(rec.splitlines(1), rep.splitlines(1), fromfile='replay.{}'.format(filee), tofile='record.{}'.format(filee)):
+                f.write(line)
+        
+    util.move_coverage(jalangi)
+
+
+
+def symbolic (filee, inputs, analysis, jalangi=util.DEFAULT_INSTALL):
+    try:
+        shutil.rmtree("jalangi_tmp")
+    except: pass
+    os.mkdir("jalangi_tmp")
+    os.putenv("JALANGI_HOME", jalangi.get_home())
+    os.chdir("jalangi_tmp")
+    (instrumented_f, out) = instrument(os.path.join(os.pardir,filee), jalangi=jalangi)
+    i = 0
+    iters = 1
+    while i <= iters and i <= inputs:
+        try:                    # Ignore failures on first iteration
+            os.remove("inputs.js")
+        except:
+            pass
+        if not os.path.isfile("inputs.js"):
+            util.mkempty("inputs.js")
+        os.putenv("JALANGI_MODE", "symbolic")
+        os.putenv("JALANGI_ANALYSIS", analysis)
+        util.run_node_script_std(os.path.join(os.path.dirname(os.path.join(os.pardir,filee) + ".js"),instrumented_f), jalangi=jalangi, savestderr=True)
+        try:
+            iters = int(util.head("jalangi_tail",1)[0])
+        except: pass
+        i = i + 1
+
+    print "Tests Generated = {}".format(iters)
 
 def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
     os.chdir("jalangi_tmp")
@@ -147,11 +211,11 @@ def rerunall(filee, jalangi=util.DEFAULT_INSTALL):
         util.mkempty("inputs.js")
     except: pass
     print "---- Runing tests on {} ----".format(filee)
-    util.run_node_script(os.path.join(os.pardir, filee + ".js"), jalangi=jalangi)
+    util.run_node_script_std(os.path.join(os.pardir, filee + ".js"), jalangi=jalangi)
     for i in glob.glob("jalangi_inputs*"):
         print "Running {} on {}".format(filee, i)
         shutil.copy(i, "inputs.js")
-        print util.run_node_script(os.path.join(os.pardir,filee +".js"), jalangi=jalangi, savestderr=True)
+        util.run_node_script_std(os.path.join(os.pardir,filee +".js"), jalangi=jalangi, savestderr=True)
     if jalangi.coverage():
         time.sleep(2)
         os.system("cover combine")

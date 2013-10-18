@@ -47,6 +47,19 @@ class AnalysisCommand:
             sys.exit(1)
         print commands.analysis(options.analysis, os.path.abspath(args[0]))
 
+class TestRecordReplayCommand:
+    name = "Analysis"
+    description = "Run a Jalangi Analysis"
+    def execute(self, params):
+        parser = OptionParser()
+        (options, args) = parser.parse_args(args=params)
+        if len(args) < 1:
+            print "Invalid command line"
+            parser.print_help()
+            sys.exit(1)
+        print commands.testrr(os.path.abspath(args[0]))
+
+
 class ServerCommand:
     name = "Server"
     description = "Run a simple HTTP server serving the current directory"
@@ -64,7 +77,7 @@ class ServerCommand:
         httpd.serve_forever()
         
 class ConcolicCommand:
-    name = "Conclic testing"
+    name = "Concolic testing"
     description = "Generate test inputs using concolic testing"
     def execute(self, params):
         parser = OptionParser()
@@ -76,6 +89,24 @@ class ConcolicCommand:
             parser.print_help()
             sys.exit(1)
         commands.concolic(args[0], int(options.inputs))
+
+class SymbolicCommand:
+    name = "Symbolic execution"
+    description = "Generate test inputs using symbolic execution"
+    def execute(self, params):
+        parser = OptionParser()
+        parser.add_option("-i", "--inputs", dest="inputs",
+                          help="Bound on number of inputs (default 1000)", default=1000)
+        parser.add_option("-a", "--analysis", dest="analysis",
+                          help="Bound on number of inputs (default 1000)", default="analyses/puresymbolic/Multiple")
+        (options, args) = parser.parse_args(args=params)
+        if len(args) < 1:
+            print "You must specify a filename"
+            parser.print_help()
+            sys.exit(1)
+        commands.symbolic(args[0], int(options.inputs), options.analysis)
+
+
 
 class RerunAllCommand:
     name = "Rerun all test cases"
@@ -122,7 +153,9 @@ class RRServerCommand:
         
 COMMANDS = {"instrument" : InstrumentCommand,
             "analyze" : AnalysisCommand,
+            "testrr" : TestRecordReplayCommand,
             "concolic" : ConcolicCommand,
+            "symbolic" : SymbolicCommand,
             "rerunall" : RerunAllCommand,
             "config" : RunConfigCommand,
             "server" : ServerCommand,

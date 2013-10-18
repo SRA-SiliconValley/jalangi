@@ -4,18 +4,16 @@ $n = 2;
 $oldlen = 0;
 $cmd = "export JALANGI_MODE=record; export JALANGI_ANALYSIS=none; node src/js/instrument/esnstrument.js a.out.js && scripts/timeout -t 4 node a.out.js && node a.out_jalangi_.js 2>&1 | grep 'TypeError: Cannot read property'";
 
-
-
 while(1) {
-	$filecontent = "";
+	@filecontent = ();
 	open(FILE,"<$ARGV[0].js");
 	while ($line = <FILE>) {
-        	$filecontent = $filecontent . $line;
+        	push(@filecontent, $line);
 	}
 	close(FILE);
 
 
-	$len = length $filecontent;
+	$len = @filecontent;
 	if ($oldlen == $len) {
 		print "Simplified 2\n";
 		exit(0);
@@ -23,9 +21,6 @@ while(1) {
 	$oldlen = $len;
         print "Outer while $len\n";
 	$size = $len/$n;
-
-#        print $filecontent;
-
 
 	L1: while ($size >= 1) {
 		for ($i=1;$i<=$n;$i++) {
@@ -57,24 +52,33 @@ while(1) {
 
 sub get_deltasmall {
 	if ($i==$n) {
-		$str = substr($filecontent,($i-1)*$size);
+	  $begin = ($i-1)*$size;
+	  $end = scalar(@filecontent);
 	} else {
-		$str = substr($filecontent,($i-1)*$size,$size);
+	  $begin = ($i-1)*$size;
+	  $end = $i * $size;
 	}
 	open(OUT,">$ARGV[0].js");
-	print OUT "$str";
+	for ($j = $begin; $j <$end; $j++) {
+	  print OUT @filecontent[$j];
+	} 
 	close(OUT);
 }
 
 sub get_deltalarge {
-	$str = $filecontent;
 	if ($i==$n) {
-		substr($str,($i-1)*$size, $len - (($i-1)*$size),"");
+	  $begin = ($i-1)*$size;
+	  $end = $len;
 	} else {
-		substr($str,($i-1)*$size,$size,"");
+	  $begin = ($i-1)*$size;
+	  $end = $i * $size;
 	}
 	open(OUT,">$ARGV[0].js");
-	print OUT "$str";
+	for ($j = 0; $j < $len; $j++) {
+	  if (!($j >= $begin && $j < $end)){
+	    print OUT @filecontent[$j];
+	  }
+	} 
 	close(OUT);
 }
 

@@ -666,8 +666,7 @@
         var l = labelCounter++;
         var ret = replaceInStatement(
             "function n() { jalangiLabel"+l+": while(true) { try {"+RP+"1} catch("+PREFIX1+
-                "e) { console.log("+PREFIX1+"e); console.log("+
-                PREFIX1+"e.stack); throw "+PREFIX1+
+                "e) { throw "+PREFIX1+
                 "e; } finally { if ("+logScriptExitFunName+"("+
                 RP+"2)) continue jalangiLabel"+l+";\n else \n  break jalangiLabel"+l+";\n }\n }}", body,
             getIid()
@@ -684,8 +683,7 @@
         var l = labelCounter++;
         var ret = replaceInStatement(
             "function n() { jalangiLabel"+l+": while(true) { try {"+RP+"1} catch("+PREFIX1+
-                "e) { console.log("+PREFIX1+"e); console.log("+
-                PREFIX1+"e.stack); throw "+PREFIX1+
+                "e) { throw "+PREFIX1+
                 "e; } finally { if ("+logFunctionReturnFunName+"("+
                 RP+"2)) continue jalangiLabel"+l+";\n else \n  return "+logReturnAggrFunName+"();\n }\n }}", body,
             getIid()

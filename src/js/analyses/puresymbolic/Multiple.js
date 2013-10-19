@@ -577,6 +577,12 @@
     function Ra() {
         var ret = returnVal;
         returnVal = undefined;
+
+        // special case to handle return of undefined from a constructor
+        // if undefined is returned from a constructor, do not wrap the return value
+        if (ret instanceof PredValues && ret.values.length === 1 && ret.values[0].value === undefined) {
+            return undefined;
+        }
         return ret;
     }
 

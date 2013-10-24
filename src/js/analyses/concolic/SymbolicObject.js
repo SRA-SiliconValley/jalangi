@@ -50,7 +50,7 @@
         },
 
         getSymbolForField: function(field) {
-            return this.sym+"_"+(field.replace(/_/g,"__"));
+            return this.sym+"_"+((field+"").replace(/_/g,"__"));
         },
 
         toString : function() {

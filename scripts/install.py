@@ -46,7 +46,7 @@ def del_dir(d):
         exit(1)
 
 npm_install("uglify-js@1")
-npm_install("ffi")
+#npm_install("ffi")
 npm_install("cover")
 npm_install("websocket")
 npm_install("source-map")

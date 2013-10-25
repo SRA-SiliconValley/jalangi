@@ -65,18 +65,6 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-var CodeLoad = new BenchmarkSuite('CodeLoad', 450000, [
-  new Benchmark('CodeLoadClosure',
-                runCodeLoadClosure,
-                setupCodeLoad,
-                tearDownCodeLoad,
-                16),
-  new Benchmark('CodeLoadJQuery',
-                runCodeLoadJQuery,
-                setupCodeLoad,
-                tearDownCodeLoad,
-                16)
-]);
 
 var salt;
 var indirectEval;
@@ -1529,3 +1517,11 @@ function runJQuery() {
     if (result != salt) throw(new Error("Incorrect result: " + result));
   })();
 }
+
+
+setupCodeLoad();
+runCodeLoadClosure();
+tearDownCodeLoad();
+setupCodeLoad();
+runCodeLoadJQuery();
+tearDownCodeLoad();

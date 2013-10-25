@@ -537,12 +537,6 @@ function MakeNewWorld () {
 
 var world = null;
 
-var Box2DBenchmark = new BenchmarkSuite('Box2D', 4559000,
-                                        [new Benchmark('Box2D',
-                                                       runBox2D,
-                                                       setupBox2D,
-                                                       tearDownBox2D,
-                                                       8)]);
 
 function runBox2D() {
   var world = MakeNewWorld();
@@ -560,3 +554,5 @@ function tearDownBox2D() {
 }
 
 
+runBox2D();
+tearDownBox2D();

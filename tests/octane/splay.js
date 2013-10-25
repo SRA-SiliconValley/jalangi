@@ -33,14 +33,11 @@
 // also has to deal with a lot of changes to the large tree object
 // graph.
 
-var Splay = new BenchmarkSuite('Splay', 81491, [
-  new Benchmark("Splay", SplayRun, SplaySetup, SplayTearDown)
-]);
 
 
 // Configuration.
-var kSplayTreeSize = 8000;
-var kSplayTreeModifications = 80;
+var kSplayTreeSize = 80;
+var kSplayTreeModifications = 8;
 var kSplayTreePayloadDepth = 5;
 
 var splayTree = null;
@@ -392,3 +389,7 @@ SplayTree.Node.prototype.traverse_ = function(f) {
     current = current.right;
   }
 };
+
+SplaySetup();
+SplayRun();
+SplayTearDown();

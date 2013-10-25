@@ -23,10 +23,6 @@
 // more like a JavaScript program.
 
 
-var DeltaBlue = new BenchmarkSuite('DeltaBlue', 66118, [
-  new Benchmark('DeltaBlue', deltaBlue)
-]);
-
 
 /**
  * A JavaScript implementation of the DeltaBlue constraint-solving
@@ -881,3 +877,5 @@ function deltaBlue() {
   chainTest(100);
   projectionTest(100);
 }
+
+deltaBlue();

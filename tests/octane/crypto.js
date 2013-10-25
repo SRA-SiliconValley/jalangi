@@ -31,11 +31,6 @@
 
 
 // The code has been adapted for use as a benchmark by Google.
-var Crypto = new BenchmarkSuite('Crypto', 266181, [
-  new Benchmark("Encrypt", encrypt),
-  new Benchmark("Decrypt", decrypt)
-]);
-
 
 // Basic JavaScript BN library - subset useful for RSA encryption.
 
@@ -1696,3 +1691,7 @@ function decrypt() {
     throw new Error("Crypto operation failed");
   }
 }
+
+encrypt();
+decrypt();
+

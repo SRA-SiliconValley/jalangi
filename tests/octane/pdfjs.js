@@ -26,10 +26,6 @@
 var pdf_file = "test.pdf";
 var canvas_logs = [];
 
-var PdfJS = new BenchmarkSuite("PdfJS", 9000000, [
-  new Benchmark("PdfJS", runPdfJS, setupPdfJS, tearDownPdfJS, 4)
-]);
-
 function setupPdfJS() {
   // Check for Typed Arrays support, throw error if not.
   if (!(typeof Uint8Array != "undefined" &&
@@ -33053,3 +33049,10 @@ var Metadata = PDFJS.Metadata = (function MetadataClosure() {
 })();
 
 }).call((typeof PdfJS_window.window === 'undefined') ? this : PdfJS_window.window);
+
+
+setupPdfJS();
+runPdfJS();
+tearDownPdfJS();
+
+

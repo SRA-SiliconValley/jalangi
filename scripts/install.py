@@ -23,10 +23,10 @@ from sys import platform
 import zipfile
 from urllib import urlretrieve
 
-def npm_install(pack):
-    print "---> installing {}".format(pack)
-    if os.system(" ".join(['npm', 'install', pack])) != 0:
-        print "node.js failed to install {}".format(pack)
+def npm_install():
+    print "---> installing node modules"
+    if os.system(" ".join(['npm', 'install'])) != 0:
+        print "npm install failed"
         exit(1)
 
 def call_fail(l):
@@ -45,16 +45,7 @@ def del_dir(d):
         print "failed to delete directory {}".format(res)
         exit(1)
 
-npm_install("uglify-js@1")
-#npm_install("ffi")
-npm_install("cover")
-npm_install("websocket")
-npm_install("source-map")
-npm_install("esprima")
-npm_install("estraverse")
-npm_install("escodegen")
-npm_install("dryice")
-npm_install("execSync")
+npm_install()
 
 if exists("thirdparty"):
     shutil.rmtree("thirdparty")
@@ -94,7 +85,6 @@ os.chdir("..")
 del_dir("source-map")
 call_fail(["git", "clone", "git://github.com/mozilla/source-map.git"])
 os.chdir("source-map")
-npm_install("amdefine")
 call_fail(["node", "Makefile.dryice.js"])
 del_dir(".git")
 

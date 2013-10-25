@@ -1,0 +1,18 @@
+{
+    "name": "jalangi",
+    "version": "0.1.0",
+    "description": "dynamic analysis framework for JavaScript",
+    "dependencies" : {
+      "uglify-js": "1.3.5",
+      "cover": "*",
+      "websocket": "*",
+      "source-map": "*",
+      "esprima": "*",
+      "estraverse": "*",
+      "escodegen": "*",
+      "dryice": "*",
+      "execSync": "*",
+      "amdefine": "*"
+    },
+    "license": "Apache"
+}

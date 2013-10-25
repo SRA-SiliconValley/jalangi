@@ -23,10 +23,10 @@ from sys import platform
 import zipfile
 from urllib import urlretrieve
 
-def npm_install(pack):
-    print "---> installing {}".format(pack)
-    if os.system(" ".join(['npm', 'install', pack])) != 0:
-        print "node.js failed to install {}".format(pack)
+def npm_install():
+    print "---> installing node modules"
+    if os.system(" ".join(['npm', 'install'])) != 0:
+        print "npm install failed"
         exit(1)
 
 def call_fail(l):
@@ -47,16 +47,7 @@ def del_dir(d):
 
 if exists("node_modules"):
     shutil.rmtree("node_modules")
-#npm_install("uglify-js@1")
-#npm_install("ffi")
-npm_install("cover")
-npm_install("websocket")
-npm_install("source-map")
-npm_install("esprima")
-npm_install("estraverse")
-npm_install("escodegen")
-#npm_install("dryice")
-npm_install("execSync")
+npm_install()
 
 urlretrieve("https://raw.github.com/Constellation/escodegen/0.0.27/escodegen.browser.js","node_modules/escodegen/escodegen.browser.js");
 
@@ -66,45 +57,6 @@ if exists("thirdparty"):
 os.mkdir("thirdparty")
 os.chdir("thirdparty");
 
-#call_fail(["git", "clone", "--recursive", "git://github.com/Trenker/Browser-UglifyJS.git", "thirdparty/browser-uglifyjs"])
-#os.chdir("thirdparty/browser-uglifyjs/lib")
-#del_dir("UglifyJS")
-#call_fail(["git", "clone", "git://github.com/mishoo/UglifyJS.git"])
-#os.chdir("UglifyJS")
-#sleep(2)
-#del_dir(".git")
-#os.chdir("../..")
-#del_dir(".git")
-#call_fail(["node", "build.js"])
-#shutil.move("build/uglifyjs.1.2.5.js", "../")
-#os.chdir("../")
-
-#del_dir("esprima")
-#call_fail(["git", "clone", "git://github.com/ariya/esprima.git"])
-#os.chdir("esprima")
-#del_dir(".git")
-#os.chdir("..")
-
-#del_dir("escodegen")
-#call_fail(["git", "clone", "git://github.com/Constellation/escodegen.git"])
-#os.chdir("escodegen")
-#del_dir(".git")
-#os.chdir("..")
-
-#del_dir("estraverse")
-#call_fail(["git", "clone", "git://github.com/Constellation/estraverse.git"])
-#os.chdir("estraverse")
-#del_dir(".git")
-#os.chdir("..")
-
-#del_dir("source-map")
-#call_fail(["git", "clone", "git://github.com/mozilla/source-map.git"])
-#os.chdir("source-map")
-#npm_install("amdefine")
-#call_fail(["node", "Makefile.dryice.js"])
-#del_dir(".git")
-
-#os.chdir("..")
 
 print "---> Downloading cvc3"
 if platform == "darwin":

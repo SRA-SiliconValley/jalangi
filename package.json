@@ -1,0 +1,16 @@
+{
+    "name":"jalangi",
+    "version":"0.1.0",
+    "description":"dynamic analysis framework for JavaScript",
+    "dependencies":{
+        "cover":"*",
+        "websocket":"*",
+        "source-map":"*",
+        "esprima":"*",
+        "estraverse":"*",
+        "escodegen":"*",
+        "execSync":"*",
+        "amdefine":"*"
+    },
+    "license":"Apache"
+}

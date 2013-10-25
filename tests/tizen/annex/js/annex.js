@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2012, Intel Corporation.
  *
- * This program is licensed under the terms and conditions of the 
+ * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0.  The full text of the Apache License is at
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -619,7 +619,7 @@ function getMessage(key, alter) {
     return ret;
 }
 
-(function(){
+$(document).ready(function(){
     license_init("license", "open");
     $('title').html(getMessage('name', 'Annex'));
     $('#open1').html(getMessage('1PlayerGame', '1 Player Game'));
@@ -679,4 +679,4 @@ function getMessage(key, alter) {
         }).find('.configure_panel_text').html(getMessage('exit','Exit'));
 
     World.playSound('snd_theme');
-})();
+});

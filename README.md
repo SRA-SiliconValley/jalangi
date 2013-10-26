@@ -173,8 +173,7 @@ First start a HTTP server by running the following command.  The command starts 
 
 Then instrument the JavaScript files that you want to analyze.  You also need to modify index.html so that it loads some library files and the instrumented files.
 
-    node src/js/instrument/esnstrument.js tests/tizen/annex/js/annex.js
-    node src/js/instrument/esnstrument.js tests/tizen/annex/lib/jquery-1.6.2.min.js
+    node src/js/instrument/esnstrument.js tests/tizen/annex/js/annex.js tests/tizen/annex/lib/jquery-1.6.2.min.js
 
 Finally launch the jalangi server and the html page by running
 
@@ -191,10 +190,10 @@ You can now play the game for sometime.  Try two moves.  This will generate a ja
 
 ***
 
-    node src/js/instrument/esnstrument.js tests/tizen/calculator/js/calc.js
+    node src/js/instrument/esnstrument.js tests/tizen/calculator/js/jquery-1.7.2.min.js tests/tizen/calculator/js/peg-0.6.2.min.js tests/tizen/calculator/js/calc.js
 
     killall node
-    ./scripts/rrserver http://127.0.0.1:8000/tests/tizen/calculator/index_jalangi_.html
+    python scripts/jalangi.py rrserver http://127.0.0.1:8000/tests/tizen/calculator/index_jalangi_.html
 
     export JALANGI_MODE=replay
     export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine
@@ -204,7 +203,7 @@ You can now play the game for sometime.  Try two moves.  This will generate a ja
 
     node src/js/instrument/esnstrument.js tests/tizen/go/js/go.js
     killall node
-    ./scripts/rrserver http://127.0.0.1:8080/tests/tizen/go/index.html
+    python scripts/jalangi.py rrserver http://127.0.0.1:8000/tests/tizen/go/index.html
 
     export JALANGI_MODE=replay
     export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine

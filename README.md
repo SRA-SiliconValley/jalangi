@@ -201,7 +201,7 @@ You can now play the game for sometime.  Try two moves.  This will generate a ja
 
 ***
 
-    node src/js/instrument/esnstrument.js tests/tizen/go/js/go.js
+    node src/js/instrument/esnstrument.js tests/tizen/go/js/go.js tests/tizen/go/lib/jquery-1.7.1.min.js
     killall node
     python scripts/jalangi.py rrserver http://127.0.0.1:8000/tests/tizen/go/index.html
 

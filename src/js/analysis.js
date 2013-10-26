@@ -686,7 +686,11 @@ J$ = {};
                 sEngine.putFieldPre(iid, base, offset, val);
             }
 
-            base_c[getConcrete(offset)] = val;
+            if (typeof base_c==='function' && getConcrete(offset)==='prototype') {
+                base_c[getConcrete(offset)] = getConcrete(val);
+            } else {
+                base_c[getConcrete(offset)] = val;
+            }
 
             if (rrEngine) {
                 rrEngine.RR_P(iid, base, offset, val);

@@ -420,7 +420,7 @@ J$ = {};
                 return callAsNativeConstructor(Constructor,args);
             } else {
                 var Temp = function(){}, inst, ret;
-                Temp.prototype = Constructor.prototype;
+                Temp.prototype = getConcrete(Constructor.prototype);
                 inst = new Temp;
                 ret = Constructor.apply(inst, args);
                 return Object(ret) === ret ? ret : inst;

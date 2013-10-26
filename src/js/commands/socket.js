@@ -46,6 +46,8 @@ wsServer = new WebSocketServer({
     // facilities built into the protocol and the browser.  You should
     // *always* verify the connection's origin and decide whether or not
     // to accept it.
+    maxReceivedFrameSize: 64*1024*1024,
+    maxReceivedMessageSize: 64*1024*1024,
     autoAcceptConnections: false
 });
 
@@ -99,6 +101,6 @@ wsServer.on('request', function(request) {
             fs.closeSync(traceFh);
             isOpen = false;
         }
-        console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+        console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected. '+reasonCode+" "+description);
     });
 });

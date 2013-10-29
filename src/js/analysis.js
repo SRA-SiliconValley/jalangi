@@ -240,8 +240,8 @@ J$ = {};
                 f === J$.addAxiom ||
                 f === J$.readInput) {
                 return [f, true];
-            } else if (f === Function.prototype.apply ||
-                f === Function.prototype.call ||
+            } else if (//f === Function.prototype.apply ||
+                //f === Function.prototype.call ||
                 f === console.log ||
                 f === RegExp.prototype.test ||
                 f === String.prototype.indexOf ||
@@ -367,9 +367,12 @@ J$ = {};
             var type = typeof val;
             if (type !== 'object' && type !== 'function') {
                 console.log(loc+":"+iid+":"+type+":"+val);
-            }
-            if (val===null) {
+            } else if (val===null) {
                 console.log(loc+":"+iid+":"+type+":"+val);
+            } else if (HOP(val,SPECIAL_PROP) && HOP(val[SPECIAL_PROP],SPECIAL_PROP)) {
+                console.log(loc+":"+iid+":"+type+":"+val[SPECIAL_PROP][SPECIAL_PROP]);
+            } else {
+                console.log(loc+":"+iid+":"+type+":object");
             }
         }
         //---------------------------- End utility functions -------------------------------
@@ -484,12 +487,15 @@ J$ = {};
             }
         }
 
-        var isInstrumentedCaller = false;
+        var isInstrumentedCaller = false, isConstructorCall = false;
 
         function invokeFun(iid, base, f, args, isConstructor) {
-            var g, invoke, val, ic, tmp_rrEngine;
+            var g, invoke, val, ic, tmp_rrEngine, tmpIsConstructorCall;
 
             var f_c = getConcrete(f);
+
+            tmpIsConstructorCall = isConstructorCall;
+            isConstructorCall = isConstructor;
 
             if (sEngine && sEngine.invokeFunPre) {
                 tmp_rrEngine = rrEngine;
@@ -530,6 +536,7 @@ J$ = {};
             } finally {
                 popSwitchKey();
                 isInstrumentedCaller = false;
+                isConstructorCall = tmpIsConstructorCall;
             }
 
             if (!ic && arr[1]) {
@@ -1009,6 +1016,7 @@ J$ = {};
                         if (!HOP(val, SPECIAL_PROP)) {
                             val[SPECIAL_PROP] = {};
                             val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
+//                            console.log("oid:"+objectId);
                             objectId = objectId + 2;
                         }
                         if (HOP(val,SPECIAL_PROP) && typeof val[SPECIAL_PROP][SPECIAL_PROP] === 'number') {
@@ -1077,6 +1085,7 @@ J$ = {};
                         val[SPECIAL_PROP] = {};
                         val[SPECIAL_PROP][SPECIAL_PROP] = id = literalId;
                         literalId = literalId + 2;
+//                        console.log("id:"+id); // uncomment for divergence
                         for (var offset in val) {
                             if (offset !== SPECIAL_PROP && offset !== SPECIAL_PROP2 && HOP(val, offset)) {
                                 val[SPECIAL_PROP][offset] = val[offset];
@@ -1352,7 +1361,7 @@ J$ = {};
             }
 
             this.RR_R = function(iid, name, val) {
-                var ret, trackedVal, trackedFrame;
+                var ret, trackedVal, trackedFrame, tmp;
 
                 trackedFrame = getFrameContainingVar(name);
                 trackedVal = trackedFrame[name];
@@ -1360,7 +1369,7 @@ J$ = {};
                 if (mode === MODE_RECORD) {
                     if (trackedVal === val ||
                         (val !== val && trackedVal !== trackedVal) ||
-                        (name === "this" && isInstrumentedCaller)) {
+                        (name === "this" && isInstrumentedCaller && !isConstructorCall)) {
                         seqNo++;
                         ret = val;
                     } else {
@@ -1371,7 +1380,7 @@ J$ = {};
                     if (traceInfo.getCurrent() === undefined) {
                         traceInfo.next();
                         skippedReads++;
-                        if (name === "this" && isInstrumentedCaller) {
+                        if (name === "this" && isInstrumentedCaller && !isConstructorCall) {
                             ret = val;
                         } else {
                             ret = trackedVal;
@@ -1496,6 +1505,7 @@ J$ = {};
             this.RR_T = function (iid,val,fun) {
                 if ((mode === MODE_RECORD || mode === MODE_REPLAY) &&
                     (fun === N_LOG_ARRAY_LIT || fun === N_LOG_FUNCTION_LIT || fun === N_LOG_OBJECT_LIT || fun === N_LOG_REGEXP_LIT)){
+//                    console.log("iid:"+iid)  // uncomment for divergence
                     setLiteralId(val);
                     if (fun === N_LOG_FUNCTION_LIT) {
                         val[SPECIAL_PROP3] = frame;

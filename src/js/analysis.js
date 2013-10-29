@@ -242,6 +242,7 @@ J$ = {};
                 return [f, true];
             } else if (//f === Function.prototype.apply ||
                 //f === Function.prototype.call ||
+                f === Object.defineProperty ||
                 f === console.log ||
                 f === RegExp.prototype.test ||
                 f === String.prototype.indexOf ||

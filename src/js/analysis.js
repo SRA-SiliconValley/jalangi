@@ -1304,7 +1304,7 @@ J$ = {};
                         seqNo++;
                         return val;
                     } else {
-                        base_c[SPECIAL_PROP][offset] = val;
+//                        base_c[SPECIAL_PROP][offset] = val;
                         return this.RR_L(iid, val, N_LOG_GETFIELD);
                     }
                 } else if (mode === MODE_REPLAY) {
@@ -1314,8 +1314,8 @@ J$ = {};
                         return val;
                     } else {
                         val = this.RR_L(iid, val, N_LOG_GETFIELD);
-                        base_c = getConcrete(base);
-                        base_c[offset] = val;
+//                        base_c = getConcrete(base);
+//                        base_c[offset] = val;
                         return val;
                     }
                 } else {

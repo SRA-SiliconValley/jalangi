@@ -151,7 +151,7 @@ def testrr (filee, jalangi=util.DEFAULT_INSTALL):
     os.putenv("JALANGI_ANALYSIS", "none")
     rep = replay()
     (open("jalangi_replay", "w")).write(rep)
-    print rep
+    #print rep
     try:
 	    wcl = util.count_lines("jalangi_trace")
 	
@@ -160,12 +160,14 @@ def testrr (filee, jalangi=util.DEFAULT_INSTALL):
 		f.write("\n")
     except: pass	
     if norm != rep: #TODO: Factor out this.
+        print "{}.js failed".format(filee)
         import difflib
         with open("../jalangi_test_results", 'a') as f:
             f.write("\n")
             for line in difflib.unified_diff(norm.splitlines(1), rec.splitlines(1), fromfile='normal.{}'.format(filee), tofile='replay.{}'.format(filee)):
                 f.write(line)
     if rec != rep:
+        print "{}.js failed".format(filee)
         import difflib
         with open("../jalangi_test_results", 'a') as f:
             f.write("\n")

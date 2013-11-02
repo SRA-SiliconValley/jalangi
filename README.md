@@ -24,8 +24,9 @@ our paper on Jalangi is available at http://srl.cs.berkeley.edu/~ksen/papers/jal
 
 ### Requirements
 
-We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS
-10.7, Ubuntu 11.0 and higher and Windows 7 or higher.
+We tested Jalangi on Mac OS X 10.8 with Chromium browser.  Jalangi should work on Mac OS
+10.7, Ubuntu 11.0 and higher and Windows 7 or higher. Jalangi will NOT work with Firefox
+and IE.
 
   * Latest version of Node.js available at http://nodejs.org/.  We have tested Jalangi with Node v0.8.22 and v0.10.3.
   * Sun's JDK 1.6 or higher.  We have tested Jalangi with Java 1.6.0_43.

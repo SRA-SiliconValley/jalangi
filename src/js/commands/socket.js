@@ -26,8 +26,6 @@ var    host = (process.argv[2]) ? process.argv[2] : "127.0.0.1";
 var    port = (process.argv[3]) ? process.argv[3] : 8080;
 var url = process.argv[4]? process.argv[4]:"";
 var TRACE_FILE_NAME = 'jalangi_trace';
-var traceFh;
-var isOpen = false;
 var fileIndex = 1;
 
 var server = http.createServer(function(request, response) {
@@ -57,6 +55,9 @@ function originIsAllowed(origin) {
 }
 
 wsServer.on('request', function(request) {
+    var traceFh;
+    var isOpen = false;
+
     if (!originIsAllowed(request.origin)) {
         // Make sure we only accept requests from an allowed origin
         request.reject();

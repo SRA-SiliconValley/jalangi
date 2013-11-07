@@ -13,7 +13,7 @@
         "amdefine":"*"
     },
     "scripts": {
-      "test": "scripts/runalltests.sh"
+      "test": "python scripts/runalltests.py"
     },
     "license":"Apache",
     "repository" : {

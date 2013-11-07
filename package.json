@@ -15,5 +15,9 @@
     "scripts": {
       "test": "scripts/runalltests.sh"
     },
-    "license":"Apache"
+    "license":"Apache",
+    "repository" : {
+      "type" : "git",
+      "url" : "https://github.com/SRA-SiliconValley/jalangi.git"
+    }
 }

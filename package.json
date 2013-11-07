@@ -12,5 +12,8 @@
         "execSync":"*",
         "amdefine":"*"
     },
+    "scripts": {
+      "test": "scripts/runalltests.sh"
+    },
     "license":"Apache"
 }

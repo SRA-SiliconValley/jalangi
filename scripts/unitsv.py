@@ -67,3 +67,5 @@ print "\nPass: {}".format(total - failed)
 print "Fail: {}".format(failed)
 
     
+if failed > 0:
+    exit(1)

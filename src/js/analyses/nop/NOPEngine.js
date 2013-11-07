@@ -67,7 +67,9 @@
 
         this.writePre = function(iid, name, val) { }
 
-        this.write = function(iid, name, val) { }
+        this.write = function(iid, name, val) {
+            return val;
+        }
 
         this.binaryPre = function(iid, op, left, right) { }
 

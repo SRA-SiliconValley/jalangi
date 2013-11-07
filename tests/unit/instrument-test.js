@@ -30,6 +30,7 @@ function f1 (j) {
 
     function f2 (c) {
         var sum = c;
+        var x;
         try {
             sum *= j;
             if (sum > 4) {

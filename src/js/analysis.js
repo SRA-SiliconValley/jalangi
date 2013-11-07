@@ -480,7 +480,7 @@ J$ = {};
                 rrEngine.RR_evalBegin();
             }
             try {
-                return f.call(base,sandbox.instrumentCode(args[0],true));
+                return f.call(base,sandbox.instrumentCode(getConcrete(args[0]),true));
             } finally {
                 if (rrEngine) {
                     rrEngine.RR_evalEnd();
@@ -491,7 +491,7 @@ J$ = {};
         var isInstrumentedCaller = false, isConstructorCall = false;
 
         function invokeFun(iid, base, f, args, isConstructor) {
-            var g, invoke, val, ic, tmp_rrEngine, tmpIsConstructorCall;
+            var g, invoke, val, ic, tmp_rrEngine, tmpIsConstructorCall, tmpIsInstrumentedCaller;
 
             var f_c = getConcrete(f);
 
@@ -508,6 +508,7 @@ J$ = {};
             executionIndex.executionIndexInc(iid);
 
             var arr = getSymbolicFunctionToInvokeAndLog(f_c, isConstructor);
+            tmpIsInstrumentedCaller = isInstrumentedCaller;
             ic = isInstrumentedCaller = f_c === undefined || HOP(f_c,SPECIAL_PROP2) || typeof f_c !== "function";
 
             if (mode === MODE_RECORD || mode === MODE_NO_RR) {
@@ -536,7 +537,7 @@ J$ = {};
                 }
             } finally {
                 popSwitchKey();
-                isInstrumentedCaller = false;
+                isInstrumentedCaller = tmpIsInstrumentedCaller;
                 isConstructorCall = tmpIsConstructorCall;
             }
 
@@ -678,7 +679,7 @@ J$ = {};
                 rrEngine.RR_W(iid, name, val);
             }
             if (sEngine && sEngine.write) {
-                sEngine.write(iid, name, val);
+                val = sEngine.write(iid, name, val);
             }
             return val;
         }

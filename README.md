@@ -71,19 +71,30 @@ Open a terminal, go to directory jalangi, and try ./scripts/testsym.
 
 ### Run Tests
 
-    python ./scripts/sym.py
+Run concolic testing tests.
 
-### Other Scripts
+    python ./scripts/sym.py
 
 Run no analysis and check if record and replay executions produce same output on some unit tests located under tests/unit/.
 
     python ./scripts/units.py
+
+Run all value tracking analysis on some unit tests located under tests/unit/.
+
+    python ./scripts/unitsv.py
 
 Run no analysis and check if record and replay executions produce same
 output on the sunspider benchmarks located under
 tests/sunspider1/.
 
     python scripts/testsp.py
+
+Run all value tracking analysis on the sunspider benchmarks located under
+tests/sunspider1/.
+
+    python scripts/testspv.py
+
+### Other Scripts
 
 Run likely type inference analysis on the sunspider benchmarks located under tests/sunspider1/.
 

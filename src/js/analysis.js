@@ -442,7 +442,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 rrEngine.RR_evalBegin();
             }
             try {
-                return f(sandbox.instrumentCode(getConcrete(args[0]), true));
+                return f(sandbox.instrumentCode(getConcrete(args[0]), false));
             } finally {
                 if (rrEngine) {
                     rrEngine.RR_evalEnd();

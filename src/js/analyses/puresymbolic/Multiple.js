@@ -300,7 +300,7 @@
 
 
     function invokeEval(base, f, args) {
-        return f.call(base, J$.instrumentCode(args[0], true));
+        return f.call(base, J$.instrumentCode(args[0], false));
     }
 
 

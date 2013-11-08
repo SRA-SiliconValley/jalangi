@@ -15,15 +15,15 @@
  */
 
 // Author: Koushik Sen
- 
 
-var Map = require('./Map');
+
+var Map = require('./map');
 
 var map = new Map.Map();
 
-var val = {x: 23345, y:3523 };
+var val = {x:23345, y:3523 };
 
-map.put("one",val);
+map.put("one", val);
 var ret = map.get("one");
 console.log(ret.x);
 

@@ -50,7 +50,10 @@
             return annotateValue(val, iid);
         };
 
-        this.read = function(iid, name, val) {
+        this.read = function(iid, name, val, isGlobal) {
+            if (isGlobal && val !== undefined) {
+                return val;
+            }
             return annotateValue(val, iid);
         };
 

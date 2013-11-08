@@ -43,7 +43,7 @@
     var formulaStack = [];
     formulaStack.count = 0;
     var solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
-    var first = true;
+    var pathCount = 0;
     var returnValue;
     var aggregatePC;
 
@@ -67,14 +67,14 @@
     }
 
     function pushPC(pc) {
-        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, first:first, returnVal: returnValue, aggrPC: aggregatePC });
+        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, pathCount:pathCount, returnVal: returnValue, aggrPC: aggregatePC });
 
         index = 0;
         formulaStack = [];
         formulaStack.count = 0;
         pathIndex = [];
         pathConstraint = pc;
-        first = true;
+        pathCount = 0;
         returnValue = undefined;
         aggregatePC = undefined;
     }
@@ -85,7 +85,7 @@
         index = pcStack[pcStack.length-1].index;
         formulaStack = pcStack[pcStack.length-1].formulaStack;
 //        solution = pcStack[pcStack.length-1].solution;
-        first = pcStack[pcStack.length-1].first;
+        pathCount = pcStack[pcStack.length-1].pathCount;
         returnValue = pcStack[pcStack.length-1].returnVal;
         aggregatePC = pcStack[pcStack.length-1].aggrPC;
 
@@ -96,7 +96,7 @@
         index = 0;
         formulaStack = [];
         formulaStack.count = 0;
-        if (first) {
+        if (pathCount==0) {
             aggregatePC = pathConstraint;
         } else {
             aggregatePC = aggregatePC.or(pathConstraint);
@@ -107,13 +107,13 @@
             solution = pathIndex[pathIndex.length-1].solution;
             pathConstraint = pathIndex[pathIndex.length-1].pc;
         }
-        first = false;
+        pathCount++;
         returnValue = returnVal;
     }
 
 
-    function isFirst() {
-        return first;
+    function getPathCount() {
+        return pathCount;
     }
 
     function getReturnVal() {
@@ -435,7 +435,7 @@
     sandbox.resetPC = resetPC;
     sandbox.getPC = getPC;
     sandbox.setPC = setPC;
-    sandbox.isFirst = isFirst;
+    sandbox.getPathCount = getPathCount;
     sandbox.concretize = concretize;
     sandbox.branch = branch;
     sandbox.branchBoth = branchBoth;

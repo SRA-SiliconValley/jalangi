@@ -72,7 +72,7 @@
 
         this.readPre = function(iid, name, val) { }
 
-        this.read = function(iid, name, val) {
+        this.read = function(iid, name, val, isGlobal) {
             return val;
         }
 

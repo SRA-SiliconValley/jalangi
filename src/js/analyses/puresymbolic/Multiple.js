@@ -21,10 +21,12 @@
     var PredValues = require('./PredValues');
     var BDD = require('./BDD');
     var SymbolicBool = require('./../concolic/SymbolicBool');
+    var SymbolicAnyVar = require('./SymbolicAnyVar');
     var getIIDInfo = require('./../../utils/IIDInfo');
     var PREFIX1 = "J$";
     var SPECIAL_PROP2 = "*" + PREFIX1 + "I*";
     var EVAL_ORG = eval;
+    var MAX_PATH_COUNT = 50;
 
     var pc = single.getPC();
 
@@ -111,15 +113,15 @@
                     pc.pushPC(pred);
                     for (i = 0; i < len; ++i) {
                         if (noConcretizeArgs) {
-                            cArgs[i] = args[i].values[indices[i]].value;
+                            cArgs[i] = single.initUndefinedNumber(args[i].values[indices[i]].value);
                         } else {
-                            cArgs[i] = pc.concretize(args[i].values[indices[i]].value);
+                            cArgs[i] = pc.concretize(single.initUndefinedNumber(args[i].values[indices[i]].value));
                         }
                     }
                     if (noConcretizeThis) {
-                        value = f.apply(getSingle(this), cArgs);
+                        value = f.apply(single.initUndefinedNumber(getSingle(this)), cArgs);
                     } else {
-                        value = f.apply(pc.concretize(getSingle(this)), cArgs);
+                        value = f.apply(pc.concretize(single.initUndefinedNumber(getSingle(this))), cArgs);
                     }
                     ret = addValue(ret, pc.getPC(), value);
                     newPC = newPC.or(pc.getPC());
@@ -206,6 +208,24 @@
         } else if (f === J$.addAxiom ||
             f === J$.readInput) {
             return f;
+        } else if (f === Math.abs ||
+            f === Math.acos ||
+            f === Math.asin ||
+            f === Math.atan ||
+            f === Math.atan2 ||
+            f === Math.ceil ||
+            f === Math.cos ||
+            f === Math.exp ||
+            f === Math.floor ||
+            f === Math.log ||
+            f === Math.max ||
+            f === Math.min ||
+            f === Math.pow ||
+            f === Math.round ||
+            f === Math.sin ||
+            f === Math.sqrt ||
+            f === Math.tan ) {
+            return create_concrete_invoke(f);
         } else {
             if (!sfuns) {
                 sfuns = require('./SymbolicFunctions3_jalangi_')
@@ -228,7 +248,7 @@
                 return create_concrete_invoke(f);
             }
         }
-        return null;
+            return null;
     }
 
     function isNative(f) {
@@ -291,6 +311,9 @@
         var g, invoke, val;
 
         console.log(pad + "Calling " + f.name + " " + getIIDInfo(iid));
+
+        f = single.initUndefinedFunction(f);
+
         var f_m = getSymbolicFunctionToInvoke(f, isConstructor);
 
         invoke = f_m || f === undefined || HOP(f, SPECIAL_PROP2) || typeof f !== "function";
@@ -307,7 +330,7 @@
                     val = g.apply(base, args);
                 }
             } else {
-                val = undefined;
+                val = single.wrapUndefined(undefined, false);
             }
         } finally {
             pad = pad.substring(2);
@@ -343,7 +366,7 @@
 
     function Sr(iid) {
         scriptCount--;
-        var ret2, first = pc.isFirst();
+        var ret2, pathCount = pc.getPathCount();
         if (scriptCount === 0) {
             ret2 = pc.generateInputs(true);
         } else {
@@ -363,8 +386,7 @@
     }
 
     function T(iid, val, type) {
-        single.T(iid, val, type);
-        return val;
+        return single.T(iid, val, type);
     }
 
     function H(iid, val) {
@@ -372,8 +394,8 @@
     }
 
 
-    function R(iid, name, val) {
-        return val;
+    function R(iid, name, val, isGlobal) {
+        return single.wrapUndefined(val, !isGlobal);
     }
 
     function W(iid, name, val, lhs) {
@@ -384,6 +406,8 @@
     }
 
     function N(iid, name, val, isArgumentSync) {
+        if (isArgumentSync)
+            return single.wrapUndefined(val, false);
         return val;
     }
 
@@ -553,20 +577,15 @@
     }
 
     function Fr(iid) {
-        var ret2, pathIndex, first = pc.isFirst(), aggrRet = pc.getReturnVal();
-        if (!first) {
-            ret2 = pc.generateInputs();
-        } else {
-            ret2 = pc.generateInputs();
-//            ret2 = pc.generateInputs(true);
-        }
+        var ret2, pathCount = pc.getPathCount(), aggrRet = pc.getReturnVal();
+        ret2 = pc.generateInputs();
         if (ret2) {
             //console.log("backtrack " + getIIDInfo(iid));
         }
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
         pc.resetPC(returnVal);
-        return ret2;
+        return ret2 && pathCount < MAX_PATH_COUNT;
     }
 
     function Rt(iid, val) {
@@ -580,7 +599,8 @@
 
         // special case to handle return of undefined from a constructor
         // if undefined is returned from a constructor, do not wrap the return value
-        if (ret instanceof PredValues && ret.values.length === 1 && ret.values[0].value === undefined) {
+        if (ret instanceof PredValues && ret.values.length === 1 &&
+            ret.values[0].value === undefined) {
             return undefined;
         }
         return ret;

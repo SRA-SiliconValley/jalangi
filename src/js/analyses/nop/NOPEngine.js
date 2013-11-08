@@ -59,9 +59,11 @@
 
         this.putField = function(iid, base, offset, val) {}
 
-        this.readPre = function(iid, name, val) { }
+        this.readPre = function(iid, name, val, isGlobal) {
 
-        this.read = function(iid, name, val) {
+        }
+
+        this.read = function(iid, name, val, isGlobal) {
             return val;
         }
 

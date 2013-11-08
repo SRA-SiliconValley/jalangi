@@ -654,15 +654,15 @@ J$ = {};
         }
 
 
-        function R(iid, name, val) {
+        function R(iid, name, val, isGlobal) {
             if (sEngine && sEngine.readPre) {
-                sEngine.readPre(iid, name, val);
+                sEngine.readPre(iid, name, val, isGlobal);
             }
             if (rrEngine) {
                 val = rrEngine.RR_R(iid, name, val);
             }
             if (sEngine && sEngine.read) {
-                val = sEngine.read(iid, name, val);
+                val = sEngine.read(iid, name, val, isGlobal);
                 if (rrEngine) {
                     rrEngine.RR_updateRecordedObject(val);
                 }

@@ -37,6 +37,7 @@
     var SymbolicStringPredicate = require('./SymbolicStringPredicate');
     var ToStringPredicate = require('./ToStringPredicate');
     var FromCharCodePredicate = require('./FromCharCodePredicate');
+    var SymbolicAnyVar = require('./SymbolicAnyVar');
     var SolverEngine = require('./SolverEngine');
     var solver = new SolverEngine();
     var pc = require('./PathConstraint');
@@ -115,8 +116,203 @@
         }
     }
 
+
     //---------------------------- End utility functions -------------------------------
 
+
+    // --------------------------- Treat undefined as input ----------------------------
+    function wrapUndefined(val, isUndefinedLiteral) {
+        if (sandbox.treatUndefinedAsInput && val === undefined) {
+            return new SymbolicAnyVar(isUndefinedLiteral);
+        }
+        return val;
+    }
+
+    function initUndefinedFunction(f) {
+        if (sandbox.treatUndefinedAsInput && f instanceof SymbolicAnyVar) {
+            if (!f.isInitialized) {
+                f.initialize(function(){});
+            }
+            f = f.value;
+        }
+        return f;
+    }
+
+    function initUndefinedForBaseOfG(base, offset) {
+        var tmp;
+        if (sandbox.treatUndefinedAsInput && base instanceof SymbolicAnyVar) {
+            if (!base.isInitialized) {
+                if (offset === "indexOf" ||
+                    offset === "lastIndexOf" ||
+                    offset === "substring" ||
+                    offset === "substr" ||
+                    offset === "charCodeAt" ||
+                    offset === "charAt" ||
+                    offset === "replace" ||
+                    offset === "toLocaleLowerCase" ||
+                    offset === "toLocaleUpperCase" ||
+                    offset === "toLowerCase" ||
+                    offset === "toUpperCase" ||
+                    offset === "match" ||
+                    offset === "search" ||
+                    offset === "replace" ||
+                    offset === "trim" ||
+                    offset === "split" ||
+                    offset === "localeCompare") {
+                    tmp = "";
+                } else if (offset === "join" ||
+                    offset === "push" ||
+                    offset === "pop" ||
+                    offset === "shift" ||
+                    offset === "unshift" ||
+                    offset === "slice" ||
+                    offset === "splice" ||
+                    offset === "sort" ||
+                    offset === "reverse" ||
+                    typeof offset === 'number') {
+                    tmp = [];
+                } else {
+                    tmp = {};
+                }
+                base.initialize(tmp);
+            }
+            base = base.value;
+        }
+        return base;
+    }
+
+    function initUndefinedOffset(offset) {
+        if (sandbox.treatUndefinedAsInput && offset instanceof SymbolicAnyVar) {
+            if (!offset.isInitialized) {
+                offset.initialize("something");
+            }
+            offset = offset.value;
+        }
+        return offset;
+    }
+
+    function initUndefinedForBaseOfP(base, offset) {
+        var tmp;
+        if (sandbox.treatUndefinedAsInput && base instanceof SymbolicAnyVar) {
+            if (!base.isInitialized) {
+                if (typeof offset === 'number') {
+                    tmp = [];
+                } else {
+                    tmp = {};
+                }
+                base.initialize(tmp);
+            }
+            base = base.value;
+        }
+        return base;
+    }
+
+    function initUndefinedForBinary(op, left, right) {
+        if (sandbox.treatUndefinedAsInput && left instanceof SymbolicAnyVar) {
+            if (!left.isInitialized) {
+                if (op === '-' ||
+                    op === '*' ||
+                    op === '/' ||
+                    op === '%' ||
+                    op === '<<' ||
+                    op === '>>' ||
+                    op === '>>>' ||
+                    op === '|' ||
+                    op === '&' ||
+                    op === '^' ||
+                    op === '<' ||
+                    op === '>' ||
+                    op === '<=' ||
+                    op === '>='
+                    ){
+                    left.initialize(0);
+                } else if (op === '&&' ||
+                    op === '||' ) {
+                    left.initialize(false);
+                } else if (op === '+' ) {
+                    if (typeof right === 'string' || isSymbolicString(right)) {
+                        left.initialize("");
+                    } else {
+                        left.initialize(0);
+                    }
+                } else if (op === '==' ||
+                    op === '!=' ||
+                    op === '===' ||
+                    op === '!==') {
+                    if (typeof right === 'string' || isSymbolicString(right)) {
+                        left.initialize("");
+                    } else if (typeof right === 'number' || isSymbolicNumber(right)) {
+                        left.initialize(0);
+                    } else if (typeof right === 'boolean' || isSymbolicBool(right)) {
+                        left.initialize(false);
+                    } else if (typeof right === SymbolicAnyVar) {
+                        if (right.isInitialized) {
+                            left.initialize(right.value);
+                        } else {
+                            left.initialize(function(){});
+                        }
+                    } else {
+                        left.initialize(function(){});
+                    }
+                } else {
+                    left.initialize(function(){});
+                }
+            }
+            left = left.value;
+        }
+        return left;
+    }
+
+    function initUndefinedForUnary(op, left) {
+        if (sandbox.treatUndefinedAsInput && left instanceof SymbolicAnyVar) {
+            if (!left.isInitialized) {
+                if (op === '-' ||
+                    op === '+' ||
+                    op === '~'
+                    ){
+                    left.initialize(0);
+                } else if (op === '!') {
+                    left.initialize(false);
+                } else {
+                    left.initialize(function(){});
+                }
+            }
+            left = left.value;
+        }
+        return left;
+    }
+
+    function initUndefinedCondition(left) {
+        if (sandbox.treatUndefinedAsInput && left instanceof SymbolicAnyVar) {
+            if (!left.isInitialized) {
+                left.initialize(false);
+            }
+            left = left.value;
+        }
+        return left;
+    }
+
+    function initUndefinedNumber(left) {
+        if (sandbox.treatUndefinedAsInput && left instanceof SymbolicAnyVar) {
+            if (!left.isInitialized) {
+                left.initialize(0);
+            }
+            left = left.value;
+        }
+        return left;
+    }
+
+    function initUndefinedString(left) {
+        if (sandbox.treatUndefinedAsInput && left instanceof SymbolicAnyVar) {
+            if (!left.isInitialized) {
+                left.initialize("");
+            }
+            left = left.value;
+        }
+        return left;
+    }
+
+    // --------------------------- End Treat undefined as input ----------------------------
 
 
     //----------------------------------- Begin concolic execution ---------------------------------
@@ -125,9 +321,9 @@
         return function() {
             var len = arguments.length;
             for (var i = 0; i<len; i++) {
-                arguments[i] = pc.concretize(getSingle(arguments[i]));
+                arguments[i] = pc.concretize(initUndefinedNumber(getSingle(arguments[i])));
             }
-            return f.apply(pc.concretize(getSingle(this)),arguments);
+            return f.apply(pc.concretize(initUndefinedString(getSingle(this))),arguments);
         }
     }
 
@@ -135,7 +331,7 @@
         return function() {
             var len = arguments.length;
             for (var i = 0; i<len; i++) {
-                arguments[i] = pc.concretize(getSingle(arguments[i]));
+                arguments[i] = pc.concretize(initUndefinedNumber(getSingle(arguments[i])));
             }
             return f.apply(this, arguments);
         }
@@ -197,6 +393,24 @@
         } else if (f === J$.addAxiom ||
             f === J$.readInput) {
             return f;
+        } else if (f === Math.abs ||
+            f === Math.acos ||
+            f === Math.asin ||
+            f === Math.atan ||
+            f === Math.atan2 ||
+            f === Math.ceil ||
+            f === Math.cos ||
+            f === Math.exp ||
+            f === Math.floor ||
+            f === Math.log ||
+            f === Math.max ||
+            f === Math.min ||
+            f === Math.pow ||
+            f === Math.round ||
+            f === Math.sin ||
+            f === Math.sqrt ||
+            f === Math.tan ) {
+            return create_concrete_invoke(f);
         } else {
             if (!sfuns) {
                 sfuns = require('./SymbolicFunctions2_jalangi_')
@@ -278,6 +492,7 @@
     function invokeFun(iid, base, f, args, isConstructor) {
         var g, invoke, val;
 
+        f = initUndefinedFunction(f);
         //console.log("    Calling "+ f.name);
         var f_m = getSymbolicFunctionToInvoke(f, isConstructor);
 
@@ -359,7 +574,8 @@
         if (type === N_LOG_FUNCTION_LIT) {
             pc.concretize(val)[SPECIAL_PROP2] = true;
         }
-        return val;
+
+        return wrapUndefined(val, true);
     }
 
     function H(iid, val) {
@@ -367,8 +583,8 @@
     }
 
 
-    function R(iid, name, val) {
-        return val;
+    function R(iid, name, val, isGlobal) {
+        return single.wrapUndefined(val, !isGlobal);
     }
 
     function W(iid, name, val, lhs) {
@@ -376,6 +592,8 @@
     }
 
     function N(iid, name, val, isArgumentSync) {
+        if (isArgumentSync)
+            return single.wrapUndefined(val, false);
         return val;
     }
 
@@ -393,7 +611,12 @@
 
         if (offset === SPECIAL_PROP2) {
             return undefined;
-        } else if (base instanceof SymbolicStringExpression) {
+        }
+
+        offset = initUndefinedOffset(offset);
+        base = initUndefinedForBaseOfG(base, offset);
+
+        if (base instanceof SymbolicStringExpression) {
             if (offset === "length") {
                 return base.getLength();
             } else if (offset === "indexOf") {
@@ -418,7 +641,12 @@
 
         base = pc.concretize(base);
 
-        return base[offset];
+        var ret = base[offset];
+        var tmp = wrapUndefined(ret, false);
+        if (sandbox.treatUndefinedAsInput && ret === undefined) {
+            base[offset] = tmp;
+        }
+        return tmp;
     }
 
     function P(iid, base, offset, val) {
@@ -427,6 +655,9 @@
         if (offset === SPECIAL_PROP2) {
             return undefined;
         }
+
+        offset = initUndefinedOffset(offset);
+        base = initUndefinedForBaseOfP(base, offset);
 
         base = pc.concretize(base);
 
@@ -620,6 +851,9 @@
 
         var result_c, left_c, right_c;
 
+        left = initUndefinedForBinary(op, left, right);
+        right = initUndefinedForBinary(op, right, left);
+
         if ((result_c = binarys(iid, op, left, right)) !== undefined) {
             return result_c;
         }
@@ -752,6 +986,8 @@
     function U(iid, op, left) {
         var left_c, result_c;
 
+        left = initUndefinedForUnary(op, left);
+
         if ((result_c = unarys(iid, op, left))) {
             return result_c;
         }
@@ -815,7 +1051,7 @@
     }
 
     function C(iid, left) {
-        var ret;
+        left = initUndefinedCondition(left);
 
         lastVal = left;
         if (isSymbolic(left)) {
@@ -878,6 +1114,11 @@
     sandbox.endExecution = endExecution;
 
     sandbox.getPC = getPC;
+    sandbox.treatUndefinedAsInput = true;
+    sandbox.wrapUndefined = wrapUndefined;
+    sandbox.initUndefinedFunction = initUndefinedFunction;
+    sandbox.initUndefinedNumber = initUndefinedNumber;
+    sandbox.initUndefinedString = initUndefinedString;
 
 }(module.exports));
 

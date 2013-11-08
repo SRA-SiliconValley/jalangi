@@ -157,7 +157,7 @@
             return ret ;
         }
 
-        this.getField = function(iid, base, offset, val) {
+        this.getField = function(iid, base, offset, val, isGlobal) {
             //var ret = annotateObject(iid, val);
             if (getConcrete(val) !== undefined) {
                 updateType(base, offset, val, iid);

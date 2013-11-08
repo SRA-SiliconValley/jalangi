@@ -97,6 +97,7 @@ if (typeof J$ === 'undefined') {
         return ret;
     }
 
+    sandbox.getNextSymbol = getNextSymbol;
     sandbox.inputs = inputs;
     sandbox.setInput = setInput;
     sandbox.readInput = readInput;

@@ -75,7 +75,7 @@
             checkNullOrUndef(base);
         }
 
-        this.read = function(iid, name, val) {
+        this.read = function(iid, name, val, isGlobal) {
             return annotateNullOrUndef(val, iid);
         }
     }

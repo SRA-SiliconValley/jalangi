@@ -19,13 +19,8 @@
 (function(module){
 
     function execSync(cmd) {
-        var FFI = require("node-ffi");
-        var libc = new FFI.Library(null, {
-            "system": ["int32", ["string"]]
-        });
-
-        var run = libc.system;
-        run(cmd);
+        es = require('execSync')
+        es.run(cmd)
     }
 
     var stdoutCache = {};

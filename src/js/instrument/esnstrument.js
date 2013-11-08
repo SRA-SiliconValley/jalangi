@@ -419,10 +419,10 @@
         return ret;
     }
 
-    function wrapRead(node, name, val, isReUseIid) {
+    function wrapRead(node, name, val, isReUseIid, isGlobal) {
         printIidToLoc(node);
         var ret = replaceInExpr(
-            logReadFunName+"("+RP+"1, "+RP+"2, "+RP+"3)",
+            logReadFunName+"("+RP+"1, "+RP+"2, "+RP+"3,"+(isGlobal?"true":"false")+")",
             isReUseIid?getPrevIidNoInc():getIid(),
             name,
             val
@@ -431,17 +431,27 @@
         return ret;
     }
 
+//    function wrapReadWithUndefinedCheck(node, name) {
+//        var ret = replaceInExpr(
+//            "("+logIFunName+"(typeof ("+name+") === 'undefined'? "+RP+"2 : "+RP+"3))",
+//            createIdentifierAst(name),
+//            wrapRead(node, createLiteralAst(name),createIdentifierAst("undefined")),
+//            wrapRead(node, createLiteralAst(name),createIdentifierAst(name), true)
+//        );
+//        transferLoc(ret, node);
+//        return ret;
+//    }
+
     function wrapReadWithUndefinedCheck(node, name) {
         var ret = replaceInExpr(
-            "("+logIFunName+"(typeof ("+name+") === 'undefined'? "+RP+"2 : "+RP+"3))",
+            "("+logIFunName+"(typeof ("+name+") === 'undefined'? ("+name+"="+RP+"2) : ("+name+"="+RP+"3)))",
             createIdentifierAst(name),
-            wrapRead(node, createLiteralAst(name),createIdentifierAst("undefined")),
-            wrapRead(node, createLiteralAst(name),createIdentifierAst(name), true)
+            wrapRead(node, createLiteralAst(name),createIdentifierAst("undefined"), false, true),
+            wrapRead(node, createLiteralAst(name),createIdentifierAst(name), true, true)
         );
         transferLoc(ret, node);
         return ret;
     }
-
 
     function wrapWrite(node, name, val, lhs) {
         printIidToLoc(node);
@@ -635,12 +645,24 @@
 
     function createCallInitAsStatement(node, name, val, isArgumentSync) {
         printIidToLoc(node);
-        var ret =replaceInStatement(
-            logInitFunName+"("+RP+"1, "+RP+"2, "+RP+"3, "+isArgumentSync+")",
-            getIid(),
-            name,
-            val
-        );
+        var ret;
+
+        if (isArgumentSync)
+            ret =replaceInStatement(
+                RP+"1 = "+logInitFunName+"("+RP+"2, "+RP+"3, "+RP+"4, "+isArgumentSync+")",
+                val,
+                getIid(),
+                name,
+                val
+            );
+        else
+            ret =replaceInStatement(
+                logInitFunName+"("+RP+"1, "+RP+"2, "+RP+"3, "+isArgumentSync+")",
+                getIid(),
+                name,
+                val
+            );
+
         transferLoc(ret[0].expression,node);
         return ret;
     }

@@ -106,4 +106,4 @@ call_fail(["node", "src/js/instrument/esnstrument.js", "src/js/analyses/puresymb
 call_fail(["node", "src/js/instrument/esnstrument.js", "src/js/analyses/puresymbolic/SymbolicFunctions3.js"])   
 
 print "---> Installation successful."
-print "---> run python scripts/sym.py to make sure all tests pass"
+print "---> run python scripts/runalltests.py to make sure all tests pass"

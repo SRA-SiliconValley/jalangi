@@ -62,7 +62,7 @@ If you have a fresh installation of Ubuntu, you can install all the requirements
 If Installation succeeds, you should see the following message:
 
     ---> Installation successful.
-    ---> run python scripts/sym.py to make sure all tests pass
+    ---> run python scripts/runalltests.py to make sure all tests pass
 
 A Lubuntu virtual machine with pre-installed jalangi can be downloaded from http://srl.cs.berkeley.edu/~ksen/jalangi4.zip.
 You need VirtualBox available at https://www.virtualbox.org/ to run the virtual machine.
@@ -94,6 +94,10 @@ tests/sunspider1/.
 
     python scripts/testspv.py
 
+Run all of the above tests.
+
+    python scripts/runalltests.py
+    
 ### Other Scripts
 
 Run likely type inference analysis on the sunspider benchmarks located under tests/sunspider1/.

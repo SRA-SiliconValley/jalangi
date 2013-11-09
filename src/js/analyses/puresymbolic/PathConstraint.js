@@ -28,6 +28,7 @@
     var solver = new SolverEngine();
     var PATH_FILE_NAME = 'jalangi_path';
     var fs = require('fs');
+    var MAX_PATH_COUNT = 10;
 
     var pathConstraint = BDD.one;
     var pathIndex;
@@ -103,10 +104,14 @@
         }
         if (pathIndex.length<=0) {
             pathConstraint = aggregatePC;
+            console.log("done");
         } else {
             solution = pathIndex[pathIndex.length-1].solution;
             pathConstraint = pathIndex[pathIndex.length-1].pc;
         }
+        console.log(pathConstraint.toString());
+        console.log(getFormulaFromBDD(pathConstraint).toString());
+
         pathCount++;
         returnValue = returnVal;
     }
@@ -353,10 +358,10 @@
         } else {
             if (isSatisfiable(falseBranch)) {
                 if (tmp = getSolution(trueBranch, true)) {
-                    setNext({done:false, branch:false, solution: tmp, pc: trueBranch, lastVal: lastVal});
+                    setNext({done:false, branch:false, solution: tmp, pc: trueBranch, lastVal: lastVal, iid: iid});
                     //console.log("At "+getIIDInfo(iid)+" solution (then) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(trueBranch));
                 } else {
-                    setNext({done:true, branch:false, solution: null, pc: null, lastVal: lastVal});
+                    setNext({done:true, branch:false, solution: null, pc: null, lastVal: lastVal, iid: iid});
                     //console.log("At "+getIIDInfo(iid)+" no solution (then) for pc = "+getFormulaFromBDD(trueBranch));
 
                 }
@@ -364,10 +369,10 @@
                 addAxiom(falseBranch, true);
             } else if (isSatisfiable(trueBranch)) {
                 if (tmp = getSolution(falseBranch, true)) {
-                    setNext({done:false, branch:true, solution: tmp, pc: falseBranch, lastVal: lastVal});
+                    setNext({done:false, branch:true, solution: tmp, pc: falseBranch, lastVal: lastVal, iid:iid});
                     //console.log("At "+getIIDInfo(iid)+" solution (else) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(falseBranch));
                 } else {
-                    setNext({done:true, branch:true, solution: null, pc: null, lastVal: lastVal});
+                    setNext({done:true, branch:true, solution: null, pc: null, lastVal: lastVal, iid:iid});
                     //console.log("At "+getIIDInfo(iid)+" no solution (else) for pc = "+getFormulaFromBDD(falseBranch));
                 }
                 ret = true;
@@ -384,7 +389,7 @@
             return val;
         }
 
-        console.log("/");
+        //console.log("/");
         //console.log("Warning: concretizing a symbolic value "+val);
 
         var concrete = makeConcrete(val, true);
@@ -407,7 +412,7 @@
         while(pathIndex.length > 0) {
             elem = pathIndex.pop();
             if (!elem.done) {
-                pathIndex.push({done: true, branch: !elem.branch, solution: elem.solution, pc: elem.pc, lastVal: elem.lastVal});
+                pathIndex.push({done: true, branch: !elem.branch, solution: elem.solution, pc: elem.pc, lastVal: elem.lastVal, iid: elem.iid});
                 break;
             }
         }
@@ -417,7 +422,7 @@
         fs.writeFileSync(PATH_FILE_NAME,JSON.stringify(pathIndex),"utf8");
 
         updateSolution();
-        var ret = pathIndex.length > 0;
+        var ret = (pathIndex.length > 0);
         if (ret || forceWrite) {
             //console.log("Writing the input "+JSON.stringify(solution));
             solver.writeInputs(solution, []);
@@ -426,6 +431,11 @@
         } else {
             //console.log("Not writing the input "+JSON.stringify(solution));
         }
+
+        if (pathCount > MAX_PATH_COUNT) {
+            pathIndex = [];
+        }
+        ret = (pathIndex.length > 0)?"backtrack at "+getIIDInfo(elem.iid):false;
         return ret;
     }
 

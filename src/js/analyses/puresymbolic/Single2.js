@@ -607,7 +607,6 @@
     }
 
     function G(iid, base, offset) {
-        offset = pc.concretize(offset);
 
         if (offset === SPECIAL_PROP2) {
             return undefined;
@@ -615,6 +614,8 @@
 
         offset = initUndefinedOffset(offset);
         base = initUndefinedForBaseOfG(base, offset);
+
+        offset = pc.concretize(offset);
 
         if (base instanceof SymbolicStringExpression) {
             if (offset === "length") {

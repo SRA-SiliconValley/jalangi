@@ -23,7 +23,6 @@
         if (!(this instanceof SymbolicAnyVar)) {
             return new SymbolicAnyVar(isUndefined);
         }
-        console.log("Called new SymbolicAnyVar")
         if (isUndefined) {
             this.value = undefined;
         }
@@ -40,7 +39,6 @@
             this.isInitialized = true;
             if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {
                 this.value = J$.readInput(val, false, this.idx);
-                console.log("Unnecessary input")
             } else {
                 this.value = val;
             }

@@ -46,4 +46,4 @@ function quick_sort(array)
     qsort(array, 0, array.length);
 }
 
-quick_sort();
+qsort();

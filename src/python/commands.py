@@ -202,7 +202,14 @@ def symbolic (filee, inputs, analysis, jalangi=util.DEFAULT_INSTALL):
             iters = int(util.head("jalangi_tail",1)[0])
         except: pass
         i = i + 1
-
+    if iters == inputs:
+        print "{}.js passed".format(filee)
+        with open("../jalangi_sym_test_results", 'a') as f:
+         f.write("{}.js passed\n".format(filee))
+    else:
+        print "{}.js failed".format(filee)
+        with open("../jalangi_sym_test_results", 'a') as f:
+         f.write("{}.js failed\n".format(filee))
     print "Tests Generated = {}".format(iters)
 
 def rerunall(filee, jalangi=util.DEFAULT_INSTALL):

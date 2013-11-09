@@ -26,7 +26,6 @@
     var PREFIX1 = "J$";
     var SPECIAL_PROP2 = "*" + PREFIX1 + "I*";
     var EVAL_ORG = eval;
-    var MAX_PATH_COUNT = 50;
 
     var pc = single.getPC();
 
@@ -305,7 +304,7 @@
     }
 
 
-    var pad = "  ";
+    var pad = "| ";
 
     function singleInvokeFun(iid, base, f, args, isConstructor) {
         var g, invoke, val;
@@ -319,7 +318,7 @@
         invoke = f_m || f === undefined || HOP(f, SPECIAL_PROP2) || typeof f !== "function";
         g = f_m || f;
         pushSwitchKey();
-        pad = pad + "  ";
+        pad = pad + "| ";
         try {
             if (g === EVAL_ORG) {
                 val = invokeEval(base, g, args);
@@ -330,6 +329,7 @@
                     val = g.apply(base, args);
                 }
             } else {
+                console.log(pad + "skip body");
                 val = single.wrapUndefined(undefined, false);
             }
         } finally {
@@ -375,7 +375,7 @@
         }
 
         if (ret2) {
-            //console.log("backtrack " + getIIDInfo(iid));
+            console.log(pad+ret2);
         }
         pc.resetPC(undefined);
         return ret2;
@@ -577,15 +577,15 @@
     }
 
     function Fr(iid) {
-        var ret2, pathCount = pc.getPathCount(), aggrRet = pc.getReturnVal();
+        var ret2, aggrRet = pc.getReturnVal();
         ret2 = pc.generateInputs();
         if (ret2) {
-            //console.log("backtrack " + getIIDInfo(iid));
+            console.log(pad+ret2);
         }
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
         pc.resetPC(returnVal);
-        return ret2 && pathCount < MAX_PATH_COUNT;
+        return ret2;
     }
 
     function Rt(iid, val) {

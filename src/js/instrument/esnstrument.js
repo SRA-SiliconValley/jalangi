@@ -171,7 +171,9 @@
         IGNORE: 2,
         OEXP: 3,
         PARAMS: 4,
-        OEXP2: 5
+        OEXP2: 5,
+        GETTER: 6,
+        SETTER: 7
     };
 
     function ignoreSubAst(node) {
@@ -217,6 +219,10 @@
                         newContext = CONTEXT.IGNORE;
                     } else if (context===CONTEXT.PARAMS) {
                         newContext = CONTEXT.IGNORE;
+                    } else if (type === 'Property' && key === 'value' && object.kind === 'get') {
+                        newContext = CONTEXT.GETTER;
+                    } else if (type === 'Property' && key === 'value' && object.kind === 'set') {
+                        newContext = CONTEXT.SETTER;
                     } else {
                         newContext = CONTEXT.RHS;
                     }
@@ -1018,9 +1024,14 @@
             }
             return ret1;
         },
-        "FunctionExpression": function(node) {
+        "FunctionExpression": function(node, context) {
             node.body.body = instrumentFunctionEntryExit(node, node.body.body);
-            var ret1 = wrapLiteral(node, node, N_LOG_FUNCTION_LIT);
+            var ret1;
+            if (context === CONTEXT.GETTER || context === CONTEXT.SETTER) {
+                ret1 = node;
+            } else {
+                ret1 = wrapLiteral(node, node, N_LOG_FUNCTION_LIT);
+            }
             scope = scope.parent;
             return ret1;
         },

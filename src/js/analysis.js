@@ -1088,11 +1088,12 @@ J$ = {};
                         val[SPECIAL_PROP][SPECIAL_PROP] = id = literalId;
                         literalId = literalId + 2;
 //                        console.log("id:"+id); // uncomment for divergence
-                        for (var offset in val) {
-                            if (offset !== SPECIAL_PROP && offset !== SPECIAL_PROP2 && HOP(val, offset)) {
-                                val[SPECIAL_PROP][offset] = val[offset];
-                            }
-                        }
+                        // the following for loop could call unexpected getter or setter method
+//                        for (var offset in val) {
+//                            if (offset !== SPECIAL_PROP && offset !== SPECIAL_PROP2 && HOP(val, offset)) {
+//                                val[SPECIAL_PROP][offset] = val[offset];
+//                            }
+//                        }
                     }
                     if (mode === MODE_REPLAY) {
                         objectMap[id] = oldVal;

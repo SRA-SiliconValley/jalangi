@@ -93,7 +93,7 @@
         return pcStack.pop();
     }
 
-    function resetPC(returnVal) {
+    function resetPC(returnVal, pad) {
         index = 0;
         formulaStack = [];
         formulaStack.count = 0;
@@ -104,13 +104,14 @@
         }
         if (pathIndex.length<=0) {
             pathConstraint = aggregatePC;
-            console.log("done");
+            console.log(pad+"Done with all paths.");
         } else {
             solution = pathIndex[pathIndex.length-1].solution;
             pathConstraint = pathIndex[pathIndex.length-1].pc;
         }
-        console.log(pathConstraint.toString());
-        console.log(getFormulaFromBDD(pathConstraint).toString());
+        console.log(pad+"Aggregate path constraint "+pathConstraint.toString());
+        console.log(pad+getFormulaFromBDD(pathConstraint).toString());
+        console.log(pad+"Return value "+returnVal);
 
         pathCount++;
         returnValue = returnVal;

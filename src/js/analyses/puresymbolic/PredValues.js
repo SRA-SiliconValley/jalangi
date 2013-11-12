@@ -66,9 +66,9 @@
             var i, len = this.values.length, sb = "[";
 
             for (i = 0; i < len; ++i) {
-                sb = sb + "{ pred: " + this.values[i].pred.toString() + "\n, value: " + this.values[i].value + "},\n";
+                sb = sb + "{ pred: " + this.values[i].pred.toString() + ", value: " + this.values[i].value + "},";
             }
-            sb = sb + "]\n";
+            sb = sb + "]";
             return sb;
         }
     }

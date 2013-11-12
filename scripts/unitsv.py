@@ -39,6 +39,7 @@ tests = [
     "tests/unit/scope_rr" ,
     "tests/unit/exception",
     "tests/unit/symbolic" ,
+    "tests/unit/gettersetter" ,
 ]
 
 SCRIPT = "src/python/jalangi_command.py"

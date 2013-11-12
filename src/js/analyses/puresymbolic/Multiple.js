@@ -377,7 +377,7 @@
         if (ret2) {
             console.log(pad+ret2);
         }
-        pc.resetPC(undefined);
+        pc.resetPC(undefined, pad);
         return ret2;
     }
 
@@ -584,7 +584,7 @@
         }
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
-        pc.resetPC(returnVal);
+        pc.resetPC(returnVal, pad);
         return ret2;
     }
 

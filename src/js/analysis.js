@@ -634,6 +634,12 @@ J$ = {};
                 rrEngine.RR_T(iid, val, type);
             }
             if (type === N_LOG_FUNCTION_LIT) {
+                if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
+                    Object.defineProperty(val, SPECIAL_PROP2, {
+                        enumerable: false,
+                        writable: true,
+                    });
+                }
                 val[SPECIAL_PROP2] = true;
             }
 
@@ -1017,6 +1023,12 @@ J$ = {};
                         value = 0;
                     } else {
                         if (!HOP(val, SPECIAL_PROP)) {
+                            if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
+                                Object.defineProperty(val, SPECIAL_PROP, {
+                                    enumerable: false,
+                                    writable: true,
+                                });
+                            }
                             val[SPECIAL_PROP] = {};
                             val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
 //                            console.log("oid:"+objectId);
@@ -1085,6 +1097,12 @@ J$ = {};
                     var oldVal = val;
                     val = getConcrete(oldVal);
                     if (!HOP(val,SPECIAL_PROP)) {
+                        if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
+                            Object.defineProperty(val, SPECIAL_PROP, {
+                                enumerable: false,
+                                writable: true,
+                            });
+                        }
                         val[SPECIAL_PROP] = {};
                         val[SPECIAL_PROP][SPECIAL_PROP] = id = literalId;
                         literalId = literalId + 2;
@@ -1142,6 +1160,12 @@ J$ = {};
                                 } else {
                                     obj = function(){};
                                 }
+                            }
+                            if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
+                                Object.defineProperty(obj, SPECIAL_PROP, {
+                                    enumerable: false,
+                                    writable: true,
+                                });
                             }
                             obj[SPECIAL_PROP] = {};
                             obj[SPECIAL_PROP][SPECIAL_PROP] = recordedValue;
@@ -1512,6 +1536,12 @@ J$ = {};
 //                    console.log("iid:"+iid)  // uncomment for divergence
                     setLiteralId(val);
                     if (fun === N_LOG_FUNCTION_LIT) {
+                        if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
+                            Object.defineProperty(val, SPECIAL_PROP3, {
+                                enumerable: false,
+                                writable: true,
+                            });
+                        }
                         val[SPECIAL_PROP3] = frame;
                     }
                 }

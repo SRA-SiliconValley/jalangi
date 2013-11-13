@@ -15,6 +15,7 @@ tests = [
     "tests/octane/splay",
     "tests/octane/navier-stokes",
     "tests/octane/code-load",
+    "tests/octane/gbemu",
     "tests/octane/box2d"
 ]
 

@@ -34,12 +34,15 @@
             if (val_s){
                 return val;
             } else {
-                return new ConcolicValue(val, (str?str:"")+val+" initialized at "+getIIDInfo(iid));
+                return new ConcolicValue(val, (str?str:"")+" initialized at "+getIIDInfo(iid));
             }
         }
 
         this.literal = function(iid, val) {
-            return annotateValue(val, iid);
+            if (typeof val !== 'function')
+                return annotateValue(val, iid);
+            else
+                return val;
         };
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {

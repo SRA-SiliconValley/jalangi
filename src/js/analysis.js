@@ -480,7 +480,8 @@ J$ = {};
                 rrEngine.RR_evalBegin();
             }
             try {
-                return f.call(base,sandbox.instrumentCode(getConcrete(args[0]),true));
+//                return f(getConcrete(args[0]));
+                return f(sandbox.instrumentCode(getConcrete(args[0]),true));
             } finally {
                 if (rrEngine) {
                     rrEngine.RR_evalEnd();

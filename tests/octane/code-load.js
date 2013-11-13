@@ -1491,7 +1491,7 @@ function runClosure() {
   })();
 }
 
-function MockElement() {
+MockElement = function MockElement_f() {
   this.appendChild = function(a) {};
   this.createComment = function(a) {};
   this.createDocumentFragment = function() { return new MockElement(); };
@@ -1519,9 +1519,9 @@ function runJQuery() {
 }
 
 
-setupCodeLoad();
-runCodeLoadClosure();
-tearDownCodeLoad();
+//setupCodeLoad();
+//runCodeLoadClosure();
+//tearDownCodeLoad();
 setupCodeLoad();
 runCodeLoadJQuery();
 tearDownCodeLoad();

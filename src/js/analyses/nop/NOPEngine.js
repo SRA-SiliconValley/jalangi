@@ -37,6 +37,10 @@
 
         this.makeConcolicPost = function() { }
 
+        this.declare = function (iid, name, val, isArgument) {
+
+        }
+
         this.literalPre = function(iid, val) { }
 
         this.literal = function(iid, val) {
@@ -95,16 +99,19 @@
 
         this.endExecution = function() { }
 
-        this.functionEnter = function(iid, fun, dis) { }
+        this.functionEnter = function(iid, fun, dis /* this */) { }
 
         this.functionExit = function(iid) {
-            return false;
+            return false; /* a return of false means that do not backtrack inside the function */
         }
 
         this.return_ = function(val) {
             return val;
         }
 
+        this.scriptEnter = function(iid, fileName) { }
+
+        this.scriptExit = function(iid) { }
     }
 
     module.exports = NOPEngine;

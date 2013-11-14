@@ -1255,12 +1255,16 @@
 
 
     function transformString(code, visitorsPost, visitorsPre) {
+//        console.time("parse")
         var newAst = esprima.parse(code, {loc:true, range:true});
+//        console.timeEnd("parse")
+//        console.time("transform")
         addScopes(newAst);
         var len = visitorsPost.length;
         for (var i=0; i<len; i++) {
             newAst = transformAst(newAst, visitorsPost[i], visitorsPre[i], CONTEXT.RHS);
         }
+//        console.timeEnd("transform")
         return newAst;
     }
 
@@ -1322,7 +1326,9 @@
             filename = args[i];
             writeLine("filename = \"" + sanitizePath(require('path').resolve(process.cwd(),filename)) + "\";\n");
             console.log("Instrumenting "+filename+" ...");
+//            console.time("load")
             var code = getCode(filename);
+//            console.timeEnd("load")
             tryCatch = false;
             var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
             //console.log(JSON.stringify(newAst, null, '\t'));
@@ -1330,12 +1336,16 @@
             var newFileName = filename.replace(".js",FILESUFFIX1+".js");
             var fileOnly = path.basename(filename);
             var newFileOnly = path.basename(newFileName);
-            var smap = escodegen.generate(newAst, {sourceMap: fileOnly});
-            smap = smap.replace(fileOnly, newFileOnly);
-            fs.writeFileSync(newFileName+".map", smap,"utf8");
+            //var smap = escodegen.generate(newAst, {sourceMap: fileOnly});
+            //smap = smap.replace(fileOnly, newFileOnly);
+            //fs.writeFileSync(newFileName+".map", smap,"utf8");
 
+//            console.time("generate")
             var n_code = escodegen.generate(newAst);
+//            console.timeEnd("generate")
+//            console.time("save")
             saveCode(n_code, newFileName, newFileOnly);
+//            console.timeEnd("save")
         }
         writeLine("}(typeof "+PREFIX1+" === 'undefined'? "+PREFIX1+" = {}:"+PREFIX1+"));\n")
         closeFile();

@@ -633,12 +633,18 @@ if (typeof J$ === 'undefined') J$ = {};
             if (rrEngine) {
                 rrEngine.RR_Se(iid,val);
             }
+            if (sandbox.analysis && sandbox.analysis.scriptEnter) {
+                sandbox.analysis.scriptEnter(iid, val);
+            }
         }
 
         function Sr(iid) {
             scriptCount--;
             if (rrEngine) {
                 rrEngine.RR_Sr(iid);
+            }
+            if (sandbox.analysis && sandbox.analysis.scriptExit) {
+                sandbox.analysis.scriptExit(iid);
             }
             if (mode === MODE_NO_RR_IGNORE_UNINSTRUMENTED && scriptCount === 0) {
                 endExecution();
@@ -717,6 +723,9 @@ if (typeof J$ === 'undefined') J$ = {};
         function N(iid, name, val, isArgumentSync) {
             if (rrEngine) {
                 rrEngine.RR_N(iid, name, val, isArgumentSync);
+            }
+            if (sandbox.analysis && sandbox.analysis.declare) {
+                sandbox.analysis.declare(iid, name, val, isArgumentSync);
             }
             return val;
         }

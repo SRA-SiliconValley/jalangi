@@ -16,83 +16,84 @@
 
 // Author: Koushik Sen
 
-J$ = {};
+
+/*
+To perform analysis in browser without recording, set window.JALANGI_MODE to 'concrete' and J$.analysis to a suitable analysis file.
+To redefine all instrumentation functions, set JALANGI_MODE to 'symbolic' and J$.analysis to a suitable library containing redefinitions of W, R, etc.
+
+ */
+
+if (typeof J$ === 'undefined') J$ = {};
 
 (function(sandbox) {
-    if (typeof require === 'function') {
-        /**
-         * Removes a module from the cache
-         */
-        require.uncache = function (moduleName) {
-            // Run over the cache looking for the files
-            // loaded by the specified module name
-            require.searchCache(moduleName, function (mod) {
-                delete require.cache[mod.id];
-            });
-        };
+    var MODE_RECORD = 1,
+        MODE_REPLAY = 2,
+        MODE_NO_RR_IGNORE_UNINSTRUMENTED = 3,
+        MODE_NO_RR = 4,
+        MODE_DIRECT = 5;
 
-        /**
-         * Runs over the cache to search for all the cached
-         * files
-         */
-        require.searchCache = function (moduleName, callback) {
-            // Resolve the module identified by the specified name
-            var mod = require.resolve(moduleName);
+    var isBrowser =  !(typeof exports !== 'undefined' && this.exports !== exports);
+    var isBrowserReplay;
+    var mode;
+    var rrEngine;
+    var executionIndex;
+    var branchCoverageInfo;
 
-            // Check if the module has been resolved and found within
-            // the cache
-            if (mod && ((mod = require.cache[mod]) !== undefined)) {
-                // Recursively go over the results
-                (function run(mod) {
-                    // Go over each of the module's children and
-                    // run over it
-                    mod.children.forEach(function (child) {
-                        run(child);
-                    });
-
-                    // Call the specified callback providing the
-                    // found module
-                    callback(mod);
-                })(mod);
-            }
-        };
-
-
-    }
+    mode = (function(str) {
+        switch(str) {
+            case "record" :
+                return MODE_RECORD;
+            case "replay":
+                return MODE_REPLAY;
+            case "analysis":
+                return MODE_NO_RR_IGNORE_UNINSTRUMENTED;
+            case "concrete":
+                return MODE_NO_RR;
+            case "symbolic":
+                return MODE_DIRECT;
+            default:
+                return MODE_RECORD;
+        }
+    }(isBrowser?window.JALANGI_MODE:process.env.JALANGI_MODE));
+    isBrowserReplay = isBrowser && mode ===MODE_REPLAY;
+    var ANALYSIS = !isBrowser?process.env.JALANGI_ANALYSIS:undefined;
 
 
 
-    if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
-        var single = require('./'+process.env.JALANGI_ANALYSIS);
+    if (mode === MODE_DIRECT) {
+        /* JALANGI_ANALYSIS file must define all instrumentation functions such as U, B, C, C1, C2, W, R, G, P */
+        if (ANALYSIS) {
+            sandbox.analysis = require('./'+ANALYSIS);
+        }
 
-        sandbox.U = single.U; // Unary operation
-        sandbox.B = single.B; // Binary operation
-        sandbox.C = single.C; // Condition
-        sandbox.C1 = single.C1; // Switch key
-        sandbox.C2 = single.C2; // case label C1 === C2
-        sandbox._ = single._;  // Last value passed to C
+        sandbox.U = sandbox.analysis.U; // Unary operation
+        sandbox.B = sandbox.analysis.B; // Binary operation
+        sandbox.C = sandbox.analysis.C; // Condition
+        sandbox.C1 = sandbox.analysis.C1; // Switch key
+        sandbox.C2 = sandbox.analysis.C2; // case label C1 === C2
+        sandbox._ = sandbox.analysis._;  // Last value passed to C
 
-        sandbox.H = single.H; // hash in for-in
-        sandbox.I = single.I; // Ignore argument
-        sandbox.G = single.G; // getField
-        sandbox.P = single.P; // putField
-        sandbox.R = single.R; // Read
-        sandbox.W = single.W; // Write
-        sandbox.N = single.N; // Init
-        sandbox.T = single.T; // object/function/regexp/array Literal
-        sandbox.F = single.F; // Function call
-        sandbox.M = single.M; // Method call
-        sandbox.A = single.A; // Modify and assign +=, -= ...
-        sandbox.Fe = single.Fe; // Function enter
-        sandbox.Fr = single.Fr; // Function return
-        sandbox.Se = single.Se; // Script enter
-        sandbox.Sr = single.Sr; // Script return
-        sandbox.Rt = single.Rt; // Value return
-        sandbox.Ra = single.Ra;
+        sandbox.H = sandbox.analysis.H; // hash in for-in
+        sandbox.I = sandbox.analysis.I; // Ignore argument
+        sandbox.G = sandbox.analysis.G; // getField
+        sandbox.P = sandbox.analysis.P; // putField
+        sandbox.R = sandbox.analysis.R; // Read
+        sandbox.W = sandbox.analysis.W; // Write
+        sandbox.N = sandbox.analysis.N; // Init
+        sandbox.T = sandbox.analysis.T; // object/function/regexp/array Literal
+        sandbox.F = sandbox.analysis.F; // Function call
+        sandbox.M = sandbox.analysis.M; // Method call
+        sandbox.A = sandbox.analysis.A; // Modify and assign +=, -= ...
+        sandbox.Fe = sandbox.analysis.Fe; // Function enter
+        sandbox.Fr = sandbox.analysis.Fr; // Function return
+        sandbox.Se = sandbox.analysis.Se; // Script enter
+        sandbox.Sr = sandbox.analysis.Sr; // Script return
+        sandbox.Rt = sandbox.analysis.Rt; // Value return
+        sandbox.Ra = sandbox.analysis.Ra;
 
-        sandbox.makeSymbolic = single.makeSymbolic;
-        sandbox.addAxiom = single.addAxiom;
-        sandbox.endExecution = single.endExecution;
+        sandbox.makeSymbolic = sandbox.analysis.makeSymbolic;
+        sandbox.addAxiom = sandbox.analysis.addAxiom;
+        sandbox.endExecution = sandbox.analysis.endExecution;
     } else {
 
 //------------------------------- Stats for the paper -----------------------
@@ -127,27 +128,18 @@ J$ = {};
         var F_TYPE = 0,
             F_VALUE = 1,
             F_IID = 2,
-            F_FUNNAME = 4,
-            F_SEQ = 3;
+            F_SEQ = 3,
+            F_FUNNAME = 4;
 
-//    var N_LOG_LOAD = 0,
-//    var N_LOG_FUN_CALL = 1,
-//      N_LOG_METHOD_CALL = 2,
         var  N_LOG_FUNCTION_ENTER = 4,
-//      N_LOG_FUNCTION_RETURN = 5,
             N_LOG_SCRIPT_ENTER = 6,
-//      N_LOG_SCRIPT_EXIT = 7,
             N_LOG_GETFIELD = 8,
-//      N_LOG_GLOBAL = 9,
             N_LOG_ARRAY_LIT = 10,
             N_LOG_OBJECT_LIT = 11,
             N_LOG_FUNCTION_LIT = 12,
             N_LOG_RETURN = 13,
             N_LOG_REGEXP_LIT = 14,
-//      N_LOG_LOCAL = 15,
-//      N_LOG_OBJECT_NEW = 16,
             N_LOG_READ = 17,
-//      N_LOG_FUNCTION_ENTER_NORMAL = 18,
             N_LOG_HASH = 19,
             N_LOG_SPECIAL = 20,
             N_LOG_STRING_LIT = 21,
@@ -156,47 +148,10 @@ J$ = {};
             N_LOG_UNDEFINED_LIT = 24,
             N_LOG_NULL_LIT = 25;
 
-        var MODE_RECORD = 1,
-            MODE_REPLAY = 2,
-            MODE_NO_RR_IGNORE_UNINSTRUMENTED = 3,
-            MODE_NO_RR = 4;
-
         //-------------------------------- End constants ---------------------------------
 
 
-        var mode = (function(str) {
-            switch(str) {
-                case "record" :
-                    return MODE_RECORD;
-                case "replay":
-                    return MODE_REPLAY;
-                case "analysis":
-                    return MODE_NO_RR_IGNORE_UNINSTRUMENTED;
-                case "concrete":
-                    return MODE_NO_RR;
-                default:
-                    return MODE_RECORD;
-            }
-        }((typeof window === "undefined")?process.env.JALANGI_MODE:window.JALANGI_MODE));
-        var ANALYSIS = ((typeof window === "undefined")?process.env.JALANGI_ANALYSIS:window.JALANGI_ANALYSIS);
-        var isBrowserReplay = (typeof window !== 'undefined') && mode ===MODE_REPLAY;
-
-        var executionIndex = new ExecutionIndex();
-
-        var sEngine;
-        var branchCoverageInfo;// = require('./BranchCoverageInfo');
-        if (ANALYSIS && ANALYSIS.indexOf("Engine")>=0) {
-//        var getSymbolicFunctionToInvoke = require('./SymbolicFunctions');
-            var SymbolicEngine = require('./'+ANALYSIS);
-            sEngine = new SymbolicEngine(executionIndex);
-        }
-
-
-        var rrEngine;
-        if (mode=== MODE_RECORD || mode === MODE_REPLAY) {
-            rrEngine = new RecordReplayEngine();
-        }
-
+        //-------------------------------------- Symbolic functions -----------------------------------------------------------
 
         var log = (function(){
             var list;
@@ -218,15 +173,29 @@ J$ = {};
         })();
 
 
-        //-------------------------------------- Symbolic functions -----------------------------------------------------------
+        function getConcrete(val) {
+            if (sandbox.analysis && sandbox.analysis.getConcrete) {
+                return sandbox.analysis.getConcrete(val);
+            } else {
+                return val;
+            }
+        }
+
+        function getSymbolic(val) {
+            if (sandbox.analysis && sandbox.analysis.getSymbolic) {
+                return sandbox.analysis.getSymbolic(val);
+            } else {
+                return val;
+            }
+        }
 
         function create_fun(f) {
             return function() {
                 var len = arguments.length;
                 for (var i = 0; i<len; i++) {
-                    arguments[i] = J$.getConcrete(arguments[i]);
+                    arguments[i] = getConcrete(arguments[i]);
                 }
-                return f.apply(J$.getConcrete(this),arguments);
+                return f.apply(getConcrete(this),arguments);
             }
         }
 
@@ -308,31 +277,15 @@ J$ = {};
         }
 
         //---------------------------- Utility functions -------------------------------
-        function getConcrete(val) {
-            if (sEngine && sEngine.getConcrete) {
-                return sEngine.getConcrete(val);
-            } else {
-                return val;
-            }
-        }
-
-        function getSymbolic(val) {
-            if (sEngine && sEngine.getSymbolic) {
-                return sEngine.getSymbolic(val);
-            } else {
-                return val;
-            }
-        }
-
         function addAxiom(c) {
-            if (sEngine && sEngine.installAxiom) {
-                sEngine.installAxiom(c);
+            if (sandbox.analysis && sandbox.analysis.installAxiom) {
+                sandbox.analysis.installAxiom(c);
             }
         }
 
         function HOP(obj, prop) {
             return Object.prototype.hasOwnProperty.call(obj, prop);
-        };
+        }
 
 
 
@@ -430,7 +383,16 @@ J$ = {};
         }
         //-------------------------------- End Execution indexing --------------------------------
 
-        //----------------------------------- Begin concolic execution ---------------------------------
+        //----------------------------------- Begin Jalangi Library backend ---------------------------------
+
+        var isInstrumentedCaller = false, isConstructorCall = false;
+        var returnVal;
+        var scriptCount = 0;
+        var lastVal;
+        var switchLeft;
+        var switchKeyStack = [];
+
+
 
         function callAsNativeConstructorWithEval(Constructor, args) {
             var a = [];
@@ -480,7 +442,6 @@ J$ = {};
                 rrEngine.RR_evalBegin();
             }
             try {
-//                return f(getConcrete(args[0]));
                 return f(sandbox.instrumentCode(getConcrete(args[0]),true));
             } finally {
                 if (rrEngine) {
@@ -489,7 +450,6 @@ J$ = {};
             }
         }
 
-        var isInstrumentedCaller = false, isConstructorCall = false;
 
         function invokeFun(iid, base, f, args, isConstructor) {
             var g, invoke, val, ic, tmp_rrEngine, tmpIsConstructorCall, tmpIsInstrumentedCaller;
@@ -499,10 +459,10 @@ J$ = {};
             tmpIsConstructorCall = isConstructorCall;
             isConstructorCall = isConstructor;
 
-            if (sEngine && sEngine.invokeFunPre) {
+            if (sandbox.analysis && sandbox.analysis.invokeFunPre) {
                 tmp_rrEngine = rrEngine;
                 rrEngine = null;
-                sEngine.invokeFunPre(iid, f, base, args, isConstructor);
+                sandbox.analysis.invokeFunPre(iid, f, base, args, isConstructor);
                 rrEngine = tmp_rrEngine;
             }
 
@@ -547,10 +507,10 @@ J$ = {};
                     val = rrEngine.RR_L(iid, val, N_LOG_RETURN);
                 }
             }
-            if (sEngine && sEngine.invokeFun) {
+            if (sandbox.analysis && sandbox.analysis.invokeFun) {
                 tmp_rrEngine = rrEngine;
                 rrEngine = null;
-                val = sEngine.invokeFun(iid, f, base, args, val, isConstructor);
+                val = sandbox.analysis.invokeFun(iid, f, base, args, val, isConstructor);
                 rrEngine = tmp_rrEngine;
                 if (rrEngine) {
                     rrEngine.RR_updateRecordedObject(val);
@@ -561,6 +521,60 @@ J$ = {};
         }
 
         //var globalInstrumentationInfo;
+
+        function G(iid, base, offset, norr) {
+            if (offset===SPECIAL_PROP || offset === SPECIAL_PROP2 || offset === SPECIAL_PROP3) {
+                return undefined;
+            }
+
+            var base_c = getConcrete(base);
+            if (sandbox.analysis && sandbox.analysis.getFieldPre) {
+                sandbox.analysis.getFieldPre(iid, base, offset);
+            }
+            var val = base_c[getConcrete(offset)];
+
+
+            if (rrEngine && !norr) {
+                val = rrEngine.RR_G(iid, base, offset, val);
+            }
+            if (sandbox.analysis && sandbox.analysis.getField) {
+                var tmp_rrEngine = rrEngine;
+                rrEngine = null;
+                val = sandbox.analysis.getField(iid, base, offset, val);
+                rrEngine = tmp_rrEngine;
+                if (rrEngine) {
+                    rrEngine.RR_updateRecordedObject(val);
+                }
+            }
+            printValueForTesting(1, iid,val);
+            return val;
+        }
+
+        function P(iid, base, offset, val) {
+            if (offset===SPECIAL_PROP || offset === SPECIAL_PROP2 || offset === SPECIAL_PROP3) {
+                return undefined;
+            }
+
+            var base_c = getConcrete(base);
+            if (sandbox.analysis && sandbox.analysis.putFieldPre) {
+                sandbox.analysis.putFieldPre(iid, base, offset, val);
+            }
+
+            if (typeof base_c==='function' && getConcrete(offset)==='prototype') {
+                base_c[getConcrete(offset)] = getConcrete(val);
+            } else {
+                base_c[getConcrete(offset)] = val;
+            }
+
+            if (rrEngine) {
+                rrEngine.RR_P(iid, base, offset, val);
+            }
+            if (sandbox.analysis && sandbox.analysis.putField) {
+                sandbox.analysis.putField(iid, base, offset, val);
+            }
+
+            return val;
+        }
 
         function F(iid, f, isConstructor) {
             return function() {
@@ -576,22 +590,29 @@ J$ = {};
             };
         }
 
-        function Fe(iid, val, dis) {
+        function Fe(iid, val, dis /* this */) {
             executionIndex.executionIndexCall();
             if (rrEngine) {
                 rrEngine.RR_Fe(iid, val, dis);
             }
             returnVal = undefined;
+            if (sandbox.analysis && sandbox.analysis.functionEnter) {
+                sandbox.analysis.functionEnter(iid, val, dis);
+            }
         }
 
         function Fr(iid) {
+            var ret = false;
             executionIndex.executionIndexReturn();
             if (rrEngine) {
                 rrEngine.RR_Fr(iid);
             }
+            if (sandbox.analysis && sandbox.analysis.functionExit) {
+                ret = sandbox.analysis.functionExit(iid);
+            }
+            return ret;
         }
 
-        var returnVal;
 
         function Rt(iid, val) {
             return returnVal = val;
@@ -600,10 +621,12 @@ J$ = {};
         function Ra() {
             var ret = returnVal;
             returnVal = undefined;
+            if (sandbox.analysis && sandbox.analysis.return_) {
+                ret = sandbox.analysis.return_(ret);
+            }
             return ret;
         }
 
-        var scriptCount = 0;
 
         function Se(iid,val) {
             scriptCount++;
@@ -627,8 +650,8 @@ J$ = {};
         }
 
         function T(iid, val, type) {
-            if (sEngine && sEngine.literalPre) {
-                sEngine.literalPre(iid, val);
+            if (sandbox.analysis && sandbox.analysis.literalPre) {
+                sandbox.analysis.literalPre(iid, val);
             }
             if (rrEngine) {
                 rrEngine.RR_T(iid, val, type);
@@ -643,8 +666,8 @@ J$ = {};
                 val[SPECIAL_PROP2] = true;
             }
 
-            if (sEngine && sEngine.literal) {
-                val = sEngine.literal(iid, val);
+            if (sandbox.analysis && sandbox.analysis.literal) {
+                val = sandbox.analysis.literal(iid, val);
                 if (rrEngine) {
                     rrEngine.RR_updateRecordedObject(val);
                 }
@@ -662,14 +685,14 @@ J$ = {};
 
 
         function R(iid, name, val, isGlobal) {
-            if (sEngine && sEngine.readPre) {
-                sEngine.readPre(iid, name, val, isGlobal);
+            if (sandbox.analysis && sandbox.analysis.readPre) {
+                sandbox.analysis.readPre(iid, name, val, isGlobal);
             }
             if (rrEngine) {
                 val = rrEngine.RR_R(iid, name, val);
             }
-            if (sEngine && sEngine.read) {
-                val = sEngine.read(iid, name, val, isGlobal);
+            if (sandbox.analysis && sandbox.analysis.read) {
+                val = sandbox.analysis.read(iid, name, val, isGlobal);
                 if (rrEngine) {
                     rrEngine.RR_updateRecordedObject(val);
                 }
@@ -679,14 +702,14 @@ J$ = {};
         }
 
         function W(iid, name, val, lhs) {
-            if (sEngine && sEngine.writePre) {
-                sEngine.writePre(iid, name, val);
+            if (sandbox.analysis && sandbox.analysis.writePre) {
+                sandbox.analysis.writePre(iid, name, val);
             }
             if (rrEngine) {
                 rrEngine.RR_W(iid, name, val);
             }
-            if (sEngine && sEngine.write) {
-                val = sEngine.write(iid, name, val);
+            if (sandbox.analysis && sandbox.analysis.write) {
+                val = sandbox.analysis.write(iid, name, val);
             }
             return val;
         }
@@ -707,65 +730,11 @@ J$ = {};
             };
         }
 
-        function G(iid, base, offset, norr) {
-            if (offset===SPECIAL_PROP || offset === SPECIAL_PROP2 || offset === SPECIAL_PROP3) {
-                return undefined;
-            }
-
-            var base_c = getConcrete(base);
-            if (sEngine && sEngine.getFieldPre) {
-                sEngine.getFieldPre(iid, base, offset);
-            }
-            var val = base_c[getConcrete(offset)];
-
-
-            if (rrEngine && !norr) {
-                val = rrEngine.RR_G(iid, base, offset, val);
-            }
-            if (sEngine && sEngine.getField) {
-                var tmp_rrEngine = rrEngine;
-                rrEngine = null;
-                val = sEngine.getField(iid, base, offset, val);
-                rrEngine = tmp_rrEngine;
-                if (rrEngine) {
-                    rrEngine.RR_updateRecordedObject(val);
-                }
-            }
-            printValueForTesting(1, iid,val);
-            return val;
-        }
-
-        function P(iid, base, offset, val) {
-            if (offset===SPECIAL_PROP || offset === SPECIAL_PROP2 || offset === SPECIAL_PROP3) {
-                return undefined;
-            }
-
-            var base_c = getConcrete(base);
-            if (sEngine && sEngine.putFieldPre) {
-                sEngine.putFieldPre(iid, base, offset, val);
-            }
-
-            if (typeof base_c==='function' && getConcrete(offset)==='prototype') {
-                base_c[getConcrete(offset)] = getConcrete(val);
-            } else {
-                base_c[getConcrete(offset)] = val;
-            }
-
-            if (rrEngine) {
-                rrEngine.RR_P(iid, base, offset, val);
-            }
-            if (sEngine && sEngine.putField) {
-                sEngine.putField(iid, base, offset, val);
-            }
-
-            return val;
-        }
-
         function B(iid, op, left, right) {
             var left_c, right_c, result_c;
 
-            if (sEngine && sEngine.binaryPre) {
-                sEngine.binaryPre(iid, op, left, right);
+            if (sandbox.analysis && sandbox.analysis.binaryPre) {
+                sandbox.analysis.binaryPre(iid, op, left, right);
             }
 
             left_c = getConcrete(left);
@@ -852,8 +821,8 @@ J$ = {};
                     break;
             }
 
-            if (sEngine && sEngine.binary) {
-                result_c = sEngine.binary(iid, op, left, right, result_c);
+            if (sandbox.analysis && sandbox.analysis.binary) {
+                result_c = sandbox.analysis.binary(iid, op, left, right, result_c);
                 if (rrEngine) {
                     rrEngine.RR_updateRecordedObject(result_c);
                 }
@@ -865,8 +834,8 @@ J$ = {};
         function U(iid, op, left) {
             var left_c, result_c;
 
-            if (sEngine && sEngine.unaryPre) {
-                sEngine.unaryPre(iid, op, left);
+            if (sandbox.analysis && sandbox.analysis.unaryPre) {
+                sandbox.analysis.unaryPre(iid, op, left);
             }
 
             left_c = getConcrete(left);
@@ -892,18 +861,14 @@ J$ = {};
                     break;
             }
 
-            if (sEngine && sEngine.unary) {
-                result_c = sEngine.unary(iid, op, left, result_c);
+            if (sandbox.analysis && sandbox.analysis.unary) {
+                result_c = sandbox.analysis.unary(iid, op, left, result_c);
                 if (rrEngine) {
                     rrEngine.RR_updateRecordedObject(result_c);
                 }
             }
             return result_c;
         }
-
-        var lastVal;
-        var switchLeft;
-        var switchKeyStack = [];
 
         function pushSwitchKey() {
             switchKeyStack.push(switchLeft);
@@ -932,14 +897,14 @@ J$ = {};
             left_c = getConcrete(left);
             left = B(iid, "===", switchLeft, left);
 
-            if (sEngine && sEngine.conditionalPre) {
-                sEngine.conditionalPre(iid, left);
+            if (sandbox.analysis && sandbox.analysis.conditionalPre) {
+                sandbox.analysis.conditionalPre(iid, left);
             }
 
             ret = !!getConcrete(left);
 
-            if (sEngine && sEngine.conditional) {
-                sEngine.conditional(iid, left, ret);
+            if (sandbox.analysis && sandbox.analysis.conditional) {
+                sandbox.analysis.conditional(iid, left, ret);
             }
 
             if (branchCoverageInfo) {
@@ -953,15 +918,15 @@ J$ = {};
         function C(iid, left) {
             var left_c, ret;
             executionIndex.executionIndexInc(iid);
-            if (sEngine && sEngine.conditionalPre) {
-                sEngine.conditionalPre(iid, left);
+            if (sandbox.analysis && sandbox.analysis.conditionalPre) {
+                sandbox.analysis.conditionalPre(iid, left);
             }
 
             left_c = getConcrete(left);
             ret = !!left_c;
 
-            if (sEngine && sEngine.conditional) {
-                lastVal = sEngine.conditional(iid, left, ret);
+            if (sandbox.analysis && sandbox.analysis.conditional) {
+                lastVal = sandbox.analysis.conditional(iid, left, ret);
                 if (rrEngine) {
                     rrEngine.RR_updateRecordedObject(lastVal);
                 }
@@ -977,9 +942,22 @@ J$ = {};
             return left_c;
         }
 
-//----------------------------------- End concolic execution ---------------------------------
+        function endExecution() {
+            if (branchCoverageInfo)
+                branchCoverageInfo.storeBranchInfo();
+            var pSkippedReads = 100.0*skippedReads/(unoptimizedLogs-optimizedLogs);
+            var pOptimizedLogs = 100.0*optimizedLogs/unoptimizedLogs;
+            //console.log("Reads Skipped, GetFields Skipped, Total Logs (unoptimized), Total Logs (optimized), % of skips that are local reads, % of reduction in logging = "+
+            //    skippedReads+" , "+skippedGetFields+" , "+unoptimizedLogs+" , "+optimizedLogs+ " , "+pSkippedReads+"% , "+pOptimizedLogs+"%");
+            if (sandbox.analysis && sandbox.analysis.endExecution) {
+                sandbox.analysis.endExecution();
+            }
+        }
 
-//----------------------------------- Record Replay Engine ---------------------------------
+
+        //----------------------------------- End Jalangi Library backend ---------------------------------
+
+        //----------------------------------- Record Replay Engine ---------------------------------
 
         function RecordReplayEngine() {
 
@@ -987,7 +965,7 @@ J$ = {};
                 return new RecordReplayEngine();
             }
 
-            var traceInfo;
+            var traceInfo, traceWriter;
             var seqNo = 0;
 
             var frame = {};
@@ -996,8 +974,9 @@ J$ = {};
             var evalFrames = [];
 
             var literalId = 2;
-            var setLiteralId;
-            var updateRecordedObject;
+
+            var objectId = 1;
+            var objectMap = [];
 
             /*
          type enumerations are
@@ -1010,7 +989,15 @@ J$ = {};
          undefined is 6
          array is 7
          */
-            var objectId = 1;
+
+            function load(path) {
+                var head, script;
+                head = document.getElementsByTagName('head')[0];
+                script= document.createElement('script');
+                script.type= 'text/javascript';
+                script.src= path;
+                head.appendChild(script);
+            }
 
             function printableValue(val) {
                 var value, typen = getNumericType(val), ret = [];
@@ -1079,220 +1066,89 @@ J$ = {};
             }
 
 
-            var syncValue = (function(){
-                var objectMap = [];
-                //var objectMapIndex = [];
-
-
-                updateRecordedObject = function(obj) {
-                    var val = getConcrete(obj);
-                    if (val !== obj && val !== undefined && val !== null && HOP(val, SPECIAL_PROP)) {
-                        var id = val[SPECIAL_PROP][SPECIAL_PROP];
-                        objectMap[id] = obj;
+            function setLiteralId(val) {
+                var id;
+                var oldVal = val;
+                val = getConcrete(oldVal);
+                if (!HOP(val,SPECIAL_PROP)) {
+                    if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
+                        Object.defineProperty(val, SPECIAL_PROP, {
+                            enumerable: false,
+                            writable: true
+                        });
                     }
+                    val[SPECIAL_PROP] = {};
+                    val[SPECIAL_PROP][SPECIAL_PROP] = id = literalId;
+                    literalId = literalId + 2;
                 }
+                if (mode === MODE_REPLAY) {
+                    objectMap[id] = oldVal;
+                }
+            }
 
-                setLiteralId = function(val) {
-                    var id;
-                    var oldVal = val;
-                    val = getConcrete(oldVal);
-                    if (!HOP(val,SPECIAL_PROP)) {
+            function getActualValue(recordedValue, recordedType) {
+                if (recordedType === T_UNDEFINED) {
+                    return undefined;
+                } else if (recordedType === T_NULL) {
+                    return null;
+                } else {
+                    return recordedValue;
+                }
+            }
+
+            function syncValue(recordedArray, replayValue, iid) {
+                var oldReplayValue = replayValue, tmp;;
+                replayValue = getConcrete(replayValue);
+                var recordedValue = recordedArray[F_VALUE], recordedType = recordedArray[F_TYPE];
+
+                if (recordedType === T_UNDEFINED ||
+                    recordedType === T_NULL ||
+                    recordedType === T_NUMBER ||
+                    recordedType === T_STRING ||
+                    recordedType === T_BOOLEAN) {
+                    if((tmp = getActualValue(recordedValue,recordedType)) !== replayValue) {
+                        return tmp;
+                    } else {
+                        return oldReplayValue;
+                    }
+                } else {
+                    //var id = objectMapIndex[recordedValue];
+                    var obj = objectMap[recordedValue];
+                    var type = getNumericType(replayValue);
+
+                    if (obj===undefined) {
+                        if (type === recordedType && !HOP(replayValue,SPECIAL_PROP)) {
+                            obj = replayValue;
+                        } else {
+                            if (recordedType === T_OBJECT) {
+                                obj = {};
+                            } else if (recordedType === T_ARRAY){
+                                obj = [];
+                            } else {
+                                obj = function(){};
+                            }
+                        }
                         if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
-                            Object.defineProperty(val, SPECIAL_PROP, {
+                            Object.defineProperty(obj, SPECIAL_PROP, {
                                 enumerable: false,
                                 writable: true,
                             });
                         }
-                        val[SPECIAL_PROP] = {};
-                        val[SPECIAL_PROP][SPECIAL_PROP] = id = literalId;
-                        literalId = literalId + 2;
-//                        console.log("id:"+id); // uncomment for divergence
-                        // the following for loop could call unexpected getter or setter method
-//                        for (var offset in val) {
-//                            if (offset !== SPECIAL_PROP && offset !== SPECIAL_PROP2 && HOP(val, offset)) {
-//                                val[SPECIAL_PROP][offset] = val[offset];
-//                            }
-//                        }
+                        obj[SPECIAL_PROP] = {};
+                        obj[SPECIAL_PROP][SPECIAL_PROP] = recordedValue;
+                        objectMap[recordedValue] = ((obj === replayValue)? oldReplayValue : obj);
                     }
-                    if (mode === MODE_REPLAY) {
-                        objectMap[id] = oldVal;
-                    }
+                    return (obj === replayValue)? oldReplayValue : obj;
                 }
+            }
 
-                function getActualValue(recordedValue, recordedType) {
-                    if (recordedType === T_UNDEFINED) {
-                        return undefined;
-                    } else if (recordedType === T_NULL) {
-                        return null;
-                    } else {
-                        return recordedValue;
-                    }
-                }
-
-                return function(recordedArray, replayValue, iid) {
-                    var oldReplayValue = replayValue, tmp;;
-                    replayValue = getConcrete(replayValue);
-                    var recordedValue = recordedArray[F_VALUE], recordedType = recordedArray[F_TYPE];
-
-                    if (recordedType === T_UNDEFINED ||
-                        recordedType === T_NULL ||
-                        recordedType === T_NUMBER ||
-                        recordedType === T_STRING ||
-                        recordedType === T_BOOLEAN) {
-                        if((tmp = getActualValue(recordedValue,recordedType)) !== replayValue) {
-                            return tmp;
-                        } else {
-                            return oldReplayValue;
-                        }
-                    } else {
-                        //var id = objectMapIndex[recordedValue];
-                        var obj = objectMap[recordedValue];
-                        var type = getNumericType(replayValue);
-
-                        if (obj===undefined) {
-                            if (type === recordedType && !HOP(replayValue,SPECIAL_PROP)) {
-                                obj = replayValue;
-                            } else {
-                                if (recordedType === T_OBJECT) {
-                                    obj = {};
-                                } else if (recordedType === T_ARRAY){
-                                    obj = [];
-                                } else {
-                                    obj = function(){};
-                                }
-                            }
-                            if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
-                                Object.defineProperty(obj, SPECIAL_PROP, {
-                                    enumerable: false,
-                                    writable: true,
-                                });
-                            }
-                            obj[SPECIAL_PROP] = {};
-                            obj[SPECIAL_PROP][SPECIAL_PROP] = recordedValue;
-                            objectMap[recordedValue] = ((obj === replayValue)? oldReplayValue : obj);
-                        }
-                        return (obj === replayValue)? oldReplayValue : obj;
-                    }
-                }
-            }());
-
-
-            var logToFile, flush, remoteLog, onflush;
-
-            (function(){
-                var bufferSize = 0;
-                var buffer = [];
-                var traceWfh;
-                var fs = (typeof window === "undefined")?require('fs'):undefined;
-
-                function getFileHanlde() {
-                    if (traceWfh === undefined) {
-                        traceWfh = fs.openSync(TRACE_FILE_NAME, 'w');
-                    }
-                    return traceWfh;
-                }
-
-                logToFile = function(line) {
-                    buffer.push(line);
-                    bufferSize += line.length;
-                    if (bufferSize > MAX_BUF_SIZE) {
-                        flush();
-                    }
-                }
-
-                flush = function() {
-                    var msg;
-                    if (typeof window === 'undefined') {
-                        var length = buffer.length;
-                        for (var i=0; i < length; i++) {
-                            fs.writeSync(getFileHanlde(),buffer[i]);
-                        }
-                    } else {
-                        msg = buffer.join('');
-                        if (msg.length >1) {
-                            remoteLog(msg);
-                        }
-                    }
-                    bufferSize = 0;
-                    buffer = [];
-                }
-
-
-                var trying = false;
-                var cb;
-                var remoteBuffer = [];
-                var socket, isOpen = false;
-
-                function openSocketIfNotOpen() {
-                    if (!socket) {
-                        console.log("Opening connection");
-                        socket = new WebSocket('ws://127.0.0.1:8080', 'log-protocol');
-                        socket.onopen = tryRemoteLog;
-                        socket.onmessage = tryRemoteLog2;
-                    }
-                }
-
-                function tryRemoteLog2() {
-                    trying = false;
-                    remoteBuffer.shift();
-                    if (remoteBuffer.length === 0) {
-                        if (cb) {
-                            cb();
-                            cb = undefined;
-                        }
-                    }
-                    tryRemoteLog();
-                }
-
-                onflush = function(callback) {
-                    if (remoteBuffer.length === 0) {
-                        if (callback) {
-                            callback();
-                        }
-                    } else {
-                        cb = callback;
-                        tryRemoteLog();
-                    }
-                }
-
-                function tryRemoteLog() {
-                    isOpen = true;
-                    if (!trying && remoteBuffer.length > 0) {
-                        trying = true;
-                        socket.send(remoteBuffer[0]);
-                    }
-                }
-
-                remoteLog = function(message) {
-                    remoteBuffer.push(message);
-                    openSocketIfNotOpen();
-                    if (isOpen) {
-                        tryRemoteLog();
-                    }
-                }
-            }());
-
-            this.onflush = onflush;
-
-            function record(prefix) {
-                var ret = [];
-                ret[F_TYPE] = getNumericType(prefix);
-                ret[F_VALUE] = prefix;
-                logValue(0, ret, N_LOG_SPECIAL);
-            };
-            this.record = record;
-
-            function command (rec) {
-                remoteLog(rec);
-            };
-            this.command = command;
 
             function logValue(iid,ret,funName) {
                 ret[F_IID] = iid;
                 ret[F_FUNNAME] = funName;
                 ret[F_SEQ] = seqNo++;
                 var line = JSON.stringify(ret)+"\n";
-                logToFile(line);
+                traceWriter.logToFile(line);
             }
 
             function checkPath(ret,iid) {
@@ -1302,7 +1158,39 @@ J$ = {};
                 }
             }
 
-            this.RR_updateRecordedObject = updateRecordedObject;
+            function getFrameContainingVar(name) {
+                var tmp = frame;
+                while(tmp && !HOP(tmp,name)) {
+                    tmp = tmp[SPECIAL_PROP3];
+                }
+                if (tmp) {
+                    return tmp;
+                } else {
+                    return frameStack[0]; // return global scope
+                }
+            }
+
+            this.record = function (prefix) {
+                var ret = [];
+                ret[F_TYPE] = getNumericType(prefix);
+                ret[F_VALUE] = prefix;
+                logValue(0, ret, N_LOG_SPECIAL);
+            };
+
+
+            this.command = function (rec) {
+                traceWriter.remoteLog(rec);
+            };
+
+            this.RR_updateRecordedObject = function (obj) {
+                var val = getConcrete(obj);
+                if (val !== obj && val !== undefined && val !== null && HOP(val, SPECIAL_PROP)) {
+                    var id = val[SPECIAL_PROP][SPECIAL_PROP];
+                    objectMap[id] = obj;
+                }
+            }
+
+
 
             this.RR_evalBegin = function() {
                 evalFrames.push(frame);
@@ -1357,18 +1245,6 @@ J$ = {};
                     if (HOP(base_c,SPECIAL_PROP)) {
                         base_c[SPECIAL_PROP][getConcrete(offset)] = val;
                     }
-                }
-            }
-
-            function getFrameContainingVar(name) {
-                var tmp = frame;
-                while(tmp && !HOP(tmp,name)) {
-                    tmp = tmp[SPECIAL_PROP3];
-                }
-                if (tmp) {
-                    return tmp;
-                } else {
-                    return frameStack[0]; // return global scope
                 }
             }
 
@@ -1449,7 +1325,7 @@ J$ = {};
                     frameStack.pop();
                     frame = frameStack[frameStack.length-1];
                     if (mode === MODE_RECORD) {
-                        flush();
+                        traceWriter.flush();
                     }
                 }
             }
@@ -1475,7 +1351,7 @@ J$ = {};
                     frameStack.pop();
                     frame = frameStack[frameStack.length-1];
                     if (mode === MODE_RECORD) {
-                        flush();
+                        traceWriter.flush();
                     }
                 }
                 if (isBrowserReplay) {
@@ -1547,15 +1423,6 @@ J$ = {};
                 }
             }
 
-            function load(path) {
-                var head, script;
-                head = document.getElementsByTagName('head')[0];
-                script= document.createElement('script');
-                script.type= 'text/javascript';
-                script.src= path;
-                head.appendChild(script);
-            }
-
             this.RR_replay = function() {
                 if (mode=== MODE_REPLAY) {
                     while(true) {
@@ -1571,8 +1438,8 @@ J$ = {};
                             prefix = ret[F_VALUE];
                             traceInfo.next();
                             ret = traceInfo.getCurrent();
-                            if (sEngine && sEngine.beginExecution) {
-                                sEngine.beginExecution(prefix);
+                            if (sandbox.analysis && sandbox.analysis.beginExecution) {
+                                sandbox.analysis.beginExecution(prefix);
                             }
                         }
                         if (ret[F_FUNNAME] === N_LOG_FUNCTION_ENTER) {
@@ -1598,9 +1465,102 @@ J$ = {};
                 }
             }
 
-            var parent = this;
 
-            function TraceInfo () {
+            function TraceWriter(){
+                var bufferSize = 0;
+                var buffer = [];
+                var traceWfh;
+                var fs = (!isBrowser)?require('fs'):undefined;
+                var trying = false;
+                var cb;
+                var remoteBuffer = [];
+                var socket, isOpen = false;
+
+
+                function getFileHanlde() {
+                    if (traceWfh === undefined) {
+                        traceWfh = fs.openSync(TRACE_FILE_NAME, 'w');
+                    }
+                    return traceWfh;
+                }
+
+                this.logToFile = function(line) {
+                    buffer.push(line);
+                    bufferSize += line.length;
+                    if (bufferSize > MAX_BUF_SIZE) {
+                        this.flush();
+                    }
+                }
+
+                this.flush = function() {
+                    var msg;
+                    if (!isBrowser) {
+                        var length = buffer.length;
+                        for (var i=0; i < length; i++) {
+                            fs.writeSync(getFileHanlde(),buffer[i]);
+                        }
+                    } else {
+                        msg = buffer.join('');
+                        if (msg.length >1) {
+                            this.remoteLog(msg);
+                        }
+                    }
+                    bufferSize = 0;
+                    buffer = [];
+                }
+
+
+                function openSocketIfNotOpen() {
+                    if (!socket) {
+                        console.log("Opening connection");
+                        socket = new WebSocket('ws://127.0.0.1:8080', 'log-protocol');
+                        socket.onopen = tryRemoteLog;
+                        socket.onmessage = tryRemoteLog2;
+                    }
+                }
+
+                function tryRemoteLog2() {
+                    trying = false;
+                    remoteBuffer.shift();
+                    if (remoteBuffer.length === 0) {
+                        if (cb) {
+                            cb();
+                            cb = undefined;
+                        }
+                    }
+                    tryRemoteLog();
+                }
+
+                this.onflush = function(callback) {
+                    if (remoteBuffer.length === 0) {
+                        if (callback) {
+                            callback();
+                        }
+                    } else {
+                        cb = callback;
+                        tryRemoteLog();
+                    }
+                }
+
+                function tryRemoteLog() {
+                    isOpen = true;
+                    if (!trying && remoteBuffer.length > 0) {
+                        trying = true;
+                        socket.send(remoteBuffer[0]);
+                    }
+                }
+
+                this.remoteLog = function(message) {
+                    remoteBuffer.push(message);
+                    openSocketIfNotOpen();
+                    if (isOpen) {
+                        tryRemoteLog();
+                    }
+                }
+            }
+
+
+            function TraceReader () {
                 var traceArray = [];
                 var traceIndex = 0;
                 var currentIndex = 0;
@@ -1611,13 +1571,6 @@ J$ = {};
                 var curRecord = null;
 
 
-
-                parent.addRecord = function(line) {
-                    var record = JSON.parse(line);
-                    traceArray.push(record);
-                    debugPrint(JSON.stringify(record));
-                    frontierIndex++;
-                }
 
                 function cacheRecords() {
                     var i = 0, flag, record;
@@ -1645,6 +1598,13 @@ J$ = {};
                     }
                 }
 
+                this.addRecord = function(line) {
+                    var record = JSON.parse(line);
+                    traceArray.push(record);
+                    debugPrint(JSON.stringify(record));
+                    frontierIndex++;
+                };
+
                 this.getAndNext = function() {
                     if (curRecord !== null) {
                         var ret = curRecord;
@@ -1663,7 +1623,7 @@ J$ = {};
                     traceIndex++;
                     unoptimizedLogs++;
                     return record;
-                }
+                };
 
                 this.getNext = function() {
                     if (curRecord !== null) {
@@ -1673,7 +1633,7 @@ J$ = {};
                     var ret = this.getCurrent();
                     curRecord = tmp;
                     return ret;
-                }
+                };
 
                 this.getCurrent = function() {
                     if (curRecord !== null) {
@@ -1713,36 +1673,54 @@ J$ = {};
 
             }
 
-            function init() {
-//            var record, traceFh;
-//            var i = 0;
 
-                if (mode === MODE_REPLAY) {
-                    traceInfo = new TraceInfo();
-                } else if (mode === MODE_RECORD && typeof window  !== 'undefined') {
-                    command('reset');
+            if (mode === MODE_REPLAY) {
+                traceInfo = new TraceReader();
+                this.addRecord = traceInfo.addRecord;
+            } else if (mode === MODE_RECORD) {
+                traceWriter = new TraceWriter();
+                this.onflush = traceWriter.onflush;
+                if (isBrowser) {
+                    this.command('reset');
                 }
             }
-
-            init();
-
-
         }
 
         //----------------------------------- End Record Replay Engine ---------------------------------
 
+        // initialize rrEngine, sandbox.analysis, executionIndex, and require.uncache
+        executionIndex = new ExecutionIndex();
 
-        function endExecution() {
-            if (branchCoverageInfo)
-                branchCoverageInfo.storeBranchInfo();
-            var pSkippedReads = 100.0*skippedReads/(unoptimizedLogs-optimizedLogs);
-            var pOptimizedLogs = 100.0*optimizedLogs/unoptimizedLogs;
-            //console.log("Reads Skipped, GetFields Skipped, Total Logs (unoptimized), Total Logs (optimized), % of skips that are local reads, % of reduction in logging = "+
-            //    skippedReads+" , "+skippedGetFields+" , "+unoptimizedLogs+" , "+optimizedLogs+ " , "+pSkippedReads+"% , "+pOptimizedLogs+"%");
-            if (sEngine && sEngine.endExecution) {
-                sEngine.endExecution();
-            }
+        if (ANALYSIS && ANALYSIS.indexOf('Engine') >=0) {
+            var SymbolicEngine = require('./'+ANALYSIS);
+            sandbox.analysis = new SymbolicEngine(executionIndex);
         }
+        if (mode=== MODE_RECORD || mode === MODE_REPLAY) {
+            rrEngine = new RecordReplayEngine();
+        }
+
+
+        if (!isBrowser && typeof require === 'function') {
+            require.uncache = function (moduleName) {
+                require.searchCache(moduleName, function (mod) {
+                    delete require.cache[mod.id];
+                });
+            };
+
+            require.searchCache = function (moduleName, callback) {
+                var mod = require.resolve(moduleName);
+
+                if (mod && ((mod = require.cache[mod]) !== undefined)) {
+                    (function run(mod) {
+                        mod.children.forEach(function (child) {
+                            run(child);
+                        });
+                        callback(mod);
+                    })(mod);
+                }
+            };
+        }
+
 
 
         sandbox.U = U; // Unary operation
@@ -1776,7 +1754,6 @@ J$ = {};
         sandbox.onflush = rrEngine?rrEngine.onflush:function(){};
         sandbox.record = rrEngine?rrEngine.record:function(){};
         sandbox.command = rrEngine?rrEngine.command:function(){};
-        sandbox.sEngine = sEngine;
         sandbox.endExecution = endExecution;
         sandbox.addRecord = rrEngine?rrEngine.addRecord:undefined;
 
@@ -1788,12 +1765,9 @@ J$ = {};
 }(J$));
 
 
-//@TODO: test with apply and call
-//@TODO: associate iid with source line and column
 
 //@todo:@assumption arguments.callee is available
 //@todo:@assumptions SPECIAL_PROP = "*J$*" is added to every object, but its enumeration is avoided in instrumented code
-//@todo:@assumptions get and set of objects in ES5 could be problem
 //@todo:@assumptions ReferenceError when accessing an undeclared uninitialized variable won't be thrown
 //@todo:@assumption window.x is not initialized in node.js replay mode when var x = e is done in the global scope, but handled using syncValues
 //@todo:@assumption eval is not renamed

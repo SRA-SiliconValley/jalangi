@@ -95,6 +95,16 @@
 
         this.endExecution = function() { }
 
+        this.functionEnter = function(iid, fun, dis) { }
+
+        this.functionExit = function(iid) {
+            return false;
+        }
+
+        this.return_ = function(val) {
+            return val;
+        }
+
     }
 
     module.exports = NOPEngine;

@@ -88,8 +88,8 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
         ret = concrete = val[0];
         type = typeof concrete;
 
-        if (sandbox.sEngine && sandbox.sEngine.makeConcolic) {
-            ret = sandbox.sEngine.makeConcolic(idx, val, getNextSymbol);
+        if (sandbox.analysis && sandbox.analysis.makeConcolic) {
+            ret = sandbox.analysis.makeConcolic(idx, val, getNextSymbol);
         }
 
         if (type === "object" && concrete !== null) {
@@ -104,8 +104,8 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
             concrete[SPECIAL_PROP2] = true;
         }
 
-        if (sandbox.sEngine && sandbox.sEngine.makeConcolicPost) {
-            sandbox.sEngine.makeConcolicPost();
+        if (sandbox.analysis && sandbox.analysis.makeConcolicPost) {
+            sandbox.analysis.makeConcolicPost();
         }
         inputs[idx] = ret;
         return ret;

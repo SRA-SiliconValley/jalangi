@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-(function(module){
+(function (module) {
 
     function UndefinedNullTrackingEngine(executionIndex) {
         var ConcolicValue = require('./../../ConcolicValue');
@@ -29,10 +29,10 @@
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
         var getSymbolic = this.getSymbolic = ConcolicValue.getSymbolic;
 
-        this.literal = function(iid, val) {
+        this.literal = function (iid, val) {
             var type;
-            if (((type = typeof val)==="object" || type === "function") && val !== null) {
-                return new ConcolicValue(val, type+" initialized at "+getIIDInfo(iid));
+            if (((type = typeof val) === "object" || type === "function") && val !== null) {
+                return new ConcolicValue(val, type + " initialized at " + getIIDInfo(iid));
             }
             return annotateNullOrUndef(val, iid);
         }
@@ -46,38 +46,40 @@
 
         function annotateNullOrUndef(val, iid, str) {
             if (val === null || val === undefined) {
-                return new ConcolicValue(val, (str?str:"")+val+" initialized at "+getIIDInfo(iid));
+                return new ConcolicValue(val, (str ? str : "") + val + " initialized at " + getIIDInfo(iid));
             }
             return val;
         }
 
-        this.invokeFunPre = function(iid, f, base, args, isConstructor) {
+        this.invokeFunPre = function (iid, f, base, args, isConstructor) {
             checkNullOrUndef(f);
         }
 
-        this.invokeFun = function(iid, f, base, args, val, isConstructor) {
+        this.invokeFun = function (iid, f, base, args, val, isConstructor) {
             return annotateNullOrUndef(val, iid);
         }
 
-        this.getFieldPre = function(iid, base, offset) {
+        this.getFieldPre = function (iid, base, offset) {
             checkNullOrUndef(base);
         }
 
-        this.getField = function(iid, base, offset, val) {
+        this.getField = function (iid, base, offset, val) {
             var s = getSymbolic(base);
             if (s) {
-                var str = s +" has field '"+ offset+"' = ";
+                var str = s + " has field '" + offset + "' = ";
             }
             return annotateNullOrUndef(val, iid, str);
         }
 
-        this.putFieldPre = function(iid, base, offset, val) {
+        this.putFieldPre = function (iid, base, offset, val) {
             checkNullOrUndef(base);
+            return val;
         }
 
-        this.read = function(iid, name, val, isGlobal) {
+        this.read = function (iid, name, val, isGlobal) {
             return annotateNullOrUndef(val, iid);
         }
     }
+
     module.exports = UndefinedNullTrackingEngine;
 }(module));

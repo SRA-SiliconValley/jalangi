@@ -18,29 +18,29 @@
 
 
 /*
-To perform analysis in browser without recording, set window.JALANGI_MODE to 'concrete' and J$.analysis to a suitable analysis file.
-To redefine all instrumentation functions, set JALANGI_MODE to 'symbolic' and J$.analysis to a suitable library containing redefinitions of W, R, etc.
+ To perform analysis in browser without recording, set window.JALANGI_MODE to 'concrete' and J$.analysis to a suitable analysis file.
+ To redefine all instrumentation functions, set JALANGI_MODE to 'symbolic' and J$.analysis to a suitable library containing redefinitions of W, R, etc.
 
  */
 
 if (typeof J$ === 'undefined') J$ = {};
 
-(function(sandbox) {
+(function (sandbox) {
     var MODE_RECORD = 1,
         MODE_REPLAY = 2,
         MODE_NO_RR_IGNORE_UNINSTRUMENTED = 3,
         MODE_NO_RR = 4,
         MODE_DIRECT = 5;
 
-    var isBrowser =  !(typeof exports !== 'undefined' && this.exports !== exports);
+    var isBrowser = !(typeof exports !== 'undefined' && this.exports !== exports);
     var isBrowserReplay;
     var mode;
     var rrEngine;
     var executionIndex;
     var branchCoverageInfo;
 
-    mode = (function(str) {
-        switch(str) {
+    mode = (function (str) {
+        switch (str) {
             case "record" :
                 return MODE_RECORD;
             case "replay":
@@ -54,16 +54,15 @@ if (typeof J$ === 'undefined') J$ = {};
             default:
                 return MODE_RECORD;
         }
-    }(isBrowser?window.JALANGI_MODE:process.env.JALANGI_MODE));
-    isBrowserReplay = isBrowser && mode ===MODE_REPLAY;
-    var ANALYSIS = !isBrowser?process.env.JALANGI_ANALYSIS:undefined;
-
+    }(isBrowser ? window.JALANGI_MODE : process.env.JALANGI_MODE));
+    isBrowserReplay = isBrowser && mode === MODE_REPLAY;
+    var ANALYSIS = !isBrowser ? process.env.JALANGI_ANALYSIS : undefined;
 
 
     if (mode === MODE_DIRECT) {
         /* JALANGI_ANALYSIS file must define all instrumentation functions such as U, B, C, C1, C2, W, R, G, P */
         if (ANALYSIS) {
-            sandbox.analysis = require('./'+ANALYSIS);
+            sandbox.analysis = require('./' + ANALYSIS);
         }
 
         sandbox.U = sandbox.analysis.U; // Unary operation
@@ -107,9 +106,9 @@ if (typeof J$ === 'undefined') J$ = {};
         var EVAL_ORG = eval;
 
         var PREFIX1 = "J$";
-        var SPECIAL_PROP = "*"+PREFIX1+"*";
-        var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
-        var SPECIAL_PROP3 = "*"+PREFIX1+"C*";
+        var SPECIAL_PROP = "*" + PREFIX1 + "*";
+        var SPECIAL_PROP2 = "*" + PREFIX1 + "I*";
+        var SPECIAL_PROP3 = "*" + PREFIX1 + "C*";
         var DEBUG = false;
         var WARN = false;
         var SERIOUS_WARN = false;
@@ -131,7 +130,7 @@ if (typeof J$ === 'undefined') J$ = {};
             F_SEQ = 3,
             F_FUNNAME = 4;
 
-        var  N_LOG_FUNCTION_ENTER = 4,
+        var N_LOG_FUNCTION_ENTER = 4,
             N_LOG_SCRIPT_ENTER = 6,
             N_LOG_GETFIELD = 8,
             N_LOG_ARRAY_LIT = 10,
@@ -153,20 +152,20 @@ if (typeof J$ === 'undefined') J$ = {};
 
         //-------------------------------------- Symbolic functions -----------------------------------------------------------
 
-        var log = (function(){
+        var log = (function () {
             var list;
 
             return {
-                reset: function() {
+                reset:function () {
                     list = [];
                 },
 
-                log: function(str) {
+                log:function (str) {
                     if (list)
                         list.push(str);
                 },
 
-                getLog: function() {
+                getLog:function () {
                     return list;
                 }
             }
@@ -190,16 +189,16 @@ if (typeof J$ === 'undefined') J$ = {};
         }
 
         function create_fun(f) {
-            return function() {
+            return function () {
                 var len = arguments.length;
-                for (var i = 0; i<len; i++) {
+                for (var i = 0; i < len; i++) {
                     arguments[i] = getConcrete(arguments[i]);
                 }
-                return f.apply(getConcrete(this),arguments);
+                return f.apply(getConcrete(this), arguments);
             }
         }
 
-        function getSymbolicFunctionToInvokeAndLog (f, isConstructor) {
+        function getSymbolicFunctionToInvokeAndLog(f, isConstructor) {
             if (f === Array ||
                 f === Error ||
                 f === String ||
@@ -210,36 +209,36 @@ if (typeof J$ === 'undefined') J$ = {};
                 f === J$.readInput) {
                 return [f, true];
             } else if (//f === Function.prototype.apply ||
-                //f === Function.prototype.call ||
+            //f === Function.prototype.call ||
                 f === Object.defineProperty ||
-                f === console.log ||
-                f === RegExp.prototype.test ||
-                f === String.prototype.indexOf ||
-                f === String.prototype.lastIndexOf ||
-                f === String.prototype.substring ||
-                f === String.prototype.substr ||
-                f === String.prototype.charCodeAt ||
-                f === String.prototype.charAt ||
-                f === String.prototype.replace ||
-                f === String.fromCharCode ||
-                f === Math.abs ||
-                f === Math.acos ||
-                f === Math.asin ||
-                f === Math.atan ||
-                f === Math.atan2 ||
-                f === Math.ceil ||
-                f === Math.cos ||
-                f === Math.exp ||
-                f === Math.floor ||
-                f === Math.log ||
-                f === Math.max ||
-                f === Math.min ||
-                f === Math.pow ||
-                f === Math.round ||
-                f === Math.sin ||
-                f === Math.sqrt ||
-                f === Math.tan ||
-                f === parseInt) {
+                    f === console.log ||
+                    f === RegExp.prototype.test ||
+                    f === String.prototype.indexOf ||
+                    f === String.prototype.lastIndexOf ||
+                    f === String.prototype.substring ||
+                    f === String.prototype.substr ||
+                    f === String.prototype.charCodeAt ||
+                    f === String.prototype.charAt ||
+                    f === String.prototype.replace ||
+                    f === String.fromCharCode ||
+                    f === Math.abs ||
+                    f === Math.acos ||
+                    f === Math.asin ||
+                    f === Math.atan ||
+                    f === Math.atan2 ||
+                    f === Math.ceil ||
+                    f === Math.cos ||
+                    f === Math.exp ||
+                    f === Math.floor ||
+                    f === Math.log ||
+                    f === Math.max ||
+                    f === Math.min ||
+                    f === Math.pow ||
+                    f === Math.round ||
+                    f === Math.sin ||
+                    f === Math.sqrt ||
+                    f === Math.tan ||
+                    f === parseInt) {
                 return  [create_fun(f), false];
             }
             return [null, true];
@@ -288,7 +287,6 @@ if (typeof J$ === 'undefined') J$ = {};
         }
 
 
-
         function debugPrint(s) {
             if (DEBUG) {
                 console.log("***" + s);
@@ -320,15 +318,16 @@ if (typeof J$ === 'undefined') J$ = {};
             return;
             var type = typeof val;
             if (type !== 'object' && type !== 'function') {
-                console.log(loc+":"+iid+":"+type+":"+val);
-            } else if (val===null) {
-                console.log(loc+":"+iid+":"+type+":"+val);
-            } else if (HOP(val,SPECIAL_PROP) && HOP(val[SPECIAL_PROP],SPECIAL_PROP)) {
-                console.log(loc+":"+iid+":"+type+":"+val[SPECIAL_PROP][SPECIAL_PROP]);
+                console.log(loc + ":" + iid + ":" + type + ":" + val);
+            } else if (val === null) {
+                console.log(loc + ":" + iid + ":" + type + ":" + val);
+            } else if (HOP(val, SPECIAL_PROP) && HOP(val[SPECIAL_PROP], SPECIAL_PROP)) {
+                console.log(loc + ":" + iid + ":" + type + ":" + val[SPECIAL_PROP][SPECIAL_PROP]);
             } else {
-                console.log(loc+":"+iid+":"+type+":object");
+                console.log(loc + ":" + iid + ":" + type + ":object");
             }
         }
+
         //---------------------------- End utility functions -------------------------------
 
 
@@ -344,12 +343,12 @@ if (typeof J$ === 'undefined') J$ = {};
 
             function executionIndexReturn() {
                 countersStack.pop();
-                counters = countersStack[countersStack.length-1];
+                counters = countersStack[countersStack.length - 1];
             }
 
             function executionIndexInc(iid) {
                 var c = counters[iid];
-                if (c===undefined) {
+                if (c === undefined) {
                     c = 1;
                 } else {
                     c++;
@@ -362,14 +361,14 @@ if (typeof J$ === 'undefined') J$ = {};
             function executionIndexGetIndex() {
                 var i, ret = [];
                 var iid;
-                for (i= countersStack.length-1; i >=0; i-- ) {
+                for (i = countersStack.length - 1; i >= 0; i--) {
                     iid = countersStack[i].iid;
                     if (iid !== undefined) {
                         ret.push(iid);
                         ret.push(countersStack[i].count);
                     }
                 }
-                return (ret+"").replace(/,/g,"_");
+                return (ret + "").replace(/,/g, "_");
             }
 
             if (this instanceof ExecutionIndex) {
@@ -381,6 +380,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 return new ExecutionIndex();
             }
         }
+
         //-------------------------------- End Execution indexing --------------------------------
 
         //----------------------------------- Begin Jalangi Library backend ---------------------------------
@@ -393,7 +393,6 @@ if (typeof J$ === 'undefined') J$ = {};
         var switchKeyStack = [];
 
 
-
         function callAsNativeConstructorWithEval(Constructor, args) {
             var a = [];
             for (var i = 0; i < args.length; i++)
@@ -402,7 +401,7 @@ if (typeof J$ === 'undefined') J$ = {};
             return eval('new Constructor(' + a.join() + ')');
         }
 
-        function callAsNativeConstructor (Constructor, args) {
+        function callAsNativeConstructor(Constructor, args) {
             if (args.length === 0) {
                 return new Constructor();
             }
@@ -426,9 +425,10 @@ if (typeof J$ === 'undefined') J$ = {};
 
         function callAsConstructor(Constructor, args) {
             if (isNative(Constructor)) {
-                return callAsNativeConstructor(Constructor,args);
+                return callAsNativeConstructor(Constructor, args);
             } else {
-                var Temp = function(){}, inst, ret;
+                var Temp = function () {
+                }, inst, ret;
                 Temp.prototype = getConcrete(Constructor.prototype);
                 inst = new Temp;
                 ret = Constructor.apply(inst, args);
@@ -442,7 +442,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 rrEngine.RR_evalBegin();
             }
             try {
-                return f(sandbox.instrumentCode(getConcrete(args[0]),true));
+                return f(sandbox.instrumentCode(getConcrete(args[0]), true));
             } finally {
                 if (rrEngine) {
                     rrEngine.RR_evalEnd();
@@ -470,19 +470,19 @@ if (typeof J$ === 'undefined') J$ = {};
 
             var arr = getSymbolicFunctionToInvokeAndLog(f_c, isConstructor);
             tmpIsInstrumentedCaller = isInstrumentedCaller;
-            ic = isInstrumentedCaller = f_c === undefined || HOP(f_c,SPECIAL_PROP2) || typeof f_c !== "function";
+            ic = isInstrumentedCaller = f_c === undefined || HOP(f_c, SPECIAL_PROP2) || typeof f_c !== "function";
 
             if (mode === MODE_RECORD || mode === MODE_NO_RR) {
                 invoke = true;
                 g = f_c;
             } else if (mode === MODE_REPLAY || mode === MODE_NO_RR_IGNORE_UNINSTRUMENTED) {
                 invoke = arr[0] || isInstrumentedCaller;
-                g = arr[0] || f_c ;
+                g = arr[0] || f_c;
             }
 
             pushSwitchKey();
             try {
-                if (g === EVAL_ORG){
+                if (g === EVAL_ORG) {
                     val = invokeEval(base, g, args);
                 } else if (invoke) {
                     if (isConstructor) {
@@ -490,7 +490,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     } else {
                         val = g.apply(base, args);
                     }
-                }  else {
+                } else {
                     if (rrEngine) {
                         rrEngine.RR_replay();
                     }
@@ -516,14 +516,14 @@ if (typeof J$ === 'undefined') J$ = {};
                     rrEngine.RR_updateRecordedObject(val);
                 }
             }
-            printValueForTesting(2, iid,val);
+            printValueForTesting(2, iid, val);
             return val;
         }
 
         //var globalInstrumentationInfo;
 
         function G(iid, base, offset, norr) {
-            if (offset===SPECIAL_PROP || offset === SPECIAL_PROP2 || offset === SPECIAL_PROP3) {
+            if (offset === SPECIAL_PROP || offset === SPECIAL_PROP2 || offset === SPECIAL_PROP3) {
                 return undefined;
             }
 
@@ -546,21 +546,21 @@ if (typeof J$ === 'undefined') J$ = {};
                     rrEngine.RR_updateRecordedObject(val);
                 }
             }
-            printValueForTesting(1, iid,val);
+            printValueForTesting(1, iid, val);
             return val;
         }
 
         function P(iid, base, offset, val) {
-            if (offset===SPECIAL_PROP || offset === SPECIAL_PROP2 || offset === SPECIAL_PROP3) {
+            if (offset === SPECIAL_PROP || offset === SPECIAL_PROP2 || offset === SPECIAL_PROP3) {
                 return undefined;
             }
 
             var base_c = getConcrete(base);
             if (sandbox.analysis && sandbox.analysis.putFieldPre) {
-                sandbox.analysis.putFieldPre(iid, base, offset, val);
+                val = sandbox.analysis.putFieldPre(iid, base, offset, val);
             }
 
-            if (typeof base_c==='function' && getConcrete(offset)==='prototype') {
+            if (typeof base_c === 'function' && getConcrete(offset) === 'prototype') {
                 base_c[getConcrete(offset)] = getConcrete(val);
             } else {
                 base_c[getConcrete(offset)] = val;
@@ -570,21 +570,21 @@ if (typeof J$ === 'undefined') J$ = {};
                 rrEngine.RR_P(iid, base, offset, val);
             }
             if (sandbox.analysis && sandbox.analysis.putField) {
-                sandbox.analysis.putField(iid, base, offset, val);
+                val = sandbox.analysis.putField(iid, base, offset, val);
             }
 
             return val;
         }
 
         function F(iid, f, isConstructor) {
-            return function() {
+            return function () {
                 var base = this;
                 return invokeFun(iid, base, f, arguments, isConstructor);
             }
         }
 
         function M(iid, base, offset, isConstructor) {
-            return function() {
+            return function () {
                 var f = G(iid, base, offset);
                 return invokeFun(iid, base, f, arguments, isConstructor);
             };
@@ -628,10 +628,10 @@ if (typeof J$ === 'undefined') J$ = {};
         }
 
 
-        function Se(iid,val) {
+        function Se(iid, val) {
             scriptCount++;
             if (rrEngine) {
-                rrEngine.RR_Se(iid,val);
+                rrEngine.RR_Se(iid, val);
             }
             if (sandbox.analysis && sandbox.analysis.scriptEnter) {
                 sandbox.analysis.scriptEnter(iid, val);
@@ -665,8 +665,8 @@ if (typeof J$ === 'undefined') J$ = {};
             if (type === N_LOG_FUNCTION_LIT) {
                 if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
                     Object.defineProperty(val, SPECIAL_PROP2, {
-                        enumerable: false,
-                        writable: true,
+                        enumerable:false,
+                        writable:true
                     });
                 }
                 val[SPECIAL_PROP2] = true;
@@ -684,7 +684,7 @@ if (typeof J$ === 'undefined') J$ = {};
 
         function H(iid, val) {
             if (rrEngine) {
-                val = rrEngine.RR_H(iid,val);
+                val = rrEngine.RR_H(iid, val);
             }
             return val;
         }
@@ -709,13 +709,13 @@ if (typeof J$ === 'undefined') J$ = {};
 
         function W(iid, name, val, lhs) {
             if (sandbox.analysis && sandbox.analysis.writePre) {
-                sandbox.analysis.writePre(iid, name, val);
+                sandbox.analysis.writePre(iid, name, val, lhs);
             }
             if (rrEngine) {
                 rrEngine.RR_W(iid, name, val);
             }
             if (sandbox.analysis && sandbox.analysis.write) {
-                val = sandbox.analysis.write(iid, name, val);
+                val = sandbox.analysis.write(iid, name, val, lhs);
             }
             return val;
         }
@@ -731,9 +731,9 @@ if (typeof J$ === 'undefined') J$ = {};
         }
 
 
-        function A(iid,base,offset,op) {
-            var oprnd1 = G(iid,base, offset);
-            return function(oprnd2) {
+        function A(iid, base, offset, op) {
+            var oprnd1 = G(iid, base, offset);
+            return function (oprnd2) {
                 var val = B(iid, op, oprnd1, oprnd2);
                 return P(iid, base, offset, val);
             };
@@ -749,7 +749,7 @@ if (typeof J$ === 'undefined') J$ = {};
             left_c = getConcrete(left);
             right_c = getConcrete(right);
 
-            switch(op) {
+            switch (op) {
                 case "+":
                     result_c = left_c + right_c;
                     break;
@@ -826,7 +826,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     result_c = right_c.test(left_c);
                     break;
                 default:
-                    throw new Error(op +" at "+iid+" not found");
+                    throw new Error(op + " at " + iid + " not found");
                     break;
             }
 
@@ -849,24 +849,24 @@ if (typeof J$ === 'undefined') J$ = {};
 
             left_c = getConcrete(left);
 
-            switch(op) {
+            switch (op) {
                 case "+":
-                    result_c = + left_c;
+                    result_c = +left_c;
                     break;
                 case "-":
-                    result_c = - left_c;
+                    result_c = -left_c;
                     break;
                 case "~":
-                    result_c = ~ left_c;
+                    result_c = ~left_c;
                     break;
                 case "!":
-                    result_c = ! left_c;
+                    result_c = !left_c;
                     break;
                 case "typeof":
                     result_c = typeof left_c;
                     break;
                 default:
-                    throw new Error(op +" at "+iid+" not found");
+                    throw new Error(op + " at " + iid + " not found");
                     break;
             }
 
@@ -920,7 +920,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 branchCoverageInfo.updateBranchInfo(iid, ret);
             }
 
-            log.log("B"+iid+":"+(left_c?1:0));
+            log.log("B" + iid + ":" + (left_c ? 1 : 0));
             return left_c;
         };
 
@@ -947,15 +947,15 @@ if (typeof J$ === 'undefined') J$ = {};
                 branchCoverageInfo.updateBranchInfo(iid, ret);
             }
 
-            log.log("B"+iid+":"+(left_c?1:0));
+            log.log("B" + iid + ":" + (left_c ? 1 : 0));
             return left_c;
         }
 
         function endExecution() {
             if (branchCoverageInfo)
                 branchCoverageInfo.storeBranchInfo();
-            var pSkippedReads = 100.0*skippedReads/(unoptimizedLogs-optimizedLogs);
-            var pOptimizedLogs = 100.0*optimizedLogs/unoptimizedLogs;
+            var pSkippedReads = 100.0 * skippedReads / (unoptimizedLogs - optimizedLogs);
+            var pOptimizedLogs = 100.0 * optimizedLogs / unoptimizedLogs;
             //console.log("Reads Skipped, GetFields Skipped, Total Logs (unoptimized), Total Logs (optimized), % of skips that are local reads, % of reduction in logging = "+
             //    skippedReads+" , "+skippedGetFields+" , "+unoptimizedLogs+" , "+optimizedLogs+ " , "+pSkippedReads+"% , "+pOptimizedLogs+"%");
             if (sandbox.analysis && sandbox.analysis.endExecution) {
@@ -988,23 +988,23 @@ if (typeof J$ === 'undefined') J$ = {};
             var objectMap = [];
 
             /*
-         type enumerations are
-         null is 0
-         number is 1
-         boolean is 2
-         string is 3
-         object is 4
-         function is 5
-         undefined is 6
-         array is 7
-         */
+             type enumerations are
+             null is 0
+             number is 1
+             boolean is 2
+             string is 3
+             object is 4
+             function is 5
+             undefined is 6
+             array is 7
+             */
 
             function load(path) {
                 var head, script;
                 head = document.getElementsByTagName('head')[0];
-                script= document.createElement('script');
-                script.type= 'text/javascript';
-                script.src= path;
+                script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.src = path;
                 head.appendChild(script);
             }
 
@@ -1021,8 +1021,8 @@ if (typeof J$ === 'undefined') J$ = {};
                         if (!HOP(val, SPECIAL_PROP)) {
                             if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
                                 Object.defineProperty(val, SPECIAL_PROP, {
-                                    enumerable: false,
-                                    writable: true,
+                                    enumerable:false,
+                                    writable:true,
                                 });
                             }
                             val[SPECIAL_PROP] = {};
@@ -1030,7 +1030,7 @@ if (typeof J$ === 'undefined') J$ = {};
 //                            console.log("oid:"+objectId);
                             objectId = objectId + 2;
                         }
-                        if (HOP(val,SPECIAL_PROP) && typeof val[SPECIAL_PROP][SPECIAL_PROP] === 'number') {
+                        if (HOP(val, SPECIAL_PROP) && typeof val[SPECIAL_PROP][SPECIAL_PROP] === 'number') {
                             value = val[SPECIAL_PROP][SPECIAL_PROP];
                         } else {
                             value = undefined;
@@ -1045,7 +1045,7 @@ if (typeof J$ === 'undefined') J$ = {};
             function getNumericType(val) {
                 var type = typeof val;
                 var typen;
-                switch(type) {
+                switch (type) {
                     case "number":
                         typen = T_NUMBER;
                         break;
@@ -1056,9 +1056,9 @@ if (typeof J$ === 'undefined') J$ = {};
                         typen = T_STRING;
                         break;
                     case "object":
-                        if (val===null) {
+                        if (val === null) {
                             typen = T_NULL;
-                        } else if( Object.prototype.toString.call( val ) === '[object Array]' ) {
+                        } else if (Object.prototype.toString.call(val) === '[object Array]') {
                             typen = T_ARRAY;
                         } else {
                             typen = T_OBJECT;
@@ -1079,11 +1079,11 @@ if (typeof J$ === 'undefined') J$ = {};
                 var id;
                 var oldVal = val;
                 val = getConcrete(oldVal);
-                if (!HOP(val,SPECIAL_PROP)) {
+                if (!HOP(val, SPECIAL_PROP)) {
                     if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
                         Object.defineProperty(val, SPECIAL_PROP, {
-                            enumerable: false,
-                            writable: true
+                            enumerable:false,
+                            writable:true
                         });
                     }
                     val[SPECIAL_PROP] = {};
@@ -1106,7 +1106,8 @@ if (typeof J$ === 'undefined') J$ = {};
             }
 
             function syncValue(recordedArray, replayValue, iid) {
-                var oldReplayValue = replayValue, tmp;;
+                var oldReplayValue = replayValue, tmp;
+                ;
                 replayValue = getConcrete(replayValue);
                 var recordedValue = recordedArray[F_VALUE], recordedType = recordedArray[F_TYPE];
 
@@ -1115,7 +1116,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     recordedType === T_NUMBER ||
                     recordedType === T_STRING ||
                     recordedType === T_BOOLEAN) {
-                    if((tmp = getActualValue(recordedValue,recordedType)) !== replayValue) {
+                    if ((tmp = getActualValue(recordedValue, recordedType)) !== replayValue) {
                         return tmp;
                     } else {
                         return oldReplayValue;
@@ -1125,51 +1126,52 @@ if (typeof J$ === 'undefined') J$ = {};
                     var obj = objectMap[recordedValue];
                     var type = getNumericType(replayValue);
 
-                    if (obj===undefined) {
-                        if (type === recordedType && !HOP(replayValue,SPECIAL_PROP)) {
+                    if (obj === undefined) {
+                        if (type === recordedType && !HOP(replayValue, SPECIAL_PROP)) {
                             obj = replayValue;
                         } else {
                             if (recordedType === T_OBJECT) {
                                 obj = {};
-                            } else if (recordedType === T_ARRAY){
+                            } else if (recordedType === T_ARRAY) {
                                 obj = [];
                             } else {
-                                obj = function(){};
+                                obj = function () {
+                                };
                             }
                         }
                         if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
                             Object.defineProperty(obj, SPECIAL_PROP, {
-                                enumerable: false,
-                                writable: true,
+                                enumerable:false,
+                                writable:true,
                             });
                         }
                         obj[SPECIAL_PROP] = {};
                         obj[SPECIAL_PROP][SPECIAL_PROP] = recordedValue;
-                        objectMap[recordedValue] = ((obj === replayValue)? oldReplayValue : obj);
+                        objectMap[recordedValue] = ((obj === replayValue) ? oldReplayValue : obj);
                     }
-                    return (obj === replayValue)? oldReplayValue : obj;
+                    return (obj === replayValue) ? oldReplayValue : obj;
                 }
             }
 
 
-            function logValue(iid,ret,funName) {
+            function logValue(iid, ret, funName) {
                 ret[F_IID] = iid;
                 ret[F_FUNNAME] = funName;
                 ret[F_SEQ] = seqNo++;
-                var line = JSON.stringify(ret)+"\n";
+                var line = JSON.stringify(ret) + "\n";
                 traceWriter.logToFile(line);
             }
 
-            function checkPath(ret,iid) {
+            function checkPath(ret, iid) {
                 if (ret === undefined || ret[F_IID] !== iid) {
-                    seriousWarnPrint(iid, "Path deviation at record = ["+ret + "] iid = "+iid+ " index = " +traceInfo.getPreviousIndex());
-                    throw new Error("Path deviation at record = ["+ret + "] iid = "+iid+ " index = " +traceInfo.getPreviousIndex());
+                    seriousWarnPrint(iid, "Path deviation at record = [" + ret + "] iid = " + iid + " index = " + traceInfo.getPreviousIndex());
+                    throw new Error("Path deviation at record = [" + ret + "] iid = " + iid + " index = " + traceInfo.getPreviousIndex());
                 }
             }
 
             function getFrameContainingVar(name) {
                 var tmp = frame;
-                while(tmp && !HOP(tmp,name)) {
+                while (tmp && !HOP(tmp, name)) {
                     tmp = tmp[SPECIAL_PROP3];
                 }
                 if (tmp) {
@@ -1200,17 +1202,16 @@ if (typeof J$ === 'undefined') J$ = {};
             }
 
 
-
-            this.RR_evalBegin = function() {
+            this.RR_evalBegin = function () {
                 evalFrames.push(frame);
                 frame = frameStack[0];
             }
 
-            this.RR_evalEnd = function() {
+            this.RR_evalEnd = function () {
                 frame = evalFrames.pop();
             }
 
-            this.RR_G = function(iid, base, offset, val) {
+            this.RR_G = function (iid, base, offset, val) {
                 var base_c, type;
 
                 offset = getConcrete(offset);
@@ -1218,10 +1219,10 @@ if (typeof J$ === 'undefined') J$ = {};
                     base_c = getConcrete(base);
                     if ((type = typeof base_c) === 'string' ||
                         type === 'number' ||
-                        type === 'boolean' ) {
+                        type === 'boolean') {
                         seqNo++;
                         return val;
-                    } else if (!HOP(base_c,SPECIAL_PROP)) {
+                    } else if (!HOP(base_c, SPECIAL_PROP)) {
                         return this.RR_L(iid, val, N_LOG_GETFIELD);
                     } else if (base_c[SPECIAL_PROP][offset] === val ||
                         (val !== val && base_c[SPECIAL_PROP][offset] !== base_c[SPECIAL_PROP][offset])) {
@@ -1248,10 +1249,10 @@ if (typeof J$ === 'undefined') J$ = {};
             }
 
 
-            this.RR_P = function(iid, base, offset, val) {
+            this.RR_P = function (iid, base, offset, val) {
                 if (mode === MODE_RECORD) {
                     var base_c = getConcrete(base);
-                    if (HOP(base_c,SPECIAL_PROP)) {
+                    if (HOP(base_c, SPECIAL_PROP)) {
                         base_c[SPECIAL_PROP][getConcrete(offset)] = val;
                     }
                 }
@@ -1273,7 +1274,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 }
             }
 
-            this.RR_R = function(iid, name, val) {
+            this.RR_R = function (iid, name, val) {
                 var ret, trackedVal, trackedFrame, tmp;
 
                 trackedFrame = getFrameContainingVar(name);
@@ -1307,23 +1308,23 @@ if (typeof J$ === 'undefined') J$ = {};
                 return ret;
             }
 
-            this.RR_Fe = function(iid, val, dis) {
+            this.RR_Fe = function (iid, val, dis) {
                 var ret;
                 if (mode === MODE_RECORD || mode === MODE_REPLAY) {
-                    frameStack.push(frame={});
+                    frameStack.push(frame = {});
                     frame[SPECIAL_PROP3] = val[SPECIAL_PROP3];
                     if (!isInstrumentedCaller) {
                         if (mode === MODE_RECORD) {
                             var tmp = printableValue(val);
-                            logValue(iid,tmp,N_LOG_FUNCTION_ENTER);
+                            logValue(iid, tmp, N_LOG_FUNCTION_ENTER);
                             tmp = printableValue(dis);
-                            logValue(iid,tmp,N_LOG_FUNCTION_ENTER);
+                            logValue(iid, tmp, N_LOG_FUNCTION_ENTER);
                         } else if (mode === MODE_REPLAY) {
                             ret = traceInfo.getAndNext();
-                            checkPath(ret,iid);
+                            checkPath(ret, iid);
                             ret = traceInfo.getAndNext();
-                            checkPath(ret,iid);
-                            debugPrint("Index:"+traceInfo.getPreviousIndex());
+                            checkPath(ret, iid);
+                            debugPrint("Index:" + traceInfo.getPreviousIndex());
                         }
                     }
                 }
@@ -1332,33 +1333,33 @@ if (typeof J$ === 'undefined') J$ = {};
             this.RR_Fr = function (iid) {
                 if (mode === MODE_RECORD || mode === MODE_REPLAY) {
                     frameStack.pop();
-                    frame = frameStack[frameStack.length-1];
+                    frame = frameStack[frameStack.length - 1];
                     if (mode === MODE_RECORD) {
                         traceWriter.flush();
                     }
                 }
             }
 
-            this.RR_Se = function(iid,val) {
+            this.RR_Se = function (iid, val) {
                 var ret;
                 if (mode === MODE_RECORD || mode === MODE_REPLAY) {
-                    frameStack.push(frame={});
+                    frameStack.push(frame = {});
                     frame[SPECIAL_PROP3] = frameStack[0];
                     if (mode === MODE_RECORD) {
                         var tmp = printableValue(val);
-                        logValue(iid,tmp,N_LOG_SCRIPT_ENTER);
+                        logValue(iid, tmp, N_LOG_SCRIPT_ENTER);
                     } else if (mode === MODE_REPLAY) {
                         ret = traceInfo.getAndNext();
-                        checkPath(ret,iid);
-                        debugPrint("Index:"+traceInfo.getPreviousIndex());
+                        checkPath(ret, iid);
+                        debugPrint("Index:" + traceInfo.getPreviousIndex());
                     }
                 }
             }
 
-            this.RR_Sr = function(iid) {
+            this.RR_Sr = function (iid) {
                 if (mode === MODE_RECORD || mode === MODE_REPLAY) {
                     frameStack.pop();
-                    frame = frameStack[frameStack.length-1];
+                    frame = frameStack[frameStack.length - 1];
                     if (mode === MODE_RECORD) {
                         traceWriter.flush();
                     }
@@ -1369,12 +1370,12 @@ if (typeof J$ === 'undefined') J$ = {};
             }
 
 
-            this.RR_H = function (iid,val) {
+            this.RR_H = function (iid, val) {
                 var ret;
                 if (mode === MODE_RECORD) {
                     ret = Object.create(null);
                     for (var i in val) {
-                        if (i !== SPECIAL_PROP && i !== SPECIAL_PROP2 && i !== SPECIAL_PROP3){
+                        if (i !== SPECIAL_PROP && i !== SPECIAL_PROP2 && i !== SPECIAL_PROP3) {
                             ret[i] = 1;
                         }
                     }
@@ -1385,12 +1386,12 @@ if (typeof J$ === 'undefined') J$ = {};
                     val = ret;
                 } else if (mode === MODE_REPLAY) {
                     ret = traceInfo.getAndNext();
-                    checkPath(ret,iid);
-                    debugPrint("Index:"+traceInfo.getPreviousIndex());
+                    checkPath(ret, iid);
+                    debugPrint("Index:" + traceInfo.getPreviousIndex());
                     val = ret[F_VALUE];
                     ret = Object.create(null);
                     for (i in val) {
-                        if (HOP(val,i)) {
+                        if (HOP(val, i)) {
                             ret[i] = 1;
                         }
                     }
@@ -1404,27 +1405,27 @@ if (typeof J$ === 'undefined') J$ = {};
                 var ret, tmp;
                 if (mode === MODE_RECORD) {
                     tmp = printableValue(val);
-                    logValue(iid,tmp,fun);
+                    logValue(iid, tmp, fun);
                 } else if (mode === MODE_REPLAY) {
                     ret = traceInfo.getCurrent();
-                    checkPath(ret,iid);
+                    checkPath(ret, iid);
                     traceInfo.next();
-                    debugPrint("Index:"+traceInfo.getPreviousIndex());
-                    val = syncValue(ret,val,iid);
+                    debugPrint("Index:" + traceInfo.getPreviousIndex());
+                    val = syncValue(ret, val, iid);
                 }
                 return val;
             }
 
-            this.RR_T = function (iid,val,fun) {
+            this.RR_T = function (iid, val, fun) {
                 if ((mode === MODE_RECORD || mode === MODE_REPLAY) &&
-                    (fun === N_LOG_ARRAY_LIT || fun === N_LOG_FUNCTION_LIT || fun === N_LOG_OBJECT_LIT || fun === N_LOG_REGEXP_LIT)){
+                    (fun === N_LOG_ARRAY_LIT || fun === N_LOG_FUNCTION_LIT || fun === N_LOG_OBJECT_LIT || fun === N_LOG_REGEXP_LIT)) {
 //                    console.log("iid:"+iid)  // uncomment for divergence
                     setLiteralId(val);
                     if (fun === N_LOG_FUNCTION_LIT) {
                         if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
                             Object.defineProperty(val, SPECIAL_PROP3, {
-                                enumerable: false,
-                                writable: true,
+                                enumerable:false,
+                                writable:true,
                             });
                         }
                         val[SPECIAL_PROP3] = frame;
@@ -1432,9 +1433,9 @@ if (typeof J$ === 'undefined') J$ = {};
                 }
             }
 
-            this.RR_replay = function() {
-                if (mode=== MODE_REPLAY) {
-                    while(true) {
+            this.RR_replay = function () {
+                if (mode === MODE_REPLAY) {
+                    while (true) {
                         var ret = traceInfo.getCurrent();
                         if (typeof ret !== 'object') {
                             if (isBrowserReplay) {
@@ -1452,12 +1453,12 @@ if (typeof J$ === 'undefined') J$ = {};
                             }
                         }
                         if (ret[F_FUNNAME] === N_LOG_FUNCTION_ENTER) {
-                            f = getConcrete(syncValue(ret, undefined,0));
+                            f = getConcrete(syncValue(ret, undefined, 0));
                             ret = traceInfo.getNext();
                             var dis = syncValue(ret, undefined, 0);
                             f.call(dis);
                         } else if (ret[F_FUNNAME] === N_LOG_SCRIPT_ENTER) {
-                            var path = getConcrete(syncValue(ret, undefined,0));
+                            var path = getConcrete(syncValue(ret, undefined, 0));
                             if (isBrowserReplay) {
                                 load(path);
                                 return;
@@ -1475,11 +1476,11 @@ if (typeof J$ === 'undefined') J$ = {};
             }
 
 
-            function TraceWriter(){
+            function TraceWriter() {
                 var bufferSize = 0;
                 var buffer = [];
                 var traceWfh;
-                var fs = (!isBrowser)?require('fs'):undefined;
+                var fs = (!isBrowser) ? require('fs') : undefined;
                 var trying = false;
                 var cb;
                 var remoteBuffer = [];
@@ -1493,7 +1494,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     return traceWfh;
                 }
 
-                this.logToFile = function(line) {
+                this.logToFile = function (line) {
                     buffer.push(line);
                     bufferSize += line.length;
                     if (bufferSize > MAX_BUF_SIZE) {
@@ -1501,16 +1502,16 @@ if (typeof J$ === 'undefined') J$ = {};
                     }
                 }
 
-                this.flush = function() {
+                this.flush = function () {
                     var msg;
                     if (!isBrowser) {
                         var length = buffer.length;
-                        for (var i=0; i < length; i++) {
-                            fs.writeSync(getFileHanlde(),buffer[i]);
+                        for (var i = 0; i < length; i++) {
+                            fs.writeSync(getFileHanlde(), buffer[i]);
                         }
                     } else {
                         msg = buffer.join('');
-                        if (msg.length >1) {
+                        if (msg.length > 1) {
                             this.remoteLog(msg);
                         }
                     }
@@ -1540,7 +1541,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     tryRemoteLog();
                 }
 
-                this.onflush = function(callback) {
+                this.onflush = function (callback) {
                     if (remoteBuffer.length === 0) {
                         if (callback) {
                             callback();
@@ -1559,7 +1560,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     }
                 }
 
-                this.remoteLog = function(message) {
+                this.remoteLog = function (message) {
                     remoteBuffer.push(message);
                     openSocketIfNotOpen();
                     if (isOpen) {
@@ -1569,7 +1570,7 @@ if (typeof J$ === 'undefined') J$ = {};
             }
 
 
-            function TraceReader () {
+            function TraceReader() {
                 var traceArray = [];
                 var traceIndex = 0;
                 var currentIndex = 0;
@@ -1578,7 +1579,6 @@ if (typeof J$ === 'undefined') J$ = {};
                 var traceFh;
                 var done = false;
                 var curRecord = null;
-
 
 
                 function cacheRecords() {
@@ -1590,7 +1590,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     if (currentIndex >= frontierIndex) {
                         if (!traceFh) {
                             var FileLineReader = require('./utils/FileLineReader');
-                            traceFh = new FileLineReader(process.argv[2]?process.argv[2]:TRACE_FILE_NAME);
+                            traceFh = new FileLineReader(process.argv[2] ? process.argv[2] : TRACE_FILE_NAME);
                         }
                         traceArray = [];
                         while (!done && (flag = traceFh.hasNextLine()) && i < MAX_SIZE) {
@@ -1607,21 +1607,21 @@ if (typeof J$ === 'undefined') J$ = {};
                     }
                 }
 
-                this.addRecord = function(line) {
+                this.addRecord = function (line) {
                     var record = JSON.parse(line);
                     traceArray.push(record);
                     debugPrint(JSON.stringify(record));
                     frontierIndex++;
                 };
 
-                this.getAndNext = function() {
+                this.getAndNext = function () {
                     if (curRecord !== null) {
                         var ret = curRecord;
                         curRecord = null;
                         return ret;
                     }
                     cacheRecords();
-                    var j = isBrowserReplay?currentIndex:currentIndex%MAX_SIZE;
+                    var j = isBrowserReplay ? currentIndex : currentIndex % MAX_SIZE;
                     var record = traceArray[j];
                     if (record && record[F_SEQ] === traceIndex) {
                         currentIndex++;
@@ -1634,7 +1634,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     return record;
                 };
 
-                this.getNext = function() {
+                this.getNext = function () {
                     if (curRecord !== null) {
                         throw new Error("Cannot do two getNext() in succession");
                     }
@@ -1644,12 +1644,12 @@ if (typeof J$ === 'undefined') J$ = {};
                     return ret;
                 };
 
-                this.getCurrent = function() {
+                this.getCurrent = function () {
                     if (curRecord !== null) {
                         return curRecord;
                     }
                     cacheRecords();
-                    var j = isBrowserReplay?currentIndex:currentIndex%MAX_SIZE;
+                    var j = isBrowserReplay ? currentIndex : currentIndex % MAX_SIZE;
                     var record = traceArray[j];
                     if (!(record && record[F_SEQ] === traceIndex)) {
                         record = undefined;
@@ -1657,13 +1657,13 @@ if (typeof J$ === 'undefined') J$ = {};
                     return record;
                 }
 
-                this.next = function() {
+                this.next = function () {
                     if (curRecord !== null) {
                         curRecord = null;
                         return;
                     }
                     cacheRecords();
-                    var j = isBrowserReplay?currentIndex:currentIndex%MAX_SIZE;
+                    var j = isBrowserReplay ? currentIndex : currentIndex % MAX_SIZE;
                     var record = traceArray[j];
                     if (record && record[F_SEQ] === traceIndex) {
                         currentIndex++;
@@ -1673,11 +1673,11 @@ if (typeof J$ === 'undefined') J$ = {};
                     unoptimizedLogs++;
                 };
 
-                this.getPreviousIndex = function() {
+                this.getPreviousIndex = function () {
                     if (curRecord !== null) {
-                        return traceIndex-2;
+                        return traceIndex - 2;
                     }
-                    return traceIndex-1;
+                    return traceIndex - 1;
                 }
 
             }
@@ -1700,11 +1700,11 @@ if (typeof J$ === 'undefined') J$ = {};
         // initialize rrEngine, sandbox.analysis, executionIndex, and require.uncache
         executionIndex = new ExecutionIndex();
 
-        if (ANALYSIS && ANALYSIS.indexOf('Engine') >=0) {
-            var SymbolicEngine = require('./'+ANALYSIS);
+        if (ANALYSIS && ANALYSIS.indexOf('Engine') >= 0) {
+            var SymbolicEngine = require('./' + ANALYSIS);
             sandbox.analysis = new SymbolicEngine(executionIndex);
         }
-        if (mode=== MODE_RECORD || mode === MODE_REPLAY) {
+        if (mode === MODE_RECORD || mode === MODE_REPLAY) {
             rrEngine = new RecordReplayEngine();
         }
 
@@ -1729,7 +1729,6 @@ if (typeof J$ === 'undefined') J$ = {};
                 }
             };
         }
-
 
 
         sandbox.U = U; // Unary operation
@@ -1759,20 +1758,21 @@ if (typeof J$ === 'undefined') J$ = {};
         sandbox.Rt = Rt; // returned value
         sandbox.Ra = Ra;
 
-        sandbox.replay = rrEngine?rrEngine.RR_replay:undefined;
-        sandbox.onflush = rrEngine?rrEngine.onflush:function(){};
-        sandbox.record = rrEngine?rrEngine.record:function(){};
-        sandbox.command = rrEngine?rrEngine.command:function(){};
+        sandbox.replay = rrEngine ? rrEngine.RR_replay : undefined;
+        sandbox.onflush = rrEngine ? rrEngine.onflush : function () {
+        };
+        sandbox.record = rrEngine ? rrEngine.record : function () {
+        };
+        sandbox.command = rrEngine ? rrEngine.command : function () {
+        };
         sandbox.endExecution = endExecution;
-        sandbox.addRecord = rrEngine?rrEngine.addRecord:undefined;
+        sandbox.addRecord = rrEngine ? rrEngine.addRecord : undefined;
 
         sandbox.log = log;
 
 
-
-}
+    }
 }(J$));
-
 
 
 //@todo:@assumption arguments.callee is available

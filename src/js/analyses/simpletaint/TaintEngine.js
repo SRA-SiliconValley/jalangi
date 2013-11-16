@@ -16,10 +16,10 @@
 
 // Author: Koushik Sen
 
-(function(module){
+(function (module) {
     function TaintEngine(executionIndex) {
         var PREFIX1 = "J$";
-        var SPECIAL_PROP = "*"+PREFIX1+"*";
+        var SPECIAL_PROP = "*" + PREFIX1 + "*";
         var TRACE_FILE_NAME = "jalangi_trace";
         var TAINT_SUMMARY = "jalangi_taint";
         var ConcolicValue = require('./../../ConcolicValue');
@@ -43,40 +43,41 @@
             var pval = [];
             var type = typeof c;
             pval[0] = type;
-            if (!(type === "object" || type === "function")){
+            if (!(type === "object" || type === "function")) {
                 pval[1] = c;
             }
             return pval;
         }
 
-        this.beginExecution = function(prefix) {
+        this.beginExecution = function (prefix) {
             this.prefix = prefix;
 
-            this.getField = function(iid, base, offset, result_c) {
+            this.getField = function (iid, base, offset, result_c) {
                 if (result_c instanceof ConcolicValue) {
                     return result_c;
                 } else {
                     var base_c = this.getConcrete(base);
-                    if (base_c[SPECIAL_PROP] === undefined || base_c[SPECIAL_PROP][SPECIAL_PROP]===undefined){
+                    if (base_c[SPECIAL_PROP] === undefined || base_c[SPECIAL_PROP][SPECIAL_PROP] === undefined) {
                         return result_c;
                     }
-                    var field = base_c[SPECIAL_PROP][SPECIAL_PROP]+"."+offset;
+                    var field = base_c[SPECIAL_PROP][SPECIAL_PROP] + "." + offset;
                     var sym = {};
-                    sym[field]=getValueWritten(result_c);
+                    sym[field] = getValueWritten(result_c);
                     return new ConcolicValue(result_c, sym);
                 }
             }
 
-            this.putField = function(iid, base, offset, val) {
-                var  pval = getValueWritten(val);
+            this.putField = function (iid, base, offset, val) {
+                var pval = getValueWritten(val);
                 var base_c = this.getConcrete(base);
-                if (base_c[SPECIAL_PROP] !== undefined && base_c[SPECIAL_PROP][SPECIAL_PROP]!==undefined){
-                    var field = base_c[SPECIAL_PROP][SPECIAL_PROP]+"."+offset;
+                if (base_c[SPECIAL_PROP] !== undefined && base_c[SPECIAL_PROP][SPECIAL_PROP] !== undefined) {
+                    var field = base_c[SPECIAL_PROP][SPECIAL_PROP] + "." + offset;
                     writeSet[field] = pval;
                 }
                 if (!(val instanceof ConcolicValue)) {
                     base_c[offset] = new ConcolicValue(val, {"nofield":pval});
                 }
+                return val;
             }
 
             this.binary = function (iid, op, left, right, result_c) {
@@ -95,11 +96,11 @@
                             result_s[e] = right_s[e];
                         }
                     }
-                    return new ConcolicValue(result_c,result_s);
+                    return new ConcolicValue(result_c, result_s);
                 } else if (left_s) {
-                    return new ConcolicValue(result_c,left_s);
+                    return new ConcolicValue(result_c, left_s);
                 } else if (right_s) {
-                    return new ConcolicValue(result_c,right_s);
+                    return new ConcolicValue(result_c, right_s);
                 } else {
                     return result_c;
                 }
@@ -108,7 +109,7 @@
             this.unary = function (iid, op, left, result_c) {
                 var left_s = getSymbolic(left);
                 if (left_s) {
-                    return new ConcolicValue(result_c,left_s);
+                    return new ConcolicValue(result_c, left_s);
                 } else {
                     return result_c;
                 }
@@ -126,12 +127,12 @@
                 return left;
             }
 
-            this.endExecution = function() {
-                var fileName = process.argv[2]?process.argv[2]:TRACE_FILE_NAME;
+            this.endExecution = function () {
+                var fileName = process.argv[2] ? process.argv[2] : TRACE_FILE_NAME;
                 var suffix = fileName.substring(TRACE_FILE_NAME.length);
                 var fs = require('fs');
                 delete readSet.nofield;
-                fs.writeFileSync(TAINT_SUMMARY+suffix, JSON.stringify([readSet, writeSet, this.prefix]),"utf8");
+                fs.writeFileSync(TAINT_SUMMARY + suffix, JSON.stringify([readSet, writeSet, this.prefix]), "utf8");
             }
         }
     }

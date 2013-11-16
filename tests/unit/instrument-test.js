@@ -19,24 +19,25 @@
 var i;
 var a = [1, 2, 3, 4];
 
-lbl1: for (i=0; i < a.length; i++) {
-    if (i===0) {
+lbl1: for (i = 0; i < a.length; i++) {
+    if (i === 0) {
         continue;
     }
     console.log(a[i]);
 }
 
-function f1 (j) {
+function f1(j) {
 
-    function f2 (c) {
+    function f2(c) {
         var sum = c;
+        var x;
         try {
             sum *= j;
             if (sum > 4) {
                 sum = -sum;
             }
             i = 0;
-            while(i < sum) {
+            while (i < sum) {
                 console.log(i);
                 i++;
             }
@@ -56,12 +57,12 @@ function f1 (j) {
 }
 
 var o = {
-    x : 1,
-    f1: function() {
+    x:1,
+    f1:function () {
         this.x += 5;
         this[x] -= 4;
     },
-    del: 5
+    del:5
 
 }
 
@@ -85,8 +86,8 @@ for (i in arr) {
 function Con() {
     this.x = 1;
 
-    this.f1 = function() {
-        ++ this.x;
+    this.f1 = function () {
+        ++this.x;
         --this.x;
     }
 }
@@ -123,25 +124,25 @@ foo();
 function f3(a, b, c) {
     var ret = null;
     try {
-        ret = c.f1(), a && b || c? a : b;
+        ret = c.f1(), a && b || c ? a : b;
         throw new Error("Test");
-    } catch(e) {
+    } catch (e) {
         console.log("f1 is undefined");
     } finally {
         return ret;
     }
     try {
         throw new Error("Test2");
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
 
-f3 (true, false, true);
+f3(true, false, true);
 
 var x = "1";
 
-switch(x) {
+switch (x) {
     case "2":
     case "3":
         console.log("x > 1");

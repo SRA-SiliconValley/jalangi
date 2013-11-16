@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-(function(module){
+(function (module) {
 
     function SimpleTaintEngine(executionIndex) {
         var TRACE_FILE_NAME = "jalangi_trace";
@@ -32,11 +32,11 @@
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
         var getSymbolic = this.getSymbolic = ConcolicValue.getSymbolic;
 
-        this.beginExecution = function(prefix) {
+        this.beginExecution = function (prefix) {
             this.prefix = prefix;
         }
 
-        this.getField = function(iid, base, offset, result_c) {
+        this.getField = function (iid, base, offset, result_c) {
             if (result_c instanceof ConcolicValue) {
                 return result_c;
             } else {
@@ -44,18 +44,19 @@
             }
         }
 
-        this.putField = function(iid, base, offset, val) {
+        this.putField = function (iid, base, offset, val) {
             var base_c = this.getConcrete(base);
             if (!(val instanceof ConcolicValue)) {
                 base_c[offset] = new ConcolicValue(val, false);
             }
+            return val;
         }
 
         this.binary = function (iid, op, left, right, result_c) {
             var left_s = getSymbolic(left);
             var right_s = getSymbolic(right);
             if (left_s || right_s) {
-                return new ConcolicValue(result_c,true);
+                return new ConcolicValue(result_c, true);
             } else {
                 return  result_c;
             }
@@ -64,7 +65,7 @@
         this.unary = function (iid, op, left, result_c) {
             var left_s = getSymbolic(left);
             if (left_s) {
-                return new ConcolicValue(result_c,true);
+                return new ConcolicValue(result_c, true);
             } else {
                 return result_c;
             }
@@ -78,15 +79,15 @@
             return left;
         }
 
-        this.endExecution = function() {
-            var fileName = process.argv[2]?process.argv[2]:TRACE_FILE_NAME;
+        this.endExecution = function () {
+            var fileName = process.argv[2] ? process.argv[2] : TRACE_FILE_NAME;
             var suffix = fileName.substring(TRACE_FILE_NAME.length);
             var fs = require('fs');
-            fs.writeFileSync(TAINT_SUMMARY+suffix, JSON.stringify([taintedConditionals, this.prefix]),"utf8");
+            fs.writeFileSync(TAINT_SUMMARY + suffix, JSON.stringify([taintedConditionals, this.prefix]), "utf8");
             console.log("Listing tainted conditionals:")
             for (var iid in taintedConditionals) {
                 if (taintedConditionals.hasOwnProperty(iid)) {
-                    console.log("Branch at "+getIIDInfo(iid));
+                    console.log("Branch at " + getIIDInfo(iid));
                 }
             }
         }

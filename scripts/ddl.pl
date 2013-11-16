@@ -2,7 +2,9 @@
 
 $n = 2;
 $oldlen = 0;
-$cmd = "export JALANGI_MODE=record; export JALANGI_ANALYSIS=none; node src/js/instrument/esnstrument.js a.out.js && scripts/timeout -t 4 node a.out.js && node a.out_jalangi_.js 2>&1 | grep 'TypeError: Cannot read property'";
+
+$cmd = "scripts/timeout -t 10 node box2d.js > /dev/null 2>&1 && python scripts/jalangi.py analyze -a analyses/nop/NOPEngine box2d 2>&1 | grep 'Error: Path deviation at record'";
+#$cmd = "export JALANGI_MODE=record; export JALANGI_ANALYSIS=none; node src/js/instrument/esnstrument.js a.out.js && scripts/timeout -t 4 node a.out.js && node a.out_jalangi_.js 2>&1 | grep 'TypeError: Cannot read property'";
 
 while(1) {
 	@filecontent = ();
@@ -25,19 +27,19 @@ while(1) {
 	L1: while ($size >= 1) {
 		for ($i=1;$i<=$n;$i++) {
 			get_deltasmall();
-			system("rm *_jalangi_.js");
+			system("rm *_jalangi_.js  > /dev/null 2>&1");
 			$ret = system($cmd);
 			if ($ret == 0) { 
 			  $n = 2;
-			  system("cp $ARGV[0].js out_$ARGV[0].js");
+			  system("cp $ARGV[0].js $ARGV[0]_min.js");
 			  last L1; 
 			}
 			get_deltalarge();
-			system("rm *_jalangi_.js");
+			system("rm *_jalangi_.js > /dev/null 2>&1");
 			$ret = system($cmd);
 			if ($ret == 0) { 
 			  $n = $n - 1; 
-			  system("cp $ARGV[0].js out_$ARGV[0].js");
+			  system("cp $ARGV[0].js $ARGV[0]_min.js");
 			  last L1; 
 			}
 		}

@@ -65,28 +65,27 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-
 var salt;
 var indirectEval;
 
 function setupCodeLoad() {
-  salt = 0;
-  indirectEval = eval;
+    salt = 0;
+    indirectEval = eval;
 }
 
 function tearDownCodeLoad() {
-  salt = null;
-  indirectEval = null;
+    salt = null;
+    indirectEval = null;
 }
 
 function runCodeLoadClosure() {
-  runClosure();
-  salt++;
+    runClosure();
+    salt++;
 }
 
 function runCodeLoadJQuery() {
-  runJQuery();
-  salt++;
+    runJQuery();
+    salt++;
 }
 
 /*
@@ -96,41 +95,41 @@ function runCodeLoadJQuery() {
  * http://code.jquery.com/jquery.min.js
  * The following Python script generates both variables:
 
-#!/usr/bin/env python
+ #!/usr/bin/env python
 
-import urllib
-import urllib2
+ import urllib
+ import urllib2
 
-def escape_and_format(data, varname):
-  data = data.replace("\n", " ").replace("; ", ";")
-  data = data.replace("\\", "\\\\").replace("\"", "\\\"")
-  data = "var " + varname + " = \"" + data + "\""
-  while len(data) > 0:
-    cutoff = min(79, len(data))
-    while data[cutoff-1] == '\\':
-      cutoff -= 1
-    line = data[0:cutoff]
-    data = data[cutoff:]
-    if len(data) > 0:
-      line += '\\'
-    print line
+ def escape_and_format(data, varname):
+ data = data.replace("\n", " ").replace("; ", ";")
+ data = data.replace("\\", "\\\\").replace("\"", "\\\"")
+ data = "var " + varname + " = \"" + data + "\""
+ while len(data) > 0:
+ cutoff = min(79, len(data))
+ while data[cutoff-1] == '\\':
+ cutoff -= 1
+ line = data[0:cutoff]
+ data = data[cutoff:]
+ if len(data) > 0:
+ line += '\\'
+ print line
 
-url = "http://closure-compiler.appspot.com/compile"
-request_params = {"output_format": "text",
-                  "compilation_level": "SIMPLE_OPTIMIZATIONS",
-                  "use_closure_library": "true",
-                  "js_code": "",
-                  "output_info": "compiled_code"}
-result = urllib2.urlopen(url, urllib.urlencode(request_params))
-escape_and_format(result.read(), "BASE_JS")
+ url = "http://closure-compiler.appspot.com/compile"
+ request_params = {"output_format": "text",
+ "compilation_level": "SIMPLE_OPTIMIZATIONS",
+ "use_closure_library": "true",
+ "js_code": "",
+ "output_info": "compiled_code"}
+ result = urllib2.urlopen(url, urllib.urlencode(request_params))
+ escape_and_format(result.read(), "BASE_JS")
 
-print "\n\n"
+ print "\n\n"
 
-url = "http://code.jquery.com/jquery.min.js"
-result = urllib2.urlopen(url)
-escape_and_format(result.read(), "JQUERY_JS")
+ url = "http://code.jquery.com/jquery.min.js"
+ result = urllib2.urlopen(url)
+ escape_and_format(result.read(), "JQUERY_JS")
 
-*/
+ */
 var BASE_JS = "var COMPILED=!0,goog=goog||{};goog.global=this;goog.DEBUG=!0;goo\
 g.LOCALE=\"en\";goog.provide=function(a){if(!COMPILED){if(goog.isProvided_(a))t\
 hrow Error('Namespace \"'+a+'\" already declared.');delete goog.implicitNamespa\
@@ -1474,54 +1473,67 @@ l:k}f(a).css(c,h)},c,a,arguments.length,null)}}),a.jQuery=a.$=f,typeof define==\
 turn f})})(windowmock);"
 
 function cacheBust(str, old) {
-  var replacement = old;
-  for (var i = 1; i < salt % 16 + 2; i++) {
-    replacement += ((salt + i * 7) % 36).toString(36);
-  }
-  return str.replace(new RegExp(old, "g"), replacement);
+    var replacement = old;
+    for (var i = 1; i < salt % 16 + 2; i++) {
+        replacement += ((salt + i * 7) % 36).toString(36);
+    }
+    return str.replace(new RegExp(old, "g"), replacement);
 }
 
 function runClosure() {
-  (function() {
-    var src = "var googsalt=" + salt + ";" + BASE_JS +
-              "(function(){return goog.cloneObject(googsalt);})();";
-    src = cacheBust(src, "goog");
-    var result = indirectEval(src);
-    if (result != salt) throw(new Error("Incorrect result: " + result));
-  })();
+    (function () {
+        var src = "var googsalt=" + salt + ";" + BASE_JS +
+            "(function(){return goog.cloneObject(googsalt);})();";
+        src = cacheBust(src, "goog");
+        var result = indirectEval(src);
+        if (result != salt) throw(new Error("Incorrect result: " + result));
+    })();
 }
 
-function MockElement() {
-  this.appendChild = function(a) {};
-  this.createComment = function(a) {};
-  this.createDocumentFragment = function() { return new MockElement(); };
-  this.createElement = function(a) { return new MockElement(); };
-  this.documentElement = this;
-  this.getElementById = function(a) { return 0; };
-  this.getElementsByTagName = function(a) {return [0];};
-  this.insertBefore = function(a, b) {};
-  this.removeChild = function(a) {};
-  this.setAttribute = function(a, b) {};
+MockElement = function MockElement_f() {
+    this.appendChild = function (a) {
+    };
+    this.createComment = function (a) {
+    };
+    this.createDocumentFragment = function () {
+        return new MockElement();
+    };
+    this.createElement = function (a) {
+        return new MockElement();
+    };
+    this.documentElement = this;
+    this.getElementById = function (a) {
+        return 0;
+    };
+    this.getElementsByTagName = function (a) {
+        return [0];
+    };
+    this.insertBefore = function (a, b) {
+    };
+    this.removeChild = function (a) {
+    };
+    this.setAttribute = function (a, b) {
+    };
 }
 
 function runJQuery() {
-  (function() {
-    var src = "var windowmock = {'document':new MockElement(),\
+    (function () {
+        var src = "var windowmock = {'document':new MockElement(),\
                                  'location':{'href':''},\
                                  'navigator':{'userAgent':''}};" +
-              "var jQuerySalt=" + salt + ";" + JQUERY_JS +
-              "(function(){return windowmock.jQuery.grep([jQuerySalt],\
-              function(a,b){return true;})[0];})();";
-    src = cacheBust(src, "jQuery");
-    var result = indirectEval(src);
-    if (result != salt) throw(new Error("Incorrect result: " + result));
-  })();
+            "var jQuerySalt=" + salt + ";" + JQUERY_JS +
+            "(function(){return windowmock.jQuery.grep([jQuerySalt],\
+            function(a,b){return true;})[0];})();";
+        src = cacheBust(src, "jQuery");
+        var result = indirectEval(src);
+        if (result != salt) throw(new Error("Incorrect result: " + result));
+    })();
 }
 
 
-setupCodeLoad();
-runCodeLoadClosure();
-tearDownCodeLoad();
+//setupCodeLoad();
+//runCodeLoadClosure();
+//tearDownCodeLoad();
 setupCodeLoad();
 runCodeLoadJQuery();
 tearDownCodeLoad();

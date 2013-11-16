@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-(function(module){
+(function (module) {
 
     function SymbolicEngine(executionIndex) {
 
@@ -53,9 +53,9 @@
                 }
                 return ret;
             } else if (left_s instanceof SymbolicStringExpression) {
-                ret = new SymbolicStringPredicate("!=",left_s,"");
+                ret = new SymbolicStringPredicate("!=", left_s, "");
                 return ret;
-            } else if (left_s instanceof SymbolicStringPredicate  ||
+            } else if (left_s instanceof SymbolicStringPredicate ||
                 left_s instanceof SymbolicBool ||
                 left_s instanceof SymbolicType ||
                 left_s instanceof FromCharCodePredicate ||
@@ -65,7 +65,7 @@
             return undefined;
         }
 
-        this.makeConcolic = function(idx, val, getNextSymbol) {
+        this.makeConcolic = function (idx, val, getNextSymbol) {
             var ret, concrete, type, stype, fieldsOrdered, len, i, slength;
             concrete = val[0];
             type = typeof concrete;
@@ -75,13 +75,13 @@
             if (type === 'string') {
                 slength = makeConcolicNumber(getNextSymbol(true), concrete.length);
                 ret = makeConcolicString(idx, concrete, slength, stype);
-            } else if (type === 'number' || type === 'boolean'){
-                ret = makeConcolicNumber(idx,concrete, stype);
-            } else if (type === 'object' || type === 'function'){
+            } else if (type === 'number' || type === 'boolean') {
+                ret = makeConcolicNumber(idx, concrete, stype);
+            } else if (type === 'object' || type === 'function') {
                 ret = makeConcolicObject(idx, concrete, stype);
                 fieldsOrdered = val[1];
                 len = fieldsOrdered.length;
-                for (i=0; i<len; i++) {
+                for (i = 0; i < len; i++) {
                     ret.symbolic.addField(fieldsOrdered[i]);
                 }
             } else if (type === "undefined") {
@@ -92,7 +92,7 @@
             return ret;
         }
 
-        this.makeConcolicPost = function() {
+        this.makeConcolicPost = function () {
             executionIndex.executionIndexReturn();
         }
 
@@ -117,21 +117,21 @@
         }
 
         function makeConcolicString(idx, val, slength, stype) {
-            installAxiom(J$.B(0,">=", slength, 0));
-            if (idx.indexOf("x")===0) {
-                installAxiom(J$.B(0,"<=", slength, MAX_STRING_LENGTH));  // add this axiom only for input symbolic values
+            installAxiom(J$.B(0, ">=", slength, 0));
+            if (idx.indexOf("x") === 0) {
+                installAxiom(J$.B(0, "<=", slength, MAX_STRING_LENGTH));  // add this axiom only for input symbolic values
             }
             return new ConcolicValue(val, new SymbolicStringExpression(idx, slength, stype));
         }
 
-        this.getFieldPre = function(iid, base, offset) {
+        this.getFieldPre = function (iid, base, offset) {
             var base_s = getSymbolic(base);
-            if (base_s){
+            if (base_s) {
                 addType(base_s, "object");
             }
         }
 
-        this.getField = function(iid, base, offset, result_c) {
+        this.getField = function (iid, base, offset, result_c) {
             var ret, base_s = this.getSymbolic(base), base_c = this.getConcrete(base);
             if (base_s && base_s.getField) {
                 ret = base_s.getField(offset);
@@ -148,46 +148,47 @@
                 ret = sfuns.object_getField.apply(undefined, [result_c, base, offset]);
             }
             if (ret !== undefined) {
-                return new ConcolicValue(result_c,ret.symbolic);
+                return new ConcolicValue(result_c, ret.symbolic);
             } else {
                 return result_c;
             }
         }
 
-        this.invokeFunPre = function(iid, f, base, args, isConstructor) {
+        this.invokeFunPre = function (iid, f, base, args, isConstructor) {
             var f_s = this.getSymbolic(f);
             if (f_s) {
-                addType(f_s,"function");
+                addType(f_s, "function");
             }
         }
 
-        function regex_escape (text) {
+        function regex_escape(text) {
             return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
         }
 
-        function regexp_test (str) {
+        function regexp_test(str) {
             // this is a regexp object
             var concrete = J$.getConcrete(str);
             var newSym;
 
             if (str !== concrete && str.symbolic && str.symbolic.isCompound && str.symbolic.isCompound()) {
-                newSym = J$.readInput(concrete,true);
-                J$.addAxiom(J$.B(0,"==",newSym,str));  // installing an axiom
+                newSym = J$.readInput(concrete, true);
+                J$.addAxiom(J$.B(0, "==", newSym, str));  // installing an axiom
             } else {
                 newSym = str;
             }
             return J$.B(0, "regexin", newSym, this);
         }
 
-        function string_fromCharCode (result) {
+        function string_fromCharCode(result) {
             var ints = [];
-            var i, len=arguments.length, flag = false;;
-            for (i=1; i < len; i++) {
+            var i, len = arguments.length, flag = false;
+            ;
+            for (i = 1; i < len; i++) {
                 if (getSymbolic(arguments[i]) instanceof SymbolicLinear) {
                     flag = true;
-                    ints[i-1] = getSymbolic(arguments[i]);
+                    ints[i - 1] = getSymbolic(arguments[i]);
                 } else {
-                    ints[i-1] = getConcrete(arguments[i]);
+                    ints[i - 1] = getConcrete(arguments[i]);
                 }
             }
             if (!flag) {
@@ -218,24 +219,24 @@
             first = J$.getConcrete(this);
 
             if (this !== first) {
-                var reg = new RegExp(".*"+regex_escape(str)+".*");
-                var ret = J$.readInput(result,true);
+                var reg = new RegExp(".*" + regex_escape(str) + ".*");
+                var ret = J$.readInput(result, true);
 
-                var S1 = J$.readInput("",true);
-                var S2 = J$.readInput("",true);
-                tmp1 = J$.B(0,"+",S1,str);
-                tmp1 = J$.B(0,"+",tmp1,S2);
-                tmp1 = J$.B(0,"==",this,tmp1);
-                tmp2 = J$.B(0,"==",ret,J$.G(0,S1,"length", true));
-                tmp1 = J$.B(0,"&&",tmp2,tmp1);
-                tmp2 = regexp_test.call(reg,S1);
-                tmp2 = J$.U(0,"!",tmp2);
-                var trueF = J$.B(0,"&&",tmp1,tmp2);
-                tmp1 = J$.B(0,"==",ret,-1);
-                tmp2 = regexp_test.call(reg,this);
-                tmp2 = J$.U(0,"!",tmp2);
-                var falseF = J$.B(0,"&&",tmp1,tmp2);
-                tmp1 = J$.B(0,"||",trueF,falseF);
+                var S1 = J$.readInput("", true);
+                var S2 = J$.readInput("", true);
+                tmp1 = J$.B(0, "+", S1, str);
+                tmp1 = J$.B(0, "+", tmp1, S2);
+                tmp1 = J$.B(0, "==", this, tmp1);
+                tmp2 = J$.B(0, "==", ret, J$.G(0, S1, "length", true));
+                tmp1 = J$.B(0, "&&", tmp2, tmp1);
+                tmp2 = regexp_test.call(reg, S1);
+                tmp2 = J$.U(0, "!", tmp2);
+                var trueF = J$.B(0, "&&", tmp1, tmp2);
+                tmp1 = J$.B(0, "==", ret, -1);
+                tmp2 = regexp_test.call(reg, this);
+                tmp2 = J$.U(0, "!", tmp2);
+                var falseF = J$.B(0, "&&", tmp1, tmp2);
+                tmp1 = J$.B(0, "||", trueF, falseF);
                 J$.addAxiom(tmp1);
                 return ret;
             }
@@ -252,23 +253,23 @@
                 if (end === undefined) {
                     end = J$.G(0, this, "length", true);
                 }
-                var ret = J$.readInput(result,true);
-                var S1 = J$.readInput("",true);
-                var S2 = J$.readInput("",true);
+                var ret = J$.readInput(result, true);
+                var S1 = J$.readInput("", true);
+                var S2 = J$.readInput("", true);
 
-                tmp2 = J$.B(0,"<=", start, end);
-                tmp1 = J$.B(0,"+",S1,ret);
-                tmp1 = J$.B(0,"+",tmp1,S2);
-                tmp1 = J$.B(0,"===",this,tmp1); // this === S1 + ret + S2
-                tmp1 = J$.B(0,"&&", tmp2, tmp1);
+                tmp2 = J$.B(0, "<=", start, end);
+                tmp1 = J$.B(0, "+", S1, ret);
+                tmp1 = J$.B(0, "+", tmp1, S2);
+                tmp1 = J$.B(0, "===", this, tmp1); // this === S1 + ret + S2
+                tmp1 = J$.B(0, "&&", tmp2, tmp1);
 
-                tmp2 = J$.B(0,"===",start, J$.G(0,S1,"length", true)); // start === S1.length
-                tmp1 = J$.B(0,"&&",tmp2,tmp1);
+                tmp2 = J$.B(0, "===", start, J$.G(0, S1, "length", true)); // start === S1.length
+                tmp1 = J$.B(0, "&&", tmp2, tmp1);
 
                 tmp2 = J$.B(0, "-", end, start);
-                tmp2 = J$.B(0, "===", tmp2, J$.G(0,ret,"length", true));
+                tmp2 = J$.B(0, "===", tmp2, J$.G(0, ret, "length", true));
 
-                tmp1 = J$.B(0,"&&",tmp1,tmp2);
+                tmp1 = J$.B(0, "&&", tmp1, tmp2);
                 J$.addAxiom(tmp1);
                 return ret;
             }
@@ -282,24 +283,24 @@
             first = J$.getConcrete(this);
 
             if (this !== first) {
-                var reg = new RegExp(".*"+regex_escape(str)+".*");
-                var ret = J$.readInput(result,true);
+                var reg = new RegExp(".*" + regex_escape(str) + ".*");
+                var ret = J$.readInput(result, true);
 
-                var S1 = J$.readInput("",true);
-                var S2 = J$.readInput("",true);
-                tmp1 = J$.B(0,"+",S1,str);
-                tmp1 = J$.B(0,"+",tmp1,S2);
-                tmp1 = J$.B(0,"==",this,tmp1);
-                tmp2 = J$.B(0,"==",ret,J$.G(0,S1,"length", true));
-                tmp1 = J$.B(0,"&&",tmp2,tmp1);
-                tmp2 = regexp_test.call(reg,S2);
-                tmp2 = J$.U(0,"!",tmp2);
-                var trueF = J$.B(0,"&&",tmp1,tmp2);
-                tmp1 = J$.B(0,"==",ret,-1);
-                tmp2 = regexp_test.call(reg,this);
-                tmp2 = J$.U(0,"!",tmp2);
-                var falseF = J$.B(0,"&&",tmp1,tmp2);
-                tmp1 = J$.B(0,"||",trueF,falseF);
+                var S1 = J$.readInput("", true);
+                var S2 = J$.readInput("", true);
+                tmp1 = J$.B(0, "+", S1, str);
+                tmp1 = J$.B(0, "+", tmp1, S2);
+                tmp1 = J$.B(0, "==", this, tmp1);
+                tmp2 = J$.B(0, "==", ret, J$.G(0, S1, "length", true));
+                tmp1 = J$.B(0, "&&", tmp2, tmp1);
+                tmp2 = regexp_test.call(reg, S2);
+                tmp2 = J$.U(0, "!", tmp2);
+                var trueF = J$.B(0, "&&", tmp1, tmp2);
+                tmp1 = J$.B(0, "==", ret, -1);
+                tmp2 = regexp_test.call(reg, this);
+                tmp2 = J$.U(0, "!", tmp2);
+                var falseF = J$.B(0, "&&", tmp1, tmp2);
+                tmp1 = J$.B(0, "||", trueF, falseF);
                 J$.addAxiom(tmp1);
                 return ret;
             }
@@ -312,7 +313,7 @@
 
 
         var sfuns;
-        this.invokeFun = function(iid, f, base, args, val, isConstructor) {
+        this.invokeFun = function (iid, f, base, args, val, isConstructor) {
             f = getConcrete(f);
             if (!sfuns) {
                 sfuns = require('./SymbolicFunctions_jalangi_');
@@ -322,7 +323,7 @@
                 isSymbolic = true;
             }
             var i, len = args.length;
-            for (i =0 ; i < len; ++i) {
+            for (i = 0; i < len; ++i) {
                 if (getSymbolic(args[i])) {
                     isSymbolic = true;
                     break;
@@ -347,7 +348,7 @@
             } else if (f === String.prototype.lastIndexOf) {
                 return sfuns.string_lastIndexOf.apply(base, concat(val, args));
 //                return string_lastIndexOf.apply(base, concat(val, args));
-            }  else if (f === String.prototype.substring) {
+            } else if (f === String.prototype.substring) {
                 return sfuns.string_substring.apply(base, concat(val, args));
 //                return string_substring.apply(base, concat(val, args));
             } else if (f === String.prototype.substr) {
@@ -358,14 +359,15 @@
             return val;
         }
 
-        this.putFieldPre = function(iid, base, offset, val) {
+        this.putFieldPre = function (iid, base, offset, val) {
             var base_s = getSymbolic(base);
-            if (base_s){
+            if (base_s) {
                 addType(base_s, "object");
             }
+            return val;
         }
 
-        this.putField = function(iid, base, offset, val) {
+        this.putField = function (iid, base, offset, val) {
             var base_s = this.getSymbolic(base);
             if (base_s && base_s.putField) {
                 base_s.putField(offset, val);
@@ -401,18 +403,17 @@
 
         function symbolicIntToString(num) {
             var concrete = getConcrete(num);
-            var newSym = J$.readInput(""+concrete, true);
-            installAxiom(new ConcolicValue(true,new ToStringPredicate(getSymbolic(num), getSymbolic(newSym))));
+            var newSym = J$.readInput("" + concrete, true);
+            installAxiom(new ConcolicValue(true, new ToStringPredicate(getSymbolic(num), getSymbolic(newSym))));
             return newSym;
         }
 
         function symbolicStringToInt(str) {
             var concrete = getConcrete(str);
             var newSym = J$.readInput(+concrete, true);
-            installAxiom(new ConcolicValue(true,new ToStringPredicate(getSymbolic(newSym), getSymbolic(str))));
+            installAxiom(new ConcolicValue(true, new ToStringPredicate(getSymbolic(newSym), getSymbolic(str))));
             return newSym;
         }
-
 
 
         this.binary = function (iid, op, left, right, result_c) {
@@ -425,23 +426,23 @@
 
             var type = typeof result_c;
 
-            switch(op) {
+            switch (op) {
                 case "+":
                 case "<":
                 case ">":
                 case "<=":
                 case ">=":
                     if (typeof right_c === "number" || typeof right_c === "string") {
-                        addType(left_s,typeof right_c);
+                        addType(left_s, typeof right_c);
                     } else {
-                        addType(left_s,"number");
-                        addType(left_s,"string");
+                        addType(left_s, "number");
+                        addType(left_s, "string");
                     }
                     if (typeof left_c === "number" || typeof left_c === "string") {
-                        addType(right_s,typeof left_c);
+                        addType(right_s, typeof left_c);
                     } else {
-                        addType(right_s,"number");
-                        addType(right_s,"string");
+                        addType(right_s, "number");
+                        addType(right_s, "string");
                     }
                     break;
                 case "-":
@@ -454,48 +455,48 @@
                 case "&":
                 case "|":
                 case "^":
-                    addType(left_s,"number");
-                    addType(right_s,"number");
+                    addType(left_s, "number");
+                    addType(right_s, "number");
                     break;
                 case "==":
                 case "!=":
                 case "===":
                 case "!==":
                     if (right_c === null) {
-                        addType(left_s,"null");
-                        addType(left_s,"object");
+                        addType(left_s, "null");
+                        addType(left_s, "object");
                     } else {
-                        addType(left_s,typeof right_c);
+                        addType(left_s, typeof right_c);
                     }
                     if (left_c === null) {
-                        addType(left_s,"null");
-                        addType(left_s,"object");
+                        addType(left_s, "null");
+                        addType(left_s, "object");
                     } else {
-                        addType(right_s,typeof left_c);
+                        addType(right_s, typeof left_c);
                     }
                     break;
                 case "||":
                 case "&&":
-                    addType(left_s,"boolean");
-                    addType(right_s,"boolean");
+                    addType(left_s, "boolean");
+                    addType(right_s, "boolean");
                     break;
                 case "instanceof":
-                    addType(left_s,right_c);
+                    addType(left_s, right_c);
                     break;
                 case "in":
-                    addType(right_s,"object");
+                    addType(right_s, "object");
                     break;
                 case "regexin":
-                    addType(left_s,"string");
+                    addType(left_s, "string");
                     break;
                 default:
-                    throw new Error(op +" at "+iid+" not found");
+                    throw new Error(op + " at " + iid + " not found");
                     break;
             }
 
 
             if (op === "+") {
-                if (type==='string') {
+                if (type === 'string') {
                     if (isSymbolicNumber(left_s)) {
                         left = symbolicIntToString(left);
                         left_s = getSymbolic(left);
@@ -560,23 +561,23 @@
                             ret = right_s.subtractFrom(left_c);
                     }
                 }
-            } else if (op === "<" || op === ">" || op === "<=" || op === ">="  || op === "==" || op === "!="  || op === "==="  || op === "!==") {
+            } else if (op === "<" || op === ">" || op === "<=" || op === ">=" || op === "==" || op === "!=" || op === "===" || op === "!==") {
                 if (op === "===" || op === "!==") {
-                    op = op.substring(0,2);
+                    op = op.substring(0, 2);
                 }
                 if (op === "==" || op === "!=") {
                     if (isSymbolicString(left_s) && isSymbolicString(right_s)) {
-                        ret = new SymbolicStringPredicate(op,left_s,right_s);
+                        ret = new SymbolicStringPredicate(op, left_s, right_s);
                     } else if (isSymbolicString(left_s)) {
-                        ret = new SymbolicStringPredicate(op,left_s,right_c+"");
+                        ret = new SymbolicStringPredicate(op, left_s, right_c + "");
                     } else if (isSymbolicString(right_s)) {
-                        ret = new SymbolicStringPredicate(op,left_c+"",right_s);
+                        ret = new SymbolicStringPredicate(op, left_c + "", right_s);
                     }
                     if (isSymbolicType(left_s)) {
-                        left_s.addType(right_c+"");
+                        left_s.addType(right_c + "");
                     }
                     if (isSymbolicType(right_s)) {
-                        left_s.addType(left_c+"");
+                        left_s.addType(left_c + "");
                     }
                 }
                 if (isSymbolicNumber(left_s) && isSymbolicNumber(right_s)) {
@@ -614,7 +615,7 @@
                     ret = ret.setop(op);
                 }
 
-            } else if(op === "*" && type === 'number') {
+            } else if (op === "*" && type === 'number') {
                 if (isSymbolicString(left_s)) {
                     left = symbolicStringToInt(left);
                     left_s = getSymbolic(left);
@@ -652,7 +653,7 @@
                 }
             } else if (op === "regexin") {
                 if (isSymbolicString(left_s)) {
-                    ret = new SymbolicStringPredicate("regexin",left_s,right_c);
+                    ret = new SymbolicStringPredicate("regexin", left_s, right_c);
                 }
             } else if (op === '|') {
                 if (isSymbolicString(left_s)) {
@@ -673,7 +674,7 @@
             }
             //var ret = (left_s?left_s:left_c) + " " + op + " " + (right_s?right_s:right_c);
             if (ret && ret.type === Symbolic) {
-                return new ConcolicValue(result_c,ret);
+                return new ConcolicValue(result_c, ret);
             } else {
                 return result_c;
             }
@@ -686,20 +687,20 @@
                 left_s = this.getSymbolic(left);
 
             if (left_s) {
-                switch(op) {
+                switch (op) {
                     case "+":
                     case "-":
                     case "~":
-                        addType(left_s,"number");
+                        addType(left_s, "number");
                         break;
                     case "!":
-                        addType(left_s,"boolean");
+                        addType(left_s, "boolean");
                         break;
                     case "typeof":
                         // @todo generate type constraint
                         break;
                     default:
-                        throw new Error(op +" at "+iid+" not found");
+                        throw new Error(op + " at " + iid + " not found");
                         break;
                 }
 
@@ -727,7 +728,7 @@
                 }
             }
             if (ret && ret.type === Symbolic) {
-                return new ConcolicValue(result_c,ret);
+                return new ConcolicValue(result_c, ret);
             } else {
                 return result_c;
             }
@@ -739,7 +740,7 @@
             // needs to be changed based on analysis
             var left_s = this.getSymbolic(left);
             if (left_s) {
-                addType(left_s,"boolean");
+                addType(left_s, "boolean");
             }
             installConstraint(left, result);
             return left;
@@ -757,15 +758,15 @@
         function installAxiom(c) {
             if (c === "begin") {
                 pathConstraint.push("begin");
-                pathConstraint.count ++;
+                pathConstraint.count++;
             } else if (c === "and" || c === "or") {
-                c = (c==='and')?"&&":"||";
+                c = (c === 'and') ? "&&" : "||";
                 var ret, i, start = -1, len;
                 pathConstraint.count--;
                 len = pathConstraint.length;
-                for(i = len-1; i>=0; i--) {
+                for (i = len - 1; i >= 0; i--) {
                     if (pathConstraint[i] === "begin") {
-                        start = i+1;
+                        start = i + 1;
                         break;
                     }
                 }
@@ -780,13 +781,13 @@
                 var c1 = pathConstraint[i];
                 c1 = c1[1];
                 var c2;
-                while(i < len-1) {
+                while (i < len - 1) {
                     i++;
                     c2 = pathConstraint[i];
                     c2 = c2[1];
                     c1 = new SymbolicBool(c, c1, c2);
                 }
-                pathConstraint.splice(start-1,len - start+1);
+                pathConstraint.splice(start - 1, len - start + 1);
                 pathConstraint.push([null, c1]);
             } else if (c === 'ignore') {
                 pathConstraint.pop();
@@ -818,11 +819,11 @@
                 s = makePredicate(s);
             }
             if (s) {
-                pathConstraint.push([executionIndex.executionIndexGetIndex(), result?s:s.not()]);
+                pathConstraint.push([executionIndex.executionIndexGetIndex(), result ? s : s.not()]);
             }
         }
 
-        this.endExecution = function() {
+        this.endExecution = function () {
             solver.generateInputs(pathConstraint);
         }
 

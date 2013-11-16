@@ -1,0 +1,12 @@
+node_modules/
+thirdparty/
+*_jalangi_.js
+*_jalangi_.js.map
+*.pyc
+*~
+jalangi_coverage
+jalangi_sourcemap.js
+jalangi_sym_test_results
+jalangi_test_results
+jalangi_tmp/
+jalangi_trace1

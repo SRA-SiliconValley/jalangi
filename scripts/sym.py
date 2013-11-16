@@ -26,7 +26,7 @@ tests = [
     ("tests/unit/parse_int", 3),
     ("tests/unit/array_s", 2),
     ("tests/unit/object_symbolic", 75),
-    ("tests/unit/objects", 9),
+    ("tests/unit/objects", 7),
     ("tests/unit/function_symbolic", 4),
     ("tests/unit/function_symbolic2", 6),
     ("tests/unit/null_symbolic", 6),
@@ -66,7 +66,7 @@ print "Running {} tests".format(total)
 for (case, expected) in tests:
     try:
         #out = check_output("python {} concolic -i {} {}".format(SCRIPT, expected, case), stderr=subprocess.STDOUT)
-        out = check_output(["python", SCRIPT, "concolic", "-i", str(expected), case])
+        out = check_output(["python", SCRIPT, "concolic", "-i", str(expected), case], stderr=subprocess.STDOUT)
     except CalledProcessError as e:
         out = e.output
     if "{}.js passed".format(case) in out:
@@ -78,3 +78,6 @@ for (case, expected) in tests:
 
 print "\nPass: {}".format(total - failed)
 print "Fail: {}".format(failed)
+
+if failed > 0:
+    exit(1)

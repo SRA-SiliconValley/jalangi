@@ -16,16 +16,11 @@
 
 // Author: Koushik Sen
 
-(function(module){
+(function (module) {
 
     function execSync(cmd) {
-        var FFI = require("node-ffi");
-        var libc = new FFI.Library(null, {
-            "system": ["int32", ["string"]]
-        });
-
-        var run = libc.system;
-        run(cmd);
+        es = require('execSync')
+        es.run(cmd)
     }
 
     var stdoutCache = {};
@@ -39,7 +34,7 @@
             return ret;
         }
         //console.log(cmd);
-        execSync(cmd+" > jalangi_javaout");
+        execSync(cmd + " > jalangi_javaout");
         var FileLineReader = require('./../../utils/FileLineReader');
         var fd = new FileLineReader("jalangi_javaout");
         var line = "";
@@ -48,15 +43,15 @@
             line = fd.nextLine();
         }
         fd.close();
-        line = line.replace(/(\r\n|\n|\r)/gm,"")
+        line = line.replace(/(\r\n|\n|\r)/gm, "")
         //console.log("Java output:"+line);
         stdoutCache[cmd] = line;
         return line;
     }
 
 
-    function regex_escape (text) {
-        return text.substring(1,text.length-1);
+    function regex_escape(text) {
+        return text.substring(1, text.length - 1);
 //    return text.replace(/[\\]/g, "\\\\$&");
     }
 
@@ -66,7 +61,7 @@
             return sExpr.charCodeAt(i);
         } else {
             len = sExpr.list.length;
-            for (j=0; j<len; j++) {
+            for (j = 0; j < len; j++) {
                 s = sExpr.list[j];
                 if (typeof s === 'string') {
                     if (i < s.length) {
@@ -75,10 +70,10 @@
                         i = i - s.length;
                     }
                 } else {
-                    idx = s+"";
+                    idx = s + "";
                     length = assignments[s.getLength()];
                     if (i < length) {
-                        tmp = idx+"__"+i;
+                        tmp = idx + "__" + i;
                         freeVars[tmp] = true;
                         return tmp;
                     } else {
@@ -95,11 +90,11 @@
         if (length <= 0) {
             return "TRUE";
         }
-        for(i=0; i<length; i++) {
-            if (i!==0) {
+        for (i = 0; i < length; i++) {
+            if (i !== 0) {
                 sb += " AND ";
             }
-            sb += "("+exprAt(left,i,freeVars,assignments)+" = " + exprAt(right,i,freeVars,assignments)+")";
+            sb += "(" + exprAt(left, i, freeVars, assignments) + " = " + exprAt(right, i, freeVars, assignments) + ")";
         }
         sb += ")";
 
@@ -118,24 +113,24 @@
         } else {
             if (!(left instanceof SymbolicStringExpression ||
                 typeof left === 'string'))
-                left = ""+left;
+                left = "" + left;
             this.left = left;
             if (!(right instanceof SymbolicStringExpression ||
                 right instanceof RegExp ||
                 typeof right === 'string'))
-                right = ""+right;
+                right = "" + right;
             this.right = right;
             if (typeof left === 'string' && typeof right === 'string') {
                 return ((op === '==' && left === right) ||
-                    (op === '!=' && left !== right))?SymbolicBool.true:SymbolicBool.false;
+                    (op === '!=' && left !== right)) ? SymbolicBool.true : SymbolicBool.false;
             }
 
             if (typeof left === 'string' && typeof right instanceof RegExp) {
                 return ((op === 'regexin' && right.test(left)) ||
-                    (op === 'regexnotin' && !right.test(left)))? SymbolicBool.true: SymbolicBool.false;
+                    (op === 'regexnotin' && !right.test(left))) ? SymbolicBool.true : SymbolicBool.false;
             }
 
-            switch(op) {
+            switch (op) {
                 case "==":
                     this.op = SymbolicStringPredicate.EQ;
                     break;
@@ -159,9 +154,9 @@
     SymbolicStringPredicate.NOTIN = 3;
 
     SymbolicStringPredicate.prototype = {
-        constructor: SymbolicStringPredicate,
+        constructor:SymbolicStringPredicate,
 
-        substitute : function(assignments) {
+        substitute:function (assignments) {
             var left = this.left;
             var right = this.right;
             if (left instanceof SymbolicStringExpression) {
@@ -172,9 +167,9 @@
             }
             if (typeof left === 'string' && right instanceof SymbolicStringExpression) {
                 var val, i, len = right.list.length;
-                for (i=0; i<len; i++) {
+                for (i = 0; i < len; i++) {
                     val = right.list[i];
-                    if (typeof val === 'string' && left.indexOf(val)<0) {
+                    if (typeof val === 'string' && left.indexOf(val) < 0) {
                         return SymbolicBool.false;
                     }
                 }
@@ -182,9 +177,9 @@
 
             if (typeof right === 'string' && left instanceof SymbolicStringExpression) {
                 var val, i, len = left.list.length;
-                for (i=0; i<len; i++) {
+                for (i = 0; i < len; i++) {
                     val = left.list[i];
-                    if (typeof val === 'string' && right.indexOf(val)<0) {
+                    if (typeof val === 'string' && right.indexOf(val) < 0) {
                         return SymbolicBool.false;
                     }
                 }
@@ -197,23 +192,23 @@
                 return ret;
             }
 
-            switch(this.op) {
+            switch (this.op) {
                 case SymbolicStringPredicate.EQ:
-                    return (left === right)?SymbolicBool.true:SymbolicBool.false;
+                    return (left === right) ? SymbolicBool.true : SymbolicBool.false;
                 case SymbolicStringPredicate.NE:
-                    return (left !== right)?SymbolicBool.true:SymbolicBool.false;
+                    return (left !== right) ? SymbolicBool.true : SymbolicBool.false;
                 case SymbolicStringPredicate.IN:
-                    return right.test(left)?SymbolicBool.true:SymbolicBool.false;
+                    return right.test(left) ? SymbolicBool.true : SymbolicBool.false;
                 case SymbolicStringPredicate.NOTIN:
-                    return (!right.test(left))?SymbolicBool.true:SymbolicBool.false;
+                    return (!right.test(left)) ? SymbolicBool.true : SymbolicBool.false;
                 default:
-                    throw new Error("Unknown op "+this.op);
+                    throw new Error("Unknown op " + this.op);
             }
         },
 
-        not: function() {
+        not:function () {
             var ret = new SymbolicStringPredicate(this);
-            switch(this.op) {
+            switch (this.op) {
                 case SymbolicStringPredicate.EQ:
                     ret.op = SymbolicStringPredicate.NE;
                     break;
@@ -230,14 +225,14 @@
             return ret;
         },
 
-        getFormulaString : function(freeVars, mode, assignments) {
+        getFormulaString:function (freeVars, mode, assignments) {
             var sb = "", s1, s2, formula, cmd, length1 = 0, length2 = 0, j;
-            var classpath = __dirname+"/../../../../jout/production/jalangijava/:"+__dirname+"/../../../../thirdparty/javalib/automaton.jar ";
-            s1 = (this.left instanceof SymbolicStringExpression)?this.left.getLength():this.left.length;
-            s2 = (this.right instanceof SymbolicStringExpression)?this.right.getLength():this.right.length;
+            var classpath = __dirname + "/../../../../jout/production/jalangijava/:" + __dirname + "/../../../../thirdparty/javalib/automaton.jar ";
+            s1 = (this.left instanceof SymbolicStringExpression) ? this.left.getLength() : this.left.length;
+            s2 = (this.right instanceof SymbolicStringExpression) ? this.right.getLength() : this.right.length;
 
             if (mode === "integer") {
-                switch(this.op) {
+                switch (this.op) {
                     case SymbolicStringPredicate.EQ:
                         if (s1 instanceof SymbolicLinear && s2 instanceof SymbolicLinear) {
                             return s1.subtract(s2).setop("==").getFormulaString(freeVars, mode, assignments);
@@ -246,7 +241,7 @@
                         } else if (s2 instanceof SymbolicLinear) {
                             return s2.subtractLong(s1).setop("==").getFormulaString(freeVars, mode, assignments);
                         } else {
-                            throw new Error("Both strings are non symbolic "+this.toString());
+                            throw new Error("Both strings are non symbolic " + this.toString());
                         }
                     case SymbolicStringPredicate.NE:
                         return "TRUE";
@@ -254,25 +249,25 @@
                         cmd = "java -cp " +
                             classpath +
                             "RegexpEncoder " +
-                            "length \""+
-                            regex_escape(this.right+"")+
-                            "\" "+s1+" true";
-                        freeVars[s1+""] = true;
+                            "length \"" +
+                            regex_escape(this.right + "") +
+                            "\" " + s1 + " true";
+                        freeVars[s1 + ""] = true;
                         sb = stdout(cmd);
                         break;
                     case SymbolicStringPredicate.NOTIN:
                         cmd = "java -cp " +
                             classpath +
                             "RegexpEncoder " +
-                            "length \""+
-                            regex_escape(this.right+"")+
-                            "\" "+s1+" false";
-                        freeVars[s1+""] = true;
+                            "length \"" +
+                            regex_escape(this.right + "") +
+                            "\" " + s1 + " false";
+                        freeVars[s1 + ""] = true;
                         sb = stdout(cmd);
                         break;
                 }
             } else if (mode === "string") {
-                switch(this.op) {
+                switch (this.op) {
                     case SymbolicStringPredicate.EQ:
                         if (s1 instanceof SymbolicLinear) {
                             length1 = s1.substitute(assignments);
@@ -303,19 +298,19 @@
                         if (length1 !== length2) {
                             return "TRUE";
                         } else {
-                            return "(NOT "+getStringEqualityFormula(this.left, this.right, length1, freeVars, assignments)+")";
+                            return "(NOT " + getStringEqualityFormula(this.left, this.right, length1, freeVars, assignments) + ")";
                         }
                     case SymbolicStringPredicate.IN:
                         length1 = s1.substitute(assignments);
                         cmd = "java -cp " +
                             classpath +
-                            "RegexpEncoder content \""+
-                            regex_escape(this.right+"")+
-                            "\" "+
-                            this.left+
-                            "__ "+length1;
-                        for(j=0; j<length1; j++) {
-                            freeVars[this.left+"__"+j] = true;
+                            "RegexpEncoder content \"" +
+                            regex_escape(this.right + "") +
+                            "\" " +
+                            this.left +
+                            "__ " + length1;
+                        for (j = 0; j < length1; j++) {
+                            freeVars[this.left + "__" + j] = true;
                         }
                         sb = stdout(cmd);
                         break;
@@ -323,13 +318,13 @@
                         length1 = s1.substitute(assignments);
                         cmd = "java -cp " +
                             classpath +
-                            "RegexpEncoder content \""+
-                            "~("+regex_escape(this.right+"")+
-                            ")\" "+
-                            this.left+
-                            "__ "+length1;
-                        for(j=0; j<length1; j++) {
-                            freeVars[this.left+"__"+j] = true;
+                            "RegexpEncoder content \"" +
+                            "~(" + regex_escape(this.right + "") +
+                            ")\" " +
+                            this.left +
+                            "__ " + length1;
+                        for (j = 0; j < length1; j++) {
+                            freeVars[this.left + "__" + j] = true;
                         }
                         sb = stdout(cmd);
                         break;
@@ -341,22 +336,20 @@
         },
 
 
-
-
-        toString: function() {
-            switch(this.op) {
+        toString:function () {
+            switch (this.op) {
                 case SymbolicStringPredicate.EQ:
-                    return this.left+" == " + this.right;
+                    return this.left + " == " + this.right;
                 case SymbolicStringPredicate.NE:
-                    return this.left+" != " + this.right;
+                    return this.left + " != " + this.right;
                 case SymbolicStringPredicate.IN:
-                    return this.left+" regexin " + this.right;
+                    return this.left + " regexin " + this.right;
                 case SymbolicStringPredicate.NOTIN:
-                    return this.left+" regexnotin " + this.right;
+                    return this.left + " regexnotin " + this.right;
             }
         },
 
-        type: require('../concolic/Symbolic')
+        type:require('../concolic/Symbolic')
     };
 
     module.exports = SymbolicStringPredicate;

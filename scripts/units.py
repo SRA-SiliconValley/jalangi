@@ -38,13 +38,8 @@ tests = [
     "tests/unit/while" ,
     "tests/unit/scope_rr" ,
     "tests/unit/exception",
-
-    "tests/unit/eval_json_global" ,
     "tests/unit/symbolic" ,
-    "tests/unit/reference_error" ,
-    "tests/unit/try_catch_finally" ,
-    "tests/unit/args" ,
-    "tests/unit/dsp"
+    "tests/unit/gettersetter" ,
 ]
 
 SCRIPT = "src/python/jalangi_command.py"
@@ -59,8 +54,18 @@ total = len(tests)
 print "Running {} tests".format(total)
 for case in tests:
     try:
-        out = check_output(["python", SCRIPT, "testrr", case])
+        out = check_output(["python", SCRIPT, "testrr", case], stderr=subprocess.STDOUT)
     except CalledProcessError as e:
         out = e.output
-    print out
+    if "{}.js failed".format(case) in out:
+        print "{} failed".format(case)
+        failed = failed + 1;
+        print out
+    else:
+        print "{}.js passed:".format(case)
 
+print "\nPass: {}".format(total - failed)
+print "Fail: {}".format(failed)
+
+if failed > 0:
+    exit(1)

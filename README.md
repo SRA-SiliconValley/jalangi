@@ -24,8 +24,9 @@ our paper on Jalangi is available at http://srl.cs.berkeley.edu/~ksen/papers/jal
 
 ### Requirements
 
-We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS
-10.7, Ubuntu 11.0 and higher and Windows 7 or higher.
+We tested Jalangi on Mac OS X 10.8 with Chromium browser.  Jalangi should work on Mac OS
+10.7, Ubuntu 11.0 and higher and Windows 7 or higher. Jalangi will NOT work with Firefox
+and IE.
 
   * Latest version of Node.js available at http://nodejs.org/.  We have tested Jalangi with Node v0.8.22 and v0.10.3.
   * Sun's JDK 1.6 or higher.  We have tested Jalangi with Java 1.6.0_43.
@@ -61,7 +62,7 @@ If you have a fresh installation of Ubuntu, you can install all the requirements
 If Installation succeeds, you should see the following message:
 
     ---> Installation successful.
-    ---> run python scripts/sym.py to make sure all tests pass
+    ---> run python scripts/runalltests.py to make sure all tests pass
 
 A Lubuntu virtual machine with pre-installed jalangi can be downloaded from http://srl.cs.berkeley.edu/~ksen/jalangi4.zip.
 You need VirtualBox available at https://www.virtualbox.org/ to run the virtual machine.
@@ -70,19 +71,34 @@ Open a terminal, go to directory jalangi, and try ./scripts/testsym.
 
 ### Run Tests
 
-    python ./scripts/sym.py
+Run concolic testing tests.
 
-### Other Scripts
+    python ./scripts/sym.py
 
 Run no analysis and check if record and replay executions produce same output on some unit tests located under tests/unit/.
 
     python ./scripts/units.py
+
+Run all value tracking analysis on some unit tests located under tests/unit/.
+
+    python ./scripts/unitsv.py
 
 Run no analysis and check if record and replay executions produce same
 output on the sunspider benchmarks located under
 tests/sunspider1/.
 
     python scripts/testsp.py
+
+Run all value tracking analysis on the sunspider benchmarks located under
+tests/sunspider1/.
+
+    python scripts/testspv.py
+
+Run all of the above tests.
+
+    python scripts/runalltests.py
+    
+### Other Scripts
 
 Run likely type inference analysis on the sunspider benchmarks located under tests/sunspider1/.
 
@@ -173,8 +189,7 @@ First start a HTTP server by running the following command.  The command starts 
 
 Then instrument the JavaScript files that you want to analyze.  You also need to modify index.html so that it loads some library files and the instrumented files.
 
-    node src/js/instrument/esnstrument.js tests/tizen/annex/js/annex.js
-    node src/js/instrument/esnstrument.js tests/tizen/annex/lib/jquery-1.6.2.min.js
+    node src/js/instrument/esnstrument.js tests/tizen/annex/js/annex.js tests/tizen/annex/lib/jquery-1.6.2.min.js
 
 Finally launch the jalangi server and the html page by running
 
@@ -191,10 +206,10 @@ You can now play the game for sometime.  Try two moves.  This will generate a ja
 
 ***
 
-    node src/js/instrument/esnstrument.js tests/tizen/calculator/js/calc.js
+    node src/js/instrument/esnstrument.js tests/tizen/calculator/js/jquery-1.7.2.min.js tests/tizen/calculator/js/peg-0.6.2.min.js tests/tizen/calculator/js/calc.js
 
     killall node
-    ./scripts/rrserver http://127.0.0.1:8000/tests/tizen/calculator/index_jalangi_.html
+    python scripts/jalangi.py rrserver http://127.0.0.1:8000/tests/tizen/calculator/index_jalangi_.html
 
     export JALANGI_MODE=replay
     export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine
@@ -202,9 +217,9 @@ You can now play the game for sometime.  Try two moves.  This will generate a ja
 
 ***
 
-    node src/js/instrument/esnstrument.js tests/tizen/go/js/go.js
+    node src/js/instrument/esnstrument.js tests/tizen/go/js/go.js tests/tizen/go/lib/jquery-1.7.1.min.js
     killall node
-    ./scripts/rrserver http://127.0.0.1:8080/tests/tizen/go/index.html
+    python scripts/jalangi.py rrserver http://127.0.0.1:8000/tests/tizen/go/index.html
 
     export JALANGI_MODE=replay
     export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine

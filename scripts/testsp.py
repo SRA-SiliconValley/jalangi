@@ -1,6 +1,6 @@
 from subprocess import check_output, CalledProcessError
 import sys
-from subprocess import call
+import subprocess
 import fnmatch
 import os
 
@@ -28,9 +28,8 @@ tests = [
     "tests/sunspider1/string-tagcloud",
     "tests/sunspider1/string-unpack-code",
     "tests/sunspider1/bitops-nsieve-bits",
-    "tests/sunspider1/crypto-aes",
-    "tests/sunspider1/string-validate-input",
-    "tests/sunspider1/string-base64"]
+    "tests/sunspider1/crypto-aes"
+    ]
 SCRIPT = "src/python/jalangi_command.py"
 failed = 0
 try:
@@ -43,8 +42,18 @@ total = len(tests)
 print "Running {} tests".format(total)
 for case in tests:
     try:
-        call(["python", SCRIPT, "testrr", case])
+        out = check_output(["python", SCRIPT, "testrr", case], stderr=subprocess.STDOUT)
     except CalledProcessError as e:
-        pass
+        out = e.output
+    if "{}.js failed".format(case) in out:
+        print "{} failed".format(case)
+        failed = failed + 1;
+        print out
+    else:
+        print "{}.js passed:".format(case)
 
+print "\nPass: {}".format(total - failed)
+print "Fail: {}".format(failed)
 
+if failed > 0:
+    exit(1)

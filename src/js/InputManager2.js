@@ -20,7 +20,7 @@ if (typeof J$ === 'undefined') {
     J$ = {};
 }
 
-(function(sandbox){
+(function (sandbox) {
     var inputs = {};
     var auxInputCount = 0;
     var inputCount = 0;
@@ -29,7 +29,7 @@ if (typeof J$ === 'undefined') {
 
 
     function setInput(key, val) {
-        inputs[key]= val;
+        inputs[key] = val;
     }
 
     function setCurrentSolutionIndex(idx) {
@@ -52,11 +52,11 @@ if (typeof J$ === 'undefined') {
         var idx;
         if (isAux) {
             auxInputCount++;
-            idx = "y"+auxInputCount;
+            idx = "y" + auxInputCount;
 
         } else {
             inputCount++;
-            idx = "x"+inputCount;
+            idx = "x" + inputCount;
         }
         return idx;
     }
@@ -64,14 +64,14 @@ if (typeof J$ === 'undefined') {
     function getNextConcreteInput(idx, val) {
         var ret;
         if ((ret = inputs[idx]) === undefined) {
-            if (idx.indexOf('x')===0) {
+            if (idx.indexOf('x') === 0) {
                 ret = inputs[idx] = val;
             } else {
                 ret = val;
             }
         }
-        if (typeof ret === 'string' && idx.indexOf('x')===0 ) {
-            inputs[idx+"__length"] = ret.length;
+        if (typeof ret === 'string' && idx.indexOf('x') === 0) {
+            inputs[idx + "__length"] = ret.length;
         }
         return ret;
     }
@@ -97,6 +97,7 @@ if (typeof J$ === 'undefined') {
         return ret;
     }
 
+    sandbox.getNextSymbol = getNextSymbol;
     sandbox.inputs = inputs;
     sandbox.setInput = setInput;
     sandbox.readInput = readInput;
@@ -104,5 +105,6 @@ if (typeof J$ === 'undefined') {
     sandbox.getCurrentSolutionIndex = getCurrentSolutionIndex;
     sandbox.setCurrentSolution = setCurrentSolution;
     sandbox.setCurrentSolutionIndex = setCurrentSolutionIndex;
-    sandbox.addAxiom = sandbox.addAxiom?sandbox.addAxiom:function(c) {};
+    sandbox.addAxiom = sandbox.addAxiom ? sandbox.addAxiom : function (c) {
+    };
 }(J$));

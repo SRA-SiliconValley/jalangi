@@ -53,8 +53,8 @@
                     var oldPred = this.values[i].pred;
                     this.values[i] = {pred:pred.or(this.values[i].pred), value:value};
                     // console.log("Reduced "+oldPred.toString()+" ***** and ******** "+pred.toString()+" ****** to ******* "+this.values[i].pred.toString()+" for "+value);
-                    console.log("Reduced BDD size "+(BDD.size(oldPred)+BDD.size(pred)-BDD.size(this.values[i].pred))+
-                        " for "+value);
+                    console.log("Reduced BDD size " + (BDD.size(oldPred) + BDD.size(pred) - BDD.size(this.values[i].pred)) +
+                        " for " + value);
                     //console.log("Reduced "+oldPred.toString()+" ***** and ******** "+pred.toString()+" ****** to ******* "+this.values[i].pred.toString()+" for "+value);
                     return;
                 }
@@ -66,9 +66,9 @@
             var i, len = this.values.length, sb = "[";
 
             for (i = 0; i < len; ++i) {
-                sb = sb + "{ pred: " + this.values[i].pred.toString() + "\n, value: " + this.values[i].value + "},\n";
+                sb = sb + "{ pred: " + this.values[i].pred.toString() + ", value: " + this.values[i].value + "},";
             }
-            sb = sb + "]\n";
+            sb = sb + "]";
             return sb;
         }
     }

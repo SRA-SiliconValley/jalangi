@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-(function(module){
+(function (module) {
 
     function ObjectAllocationTrackerEngine(executionIndex) {
         var ConcolicValue = require('./../../ConcolicValue');
@@ -34,7 +34,7 @@
         };
 
         function isArr(val) {
-            return Object.prototype.toString.call( val ) === '[object Array]';
+            return Object.prototype.toString.call(val) === '[object Array]';
         }
 
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
@@ -43,7 +43,7 @@
 
         function getSetFields(map, key) {
             if (!HOP(map, key)) {
-                return map[key] = {nObjects: 0, maxLastAccessTime: 0, averageLastAccessTime:0, isWritten: false};
+                return map[key] = {nObjects:0, maxLastAccessTime:0, averageLastAccessTime:0, isWritten:false};
             }
             var ret = map[key];
             return ret;
@@ -70,14 +70,14 @@
 
         function annotateObject(creationLocation, obj) {
             var type, ret = obj, i, s;
-            if (!getSymbolic(obj)){
+            if (!getSymbolic(obj)) {
                 type = typeof obj;
-                if ((type ==="object" || type === "function") && obj !== null && obj.name !== "eval") {
+                if ((type === "object" || type === "function") && obj !== null && obj.name !== "eval") {
                     if (isArr(obj)) {
                         type = "array";
                     }
-                    s = type+"("+creationLocation+")";
-                    ret = new ConcolicValue(obj, {loc: s, originTime: instrCounter, lastAccessTime: instrCounter});
+                    s = type + "(" + creationLocation + ")";
+                    ret = new ConcolicValue(obj, {loc:s, originTime:instrCounter, lastAccessTime:instrCounter});
                     var objectInfo = getSetFields(iidToObjectInfo, s);
                     objectInfo.nObjects++;
                 }
@@ -87,43 +87,60 @@
 
         var instrCounter = 0;
 
-        this.literalPre = function(iid, val) { instrCounter++; }
+        this.literalPre = function (iid, val) {
+            instrCounter++;
+        }
 
-        this.invokeFunPre = function(iid, f, base, args, isConstructor) {  instrCounter++; }
+        this.invokeFunPre = function (iid, f, base, args, isConstructor) {
+            instrCounter++;
+        }
 
-        this.getFieldPre = function(iid, base, offset) {  instrCounter++; }
+        this.getFieldPre = function (iid, base, offset) {
+            instrCounter++;
+        }
 
-        this.readPre = function(iid, name, val) {  instrCounter++; }
+        this.readPre = function (iid, name, val) {
+            instrCounter++;
+        }
 
-        this.writePre = function(iid, name, val) {  instrCounter++; }
+        this.writePre = function (iid, name, val) {
+            instrCounter++;
+        }
 
-        this.binaryPre = function(iid, op, left, right) {  instrCounter++; }
+        this.binaryPre = function (iid, op, left, right) {
+            instrCounter++;
+        }
 
-        this.unaryPre = function(iid, op, left) {  instrCounter++; }
+        this.unaryPre = function (iid, op, left) {
+            instrCounter++;
+        }
 
-        this.conditionalPre = function(iid, left) {  instrCounter++; }
+        this.conditionalPre = function (iid, left) {
+            instrCounter++;
+        }
 
 
-        this.literal = function(iid, val) {
+        this.literal = function (iid, val) {
             return annotateObject(iid, val);
         }
 
-        this.putFieldPre = function(iid, base, offset, val) {
+        this.putFieldPre = function (iid, base, offset, val) {
             instrCounter++;
             updateObjectInfo(base, offset, val, iid, true);
+            return val;
         }
 
-        this.invokeFun = function(iid, f, base, args, val, isConstructor) {
+        this.invokeFun = function (iid, f, base, args, val, isConstructor) {
             var ret;
             if (isConstructor) {
                 ret = annotateObject(iid, val);
             } else {
                 ret = val;
             }
-            return ret ;
+            return ret;
         }
 
-        this.getField = function(iid, base, offset, val) {
+        this.getField = function (iid, base, offset, val) {
             if (getConcrete(val) !== undefined) {
                 updateObjectInfo(base, offset, val, iid, false);
             }
@@ -141,13 +158,13 @@
         }
 
         function typeInfoWithLocation(type) {
-            if (type.indexOf("(")>0) {
+            if (type.indexOf("(") > 0) {
                 var type1 = type.substring(0, type.indexOf("("));
-                var iid = type.substring(type.indexOf("(")+1, type.indexOf(")"));
+                var iid = type.substring(type.indexOf("(") + 1, type.indexOf(")"));
                 if (iid === "null") {
                     throw new Error("Not expecting null");
                 } else {
-                    return "Location "+getIIDInfo(iid)+" has created "+type1;
+                    return "Location " + getIIDInfo(iid) + " has created " + type1;
                 }
             } else {
                 throw new Error("Expecting '(' in object location");
@@ -163,7 +180,9 @@
                     stats.push(objectInfo);
                 }
             }
-            stats.sort(function(a, b){ return b.nObjects - a.nObjects; });
+            stats.sort(function (a, b) {
+                return b.nObjects - a.nObjects;
+            });
 
             var len = stats.length;
             for (var i = 0; i < len; i++) {
@@ -171,16 +190,16 @@
                 iid = objectInfo.iid;
                 var str = typeInfoWithLocation(iid);
                 str = str + " " + objectInfo.nObjects +
-                    " times\n      with max last access time since creation = "+objectInfo.maxLastAccessTime+ " instructions "+
-                    "\n      and average last access time since creation = "+(objectInfo.averageLastAccessTime/objectInfo.nObjects)+" instructions "+
-                    (objectInfo.isWritten?"":"\n      and seems to be Read Only");
+                    " times\n      with max last access time since creation = " + objectInfo.maxLastAccessTime + " instructions " +
+                    "\n      and average last access time since creation = " + (objectInfo.averageLastAccessTime / objectInfo.nObjects) + " instructions " +
+                    (objectInfo.isWritten ? "" : "\n      and seems to be Read Only");
                 console.log(str);
             }
 
         }
 
 
-        this.endExecution = function() {
+        this.endExecution = function () {
             printObjectInfo();
         }
 

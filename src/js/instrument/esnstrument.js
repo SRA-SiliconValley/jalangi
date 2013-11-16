@@ -170,7 +170,9 @@
         IGNORE:2,
         OEXP:3,
         PARAMS:4,
-        OEXP2:5
+        OEXP2:5,
+        GETTER:6,
+        SETTER:7
     };
 
     function ignoreSubAst(node) {
@@ -216,6 +218,10 @@
                         newContext = CONTEXT.IGNORE;
                     } else if (context === CONTEXT.PARAMS) {
                         newContext = CONTEXT.IGNORE;
+                    } else if (type === 'Property' && key === 'value' && object.kind === 'get') {
+                        newContext = CONTEXT.GETTER;
+                    } else if (type === 'Property' && key === 'value' && object.kind === 'set') {
+                        newContext = CONTEXT.SETTER;
                     } else {
                         newContext = CONTEXT.RHS;
                     }
@@ -418,10 +424,10 @@
         return ret;
     }
 
-    function wrapRead(node, name, val, isReUseIid) {
+    function wrapRead(node, name, val, isReUseIid, isGlobal) {
         printIidToLoc(node);
         var ret = replaceInExpr(
-            logReadFunName + "(" + RP + "1, " + RP + "2, " + RP + "3)",
+            logReadFunName + "(" + RP + "1, " + RP + "2, " + RP + "3," + (isGlobal ? "true" : "false") + ")",
             isReUseIid ? getPrevIidNoInc() : getIid(),
             name,
             val
@@ -430,17 +436,27 @@
         return ret;
     }
 
+//    function wrapReadWithUndefinedCheck(node, name) {
+//        var ret = replaceInExpr(
+//            "("+logIFunName+"(typeof ("+name+") === 'undefined'? "+RP+"2 : "+RP+"3))",
+//            createIdentifierAst(name),
+//            wrapRead(node, createLiteralAst(name),createIdentifierAst("undefined")),
+//            wrapRead(node, createLiteralAst(name),createIdentifierAst(name), true)
+//        );
+//        transferLoc(ret, node);
+//        return ret;
+//    }
+
     function wrapReadWithUndefinedCheck(node, name) {
         var ret = replaceInExpr(
-            "(" + logIFunName + "(typeof (" + name + ") === 'undefined'? " + RP + "2 : " + RP + "3))",
+            "(" + logIFunName + "(typeof (" + name + ") === 'undefined'? (" + name + "=" + RP + "2) : (" + name + "=" + RP + "3)))",
             createIdentifierAst(name),
-            wrapRead(node, createLiteralAst(name), createIdentifierAst("undefined")),
-            wrapRead(node, createLiteralAst(name), createIdentifierAst(name), true)
+            wrapRead(node, createLiteralAst(name), createIdentifierAst("undefined"), false, true),
+            wrapRead(node, createLiteralAst(name), createIdentifierAst(name), true, true)
         );
         transferLoc(ret, node);
         return ret;
     }
-
 
     function wrapWrite(node, name, val, lhs) {
         printIidToLoc(node);
@@ -634,12 +650,24 @@
 
     function createCallInitAsStatement(node, name, val, isArgumentSync) {
         printIidToLoc(node);
-        var ret = replaceInStatement(
-            logInitFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + isArgumentSync + ")",
-            getIid(),
-            name,
-            val
-        );
+        var ret;
+
+        if (isArgumentSync)
+            ret = replaceInStatement(
+                RP + "1 = " + logInitFunName + "(" + RP + "2, " + RP + "3, " + RP + "4, " + isArgumentSync + ")",
+                val,
+                getIid(),
+                name,
+                val
+            );
+        else
+            ret = replaceInStatement(
+                logInitFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + isArgumentSync + ")",
+                getIid(),
+                name,
+                val
+            );
+
         transferLoc(ret[0].expression, node);
         return ret;
     }
@@ -996,9 +1024,14 @@
             }
             return ret1;
         },
-        "FunctionExpression":function (node) {
+        "FunctionExpression":function (node, context) {
             node.body.body = instrumentFunctionEntryExit(node, node.body.body);
-            var ret1 = wrapLiteral(node, node, N_LOG_FUNCTION_LIT);
+            var ret1;
+            if (context === CONTEXT.GETTER || context === CONTEXT.SETTER) {
+                ret1 = node;
+            } else {
+                ret1 = wrapLiteral(node, node, N_LOG_FUNCTION_LIT);
+            }
             scope = scope.parent;
             return ret1;
         },
@@ -1261,12 +1294,16 @@
 
 
     function transformString(code, visitorsPost, visitorsPre) {
+//        console.time("parse")
         var newAst = esprima.parse(code, {loc:true, range:true});
+//        console.timeEnd("parse")
+//        console.time("transform")
         addScopes(newAst);
         var len = visitorsPost.length;
         for (var i = 0; i < len; i++) {
             newAst = transformAst(newAst, visitorsPost[i], visitorsPre[i], CONTEXT.RHS);
         }
+//        console.timeEnd("transform")
         return newAst;
     }
 
@@ -1329,7 +1366,9 @@
             filename = args[i];
             writeLine("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
             console.log("Instrumenting " + filename + " ...");
+//            console.time("load")
             var code = getCode(filename);
+//            console.timeEnd("load")
             tryCatch = false;
             var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
             //console.log(JSON.stringify(newAst, null, '\t'));
@@ -1337,10 +1376,11 @@
             var newFileName = filename.replace(".js", FILESUFFIX1 + ".js");
             var fileOnly = path.basename(filename);
             var newFileOnly = path.basename(newFileName);
-            var smap = escodegen.generate(newAst, {sourceMap:fileOnly});
-            smap = smap.replace(fileOnly, newFileOnly);
-            fs.writeFileSync(newFileName + ".map", smap, "utf8");
+            //var smap = escodegen.generate(newAst, {sourceMap: fileOnly});
+            //smap = smap.replace(fileOnly, newFileOnly);
+            //fs.writeFileSync(newFileName+".map", smap,"utf8");
 
+//            console.time("generate")
             var n_code = escodegen.generate(newAst);
             var serializedAst = serialize(newAst);
             saveCode(n_code, newFileName, newFileOnly, serializedAst);

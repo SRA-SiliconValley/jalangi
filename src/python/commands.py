@@ -151,7 +151,7 @@ def testrr (filee, jalangi=util.DEFAULT_INSTALL):
     os.putenv("JALANGI_ANALYSIS", "none")
     rep = replay()
     (open("jalangi_replay", "w")).write(rep)
-    print rep
+    #print rep
     try:
 	    wcl = util.count_lines("jalangi_trace")
 	
@@ -160,12 +160,14 @@ def testrr (filee, jalangi=util.DEFAULT_INSTALL):
 		f.write("\n")
     except: pass	
     if norm != rep: #TODO: Factor out this.
+        print "{}.js failed".format(filee)
         import difflib
         with open("../jalangi_test_results", 'a') as f:
             f.write("\n")
             for line in difflib.unified_diff(norm.splitlines(1), rec.splitlines(1), fromfile='normal.{}'.format(filee), tofile='replay.{}'.format(filee)):
                 f.write(line)
     if rec != rep:
+        print "{}.js failed".format(filee)
         import difflib
         with open("../jalangi_test_results", 'a') as f:
             f.write("\n")
@@ -200,7 +202,14 @@ def symbolic (filee, inputs, analysis, jalangi=util.DEFAULT_INSTALL):
             iters = int(util.head("jalangi_tail",1)[0])
         except: pass
         i = i + 1
-
+    if iters == inputs:
+        print "{}.js passed".format(filee)
+        with open("../jalangi_sym_test_results", 'a') as f:
+         f.write("{}.js passed\n".format(filee))
+    else:
+        print "{}.js failed".format(filee)
+        with open("../jalangi_sym_test_results", 'a') as f:
+         f.write("{}.js failed\n".format(filee))
     print "Tests Generated = {}".format(iters)
 
 def rerunall(filee, jalangi=util.DEFAULT_INSTALL):

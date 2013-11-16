@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-(function(module){
+(function (module) {
 
     function NOPEngine(executionIndex) {
         var ConcolicValue = require('./../../ConcolicValue');
@@ -28,69 +28,109 @@
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
         var getSymbolic = this.getSymbolic = ConcolicValue.getSymbolic;
 
-        this.installAxiom = function(c) { }
+        this.installAxiom = function (c) {
+        }
 
 
-        this.makeConcolic = function(idx, val, getNextSymbol) {
+        this.makeConcolic = function (idx, val, getNextSymbol) {
             return val;
         }
 
-        this.makeConcolicPost = function() { }
+        this.makeConcolicPost = function () {
+        }
 
-        this.literalPre = function(iid, val) { }
+        this.declare = function (iid, name, val, isArgument) {
 
-        this.literal = function(iid, val) {
+        }
+
+        this.literalPre = function (iid, val) {
+        }
+
+        this.literal = function (iid, val) {
             return val;
         }
 
-        this.invokeFunPre = function(iid, f, base, args, isConstructor) { }
+        this.invokeFunPre = function (iid, f, base, args, isConstructor) {
+        }
 
-        this.invokeFun = function(iid, f, base, args, val, isConstructor) {
+        this.invokeFun = function (iid, f, base, args, val, isConstructor) {
             return val;
         }
 
-        this.getFieldPre = function(iid, base, offset) { }
+        this.getFieldPre = function (iid, base, offset) {
+        }
 
-        this.getField = function(iid, base, offset, val) {
+        this.getField = function (iid, base, offset, val) {
             return val;
         }
 
-        this.putFieldPre = function(iid, base, offset, val) {}
-
-        this.putField = function(iid, base, offset, val) {}
-
-        this.readPre = function(iid, name, val) { }
-
-        this.read = function(iid, name, val) {
+        this.putFieldPre = function (iid, base, offset, val) {
             return val;
         }
 
-        this.writePre = function(iid, name, val) { }
+        this.putField = function (iid, base, offset, val) {
+            return val;
+        }
 
-        this.write = function(iid, name, val) { }
+        this.readPre = function (iid, name, val, isGlobal) {
 
-        this.binaryPre = function(iid, op, left, right) { }
+        }
+
+        this.read = function (iid, name, val, isGlobal) {
+            return val;
+        }
+
+        this.writePre = function (iid, name, val, oldValue) {
+        }
+
+        this.write = function (iid, name, val, oldValue) {
+            return val;
+        }
+
+        this.binaryPre = function (iid, op, left, right) {
+        }
 
         this.binary = function (iid, op, left, right, result_c) {
             return result_c;
         }
 
-        this.unaryPre = function(iid, op, left) { }
+        this.unaryPre = function (iid, op, left) {
+        }
 
         this.unary = function (iid, op, left, result_c) {
             return result_c;
         }
 
-        this.conditionalPre = function(iid, left) { }
+        this.conditionalPre = function (iid, left) {
+        }
 
         this.conditional = function (iid, left, result_c) {
             return left;
         }
 
-        this.beginExecution = function(data) { }
+        this.beginExecution = function (data) {
+        }
 
-        this.endExecution = function() { }
+        this.endExecution = function () {
+        }
 
+        this.functionEnter = function (iid, fun, dis /* this */) {
+        }
+
+        this.functionExit = function (iid) {
+            return false;
+            /* a return of false means that do not backtrack inside the function */
+        }
+
+        this.return_ = function (val) {
+            return val;
+        }
+
+        this.scriptEnter = function (iid, fileName) {
+        }
+
+        this.scriptExit = function (iid) {
+        }
     }
 
     module.exports = NOPEngine;

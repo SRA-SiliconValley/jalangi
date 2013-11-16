@@ -18,6 +18,7 @@
 
 require('./../analysis');
 try {
+//    console.log("Starting replay ...")
     J$.replay();
 } finally {
     J$.endExecution();

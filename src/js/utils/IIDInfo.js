@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-
+/*global J$ */
 module.exports = (function(){
     var isInit = false;
 
@@ -24,8 +24,12 @@ module.exports = (function(){
         var ret;
         if (!isInit) {
             isInit = true;
-            require(process.cwd()+"/jalangi_sourcemap");
-        }
+            try {
+                require(process.cwd()+"/jalangi_sourcemap");
+            } catch (e) {
+                // don't crash if we can't find sourcemap file
+            }
+         }
         if (J$.iids) {
             if ((ret = J$.iids[iid])) {
 
@@ -33,5 +37,5 @@ module.exports = (function(){
             }
         }
         return iid+"";
-    }
+    };
 } ());

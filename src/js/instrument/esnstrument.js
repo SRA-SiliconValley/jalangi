@@ -320,21 +320,21 @@
     var traceWfh;
     var fs;
 
-    function openFile() {
+    function openIIDMapFile() {
         if (traceWfh === undefined) {
             fs = require('fs');
             traceWfh = fs.openSync(SMAP_FILE_NAME, 'w');
         }
     }
 
-    function writeLine(str) {
+    function writeLineToIIDMap(str) {
         if (traceWfh) {
             fs.writeSync(traceWfh, str);
         }
     }
 
 
-    function closeFile() {
+    function closeIIDMapFile() {
         if (traceWfh) {
             fs.closeSync(traceWfh);
         }
@@ -344,7 +344,7 @@
 
     function printLineInfoAux(i,ast) {
         if (ast && ast.loc) {
-            writeLine('iids['+i+'] = [filename,'+(ast.loc.start.line)+","+(ast.loc.start.column+1)+"];\n");
+            writeLineToIIDMap('iids['+i+'] = [filename,'+(ast.loc.start.line)+","+(ast.loc.start.column+1)+"];\n");
         }
 //        else {
 //            console.log(i+":undefined:undefined");
@@ -1353,11 +1353,11 @@
         };
 
 
-        openFile();
-        writeLine("(function (sandbox) { var iids = sandbox.iids = []; var filename;\n");
+        openIIDMapFile();
+        writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var filename;\n");
         for (i = 2; i < args.length; i++) {
             filename = args[i];
-            writeLine("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
+            writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(),filename)) + "\";\n");
             console.log("Instrumenting " + filename + " ...");
 //            console.time("load")
             var code = getCode(filename);
@@ -1380,8 +1380,8 @@
             saveCode(n_code, newFileName, newFileOnly);
 //            console.timeEnd("save")
         }
-        writeLine("}(typeof " + PREFIX1 + " === 'undefined'? " + PREFIX1 + " = {}:" + PREFIX1 + "));\n");
-        closeFile();
+        writeLineToIIDMap("}(typeof " + PREFIX1 + " === 'undefined'? " + PREFIX1 + " = {}:" + PREFIX1 + "));\n");
+        closeIIDMapFile();
     }
 
 

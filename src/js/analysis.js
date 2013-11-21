@@ -114,6 +114,10 @@ if (typeof J$ === 'undefined') J$ = {};
         var SERIOUS_WARN = false;
         var MAX_BUF_SIZE = 4096;
         var TRACE_FILE_NAME = 'jalangi_trace';
+        // should we keep the trace in memory in the browser?
+        // TODO somehow make this a parameter
+		var IN_MEMORY_BROWSER_LOG = false;
+		//var IN_MEMORY_BROWSER_LOG = isBrowser;
 
         var T_NULL = 0,
             T_NUMBER = 1,
@@ -1046,7 +1050,7 @@ if (typeof J$ === 'undefined') J$ = {};
                             if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
                                 Object.defineProperty(val, SPECIAL_PROP, {
                                     enumerable:false,
-                                    writable:true,
+                                    writable:true
                                 });
                             }
                             val[SPECIAL_PROP] = {};
@@ -1521,6 +1525,10 @@ if (typeof J$ === 'undefined') J$ = {};
                 var remoteBuffer = [];
                 var socket, isOpen = false;
 
+				if (IN_MEMORY_BROWSER_LOG) {
+					// attach the buffer to the sandbox
+					sandbox.trace_output = buffer;
+				}
 
                 function getFileHanlde() {
                     if (traceWfh === undefined) {
@@ -1538,6 +1546,10 @@ if (typeof J$ === 'undefined') J$ = {};
                 }
 
                 this.flush = function () {
+                	if (IN_MEMORY_BROWSER_LOG) {
+                		// no need to flush anything
+                		return;
+                	}
                     var msg;
                     if (!isBrowser) {
                         var length = buffer.length;
@@ -1724,7 +1736,7 @@ if (typeof J$ === 'undefined') J$ = {};
             } else if (mode === MODE_RECORD) {
                 traceWriter = new TraceWriter();
                 this.onflush = traceWriter.onflush;
-                if (isBrowser) {
+                if (isBrowser && !IN_MEMORY_BROWSER_LOG) {
                     this.command('reset');
                 }
             }

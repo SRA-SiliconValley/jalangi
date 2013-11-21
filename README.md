@@ -225,6 +225,34 @@ You can now play the game for sometime.  Try two moves.  This will generate a ja
     export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine
     node src/js/commands/replay.js jalangi_trace1
 
+### In browser analysis of a web application.
+
+***
+
+First start a HTTP server by running the following command.  The command starts a simple Python based http server.
+
+	python scripts/jalangi.py server &
+
+Then instrument the JavaScript files that you want to analyze.  You also need to modify index.html so that it loads some library files and the instrumented files.
+
+    node src/js/instrument/esnstrument.js tests/tizen/annex/js/annex.js tests/tizen/annex/lib/jquery-1.6.2.min.js
+
+Finally open the following webpage in Chrome and open the JavaScipt console to see a log of all NaN values read during the execution.
+
+    open http://127.0.0.1:8000/tests/tizen/annex/index_direct.html
+
+Jalangi runs the analysis described in src/js/analyses/logundefinedread/logUndefinedRead.js.  Note that we have added the following lines in index_direct.html to perform
+the analysis directly in the browser.  In summary, window.JALANGI_MODE must be set to 'inbrowser' and J$.analysis must be set to a suitable analysis file. In the
+in-browser mode, one must not use ConcolicValue to wrap a program value.  However, one could use shadow execution to collect statistics.
+
+    <script>window.JALANGI_MODE='inbrowser'</script>
+    <script src="../../../src/js/analysis.js" type="text/javascript"></script>
+    <script src="../../../src/js/analyses/logundefinedread/logUndefinedRead.js" type="text/javascript"></script>
+    <script src="../../../src/js/InputManager.js" type="text/javascript"></script>
+    <script src="../../../node_modules/escodegen/escodegen.browser.js" type="text/javascript"></script>
+    <script src="../../../node_modules/esprima/esprima.js" type="text/javascript"></script>
+    <script src="../../../src/js/instrument/esnstrument.js" type="text/javascript"></script>
+
 
 
 

@@ -47,7 +47,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 return MODE_REPLAY;
             case "analysis":
                 return MODE_NO_RR_IGNORE_UNINSTRUMENTED;
-            case "concrete":
+            case "inbrowser":
                 return MODE_NO_RR;
             case "symbolic":
                 return MODE_DIRECT;

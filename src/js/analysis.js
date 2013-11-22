@@ -1763,9 +1763,9 @@ if (typeof J$ === 'undefined') J$ = {};
                 	if (!IN_MEMORY_BROWSER_LOG) {
                     	this.command('reset');
                     }
-                    window.addEventListener('keypress', function (e) {
+                    window.addEventListener('keydown', function (e) {
                     	// keyboard shortcut is Alt-Shift-T for now
-                    	if (e.altKey && e.shiftKey && e.keyCode === 711) {
+                    	if (e.altKey && e.shiftKey && e.keyCode === 84) {
                     		traceWriter.stopTracing();
                     		traceWriter.onflush(function () {
                     			alert("trace flush complete");

@@ -1631,7 +1631,7 @@ if (typeof J$ === 'undefined') J$ = {};
                  * stop recording the trace and flush everything
                  */
                 this.stopTracing = function () {
-                	this.tracingDone = true;
+                	tracingDone = true;
 	                alert("tracing stopped; flushing...");
                 	if (!IN_MEMORY_BROWSER_LOG) {
                 		this.flush();                		

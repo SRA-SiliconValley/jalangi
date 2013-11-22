@@ -1524,6 +1524,9 @@ if (typeof J$ === 'undefined') J$ = {};
                 var cb;
                 var remoteBuffer = [];
                 var socket, isOpen = false;
+                // if true, in the process of doing final trace dump,
+                // so don't record any more events
+                var tracingDone = false;
 
 				if (IN_MEMORY_BROWSER_LOG) {
 					// attach the buffer to the sandbox
@@ -1538,6 +1541,10 @@ if (typeof J$ === 'undefined') J$ = {};
                 }
 
                 this.logToFile = function (line) {
+                	if (tracingDone) {
+                		// do nothing
+                		return;
+                	}
                     buffer.push(line);
                     bufferSize += line.length;
                     if (bufferSize > MAX_BUF_SIZE) {
@@ -1576,6 +1583,11 @@ if (typeof J$ === 'undefined') J$ = {};
                     }
                 }
 
+				/**
+				 * invoked when we receive a message over the websocket,
+				 * indicating that the last trace chunk in the remoteBuffer
+				 * has been received
+				 */
                 function tryRemoteLog2() {
                     trying = false;
                     remoteBuffer.shift();
@@ -1613,6 +1625,17 @@ if (typeof J$ === 'undefined') J$ = {};
                     if (isOpen) {
                         tryRemoteLog();
                     }
+                }
+                
+                /**
+                 * stop recording the trace and flush everything
+                 */
+                this.stopTracing = function () {
+                	this.tracingDone = true;
+	                alert("tracing stopped; flushing...");
+                	if (!IN_MEMORY_BROWSER_LOG) {
+                		this.flush();                		
+                	}
                 }
             }
 
@@ -1736,8 +1759,20 @@ if (typeof J$ === 'undefined') J$ = {};
             } else if (mode === MODE_RECORD) {
                 traceWriter = new TraceWriter();
                 this.onflush = traceWriter.onflush;
-                if (isBrowser && !IN_MEMORY_BROWSER_LOG) {
-                    this.command('reset');
+                if (isBrowser) {
+                	if (!IN_MEMORY_BROWSER_LOG) {
+                    	this.command('reset');
+                    }
+                    window.addEventListener('keypress', function (e) {
+                    	// keyboard shortcut is Alt-Shift-T for now
+                    	if (e.altKey && e.shiftKey && e.keyCode === 711) {
+                    		traceWriter.stopTracing();
+                    		traceWriter.onflush(function () {
+                    			alert("trace flush complete");
+                    		});
+                    	}
+                    });
+                    
                 }
             }
         }

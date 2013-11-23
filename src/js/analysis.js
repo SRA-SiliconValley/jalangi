@@ -1008,6 +1008,30 @@ if (typeof J$ === 'undefined') J$ = {};
                 head.appendChild(script);
             }
 
+            function isSafeToCallGetOrSet(obj, prop, isGetter) {
+                if (typeof Object.getOwnPropertyDescriptor !== 'function') {
+                    return false;
+                }
+                while (obj !== null) {
+                    if (typeof obj !== 'object' && typeof obj !== 'function') {
+                        return true;
+                    }
+                    var desc = Object.getOwnPropertyDescriptor(obj, prop);
+                    if (desc !== undefined) {
+                        if (isGetter && typeof desc.get === 'function') {
+                            return false;
+                        }
+                        if (!isGetter && typeof desc.set === 'function') {
+                            return false;
+                        }
+                    } else if (HOP(obj, prop)) {
+                        return true;
+                    }
+                    obj = obj.__proto__;
+                }
+                return true;
+            }
+
             function printableValue(val) {
                 var value, typen = getNumericType(val), ret = [];
                 if (typen === T_NUMBER || typen === T_BOOLEAN || typen === T_STRING) {
@@ -1089,6 +1113,13 @@ if (typeof J$ === 'undefined') J$ = {};
                     val[SPECIAL_PROP] = {};
                     val[SPECIAL_PROP][SPECIAL_PROP] = id = literalId;
                     literalId = literalId + 2;
+                    // changes due to getter or setter method
+                    for (var offset in val) {
+                        if (offset !== SPECIAL_PROP && offset !== SPECIAL_PROP2 && HOP(val, offset)) {
+                            if (isSafeToCallGetOrSet(val, offset, true))
+                                val[SPECIAL_PROP][offset] = val[offset];
+                        }
+                    }
                 }
                 if (mode === MODE_REPLAY) {
                     objectMap[id] = oldVal;
@@ -1229,7 +1260,9 @@ if (typeof J$ === 'undefined') J$ = {};
                         seqNo++;
                         return val;
                     } else {
-//                        base_c[SPECIAL_PROP][offset] = val;
+                        if (isSafeToCallGetOrSet(base_c, offset, false)) {
+                            base_c[SPECIAL_PROP][offset] = val;
+                        }
                         return this.RR_L(iid, val, N_LOG_GETFIELD);
                     }
                 } else if (mode === MODE_REPLAY) {
@@ -1239,8 +1272,10 @@ if (typeof J$ === 'undefined') J$ = {};
                         return val;
                     } else {
                         val = this.RR_L(iid, val, N_LOG_GETFIELD);
-//                        base_c = getConcrete(base);
-//                        base_c[offset] = val;
+                        base_c = getConcrete(base);
+                        if (isSafeToCallGetOrSet(base_c, offset, false)) {
+                            base_c[offset] = val;
+                        }
                         return val;
                     }
                 } else {
@@ -1456,7 +1491,7 @@ if (typeof J$ === 'undefined') J$ = {};
                             f = getConcrete(syncValue(ret, undefined, 0));
                             ret = traceInfo.getNext();
                             var dis = syncValue(ret, undefined, 0);
-                            f.call(dis);
+                            f(dis);
                         } else if (ret[F_FUNNAME] === N_LOG_SCRIPT_ENTER) {
                             var path = getConcrete(syncValue(ret, undefined, 0));
                             if (isBrowserReplay) {

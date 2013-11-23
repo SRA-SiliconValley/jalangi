@@ -112,7 +112,7 @@ if (typeof J$ === 'undefined') J$ = {};
         var DEBUG = false;
         var WARN = false;
         var SERIOUS_WARN = false;
-        var MAX_BUF_SIZE = 4096;
+        var MAX_BUF_SIZE = 64000;
         var TRACE_FILE_NAME = 'jalangi_trace';
         // should we keep the trace in memory in the browser?
         // TODO somehow make this a parameter
@@ -1373,8 +1373,8 @@ if (typeof J$ === 'undefined') J$ = {};
                 if (mode === MODE_RECORD || mode === MODE_REPLAY) {
                     frameStack.pop();
                     frame = frameStack[frameStack.length - 1];
-                    if (mode === MODE_RECORD) {
-                        traceWriter.flush();
+                    if (mode === MODE_RECORD && frameStack.length <= 1) {
+                    	traceWriter.flush();
                     }
                 }
             }
@@ -1399,8 +1399,8 @@ if (typeof J$ === 'undefined') J$ = {};
                 if (mode === MODE_RECORD || mode === MODE_REPLAY) {
                     frameStack.pop();
                     frame = frameStack[frameStack.length - 1];
-                    if (mode === MODE_RECORD) {
-                        traceWriter.flush();
+                    if (mode === MODE_RECORD && frameStack.length <= 1) {
+                    	traceWriter.flush();
                     }
                 }
                 if (isBrowserReplay) {
@@ -1772,7 +1772,6 @@ if (typeof J$ === 'undefined') J$ = {};
                     		});
                     	}
                     });
-                    
                 }
             }
         }

@@ -1632,7 +1632,6 @@ if (typeof J$ === 'undefined') J$ = {};
                  */
                 this.stopTracing = function () {
                 	tracingDone = true;
-	                alert("tracing stopped; flushing...");
                 	if (!IN_MEMORY_BROWSER_LOG) {
                 		this.flush();                		
                 	}
@@ -1763,6 +1762,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 	if (!IN_MEMORY_BROWSER_LOG) {
                     	this.command('reset');
                     }
+                    // enable keyboard shortcut to stop tracing
                     window.addEventListener('keydown', function (e) {
                     	// keyboard shortcut is Alt-Shift-T for now
                     	if (e.altKey && e.shiftKey && e.keyCode === 84) {

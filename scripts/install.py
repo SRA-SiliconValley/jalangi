@@ -49,7 +49,7 @@ if exists("node_modules"):
     shutil.rmtree("node_modules")
 npm_install()
 
-urlretrieve("https://raw.github.com/Constellation/escodegen/0.0.27/escodegen.browser.js","node_modules/escodegen/escodegen.browser.js");
+urlretrieve("https://raw.github.com/Constellation/escodegen/0.0.28/escodegen.browser.js","node_modules/escodegen/escodegen.browser.js");
 
 if exists("thirdparty"):
     shutil.rmtree("thirdparty")

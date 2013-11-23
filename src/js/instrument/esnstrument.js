@@ -16,6 +16,7 @@
 
 // Author: Koushik Sen
 
+/*global esprima require escodegen process __dirname __filename console window module exports J$ */
 (function (sandbox) {
     if (typeof esprima === 'undefined') {
         esprima = require("esprima");
@@ -127,15 +128,15 @@
 
 
     function sanitizePath(path) {
-        if (typeof process !== 'undefined' && process.platform == "win32") {
-            return path.split("\\").join("\\\\")
+        if (typeof process !== 'undefined' && process.platform === "win32") {
+            return path.split("\\").join("\\\\");
         }
-        return path
+        return path;
     }
 
     function HOP(obj, prop) {
         return Object.prototype.hasOwnProperty.call(obj, prop);
-    };
+    }
 
 
     function isArr(val) {
@@ -147,7 +148,7 @@
         if (!isArr(arr)) {
             throw new TypeError();
         }
-        if (typeof fun != "function") {
+        if (typeof fun !== "function") {
             throw new TypeError();
         }
 
@@ -178,7 +179,7 @@
     function ignoreSubAst(node) {
         return node.type === 'CallExpression' && node.callee.type === 'MemberExpression' &&
             node.callee.object.type === 'Identifier' && node.callee.object.name === PREFIX1 &&
-            node.callee.property.type === 'Identifier' && node.callee.property.name === 'I'
+            node.callee.property.type === 'Identifier' && node.callee.property.name === 'I';
     }
 
     function transformAst(object, visitorPost, visitorPre, context, noIgnore) {
@@ -261,7 +262,7 @@
                 }
                 return node;
             }
-        }
+        };
         var ast = esprima.parse(code);
         var newAst = transformAst(ast, visitorReplaceInExpr, undefined, undefined, true);
         //console.log(newAst);
@@ -289,6 +290,7 @@
     }
 
     var inc = 4;
+    // current static identifier for each conditional expression
     var condCount = 0 + inc;
     var iid = 1 + inc;
     var opIid = 2 + inc;
@@ -315,10 +317,34 @@
         return createLiteralAst(tmpIid);
     }
 
+    var traceWfh;
+    var fs;
 
-    function printLineInfoAux(i, ast) {
+    function openIIDMapFile() {
+        if (traceWfh === undefined) {
+            fs = require('fs');
+            traceWfh = fs.openSync(SMAP_FILE_NAME, 'w');
+        }
+    }
+
+    function writeLineToIIDMap(str) {
+        if (traceWfh) {
+            fs.writeSync(traceWfh, str);
+        }
+    }
+
+
+    function closeIIDMapFile() {
+        if (traceWfh) {
+            fs.closeSync(traceWfh);
+        }
+    }
+
+
+
+    function printLineInfoAux(i,ast) {
         if (ast && ast.loc) {
-            writeLine('iids[' + i + '] = [filename,' + (ast.loc.start.line) + "," + (ast.loc.start.column + 1) + "];\n");
+            writeLineToIIDMap('iids['+i+'] = [filename,'+(ast.loc.start.line)+","+(ast.loc.start.column+1)+"];\n");
         }
 //        else {
 //            console.log(i+":undefined:undefined");
@@ -336,30 +362,6 @@
     function printCondIidToLoc(ast0) {
         printLineInfoAux(condCount, ast0);
     }
-
-    var traceWfh;
-    var fs;
-
-    function openFile() {
-        if (traceWfh === undefined) {
-            fs = require('fs');
-            traceWfh = fs.openSync(SMAP_FILE_NAME, 'w');
-        }
-    }
-
-    function writeLine(str) {
-        if (traceWfh) {
-            fs.writeSync(traceWfh, str);
-        }
-    }
-
-
-    function closeFile() {
-        if (traceWfh) {
-            fs.closeSync(traceWfh);
-        }
-    }
-
 
     function wrapPutField(node, base, offset, rvalue) {
         printIidToLoc(node);
@@ -554,7 +556,7 @@
 
     function wrapEvalArg(ast) {
         var ret = replaceInExpr(
-            instrumentCodeFunName + "(" + PREFIX1 + ".getConcrete(" + RP + "1), true)",
+            instrumentCodeFunName + "(" + PREFIX1 + ".getConcrete(" + RP + "1), false)",
             ast
         );
         transferLoc(ret, ast);
@@ -775,27 +777,6 @@
         return ret;
     }
 
-    function instrumentFunctionEntryExit(node, ast) {
-        var body = createCallAsFunEnterStatement(node).
-            concat(syncDefuns(node, scope, false)).concat(ast);
-        return body;
-    }
-
-//    function instrumentFunctionEntryExit(node, ast) {
-//        return wrapFunBodyWithTryCatch(node, ast);
-//    }
-
-    function instrumentScriptEntryExit(node, body0) {
-        var modFile = (typeof filename === "string") ?
-            filename.replace(".js", FILESUFFIX1 + ".js") :
-            "internal";
-        var body = createCallAsScriptEnterStatement(node, modFile).
-            concat(syncDefuns(node, scope, true)).
-            concat(body0);
-        return body;
-    }
-
-
     function syncDefuns(node, scope, isScript) {
         var ret = [];
         if (!isScript) {
@@ -833,6 +814,31 @@
         return ret;
     }
 
+
+    var scope;
+
+
+    function instrumentFunctionEntryExit(node, ast) {
+        var body = createCallAsFunEnterStatement(node).
+            concat(syncDefuns(node, scope, false)).concat(ast);
+        return body;
+    }
+
+//    function instrumentFunctionEntryExit(node, ast) {
+//        return wrapFunBodyWithTryCatch(node, ast);
+//    }
+
+    function instrumentScriptEntryExit(node, body0) {
+        var modFile = (typeof filename === "string")?
+            filename.replace(".js",FILESUFFIX1+".js"):
+            "internal";
+        var body = createCallAsScriptEnterStatement(node, modFile).
+            concat(syncDefuns(node, scope, true)).
+            concat(body0);
+        return body;
+    }
+
+
     function getPropertyAsAst(ast) {
         return ast.computed ? ast.property : createLiteralAst(ast.property.name);
     }
@@ -866,6 +872,32 @@
         } else {
             ret = wrapPutField(node, node.left.object, getPropertyAsAst(node.left), node.right);
             return ret;
+        }
+    }
+
+    function instrumentLoad(ast) {
+        var ret;
+        if (ast.type ==='Identifier') {
+            if (ast.name === "undefined") {
+                ret = wrapLiteral(ast, ast, N_LOG_UNDEFINED_LIT);
+                return ret;
+            } else if (ast.name === "NaN" || ast.name === "Infinity") {
+                ret = wrapLiteral(ast, ast, N_LOG_NUMBER_LIT);
+                return ret;
+            } if(ast.name === PREFIX1 ||
+                ast.name === "eval"){
+                return ast;
+            } else if (scope.hasVar(ast.name)) {
+                ret = wrapRead(ast, createLiteralAst(ast.name),ast);
+                return ret;
+            } else {
+                ret = wrapReadWithUndefinedCheck(ast, ast.name);
+                return ret;
+            }
+        } else if (ast.type==='MemberExpression') {
+            return wrapGetField(ast, ast.object, getPropertyAsAst(ast));
+        } else {
+            return ast;
         }
     }
 
@@ -909,37 +941,13 @@
         return ret;
     }
 
-    function instrumentLoad(ast) {
-        var ret;
-        if (ast.type === 'Identifier') {
-            if (ast.name === "undefined") {
-                ret = wrapLiteral(ast, ast, N_LOG_UNDEFINED_LIT);
-                return ret;
-            } else if (ast.name === "NaN" || ast.name === "Infinity") {
-                ret = wrapLiteral(ast, ast, N_LOG_NUMBER_LIT);
-                return ret;
-            }
-            if (ast.name === PREFIX1 ||
-                ast.name === "eval") {
-                return ast;
-            } else if (scope.hasVar(ast.name)) {
-                ret = wrapRead(ast, createLiteralAst(ast.name), ast);
-                return ret;
-            } else {
-                ret = wrapReadWithUndefinedCheck(ast, ast.name);
-                return ret;
-            }
-        } else if (ast.type === 'MemberExpression') {
-            return wrapGetField(ast, ast.object, getPropertyAsAst(ast));
-        } else {
-            return ast;
-        }
-    }
 
-
-    var tryCatch = false;
-
-    var scope;
+	// should a try-catch block be inserted at the top level of the instrumented code?
+	// we need this flag since when we're instrumenting eval'd code, we want to avoid
+	// wrapping the code in a try-catch, since that may not be syntactically valid in 
+	// the surrounding context, e.g.:
+	//    var y = eval("x + 1");
+    var insertTopLevelTryCatch = true;
 
     function setScope(node) {
         scope = node.scope;
@@ -949,7 +957,7 @@
         'Program':setScope,
         'FunctionDeclaration':setScope,
         'FunctionExpression':setScope
-    }
+    };
 
     var visitorRRPost = {
         'Literal':function (node, context) {
@@ -980,7 +988,7 @@
             }
         },
         "Program":function (node) {
-            if (!tryCatch) {
+            if (insertTopLevelTryCatch) {
                 var ret = instrumentScriptEntryExit(node, node.body);
                 node.body = ret;
 
@@ -1090,7 +1098,7 @@
             node.argument = ret;
             return node;
         }
-    }
+    };
 
     function funCond(node) {
         var ret = wrapConditional(node.test, node.test);
@@ -1101,8 +1109,8 @@
 
     var visitorOps = {
         "Program":function (node) {
-            var body = wrapScriptBodyWithTryCatch(node, node.body)
-            if (!tryCatch) {
+            var body = wrapScriptBodyWithTryCatch(node, node.body);
+            if (insertTopLevelTryCatch) {
                 var ret = prependScriptBody(node, body);
                 node.body = ret;
 
@@ -1222,14 +1230,14 @@
                 oldScope.addVar(node.id.name, "defun", node.loc);
                 MAP(node.params, function (param) {
                     currentScope.addVar(param.name, "arg");
-                })
+                });
             } else if (node.type === 'FunctionExpression') {
                 if (node.id !== null) {
                     currentScope.addVar(node.id.name, "lambda");
                 }
                 MAP(node.params, function (param) {
                     currentScope.addVar(param.name, "arg");
-                })
+                });
             }
         }
 
@@ -1252,14 +1260,13 @@
             'FunctionExpression':handleFun,
             'VariableDeclarator':handleVar,
             'CatchClause':handleCatch
-        }
+        };
 
         var visitorPost = {
             'Program':popScope,
             'FunctionDeclaration':popScope,
             'FunctionExpression':popScope
-        }
-
+        };
         transformAst(ast, visitorPost, visitorPre);
     }
 
@@ -1278,21 +1285,37 @@
         return newAst;
     }
 
+	// if this string is discovered inside code passed to instrumentCode(),
+	// the code will not be instrumented
     var noInstr = "// JALANGI DO NOT INSTRUMENT";
 
-    function instrumentCode(code, noTryCatchAtTop) {
+    /**
+     * @param {string} code The code to instrument
+     * @param {boolean} tryCatchAtTop Should a try-catch block be inserted
+     *          at the top-level of the instrumented code?
+     * @param {string} instFileName What filename should be associated with
+     *          the instrumented code?  optional
+     */
+    function instrumentCode(code, tryCatchAtTop, instFileName) {
         var oldCondCount;
 
-        if (typeof  code === "string" && !(code.indexOf(noInstr) >= 0)) {
-            if (noTryCatchAtTop) {
+		if (instFileName) {
+			filename = instFileName;
+		}
+        if (typeof  code === "string" && code.indexOf(noInstr) < 0) {
+            if (!tryCatchAtTop) {
+                // this means we are inside an eval
+                // set to 3 so condition ids inside eval'd code won't conflict
+                // with containing script          
+                // TODO what aboue multiple levels of nested evals?  
                 oldCondCount = condCount;
                 condCount = 3;
             }
-            tryCatch = noTryCatchAtTop;
+            insertTopLevelTryCatch = tryCatchAtTop;
             var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
             var newCode = escodegen.generate(newAst);
 
-            if (noTryCatchAtTop) {
+            if (!tryCatchAtTop) {
                 condCount = oldCondCount;
             }
             var ret = newCode + "\n" + noInstr + "\n";
@@ -1327,19 +1350,19 @@
             n_code += '\n//@ sourceMappingURL=' + fileOnly + '.map';
             fs.writeFileSync(filename, n_code, "utf8");
             fs.writeFileSync(COVERAGE_FILE_NAME, JSON.stringify({"covered":0, "branches":condCount / inc * 2, "coverage":[]}), "utf8");
-        }
+        };
 
 
-        openFile();
-        writeLine("(function (sandbox) { var iids = sandbox.iids = []; var filename;\n")
+        openIIDMapFile();
+        writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var filename;\n");
         for (i = 2; i < args.length; i++) {
             filename = args[i];
-            writeLine("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
+            writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(),filename)) + "\";\n");
             console.log("Instrumenting " + filename + " ...");
 //            console.time("load")
             var code = getCode(filename);
 //            console.timeEnd("load")
-            tryCatch = false;
+            insertTopLevelTryCatch = true;
             var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
             //console.log(JSON.stringify(newAst, null, '\t'));
 
@@ -1357,8 +1380,8 @@
             saveCode(n_code, newFileName, newFileOnly);
 //            console.timeEnd("save")
         }
-        writeLine("}(typeof " + PREFIX1 + " === 'undefined'? " + PREFIX1 + " = {}:" + PREFIX1 + "));\n")
-        closeFile();
+        writeLineToIIDMap("}(typeof " + PREFIX1 + " === 'undefined'? " + PREFIX1 + " = {}:" + PREFIX1 + "));\n");
+        closeIIDMapFile();
     }
 
 
@@ -1368,8 +1391,9 @@
     } else {
         sandbox.instrumentCode = instrumentCode;
         sandbox.instrumentFile = instrumentFile;
+        sandbox.fileSuffix = FILESUFFIX1;
     }
-}((typeof J$ === 'undefined') ? undefined : J$));
+}((typeof J$ === 'undefined')? (typeof exports === 'undefined' ? undefined : exports):J$)); 
 
 
 //console.log(transformString("var x = 3 * 4;", visitor1));

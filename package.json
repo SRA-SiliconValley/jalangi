@@ -10,7 +10,9 @@
         "estraverse":"*",
         "escodegen":"*",
         "execSync":"*",
-        "amdefine":"*"
+        "amdefine":"*",
+        "argparse": "*",
+        "mkdirp": "*"
     },
     "scripts": {
       "test": "python scripts/runalltests.py"

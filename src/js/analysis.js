@@ -112,8 +112,12 @@ if (typeof J$ === 'undefined') J$ = {};
         var DEBUG = false;
         var WARN = false;
         var SERIOUS_WARN = false;
-        var MAX_BUF_SIZE = 4096;
+        var MAX_BUF_SIZE = 64000;
         var TRACE_FILE_NAME = 'jalangi_trace';
+        // should we keep the trace in memory in the browser?
+        // TODO somehow make this a parameter
+		var IN_MEMORY_BROWSER_LOG = false;
+		//var IN_MEMORY_BROWSER_LOG = isBrowser;
 
         var T_NULL = 0,
             T_NUMBER = 1,
@@ -442,7 +446,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 rrEngine.RR_evalBegin();
             }
             try {
-                return f(sandbox.instrumentCode(getConcrete(args[0]), true));
+                return f(sandbox.instrumentCode(getConcrete(args[0]), false));
             } finally {
                 if (rrEngine) {
                     rrEngine.RR_evalEnd();
@@ -1046,7 +1050,7 @@ if (typeof J$ === 'undefined') J$ = {};
                             if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
                                 Object.defineProperty(val, SPECIAL_PROP, {
                                     enumerable:false,
-                                    writable:true,
+                                    writable:true
                                 });
                             }
                             val[SPECIAL_PROP] = {};
@@ -1369,8 +1373,8 @@ if (typeof J$ === 'undefined') J$ = {};
                 if (mode === MODE_RECORD || mode === MODE_REPLAY) {
                     frameStack.pop();
                     frame = frameStack[frameStack.length - 1];
-                    if (mode === MODE_RECORD) {
-                        traceWriter.flush();
+                    if (mode === MODE_RECORD && frameStack.length <= 1) {
+                    	traceWriter.flush();
                     }
                 }
             }
@@ -1395,8 +1399,8 @@ if (typeof J$ === 'undefined') J$ = {};
                 if (mode === MODE_RECORD || mode === MODE_REPLAY) {
                     frameStack.pop();
                     frame = frameStack[frameStack.length - 1];
-                    if (mode === MODE_RECORD) {
-                        traceWriter.flush();
+                    if (mode === MODE_RECORD && frameStack.length <= 1) {
+                    	traceWriter.flush();
                     }
                 }
                 if (isBrowserReplay) {
@@ -1520,7 +1524,14 @@ if (typeof J$ === 'undefined') J$ = {};
                 var cb;
                 var remoteBuffer = [];
                 var socket, isOpen = false;
+                // if true, in the process of doing final trace dump,
+                // so don't record any more events
+                var tracingDone = false;
 
+				if (IN_MEMORY_BROWSER_LOG) {
+					// attach the buffer to the sandbox
+					sandbox.trace_output = buffer;
+				}
 
                 function getFileHanlde() {
                     if (traceWfh === undefined) {
@@ -1530,6 +1541,10 @@ if (typeof J$ === 'undefined') J$ = {};
                 }
 
                 this.logToFile = function (line) {
+                	if (tracingDone) {
+                		// do nothing
+                		return;
+                	}
                     buffer.push(line);
                     bufferSize += line.length;
                     if (bufferSize > MAX_BUF_SIZE) {
@@ -1538,6 +1553,10 @@ if (typeof J$ === 'undefined') J$ = {};
                 }
 
                 this.flush = function () {
+                	if (IN_MEMORY_BROWSER_LOG) {
+                		// no need to flush anything
+                		return;
+                	}
                     var msg;
                     if (!isBrowser) {
                         var length = buffer.length;
@@ -1564,6 +1583,11 @@ if (typeof J$ === 'undefined') J$ = {};
                     }
                 }
 
+				/**
+				 * invoked when we receive a message over the websocket,
+				 * indicating that the last trace chunk in the remoteBuffer
+				 * has been received
+				 */
                 function tryRemoteLog2() {
                     trying = false;
                     remoteBuffer.shift();
@@ -1601,6 +1625,17 @@ if (typeof J$ === 'undefined') J$ = {};
                     if (isOpen) {
                         tryRemoteLog();
                     }
+                }
+                
+                /**
+                 * stop recording the trace and flush everything
+                 */
+                this.stopTracing = function () {
+                	tracingDone = true;
+	                alert("tracing stopped; flushing...");
+                	if (!IN_MEMORY_BROWSER_LOG) {
+                		this.flush();                		
+                	}
                 }
             }
 
@@ -1725,7 +1760,18 @@ if (typeof J$ === 'undefined') J$ = {};
                 traceWriter = new TraceWriter();
                 this.onflush = traceWriter.onflush;
                 if (isBrowser) {
-                    this.command('reset');
+                	if (!IN_MEMORY_BROWSER_LOG) {
+                    	this.command('reset');
+                    }
+                    window.addEventListener('keydown', function (e) {
+                    	// keyboard shortcut is Alt-Shift-T for now
+                    	if (e.altKey && e.shiftKey && e.keyCode === 84) {
+                    		traceWriter.stopTracing();
+                    		traceWriter.onflush(function () {
+                    			alert("trace flush complete");
+                    		});
+                    	}
+                    });
                 }
             }
         }

@@ -16,6 +16,8 @@
 
 // Author: Koushik Sen
 
+/*jslint node: true */
+
 var WebSocketServer = require('websocket').server;
 var http = require('http');
 
@@ -37,16 +39,8 @@ server.listen(8080, function() {
     console.log((new Date()) + ' Server is listening on port 8080');
 });
 
-wsServer = new WebSocketServer({
-    httpServer: server,
-    // You should not use autoAcceptConnections for production
-    // applications, as it defeats all standard cross-origin protection
-    // facilities built into the protocol and the browser.  You should
-    // *always* verify the connection's origin and decide whether or not
-    // to accept it.
-    maxReceivedFrameSize: 64*1024*1024,
-    maxReceivedMessageSize: 64*1024*1024,
-    autoAcceptConnections: false
+var wsServer = new WebSocketServer({
+    httpServer: server
 });
 
 function originIsAllowed(origin) {
@@ -86,9 +80,9 @@ wsServer.on('request', function(request) {
 //                    fs.closeSync(traceFh);
 //                    isOpen = false;
 //                }
-                var sys = require('sys')
+                var sys = require('sys');
                 var exec = require('child_process').exec;
-                function puts(error, stdout, stderr) { sys.puts(stdout) }
+                var puts = function(error, stdout, stderr) { sys.puts(stdout); };
                 exec("./por "+url, puts);
             } else {
                 fs.writeSync(traceFh,msg);

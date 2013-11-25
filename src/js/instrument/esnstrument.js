@@ -320,23 +320,33 @@
     var traceWfh;
     var fs;
 
-    function openIIDMapFile() {
-        if (traceWfh === undefined) {
-            fs = require('fs');
-            traceWfh = fs.openSync(SMAP_FILE_NAME, 'w');
-        }
-    }
-
     function writeLineToIIDMap(str) {
         if (traceWfh) {
             fs.writeSync(traceWfh, str);
         }
     }
 
+    /**
+     * if not yet open, open the IID map file and write the header.
+     * @param {string} outputDir an optional output directory for the sourcemap file
+     */
+    function openIIDMapFile(outputDir) {
+        if (traceWfh === undefined) {
+            fs = require('fs');
+            var smapFile = outputDir ? (require('path').join(outputDir, SMAP_FILE_NAME)) : SMAP_FILE_NAME;
+            traceWfh = fs.openSync(smapFile, 'w');
+            writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var filename;\n");
+        }
+    }
 
+    /**
+     * if open, write footer and close IID map file
+     */
     function closeIIDMapFile() {
         if (traceWfh) {
+            writeLineToIIDMap("}(typeof " + PREFIX1 + " === 'undefined'? " + PREFIX1 + " = {}:" + PREFIX1 + "));\n");
             fs.closeSync(traceWfh);
+            traceWfh = undefined;
         }
     }
 
@@ -1294,13 +1304,19 @@
      * @param {boolean} tryCatchAtTop Should a try-catch block be inserted
      *          at the top-level of the instrumented code?
      * @param {string} instFileName What filename should be associated with
-     *          the instrumented code?  optional
+     *          the instrumented code?  optional.  if open, IID map file
+     *        will also be updated
      */
     function instrumentCode(code, tryCatchAtTop, instFileName) {
         var oldCondCount;
 
 		if (instFileName) {
 			filename = instFileName;
+			// this works under the assumption that the app root directory,
+			// the directory in which the sourcemap file is written, and
+			// the current working directory are all the same during replay
+			// TODO add parameters to allow these paths to be distinct
+            writeLineToIIDMap("filename = \"" + filename + "\";\n");			
 		}
         if (typeof  code === "string" && code.indexOf(noInstr) < 0) {
             if (!tryCatchAtTop) {
@@ -1354,7 +1370,6 @@
 
 
         openIIDMapFile();
-        writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var filename;\n");
         for (i = 2; i < args.length; i++) {
             filename = args[i];
             writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(),filename)) + "\";\n");
@@ -1380,7 +1395,6 @@
             saveCode(n_code, newFileName, newFileOnly);
 //            console.timeEnd("save")
         }
-        writeLineToIIDMap("}(typeof " + PREFIX1 + " === 'undefined'? " + PREFIX1 + " = {}:" + PREFIX1 + "));\n");
         closeIIDMapFile();
     }
 
@@ -1392,6 +1406,8 @@
         sandbox.instrumentCode = instrumentCode;
         sandbox.instrumentFile = instrumentFile;
         sandbox.fileSuffix = FILESUFFIX1;
+        sandbox.openIIDMapFile = openIIDMapFile;
+        sandbox.closeIIDMapFile = closeIIDMapFile;
     }
 }((typeof J$ === 'undefined')? (typeof exports === 'undefined' ? undefined : exports):J$)); 
 

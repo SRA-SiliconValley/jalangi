@@ -121,6 +121,8 @@ function initOutputDir() {
  * Jalangi scripts at the top of the file.
  */
 function startJalangiProxy() {
+	// set up the instrumenter to write the source map file to the output directory
+	esnstrument.openIIDMapFile(outputDir);
 	proxy.start({ headerCode: createHeaderCode(), rewriter: rewriter, port: 8501 });
 }
 
@@ -137,5 +139,17 @@ if (args.ignoreInline) {
 }
 initOutputDir();
 startJalangiProxy();
+
 // TODO add command-line option to not launch websocket proxy
 jalangi_ws.start({ outputDir: outputDir });
+
+// TODO temporary hack; this is very gross.  we need separate IID map files per script file
+var exitFun = function () {
+	console.log("closing IID map file...");
+	esnstrument.closeIIDMapFile();
+	console.log("done");
+	process.exit();
+};
+
+process.on('exit', exitFun);
+process.on('SIGINT', exitFun);

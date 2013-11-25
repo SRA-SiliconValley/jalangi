@@ -21,6 +21,7 @@
 var proxy = require("../../../../rewriting-proxy/proxy");
 var esnstrument = require("../instrument/esnstrument");
 var fs = require("fs");
+var path = require("path");
 var urlParser = require("url");
 var ArgumentParser = require('argparse').ArgumentParser;
 var mkdirp = require('mkdirp');
@@ -86,10 +87,11 @@ function rewriter(src, metadata) {
 		return src;
 	}
 	console.log("instrumenting " + url);
-	var filename = outputDir + "/" + createFilenameForScript(url);
+	var basename = createFilenameForScript(url);
+	var filename = path.join(outputDir, basename);
 	// TODO check for file conflicts and handle appropriately
 	fs.writeFileSync(filename, src);
-	var instrumented = esnstrument.instrumentCode(src, true, filename);
+	var instrumented = esnstrument.instrumentCode(src, true, basename);
 	fs.writeFileSync(filename.replace(".js",esnstrument.fileSuffix+".js"), instrumented);
 	return instrumented;
 }
@@ -109,6 +111,9 @@ function initOutputDir() {
 	mkdirp.sync(scriptDirToTry);
 	console.log("writing output to " + scriptDirToTry);
 	outputDir = scriptDirToTry;
+	// write an empty 'inputs.js' file here, to make replay happy
+	// TODO make this filename more robust against name collisions
+	fs.writeFileSync(path.join(outputDir, "inputs.js"), "");
 }
 /**
  * start the instrumenting proxy.  This will instrument

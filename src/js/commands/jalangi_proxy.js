@@ -16,7 +16,7 @@
 
 // Author: Manu Sridharan
 
-/*jslint node: true */
+/*jslint node: true plusplus: false */
 
 var proxy = require("../../../../rewriting-proxy/proxy");
 var esnstrument = require("../instrument/esnstrument");
@@ -24,6 +24,7 @@ var fs = require("fs");
 var urlParser = require("url");
 var ArgumentParser = require('argparse').ArgumentParser;
 var mkdirp = require('mkdirp');
+var jalangi_ws = require("./socket.js");
 
 
 // CONFIGURATION VARS
@@ -38,9 +39,9 @@ var headerSources = ["src/js/analysis.js",
 					"src/js/instrument/esnstrument.js"];
 					
 /**
- * where should instrumented scripts be written to disk?
+ * where should output files be written to disk?
  */
-var instScriptDir = "/tmp/instScripts";
+var outputDir = "/tmp/instScripts";
 
 /**
  * should inline scripts be ignored?
@@ -85,7 +86,7 @@ function rewriter(src, metadata) {
 		return src;
 	}
 	console.log("instrumenting " + url);
-	var filename = instScriptDir + "/" + createFilenameForScript(url);
+	var filename = outputDir + "/" + createFilenameForScript(url);
 	// TODO check for file conflicts and handle appropriately
 	fs.writeFileSync(filename, src);
 	var instrumented = esnstrument.instrumentCode(src, true, filename);
@@ -96,18 +97,18 @@ function rewriter(src, metadata) {
 /**
  * create a fresh directory in which to dump instrumented scripts
  */
-function initInstScriptDir() {
+function initOutputDir() {
 	var scriptDirToTry = "";
 	for (var i = 0; i < 100; i++) {
-		scriptDirToTry = instScriptDir + "/site" + i;
+		scriptDirToTry = outputDir + "/site" + i;
 		if (!fs.existsSync(scriptDirToTry)) {
 			break;
 		}
 	}
 	// create the directory, including parents
 	mkdirp.sync(scriptDirToTry);
-	console.log("writing instrumented scripts to " + scriptDirToTry);
-	instScriptDir = scriptDirToTry;
+	console.log("writing output to " + scriptDirToTry);
+	outputDir = scriptDirToTry;
 }
 /**
  * start the instrumenting proxy.  This will instrument
@@ -124,10 +125,12 @@ parser.addArgument(['-i', '--ignoreInline'], { help: "ignore all inline scripts"
 
 var args = parser.parseArgs();
 if (args.outputDir) {
-	instScriptDir = args.outputDir;	
+	outputDir = args.outputDir;	
 }
 if (args.ignoreInline) {
 	ignoreInline = args.ignoreInline;
 }
-initInstScriptDir();
+initOutputDir();
 startJalangiProxy();
+// TODO add command-line option to not launch websocket proxy
+jalangi_ws.start({ outputDir: outputDir });

@@ -60,6 +60,7 @@ function createHeaderCode() {
 }
 
 var inlineRegexp = /#(inline|event-handler|js-url)/;
+
 /**
  * generate a filename for a script with the given url
  */
@@ -74,7 +75,8 @@ function createFilenameForScript(url) {
 }
 
 /**
- * performs Jalangi instrumentation, and writes associated data to disk.
+ * performs Jalangi instrumentation, and writes associated data to disk.  Saves
+ * the original script foo.js and the instrumented script foo_jalangi_.js
  */
 function rewriter(src, metadata) {
 	var url = metadata.url;
@@ -83,9 +85,9 @@ function rewriter(src, metadata) {
 		return src;
 	}
 	console.log("instrumenting " + url);
-	// create filename for script
 	var filename = instScriptDir + "/" + createFilenameForScript(url);
-	console.log("filename " + filename);
+	// TODO check for file conflicts and handle appropriately
+	fs.writeFileSync(filename, src);
 	var instrumented = esnstrument.instrumentCode(src, true, filename);
 	fs.writeFileSync(filename.replace(".js",esnstrument.fileSuffix+".js"), instrumented);
 	return instrumented;

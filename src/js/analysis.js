@@ -112,6 +112,7 @@ if (typeof J$ === 'undefined') J$ = {};
         var DEBUG = false;
         var WARN = false;
         var SERIOUS_WARN = false;
+        // make MAX_BUF_SIZE slightly less than 2^16, to allow over low-level overheads
         var MAX_BUF_SIZE = 64000;
         var TRACE_FILE_NAME = 'jalangi_trace';
         // should we keep the trace in memory in the browser?
@@ -1540,16 +1541,29 @@ if (typeof J$ === 'undefined') J$ = {};
                     return traceWfh;
                 }
 
+				/**
+				 * @param {string} line
+				 */
                 this.logToFile = function (line) {
                 	if (tracingDone) {
                 		// do nothing
                 		return;
                 	}
-                    buffer.push(line);
-                    bufferSize += line.length;
-                    if (bufferSize > MAX_BUF_SIZE) {
-                        this.flush();
-                    }
+                	var len = line.length;
+                	// we need this loop because it's possible that len >= MAX_BUF_SIZE
+                	// TODO fast path for case where len < MAX_BUF_SIZE?
+                	var start = 0, end = len < MAX_BUF_SIZE ? len : MAX_BUF_SIZE;
+                	while (start < len) {
+                		var chunk = line.substring(start, end);
+                		var curLen = end - start;
+                		if (bufferSize + curLen > MAX_BUF_SIZE) {
+                			this.flush();
+                		}
+                		buffer.push(chunk);
+                		bufferSize += curLen;
+                		start = end;
+                		end = (end + MAX_BUF_SIZE < len) ? end + MAX_BUF_SIZE : len;
+                	}
                 }
 
                 this.flush = function () {
@@ -1620,6 +1634,9 @@ if (typeof J$ === 'undefined') J$ = {};
                 }
 
                 this.remoteLog = function (message) {
+                    if (message.length > MAX_BUF_SIZE) {
+                    	throw new Error("message too big!!!");
+                    }
                     remoteBuffer.push(message);
                     openSocketIfNotOpen();
                     if (isOpen) {

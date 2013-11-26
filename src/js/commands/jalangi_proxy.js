@@ -16,14 +16,16 @@
 
 // Author: Manu Sridharan
 
-/*jslint node: true */
+/*jslint node: true plusplus: false */
 
 var proxy = require("../../../../rewriting-proxy/proxy");
 var esnstrument = require("../instrument/esnstrument");
 var fs = require("fs");
+var path = require("path");
 var urlParser = require("url");
 var ArgumentParser = require('argparse').ArgumentParser;
 var mkdirp = require('mkdirp');
+var jalangi_ws = require("./socket.js");
 
 
 // CONFIGURATION VARS
@@ -38,9 +40,9 @@ var headerSources = ["src/js/analysis.js",
 					"src/js/instrument/esnstrument.js"];
 					
 /**
- * where should instrumented scripts be written to disk?
+ * where should output files be written to disk?
  */
-var instScriptDir = "/tmp/instScripts";
+var outputDir = "/tmp/instScripts";
 
 /**
  * should inline scripts be ignored?
@@ -60,6 +62,7 @@ function createHeaderCode() {
 }
 
 var inlineRegexp = /#(inline|event-handler|js-url)/;
+
 /**
  * generate a filename for a script with the given url
  */
@@ -74,7 +77,8 @@ function createFilenameForScript(url) {
 }
 
 /**
- * performs Jalangi instrumentation, and writes associated data to disk.
+ * performs Jalangi instrumentation, and writes associated data to disk.  Saves
+ * the original script foo.js and the instrumented script foo_jalangi_.js
  */
 function rewriter(src, metadata) {
 	var url = metadata.url;
@@ -83,10 +87,11 @@ function rewriter(src, metadata) {
 		return src;
 	}
 	console.log("instrumenting " + url);
-	// create filename for script
-	var filename = instScriptDir + "/" + createFilenameForScript(url);
-	console.log("filename " + filename);
-	var instrumented = esnstrument.instrumentCode(src, true, filename);
+	var basename = createFilenameForScript(url);
+	var filename = path.join(outputDir, basename);
+	// TODO check for file conflicts and handle appropriately
+	fs.writeFileSync(filename, src);
+	var instrumented = esnstrument.instrumentCode(src, true, basename);
 	fs.writeFileSync(filename.replace(".js",esnstrument.fileSuffix+".js"), instrumented);
 	return instrumented;
 }
@@ -94,18 +99,21 @@ function rewriter(src, metadata) {
 /**
  * create a fresh directory in which to dump instrumented scripts
  */
-function initInstScriptDir() {
+function initOutputDir() {
 	var scriptDirToTry = "";
 	for (var i = 0; i < 100; i++) {
-		scriptDirToTry = instScriptDir + "/site" + i;
+		scriptDirToTry = outputDir + "/site" + i;
 		if (!fs.existsSync(scriptDirToTry)) {
 			break;
 		}
 	}
 	// create the directory, including parents
 	mkdirp.sync(scriptDirToTry);
-	console.log("writing instrumented scripts to " + scriptDirToTry);
-	instScriptDir = scriptDirToTry;
+	console.log("writing output to " + scriptDirToTry);
+	outputDir = scriptDirToTry;
+	// write an empty 'inputs.js' file here, to make replay happy
+	// TODO make this filename more robust against name collisions
+	fs.writeFileSync(path.join(outputDir, "inputs.js"), "");
 }
 /**
  * start the instrumenting proxy.  This will instrument
@@ -113,6 +121,8 @@ function initInstScriptDir() {
  * Jalangi scripts at the top of the file.
  */
 function startJalangiProxy() {
+	// set up the instrumenter to write the source map file to the output directory
+	esnstrument.openIIDMapFile(outputDir);
 	proxy.start({ headerCode: createHeaderCode(), rewriter: rewriter, port: 8501 });
 }
 
@@ -122,10 +132,24 @@ parser.addArgument(['-i', '--ignoreInline'], { help: "ignore all inline scripts"
 
 var args = parser.parseArgs();
 if (args.outputDir) {
-	instScriptDir = args.outputDir;	
+	outputDir = args.outputDir;	
 }
 if (args.ignoreInline) {
 	ignoreInline = args.ignoreInline;
 }
-initInstScriptDir();
+initOutputDir();
 startJalangiProxy();
+
+// TODO add command-line option to not launch websocket proxy
+jalangi_ws.start({ outputDir: outputDir });
+
+// TODO temporary hack; this is very gross.  we need separate IID map files per script file
+var exitFun = function () {
+	console.log("closing IID map file...");
+	esnstrument.closeIIDMapFile();
+	console.log("done");
+	process.exit();
+};
+
+process.on('exit', exitFun);
+process.on('SIGINT', exitFun);

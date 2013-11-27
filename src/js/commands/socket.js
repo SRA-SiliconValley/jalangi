@@ -44,12 +44,6 @@ function start(options) {
 	var port = options.port ? options.port : 8080;
 	var url = options.url ? options.url : "";
 	var outputDir = options.outputDir ? options.outputDir : ".";
-	if (!port) {
-		port = 8080;
-	}
-	if (!url) {
-		url = "";
-	}
 	var server = http.createServer(function(request, response) {
 	    console.log((new Date()) + ' Received request for ' + request.url);
 	    response.writeHead(404);

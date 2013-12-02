@@ -37,6 +37,7 @@ var headerSources = ["src/js/analysis.js",
 					"src/js/InputManager.js", 
 					"node_modules/escodegen/escodegen.browser.js",
 					"node_modules/esprima/esprima.js",
+					"src/js/utils/astUtil.js",
 					"src/js/instrument/esnstrument.js"];
 					
 /**

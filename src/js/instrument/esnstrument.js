@@ -16,18 +16,18 @@
 
 // Author: Koushik Sen
 
-/*global esprima require escodegen process __dirname __filename console window module exports J$ */
+/*global astUtil esprima require escodegen process __dirname __filename console window module exports J$ */
 (function (sandbox) {
     if (typeof esprima === 'undefined') {
         esprima = require("esprima");
         escodegen = require('escodegen');
+        astUtil = require("./../utils/astUtil");
     }
 
     var FILESUFFIX1 = "_jalangi_";
     var COVERAGE_FILE_NAME = "jalangi_coverage";
     var SMAP_FILE_NAME = "jalangi_sourcemap.js";
-    var PREFIX1 = "J$";
-    var RP = PREFIX1 + "_";
+    var RP = astUtil.JALANGI_VAR + "_";
 
 //    var N_LOG_LOAD = 0,
 //    var N_LOG_FUN_CALL = 1,
@@ -55,32 +55,32 @@
         N_LOG_UNDEFINED_LIT = 24,
         N_LOG_NULL_LIT = 25;
 
-    var logFunctionEnterFunName = PREFIX1 + ".Fe";
-    var logFunctionReturnFunName = PREFIX1 + ".Fr";
-    var logFunCallFunName = PREFIX1 + ".F";
-    var logMethodCallFunName = PREFIX1 + ".M";
-    var logAssignFunName = PREFIX1 + ".A";
-    var logPutFieldFunName = PREFIX1 + ".P";
-    var logGetFieldFunName = PREFIX1 + ".G";
-    var logScriptEntryFunName = PREFIX1 + ".Se";
-    var logScriptExitFunName = PREFIX1 + ".Sr";
-    var logReadFunName = PREFIX1 + ".R";
-    var logWriteFunName = PREFIX1 + ".W";
-    var logIFunName = PREFIX1 + ".I";
-    var logHashFunName = PREFIX1 + ".H";
-    var logLitFunName = PREFIX1 + ".T";
-    var logInitFunName = PREFIX1 + ".N";
-    var logReturnFunName = PREFIX1 + ".Rt";
-    var logReturnAggrFunName = PREFIX1 + ".Ra";
+    var logFunctionEnterFunName = astUtil.JALANGI_VAR + ".Fe";
+    var logFunctionReturnFunName = astUtil.JALANGI_VAR + ".Fr";
+    var logFunCallFunName = astUtil.JALANGI_VAR + ".F";
+    var logMethodCallFunName = astUtil.JALANGI_VAR + ".M";
+    var logAssignFunName = astUtil.JALANGI_VAR + ".A";
+    var logPutFieldFunName = astUtil.JALANGI_VAR + ".P";
+    var logGetFieldFunName = astUtil.JALANGI_VAR + ".G";
+    var logScriptEntryFunName = astUtil.JALANGI_VAR + ".Se";
+    var logScriptExitFunName = astUtil.JALANGI_VAR + ".Sr";
+    var logReadFunName = astUtil.JALANGI_VAR + ".R";
+    var logWriteFunName = astUtil.JALANGI_VAR + ".W";
+    var logIFunName = astUtil.JALANGI_VAR + ".I";
+    var logHashFunName = astUtil.JALANGI_VAR + ".H";
+    var logLitFunName = astUtil.JALANGI_VAR + ".T";
+    var logInitFunName = astUtil.JALANGI_VAR + ".N";
+    var logReturnFunName = astUtil.JALANGI_VAR + ".Rt";
+    var logReturnAggrFunName = astUtil.JALANGI_VAR + ".Ra";
 
-    var logBinaryOpFunName = PREFIX1 + ".B";
-    var logUnaryOpFunName = PREFIX1 + ".U";
-    var logConditionalFunName = PREFIX1 + ".C";
-    var logSwitchLeftFunName = PREFIX1 + ".C1";
-    var logSwitchRightFunName = PREFIX1 + ".C2";
-    var logLastFunName = PREFIX1 + "._";
+    var logBinaryOpFunName = astUtil.JALANGI_VAR + ".B";
+    var logUnaryOpFunName = astUtil.JALANGI_VAR + ".U";
+    var logConditionalFunName = astUtil.JALANGI_VAR + ".C";
+    var logSwitchLeftFunName = astUtil.JALANGI_VAR + ".C1";
+    var logSwitchRightFunName = astUtil.JALANGI_VAR + ".C2";
+    var logLastFunName = astUtil.JALANGI_VAR + "._";
 
-    var instrumentCodeFunName = PREFIX1 + ".instrumentCode";
+    var instrumentCodeFunName = astUtil.JALANGI_VAR + ".instrumentCode";
 
 
     var Syntax = {
@@ -166,80 +166,6 @@
         return fs.readFileSync(filename, "utf8");
     }
 
-    var CONTEXT = {
-        RHS:1,
-        IGNORE:2,
-        OEXP:3,
-        PARAMS:4,
-        OEXP2:5,
-        GETTER:6,
-        SETTER:7
-    };
-
-    function ignoreSubAst(node) {
-        return node.type === 'CallExpression' && node.callee.type === 'MemberExpression' &&
-            node.callee.object.type === 'Identifier' && node.callee.object.name === PREFIX1 &&
-            node.callee.property.type === 'Identifier' && node.callee.property.name === 'I';
-    }
-
-    function transformAst(object, visitorPost, visitorPre, context, noIgnore) {
-        var key, child, type, ret, newContext;
-
-        type = object.type;
-        if (visitorPre && HOP(visitorPre, type))
-            visitorPre[type](object, context);
-
-        for (key in object) {
-            if (object.hasOwnProperty(key)) {
-                child = object[key];
-                if (typeof child === 'object' && child !== null && key !== "scope" && (noIgnore || !ignoreSubAst(object))) {
-                    if ((type === 'AssignmentExpression' && key === 'left') ||
-                        (type === 'UpdateExpression' && key === 'argument') ||
-                        (type === 'UnaryExpression' && key === 'argument' && object.operator === 'delete') ||
-                        (type === 'ForInStatement' && key === 'left') ||
-                        ((type === 'FunctionExpression' || type === 'FunctionDeclaration') && key === 'id') ||
-                        (type === 'LabeledStatement' && key === 'label') ||
-                        (type === 'BreakStatement' && key === 'label') ||
-                        (type === 'CatchClause' && key === 'param') ||
-                        (type === 'ContinueStatement' && key === 'label') ||
-                        ((type === 'CallExpression' || type === 'NewExpression') &&
-                            key === 'callee' &&
-                            (object.callee.type === 'MemberExpression' ||
-                                (object.callee.type === 'Identifier' && object.callee.name === 'eval'))) ||
-                        (type === 'VariableDeclarator' && key === 'id') ||
-                        (type === 'MemberExpression' && !object.computed && key === 'property')) {
-                        newContext = CONTEXT.IGNORE;
-                    } else if (type === 'ObjectExpression' && key === 'properties') {
-                        newContext = CONTEXT.OEXP;
-                    } else if ((type === 'FunctionExpression' || type === 'FunctionDeclaration') && key === 'params') {
-                        newContext = CONTEXT.PARAMS;
-                    } else if (context === CONTEXT.OEXP) {
-                        newContext = CONTEXT.OEXP2;
-                    } else if (context === CONTEXT.OEXP2 && key === 'key') {
-                        newContext = CONTEXT.IGNORE;
-                    } else if (context === CONTEXT.PARAMS) {
-                        newContext = CONTEXT.IGNORE;
-                    } else if (type === 'Property' && key === 'value' && object.kind === 'get') {
-                        newContext = CONTEXT.GETTER;
-                    } else if (type === 'Property' && key === 'value' && object.kind === 'set') {
-                        newContext = CONTEXT.SETTER;
-                    } else {
-                        newContext = CONTEXT.RHS;
-                    }
-                    object[key] = transformAst(child, visitorPost, visitorPre, newContext, noIgnore);
-
-                }
-            }
-        }
-
-        if (visitorPost && HOP(visitorPost, type))
-            ret = visitorPost[type](object, context);
-        else
-            ret = object;
-        return ret;
-
-    }
-
     var filename;
 
 // J$_i in expression context will replace it by an AST
@@ -264,7 +190,7 @@
             }
         };
         var ast = esprima.parse(code);
-        var newAst = transformAst(ast, visitorReplaceInExpr, undefined, undefined, true);
+        var newAst = astUtil.transformAst(ast, visitorReplaceInExpr, undefined, undefined, true);
         //console.log(newAst);
         return newAst.body;
     }
@@ -344,7 +270,7 @@
      */
     function closeIIDMapFile() {
         if (traceWfh) {
-            writeLineToIIDMap("}(typeof " + PREFIX1 + " === 'undefined'? " + PREFIX1 + " = {}:" + PREFIX1 + "));\n");
+            writeLineToIIDMap("}(typeof " + astUtil.JALANGI_VAR + " === 'undefined'? " + astUtil.JALANGI_VAR + " = {}:" + astUtil.JALANGI_VAR + "));\n");
             fs.closeSync(traceWfh);
             traceWfh = undefined;
         }
@@ -566,7 +492,7 @@
 
     function wrapEvalArg(ast) {
         var ret = replaceInExpr(
-            instrumentCodeFunName + "(" + PREFIX1 + ".getConcrete(" + RP + "1), false)",
+            instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), false)",
             ast
         );
         transferLoc(ret, ast);
@@ -720,9 +646,9 @@
         printIidToLoc(node);
         var l = labelCounter++;
         var ret = replaceInStatement(
-            "function n() { jalangiLabel" + l + ": while(true) { try {" + RP + "1} catch(" + PREFIX1 +
-                "e) { console.log(" + PREFIX1 + "e); console.log(" +
-                PREFIX1 + "e.stack); throw " + PREFIX1 +
+            "function n() { jalangiLabel" + l + ": while(true) { try {" + RP + "1} catch(" + astUtil.JALANGI_VAR +
+                "e) { console.log(" + astUtil.JALANGI_VAR + "e); console.log(" +
+                astUtil.JALANGI_VAR + "e.stack); throw " + astUtil.JALANGI_VAR +
                 "e; } finally { if (" + logScriptExitFunName + "(" +
                 RP + "2)) continue jalangiLabel" + l + ";\n else \n  break jalangiLabel" + l + ";\n }\n }}", body,
             getIid()
@@ -738,9 +664,9 @@
         printIidToLoc(node);
         var l = labelCounter++;
         var ret = replaceInStatement(
-            "function n() { jalangiLabel" + l + ": while(true) { try {" + RP + "1} catch(" + PREFIX1 +
-                "e) { console.log(" + PREFIX1 + "e); console.log(" +
-                PREFIX1 + "e.stack); throw " + PREFIX1 +
+            "function n() { jalangiLabel" + l + ": while(true) { try {" + RP + "1} catch(" + astUtil.JALANGI_VAR +
+                "e) { console.log(" + astUtil.JALANGI_VAR + "e); console.log(" +
+                astUtil.JALANGI_VAR + "e.stack); throw " + astUtil.JALANGI_VAR +
                 "e; } finally { if (" + logFunctionReturnFunName + "(" +
                 RP + "2)) continue jalangiLabel" + l + ";\n else \n  return " + logReturnAggrFunName + "();\n }\n }}", body,
             getIid()
@@ -754,9 +680,9 @@
 
 //    function wrapScriptBodyWithTryCatch(node, body) {
 //        printIidToLoc(node);
-//        var ret = replaceInStatement("try {"+RP+"1} catch("+PREFIX1+
-//                "e) { console.log("+PREFIX1+"e); console.log("+
-//                PREFIX1+"e.stack); throw "+PREFIX1+
+//        var ret = replaceInStatement("try {"+RP+"1} catch("+astUtil.JALANGI_VAR+
+//                "e) { console.log("+astUtil.JALANGI_VAR+"e); console.log("+
+//                astUtil.JALANGI_VAR+"e.stack); throw "+astUtil.JALANGI_VAR+
 //                "e; } finally { "+logScriptExitFunName+"("+
 //                RP+"2); }",
 //            body,
@@ -894,7 +820,7 @@
             } else if (ast.name === "NaN" || ast.name === "Infinity") {
                 ret = wrapLiteral(ast, ast, N_LOG_NUMBER_LIT);
                 return ret;
-            } if(ast.name === PREFIX1 ||
+            } if(ast.name === astUtil.JALANGI_VAR ||
                 ast.name === "eval"){
                 return ast;
             } else if (scope.hasVar(ast.name)) {
@@ -913,8 +839,8 @@
 
     function instrumentLoadModStore(node) {
         if (node.left.type === 'Identifier') {
-            var ret = instrumentLoad(node.left);
-            var tmp1 = wrapRHSOfModStore(node.right, ret, node.right, node.operator.substring(0, node.operator.length - 1));
+            var tmp0 = instrumentLoad(node.left);
+            var tmp1 = wrapRHSOfModStore(node.right, tmp0, node.right, node.operator.substring(0, node.operator.length - 1));
 
             var tmp2;
             if (scope.hasVar(node.left.name)) {
@@ -971,7 +897,7 @@
 
     var visitorRRPost = {
         'Literal':function (node, context) {
-            if (context === CONTEXT.RHS) {
+            if (context === astUtil.CONTEXT.RHS) {
 
                 var litType;
                 switch (typeof node.value) {
@@ -1056,7 +982,7 @@
         "FunctionExpression":function (node, context) {
             node.body.body = instrumentFunctionEntryExit(node, node.body.body);
             var ret1;
-            if (context === CONTEXT.GETTER || context === CONTEXT.SETTER) {
+            if (context === astUtil.CONTEXT.GETTER || context === astUtil.CONTEXT.SETTER) {
                 ret1 = node;
             } else {
                 ret1 = wrapLiteral(node, node, N_LOG_FUNCTION_LIT);
@@ -1083,7 +1009,7 @@
             return ret;
         },
         'Identifier':function (node, context) {
-            if (context === CONTEXT.RHS) {
+            if (context === astUtil.CONTEXT.RHS) {
                 var ret = instrumentLoad(node);
                 return ret;
             } else {
@@ -1091,7 +1017,7 @@
             }
         },
         'MemberExpression':function (node, context) {
-            if (context === CONTEXT.RHS) {
+            if (context === astUtil.CONTEXT.RHS) {
                 var ret = instrumentLoad(node);
                 return ret;
             } else {
@@ -1277,7 +1203,7 @@
             'FunctionDeclaration':popScope,
             'FunctionExpression':popScope
         };
-        transformAst(ast, visitorPost, visitorPre);
+        astUtil.transformAst(ast, visitorPost, visitorPre);
     }
 
 
@@ -1289,7 +1215,7 @@
         addScopes(newAst);
         var len = visitorsPost.length;
         for (var i = 0; i < len; i++) {
-            newAst = transformAst(newAst, visitorsPost[i], visitorsPre[i], CONTEXT.RHS);
+            newAst = astUtil.transformAst(newAst, visitorsPost[i], visitorsPre[i], astUtil.CONTEXT.RHS);
         }
 //        console.timeEnd("transform")
         return newAst;

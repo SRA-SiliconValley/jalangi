@@ -18,31 +18,68 @@
 // Author: Manu Sridharan
 
 /*jslint node: true */
-
+/*global window */
 
 function HOP(obj, prop) {
     return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
-var PREFIX1 = "J$";
+/**
+ * name of the global variable holding the Jalangi runtime objects
+ */
+var JALANGI_VAR = "J$";
 
+/**
+ * information on surrounding AST context, to be used by visitors passed
+ * to transformAst()
+ */
 var CONTEXT = {
+	// TODO what is this?
     RHS:1,
+    // TODO what is this?
     IGNORE:2,
+    // inside the properties of an ObjectExpression
     OEXP:3,
+    // inside the formal parameters of a FunctionDeclaration or FunctionExpression
     PARAMS:4,
+    // TODO what is this?
     OEXP2:5,
+    // inside a getter
     GETTER:6,
+    // inside a setter
     SETTER:7
 };
 
+/**
+ * invoked by transformAst() to see if a sub-ast should be ignored.  For now,
+ * only ignoring calls to J$.I()
+ */
 function ignoreSubAst(node) {
     return node.type === 'CallExpression' && node.callee.type === 'MemberExpression' &&
-        node.callee.object.type === 'Identifier' && node.callee.object.name === PREFIX1 &&
+        node.callee.object.type === 'Identifier' && node.callee.object.name === JALANGI_VAR &&
         node.callee.property.type === 'Identifier' && node.callee.property.name === 'I';
 }
 
-
+/**
+ * generic AST visitor that allows for AST transformation.
+ * 
+ * @param object the root AST node to be visited
+ * @param visitorPost an object defining visitor methods to be executed after a node's children 
+ * have been visited.  The properties of visitorPost should be named with AST node types, and the
+ * property values should be functions that take the node to be visited and a context value (see
+ * the CONTEXT object above).  E.g., a post-visitor could be:
+ * { 'AssignmentExpression': function (node, context) {
+ *      // node.type === 'AssignmentExpression'	
+ *   }
+ * }
+ * The value returned by the visitorPost method for a node will replace the node in the AST.
+ * @param visitorPre an object defining visitor me5thods to be executed before a node's children
+ * have been visited.  Structure should be similar to visitorPost (see above).  The return value
+ * of visitorPre functions is ignored.
+ * @param context the context of the surrounding AST; see the CONTEXT object above
+ * @param {boolean} noIgnore if true, no sub-ast will be ignored.  Otherwise, sub-ASTs will be ignored
+ * if ignoreAST() returns true.
+ */
 function transformAst(object, visitorPost, visitorPre, context, noIgnore) {
     var key, child, type, ret, newContext;
 
@@ -162,5 +199,19 @@ function deserialize(iidToAstTable) {
 	});
 }
 
-exports.serialize = serialize;
-exports.deserialize = deserialize;
+// handle node.js and browser
+// TODO use browserify
+var exportObj;
+if (typeof exports === 'undefined') {
+	exportObj = {};
+	if (typeof window !== 'undefined') {
+		window.astUtil = exportObj;
+	}
+} else {
+	exportObj = exports;
+}
+exportObj.serialize = serialize;
+exportObj.deserialize = deserialize;
+exportObj.JALANGI_VAR = JALANGI_VAR;
+exportObj.CONTEXT = CONTEXT;
+exportObj.transformAst = transformAst;

@@ -167,8 +167,9 @@
         return fs.readFileSync(filename, "utf8");
     }
 
-    var filename;
-
+	// name of the file containing the instrumented code
+	var instCodeFileName;
+	
 // J$_i in expression context will replace it by an AST
 // {J$_i} will replace the body of the block statement with an array of statements passed as argument
 
@@ -773,8 +774,8 @@
 //    }
 
     function instrumentScriptEntryExit(node, body0) {
-        var modFile = (typeof filename === "string") ?
-            filename.replace(".js", FILESUFFIX1 + ".js") :
+        var modFile = (typeof instCodeFileName === "string")?
+            instCodeFileName:
             "internal";
         var body = createCallAsScriptEnterStatement(node, modFile).
             concat(syncDefuns(node, scope, true)).
@@ -1237,25 +1238,29 @@
     // the code will not be instrumented
     var noInstr = "// JALANGI DO NOT INSTRUMENT";
 
+	function makeInstCodeFileName(name) {
+		return name.replace(".js", FILESUFFIX1 + ".js")
+	}
+	
     /**
      * @param {string} code The code to instrument
      * @param {boolean} tryCatchAtTop Should a try-catch block be inserted
      *          at the top-level of the instrumented code?
-     * @param {string} instFileName What filename should be associated with
+     * @param {string} filename What filename should be associated with
      *          the instrumented code?  optional.  if open, IID map file
      *        will also be updated
      */
-    function instrumentCode(code, tryCatchAtTop, instFileName) {
+    function instrumentCode(code, tryCatchAtTop, filename) {
         var oldCondCount;
 
-        if (instFileName) {
-            filename = instFileName;
-            // this works under the assumption that the app root directory,
-            // the directory in which the sourcemap file is written, and
-            // the current working directory are all the same during replay
-            // TODO add parameters to allow these paths to be distinct
-            writeLineToIIDMap("filename = \"" + filename + "\";\n");
-        }
+		if (filename) {
+			// this works under the assumption that the app root directory,
+			// the directory in which the sourcemap file is written, and
+			// the current working directory are all the same during replay
+			// TODO add parameters to allow these paths to be distinct
+            writeLineToIIDMap("filename = \"" + filename + "\";\n");			
+            instCodeFileName = makeInstCodeFileName(filename);
+		}
         if (typeof  code === "string" && code.indexOf(noInstr) < 0) {
             if (!tryCatchAtTop) {
                 // this means we are inside an eval
@@ -1309,19 +1314,19 @@
 
         openIIDMapFile();
         for (i = 2; i < args.length; i++) {
-            filename = args[i];
-            writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
+            var filename = args[i];
+            writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(),filename)) + "\";\n");
             console.log("Instrumenting " + filename + " ...");
 //            console.time("load")
             var code = getCode(filename);
 //            console.timeEnd("load")
             insertTopLevelTryCatch = true;
+            instCodeFileName = makeInstCodeFileName(filename);
             var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
             //console.log(JSON.stringify(newAst, null, '\t'));
 
-            var newFileName = filename.replace(".js", FILESUFFIX1 + ".js");
-            var fileOnly = path.basename(filename);
-            var newFileOnly = path.basename(newFileName);
+            var newFileOnly = path.basename(instCodeFileName);
+//            var fileOnly = path.basename(filename);
             //var smap = escodegen.generate(newAst, {sourceMap: fileOnly});
             //smap = smap.replace(fileOnly, newFileOnly);
             //fs.writeFileSync(newFileName+".map", smap,"utf8");
@@ -1330,7 +1335,7 @@
             var n_code = escodegen.generate(newAst);
 //            console.timeEnd("generate")
 //            console.time("save")
-            saveCode(n_code, newFileName, newFileOnly);
+            saveCode(n_code, instCodeFileName, newFileOnly);
 //            console.timeEnd("save")
         }
         closeIIDMapFile();

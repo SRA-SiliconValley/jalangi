@@ -23,6 +23,9 @@
 
  */
 
+/*jslint node: true browser: true */
+/*global J$ alert */
+
 if (typeof J$ === 'undefined') J$ = {};
 
 (function (sandbox) {
@@ -1235,17 +1238,17 @@ if (typeof J$ === 'undefined') J$ = {};
                     var id = val[SPECIAL_PROP][SPECIAL_PROP];
                     objectMap[id] = obj;
                 }
-            }
+            };
 
 
             this.RR_evalBegin = function () {
                 evalFrames.push(frame);
                 frame = frameStack[0];
-            }
+            };
 
             this.RR_evalEnd = function () {
                 frame = evalFrames.pop();
-            }
+            };
 
             this.RR_G = function (iid, base, offset, val) {
                 var base_c, type;
@@ -1286,7 +1289,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 } else {
                     return val;
                 }
-            }
+            };
 
 
             this.RR_P = function (iid, base, offset, val) {
@@ -1296,13 +1299,13 @@ if (typeof J$ === 'undefined') J$ = {};
                         base_c[SPECIAL_PROP][getConcrete(offset)] = val;
                     }
                 }
-            }
+            };
 
             this.RR_W = function (iid, name, val) {
                 if (mode === MODE_RECORD || mode === MODE_REPLAY) {
                     getFrameContainingVar(name)[name] = val;
                 }
-            }
+            };
 
             this.RR_N = function (iid, name, val, isArgumentSync) {
                 if (mode === MODE_RECORD || mode === MODE_REPLAY) {
@@ -1312,7 +1315,7 @@ if (typeof J$ === 'undefined') J$ = {};
                         frame[name] = undefined;
                     }
                 }
-            }
+            };
 
             this.RR_R = function (iid, name, val) {
                 var ret, trackedVal, trackedFrame, tmp;
@@ -1346,7 +1349,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     ret = val;
                 }
                 return ret;
-            }
+            };
 
             this.RR_Fe = function (iid, val, dis) {
                 var ret;
@@ -1368,7 +1371,7 @@ if (typeof J$ === 'undefined') J$ = {};
                         }
                     }
                 }
-            }
+            };
 
             this.RR_Fr = function (iid) {
                 if (mode === MODE_RECORD || mode === MODE_REPLAY) {
@@ -1378,7 +1381,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     	traceWriter.flush();
                     }
                 }
-            }
+            };
 
             this.RR_Se = function (iid, val) {
                 var ret;
@@ -1394,7 +1397,7 @@ if (typeof J$ === 'undefined') J$ = {};
                         debugPrint("Index:" + traceInfo.getPreviousIndex());
                     }
                 }
-            }
+            };
 
             this.RR_Sr = function (iid) {
                 if (mode === MODE_RECORD || mode === MODE_REPLAY) {
@@ -1407,8 +1410,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 if (isBrowserReplay) {
                     this.RR_replay();
                 }
-            }
-
+            };
 
             this.RR_H = function (iid, val) {
                 var ret;
@@ -1438,7 +1440,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     val = ret;
                 }
                 return val;
-            }
+            };
 
 
             this.RR_L = function (iid, val, fun) {
@@ -1454,7 +1456,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     val = syncValue(ret, val, iid);
                 }
                 return val;
-            }
+            };
 
             this.RR_T = function (iid, val, fun) {
                 if ((mode === MODE_RECORD || mode === MODE_REPLAY) &&
@@ -1471,7 +1473,7 @@ if (typeof J$ === 'undefined') J$ = {};
                         val[SPECIAL_PROP3] = frame;
                     }
                 }
-            }
+            };
 
             this.RR_replay = function () {
                 if (mode === MODE_REPLAY) {
@@ -1513,7 +1515,7 @@ if (typeof J$ === 'undefined') J$ = {};
                         }
                     }
                 }
-            }
+            };
 
 
             function TraceWriter() {
@@ -1564,7 +1566,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 		start = end;
                 		end = (end + MAX_BUF_SIZE < len) ? end + MAX_BUF_SIZE : len;
                 	}
-                }
+                };
 
                 this.flush = function () {
                 	if (IN_MEMORY_BROWSER_LOG) {
@@ -1585,7 +1587,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     }
                     bufferSize = 0;
                     buffer = [];
-                }
+                };
 
 
                 function openSocketIfNotOpen() {
@@ -1623,7 +1625,7 @@ if (typeof J$ === 'undefined') J$ = {};
                         cb = callback;
                         tryRemoteLog();
                     }
-                }
+                };
 
                 function tryRemoteLog() {
                     isOpen = true;
@@ -1642,7 +1644,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     if (isOpen) {
                         tryRemoteLog();
                     }
-                }
+                };
                 
                 /**
                  * stop recording the trace and flush everything
@@ -1652,7 +1654,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 	if (!IN_MEMORY_BROWSER_LOG) {
                 		this.flush();                		
                 	}
-                }
+                };
             }
 
 
@@ -1741,7 +1743,7 @@ if (typeof J$ === 'undefined') J$ = {};
                         record = undefined;
                     }
                     return record;
-                }
+                };
 
                 this.next = function () {
                     if (curRecord !== null) {
@@ -1764,7 +1766,7 @@ if (typeof J$ === 'undefined') J$ = {};
                         return traceIndex - 2;
                     }
                     return traceIndex - 1;
-                }
+                };
 
             }
 

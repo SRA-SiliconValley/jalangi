@@ -1246,11 +1246,15 @@
      * @param {string} code The code to instrument
      * @param {boolean} tryCatchAtTop Should a try-catch block be inserted
      *          at the top-level of the instrumented code?
-     * @param {string} filename What filename should be associated with
-     *          the instrumented code?  optional.  if open, IID map file
-     *        will also be updated
+     * @param {string} filename What is the "original" filename of the instrumented code?  
+     *                 optional.  if the IID map file is open, it will be updated during
+     *                 instrumentation with source locations pointing to this filename
+     * @param {string} instFileName What should the filename for the instrumented code be?
+     *                 If not provided, and the filename parameter is provided, defaults to
+     *                 filename_jalangi_.js.  We need this filename because it gets written
+     *                 into the trace produced by the instrumented code during record
      */
-    function instrumentCode(code, tryCatchAtTop, filename) {
+    function instrumentCode(code, tryCatchAtTop, filename, instFileName) {
         var oldCondCount;
 
 		if (filename) {
@@ -1259,7 +1263,7 @@
 			// the current working directory are all the same during replay
 			// TODO add parameters to allow these paths to be distinct
             writeLineToIIDMap("filename = \"" + filename + "\";\n");			
-            instCodeFileName = makeInstCodeFileName(filename);
+            instCodeFileName = instFileName ? instFileName : makeInstCodeFileName(filename);
 		}
         if (typeof  code === "string" && code.indexOf(noInstr) < 0) {
             if (!tryCatchAtTop) {

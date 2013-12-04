@@ -16,6 +16,8 @@
 
 // Author: Koushik Sen
 
+/*jslint node: true */
+/*global J$ */
 require('./../analysis');
 try {
 //    console.log("Starting replay ...")

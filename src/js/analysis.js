@@ -1678,7 +1678,12 @@ if (typeof J$ === 'undefined') J$ = {};
                     if (currentIndex >= frontierIndex) {
                         if (!traceFh) {
                             var FileLineReader = require('./utils/FileLineReader');
-                            traceFh = new FileLineReader(process.argv[2] ? process.argv[2] : TRACE_FILE_NAME);
+                            var traceFileName = process.argv[2] ? process.argv[2] : TRACE_FILE_NAME;
+                            traceFh = new FileLineReader(traceFileName);
+                        	// change working directory to wherever trace file resides
+                        	var pth = require('path');
+                        	var traceFileDir = pth.dirname(pth.resolve(process.cwd(),traceFileName));
+                        	process.chdir(traceFileDir);
                         }
                         traceArray = [];
                         while (!done && (flag = traceFh.hasNextLine()) && i < MAX_SIZE) {

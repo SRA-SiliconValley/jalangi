@@ -32,6 +32,8 @@ var assert = require('assert');
 
 var Transform = stream.Transform;
 
+var instrumentInline = false;
+
 // directory in which original app sits
 var appDir;
 
@@ -69,7 +71,15 @@ util.inherits(HTMLRewriteStream, Transform);
 HTMLRewriteStream.prototype._transform = accumulateData;
 
 HTMLRewriteStream.prototype._flush = function (cb) {
-	this.push(proxy.rewriteHTML(this.data, "http://foo.com", rewriteInlineScript, instUtil.getHeaderCode()));
+	if (instrumentInline) {
+		this.push(proxy.rewriteHTML(this.data, "http://foo.com", rewriteInlineScript, instUtil.getHeaderCode()));	
+	} else {
+		// just inject our header code
+		var headIndex = this.data.indexOf("<head>");
+		assert.ok(headIndex !== -1, "couldn't find head element");
+		var newHTML = this.data.slice(0, headIndex+6) + "<script>" + instUtil.getHeaderCode() + "</script>" + this.data.slice(headIndex+6);
+		this.push(newHTML);
+	}
 	cb();
 };
 

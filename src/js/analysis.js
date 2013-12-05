@@ -28,6 +28,11 @@
 
 if (typeof J$ === 'undefined') J$ = {};
 
+// stashed functions
+// TODO be more principled about this
+var functionPrototypeCall = Function.prototype.call;
+var objectPrototypeToString = Object.prototype.toString;
+
 (function (sandbox) {
     var MODE_RECORD = 1,
         MODE_REPLAY = 2,
@@ -1090,7 +1095,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     case "object":
                         if (val === null) {
                             typen = T_NULL;
-                        } else if (Object.prototype.toString.call(val) === '[object Array]') {
+                        } else if (functionPrototypeCall.call(objectPrototypeToString,val) === '[object Array]') {
                             typen = T_ARRAY;
                         } else {
                             typen = T_OBJECT;
@@ -1805,7 +1810,7 @@ if (typeof J$ === 'undefined') J$ = {};
         // initialize rrEngine, sandbox.analysis, executionIndex, and require.uncache
         executionIndex = new ExecutionIndex();
 
-        if (ANALYSIS && ANALYSIS.indexOf('Engine') >= 0) {
+        if (ANALYSIS && ANALYSIS.indexOf('Engine') >= 0 && mode !== MODE_RECORD) {
             var SymbolicEngine = require('./' + ANALYSIS);
             sandbox.analysis = new SymbolicEngine(executionIndex);
         }

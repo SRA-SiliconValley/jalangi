@@ -773,6 +773,11 @@
 //        return wrapFunBodyWithTryCatch(node, ast);
 //    }
 
+    /**
+     * instruments entry of a script.  Adds the script entry (J$.Se) callback,
+     * and the J$.N init callbacks for locals.
+     * 
+     */
     function instrumentScriptEntryExit(node, body0) {
         var modFile = (typeof instCodeFileName === "string")?
             instCodeFileName:
@@ -891,12 +896,13 @@
     }
 
 
-    // should a try-catch block be inserted at the top level of the instrumented code?
-    // we need this flag since when we're instrumenting eval'd code, we want to avoid
-    // wrapping the code in a try-catch, since that may not be syntactically valid in
+    // Should 'Program' nodes in the AST be wrapped with prefix code to load libraries,
+    // code to indicate script entry and exit, etc.?
+    // we need this flag since when we're instrumenting eval'd code, the code is parsed
+    // as a top-level 'Program', but the wrapping code may not be syntactically valid in 
     // the surrounding context, e.g.:
     //    var y = eval("x + 1");
-    var insertTopLevelTryCatch = true;
+    var wrapProgramNode = true;
 
     function setScope(node) {
         scope = node.scope;
@@ -937,7 +943,7 @@
             }
         },
         "Program":function (node) {
-            if (insertTopLevelTryCatch) {
+            if (wrapProgramNode) {
                 var ret = instrumentScriptEntryExit(node, node.body);
                 node.body = ret;
 
@@ -1058,8 +1064,8 @@
 
     var visitorOps = {
         "Program":function (node) {
-            var body = wrapScriptBodyWithTryCatch(node, node.body);
-            if (insertTopLevelTryCatch) {
+            if (wrapProgramNode) {
+                var body = wrapScriptBodyWithTryCatch(node, node.body);
                 var ret = prependScriptBody(node, body);
                 node.body = ret;
 
@@ -1274,7 +1280,7 @@
                 oldCondCount = condCount;
                 condCount = 3;
             }
-            insertTopLevelTryCatch = tryCatchAtTop;
+            wrapProgramNode = tryCatchAtTop;
             var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
             var newCode = escodegen.generate(newAst);
 
@@ -1324,7 +1330,7 @@
 //            console.time("load")
             var code = getCode(filename);
 //            console.timeEnd("load")
-            insertTopLevelTryCatch = true;
+            wrapProgramNode = true;
             instCodeFileName = makeInstCodeFileName(filename);
             var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
             //console.log(JSON.stringify(newAst, null, '\t'));

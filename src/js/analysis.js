@@ -1846,7 +1846,7 @@ if (typeof J$ === 'undefined') J$ = {};
         // initialize rrEngine, sandbox.analysis, executionIndex, and require.uncache
         executionIndex = new ExecutionIndex();
 
-        if (ANALYSIS && ANALYSIS.indexOf('Engine') >= 0) {
+        if (ANALYSIS && ANALYSIS.indexOf('Engine') >= 0 && mode !== MODE_RECORD) {
             var SymbolicEngine = require('./' + ANALYSIS);
             sandbox.analysis = new SymbolicEngine(executionIndex);
         }

@@ -22,23 +22,15 @@ var proxy = require("../../../../rewriting-proxy/proxy");
 var esnstrument = require("../instrument/esnstrument");
 var fs = require("fs");
 var path = require("path");
-var urlParser = require("url");
 var ArgumentParser = require('argparse').ArgumentParser;
 var mkdirp = require('mkdirp');
 var jalangi_ws = require("./socket.js");
+var instUtil = require('./../instrument/instUtil');
 
 
 // CONFIGURATION VARS
 
-/**
- * which source files are required for Jalangi to run in the browser?
- */
-var headerSources = ["src/js/analysis.js", 
-					"src/js/InputManager.js", 
-					"node_modules/escodegen/escodegen.browser.js",
-					"node_modules/esprima/esprima.js",
-					"src/js/utils/astUtil.js",
-					"src/js/instrument/esnstrument.js"];
+
 					
 /**
  * where should output files be written to disk?
@@ -50,32 +42,9 @@ var outputDir = "/tmp/instScripts";
  */
 var ignoreInline = false;
 
-/**
- * concatenates required scripts for Jalangi to run in the browser into a single string
- */
-function createHeaderCode() {
-	// TODO this assumes we are run from root Jalangi directory.  Allow for parameter / environment variable?
-	var result = "";
-	headerSources.forEach(function (src) {
-		result += fs.readFileSync(src);
-	});
-	return result;
-}
 
-var inlineRegexp = /#(inline|event-handler|js-url)/;
 
-/**
- * generate a filename for a script with the given url
- */
-function createFilenameForScript(url) {
-	// TODO make this much more robust
-	var parsed = urlParser.parse(url);
-	if (inlineRegexp.test(url)) {
-		return parsed.hash.substring(1) + ".js";
-	} else {
-		return parsed.pathname.substring(parsed.pathname.lastIndexOf("/")+1);	
-	}
-}
+
 
 /**
  * performs Jalangi instrumentation, and writes associated data to disk.  Saves
@@ -83,12 +52,12 @@ function createFilenameForScript(url) {
  */
 function rewriter(src, metadata) {
 	var url = metadata.url;
-	if (ignoreInline && inlineRegexp.test(url)) {
+	if (ignoreInline && instUtil.isInlineScript(url)) {
 		console.log("ignoring inline script " + url);
 		return src;
 	}
 	console.log("instrumenting " + url);
-	var basename = createFilenameForScript(url);
+	var basename = instUtil.createFilenameForScript(url);
 	var filename = path.join(outputDir, basename);
 	// TODO check for file conflicts and handle appropriately
 	fs.writeFileSync(filename, src);
@@ -124,7 +93,7 @@ function initOutputDir() {
 function startJalangiProxy() {
 	// set up the instrumenter to write the source map file to the output directory
 	esnstrument.openIIDMapFile(outputDir);
-	proxy.start({ headerCode: createHeaderCode(), rewriter: rewriter, port: 8501 });
+	proxy.start({ headerCode: instUtil.getHeaderCode(), rewriter: rewriter, port: 8501 });
 }
 
 var parser = new ArgumentParser({ addHelp: true, description: "Jalangi instrumenting proxy server"});

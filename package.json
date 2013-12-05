@@ -12,7 +12,8 @@
         "execSync":"*",
         "amdefine":"*",
         "argparse": "*",
-        "mkdirp": "*"
+        "mkdirp": "*",
+        "ncp": "*"
     },
     "scripts": {
       "test": "python scripts/runalltests.py"

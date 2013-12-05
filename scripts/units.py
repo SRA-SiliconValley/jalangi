@@ -34,6 +34,7 @@ tests = [
     "tests/unit/switch" ,
     "tests/unit/switch2" ,
     "tests/unit/string" ,
+    "tests/unit/try_catch_finally_2",
     "tests/unit/vars" ,
     "tests/unit/while" ,
     "tests/unit/scope_rr" ,

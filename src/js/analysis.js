@@ -29,9 +29,10 @@
 if (typeof J$ === 'undefined') J$ = {};
 
 // stashed functions
-// TODO be more principled about this
+// TODO be more principled about this; stick these functions in another module
 var functionPrototypeCall = Function.prototype.call;
 var objectPrototypeToString = Object.prototype.toString;
+var objectPrototypeHasOwnProperty = Object.prototype.hasOwnProperty;
 
 (function (sandbox) {
     var MODE_RECORD = 1,
@@ -296,7 +297,7 @@ var objectPrototypeToString = Object.prototype.toString;
         }
 
         function HOP(obj, prop) {
-            return Object.prototype.hasOwnProperty.call(obj, prop);
+            return functionPrototypeCall.call(objectPrototypeHasOwnProperty, obj, prop);
         }
 
 

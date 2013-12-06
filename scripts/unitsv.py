@@ -26,6 +26,7 @@ tests = [
     "tests/unit/fun_call" ,
     "tests/unit/label" ,
     "tests/unit/local_inc_dec" ,
+    "tests/unit/monkeypatch",
     "tests/unit/method_sub" ,
     "tests/unit/null_instr" ,
     "tests/unit/object_lit" ,

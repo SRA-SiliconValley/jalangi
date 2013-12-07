@@ -19,7 +19,7 @@
 J$ = {};
 
 
-(function(sandbox) {
+(function (sandbox) {
     var single = require('./analyses/puresymbolic/Multiple');
 
 //    function makeSymbolic(idx, val) {
@@ -145,6 +145,7 @@ J$ = {};
     sandbox.Sr = single.Sr; // Script return
     sandbox.Rt = single.Rt; // Value return
     sandbox.Ra = single.Ra;
+    sandbox.Ex = single.Ex;
 
     sandbox.makeSymbolic = single.makeSymbolic;
     sandbox.addAxiom = single.addAxiom;

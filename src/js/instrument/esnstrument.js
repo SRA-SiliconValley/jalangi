@@ -72,6 +72,7 @@
     var logInitFunName = astUtil.JALANGI_VAR + ".N";
     var logReturnFunName = astUtil.JALANGI_VAR + ".Rt";
     var logReturnAggrFunName = astUtil.JALANGI_VAR + ".Ra";
+    var logUncaughtExceptionFunName = astUtil.JALANGI_VAR + ".Ex";
 
     var logBinaryOpFunName = astUtil.JALANGI_VAR + ".B";
     var logUnaryOpFunName = astUtil.JALANGI_VAR + ".U";
@@ -277,10 +278,9 @@
     }
 
 
-
-    function printLineInfoAux(i,ast) {
+    function printLineInfoAux(i, ast) {
         if (ast && ast.loc) {
-            writeLineToIIDMap('iids['+i+'] = [filename,'+(ast.loc.start.line)+","+(ast.loc.start.column+1)+"];\n");
+            writeLineToIIDMap('iids[' + i + '] = [filename,' + (ast.loc.start.line) + "," + (ast.loc.start.column + 1) + "];\n");
         }
 //        else {
 //            console.log(i+":undefined:undefined");
@@ -653,10 +653,11 @@
         var l = labelCounter++;
         var ret = replaceInStatement(
             "function n() { jalangiLabel" + l + ": while(true) { try {" + RP + "1} catch(" + astUtil.JALANGI_VAR +
-                "e) { console.log(" + astUtil.JALANGI_VAR + "e); console.log(" +
-                astUtil.JALANGI_VAR + "e.stack); throw " + astUtil.JALANGI_VAR +
-                "e; } finally { if (" + logScriptExitFunName + "(" +
-                RP + "2)) continue jalangiLabel" + l + ";\n else \n  break jalangiLabel" + l + ";\n }\n }}", body,
+                "e) { //console.log(" + astUtil.JALANGI_VAR + "e); console.log(" +
+                astUtil.JALANGI_VAR + "e.stack);\n  " + logUncaughtExceptionFunName + "(" + RP + "2," + astUtil.JALANGI_VAR +
+                "e); } finally { if (" + logScriptExitFunName + "(" +
+                RP + "3)) continue jalangiLabel" + l + ";\n else \n  break jalangiLabel" + l + ";\n }\n }}", body,
+            getIid(),
             getIid()
         );
         //console.log(JSON.stringify(ret));
@@ -671,10 +672,11 @@
         var l = labelCounter++;
         var ret = replaceInStatement(
             "function n() { jalangiLabel" + l + ": while(true) { try {" + RP + "1} catch(" + astUtil.JALANGI_VAR +
-                "e) { console.log(" + astUtil.JALANGI_VAR + "e); console.log(" +
-                astUtil.JALANGI_VAR + "e.stack); throw " + astUtil.JALANGI_VAR +
-                "e; } finally { if (" + logFunctionReturnFunName + "(" +
-                RP + "2)) continue jalangiLabel" + l + ";\n else \n  return " + logReturnAggrFunName + "();\n }\n }}", body,
+                "e) { //console.log(" + astUtil.JALANGI_VAR + "e); console.log(" +
+                astUtil.JALANGI_VAR + "e.stack);\n " + logUncaughtExceptionFunName + "(" + RP + "2," + astUtil.JALANGI_VAR +
+                "e); } finally { if (" + logFunctionReturnFunName + "(" +
+                RP + "3)) continue jalangiLabel" + l + ";\n else \n  return " + logReturnAggrFunName + "();\n }\n }}", body,
+            getIid(),
             getIid()
         );
         //console.log(JSON.stringify(ret));
@@ -771,8 +773,8 @@
 //    }
 
     function instrumentScriptEntryExit(node, body0) {
-        var modFile = (typeof filename === "string")?
-            filename.replace(".js",FILESUFFIX1+".js"):
+        var modFile = (typeof filename === "string") ?
+            filename.replace(".js", FILESUFFIX1 + ".js") :
             "internal";
         var body = createCallAsScriptEnterStatement(node, modFile).
             concat(syncDefuns(node, scope, true)).
@@ -819,24 +821,25 @@
 
     function instrumentLoad(ast) {
         var ret;
-        if (ast.type ==='Identifier') {
+        if (ast.type === 'Identifier') {
             if (ast.name === "undefined") {
                 ret = wrapLiteral(ast, ast, N_LOG_UNDEFINED_LIT);
                 return ret;
             } else if (ast.name === "NaN" || ast.name === "Infinity") {
                 ret = wrapLiteral(ast, ast, N_LOG_NUMBER_LIT);
                 return ret;
-            } if(ast.name === astUtil.JALANGI_VAR ||
-                ast.name === "eval"){
+            }
+            if (ast.name === astUtil.JALANGI_VAR ||
+                ast.name === "eval") {
                 return ast;
             } else if (scope.hasVar(ast.name)) {
-                ret = wrapRead(ast, createLiteralAst(ast.name),ast);
+                ret = wrapRead(ast, createLiteralAst(ast.name), ast);
                 return ret;
             } else {
                 ret = wrapReadWithUndefinedCheck(ast, ast.name);
                 return ret;
             }
-        } else if (ast.type==='MemberExpression') {
+        } else if (ast.type === 'MemberExpression') {
             return wrapGetField(ast, ast.object, getPropertyAsAst(ast));
         } else {
             return ast;
@@ -887,11 +890,11 @@
     }
 
 
-	// should a try-catch block be inserted at the top level of the instrumented code?
-	// we need this flag since when we're instrumenting eval'd code, we want to avoid
-	// wrapping the code in a try-catch, since that may not be syntactically valid in 
-	// the surrounding context, e.g.:
-	//    var y = eval("x + 1");
+    // should a try-catch block be inserted at the top level of the instrumented code?
+    // we need this flag since when we're instrumenting eval'd code, we want to avoid
+    // wrapping the code in a try-catch, since that may not be syntactically valid in
+    // the surrounding context, e.g.:
+    //    var y = eval("x + 1");
     var insertTopLevelTryCatch = true;
 
     function setScope(node) {
@@ -1230,8 +1233,8 @@
         return newAst;
     }
 
-	// if this string is discovered inside code passed to instrumentCode(),
-	// the code will not be instrumented
+    // if this string is discovered inside code passed to instrumentCode(),
+    // the code will not be instrumented
     var noInstr = "// JALANGI DO NOT INSTRUMENT";
 
     /**
@@ -1245,14 +1248,14 @@
     function instrumentCode(code, tryCatchAtTop, instFileName) {
         var oldCondCount;
 
-		if (instFileName) {
-			filename = instFileName;
-			// this works under the assumption that the app root directory,
-			// the directory in which the sourcemap file is written, and
-			// the current working directory are all the same during replay
-			// TODO add parameters to allow these paths to be distinct
-            writeLineToIIDMap("filename = \"" + filename + "\";\n");			
-		}
+        if (instFileName) {
+            filename = instFileName;
+            // this works under the assumption that the app root directory,
+            // the directory in which the sourcemap file is written, and
+            // the current working directory are all the same during replay
+            // TODO add parameters to allow these paths to be distinct
+            writeLineToIIDMap("filename = \"" + filename + "\";\n");
+        }
         if (typeof  code === "string" && code.indexOf(noInstr) < 0) {
             if (!tryCatchAtTop) {
                 // this means we are inside an eval
@@ -1307,7 +1310,7 @@
         openIIDMapFile();
         for (i = 2; i < args.length; i++) {
             filename = args[i];
-            writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(),filename)) + "\";\n");
+            writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
             console.log("Instrumenting " + filename + " ...");
 //            console.time("load")
             var code = getCode(filename);
@@ -1344,7 +1347,7 @@
         sandbox.openIIDMapFile = openIIDMapFile;
         sandbox.closeIIDMapFile = closeIIDMapFile;
     }
-}((typeof J$ === 'undefined')? (typeof exports === 'undefined' ? undefined : exports):J$)); 
+}((typeof J$ === 'undefined') ? (typeof exports === 'undefined' ? undefined : exports) : J$));
 
 
 //console.log(transformString("var x = 3 * 4;", visitor1));

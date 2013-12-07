@@ -92,6 +92,7 @@ if (typeof J$ === 'undefined') J$ = {};
         sandbox.Sr = sandbox.analysis.Sr; // Script return
         sandbox.Rt = sandbox.analysis.Rt; // Value return
         sandbox.Ra = sandbox.analysis.Ra;
+        sandbox.Ex = sandbox.analysis.Ex;
 
         sandbox.makeSymbolic = sandbox.analysis.makeSymbolic;
         sandbox.addAxiom = sandbox.analysis.addAxiom;
@@ -120,8 +121,8 @@ if (typeof J$ === 'undefined') J$ = {};
         var TRACE_FILE_NAME = 'jalangi_trace';
         // should we keep the trace in memory in the browser?
         // TODO somehow make this a parameter
-		var IN_MEMORY_BROWSER_LOG = false;
-		//var IN_MEMORY_BROWSER_LOG = isBrowser;
+        var IN_MEMORY_BROWSER_LOG = false;
+        //var IN_MEMORY_BROWSER_LOG = isBrowser;
 
         var T_NULL = 0,
             T_NUMBER = 1,
@@ -395,6 +396,7 @@ if (typeof J$ === 'undefined') J$ = {};
 
         var isInstrumentedCaller = false, isConstructorCall = false;
         var returnVal;
+        var exceptionVal;
         var scriptCount = 0;
         var lastVal;
         var switchLeft;
@@ -604,13 +606,14 @@ if (typeof J$ === 'undefined') J$ = {};
                 rrEngine.RR_Fe(iid, val, dis);
             }
             returnVal = undefined;
+            exceptionVal = undefined;
             if (sandbox.analysis && sandbox.analysis.functionEnter) {
                 sandbox.analysis.functionEnter(iid, val, dis);
             }
         }
 
         function Fr(iid) {
-            var ret = false;
+            var ret = false, tmp;
             executionIndex.executionIndexReturn();
             if (rrEngine) {
                 rrEngine.RR_Fr(iid);
@@ -618,9 +621,18 @@ if (typeof J$ === 'undefined') J$ = {};
             if (sandbox.analysis && sandbox.analysis.functionExit) {
                 ret = sandbox.analysis.functionExit(iid);
             }
+            if (exceptionVal !== undefined) {
+                tmp = exceptionVal;
+                exceptionVal = undefined;
+                throw tmp;
+            }
             return ret;
         }
 
+
+        function Ex(iid, e) {
+            exceptionVal = e;
+        }
 
         function Rt(iid, val) {
             return returnVal = val;
@@ -629,6 +641,7 @@ if (typeof J$ === 'undefined') J$ = {};
         function Ra() {
             var ret = returnVal;
             returnVal = undefined;
+            exceptionVal = undefined;
             if (sandbox.analysis && sandbox.analysis.return_) {
                 ret = sandbox.analysis.return_(ret);
             }
@@ -647,6 +660,7 @@ if (typeof J$ === 'undefined') J$ = {};
         }
 
         function Sr(iid) {
+            var tmp;
             scriptCount--;
             if (rrEngine) {
                 rrEngine.RR_Sr(iid);
@@ -656,6 +670,11 @@ if (typeof J$ === 'undefined') J$ = {};
             }
             if (mode === MODE_NO_RR_IGNORE_UNINSTRUMENTED && scriptCount === 0) {
                 endExecution();
+            }
+            if (exceptionVal !== undefined) {
+                tmp = exceptionVal;
+                exceptionVal = undefined;
+                throw tmp;
             }
         }
 
@@ -1378,7 +1397,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     frameStack.pop();
                     frame = frameStack[frameStack.length - 1];
                     if (mode === MODE_RECORD && frameStack.length <= 1) {
-                    	traceWriter.flush();
+                        traceWriter.flush();
                     }
                 }
             };
@@ -1404,7 +1423,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     frameStack.pop();
                     frame = frameStack[frameStack.length - 1];
                     if (mode === MODE_RECORD && frameStack.length <= 1) {
-                    	traceWriter.flush();
+                        traceWriter.flush();
                     }
                 }
                 if (isBrowserReplay) {
@@ -1531,10 +1550,10 @@ if (typeof J$ === 'undefined') J$ = {};
                 // so don't record any more events
                 var tracingDone = false;
 
-				if (IN_MEMORY_BROWSER_LOG) {
-					// attach the buffer to the sandbox
-					sandbox.trace_output = buffer;
-				}
+                if (IN_MEMORY_BROWSER_LOG) {
+                    // attach the buffer to the sandbox
+                    sandbox.trace_output = buffer;
+                }
 
                 function getFileHanlde() {
                     if (traceWfh === undefined) {
@@ -1543,36 +1562,36 @@ if (typeof J$ === 'undefined') J$ = {};
                     return traceWfh;
                 }
 
-				/**
-				 * @param {string} line
-				 */
+                /**
+                 * @param {string} line
+                 */
                 this.logToFile = function (line) {
-                	if (tracingDone) {
-                		// do nothing
-                		return;
-                	}
-                	var len = line.length;
-                	// we need this loop because it's possible that len >= MAX_BUF_SIZE
-                	// TODO fast path for case where len < MAX_BUF_SIZE?
-                	var start = 0, end = len < MAX_BUF_SIZE ? len : MAX_BUF_SIZE;
-                	while (start < len) {
-                		var chunk = line.substring(start, end);
-                		var curLen = end - start;
-                		if (bufferSize + curLen > MAX_BUF_SIZE) {
-                			this.flush();
-                		}
-                		buffer.push(chunk);
-                		bufferSize += curLen;
-                		start = end;
-                		end = (end + MAX_BUF_SIZE < len) ? end + MAX_BUF_SIZE : len;
-                	}
+                    if (tracingDone) {
+                        // do nothing
+                        return;
+                    }
+                    var len = line.length;
+                    // we need this loop because it's possible that len >= MAX_BUF_SIZE
+                    // TODO fast path for case where len < MAX_BUF_SIZE?
+                    var start = 0, end = len < MAX_BUF_SIZE ? len : MAX_BUF_SIZE;
+                    while (start < len) {
+                        var chunk = line.substring(start, end);
+                        var curLen = end - start;
+                        if (bufferSize + curLen > MAX_BUF_SIZE) {
+                            this.flush();
+                        }
+                        buffer.push(chunk);
+                        bufferSize += curLen;
+                        start = end;
+                        end = (end + MAX_BUF_SIZE < len) ? end + MAX_BUF_SIZE : len;
+                    }
                 };
 
                 this.flush = function () {
-                	if (IN_MEMORY_BROWSER_LOG) {
-                		// no need to flush anything
-                		return;
-                	}
+                    if (IN_MEMORY_BROWSER_LOG) {
+                        // no need to flush anything
+                        return;
+                    }
                     var msg;
                     if (!isBrowser) {
                         var length = buffer.length;
@@ -1599,11 +1618,11 @@ if (typeof J$ === 'undefined') J$ = {};
                     }
                 }
 
-				/**
-				 * invoked when we receive a message over the websocket,
-				 * indicating that the last trace chunk in the remoteBuffer
-				 * has been received
-				 */
+                /**
+                 * invoked when we receive a message over the websocket,
+                 * indicating that the last trace chunk in the remoteBuffer
+                 * has been received
+                 */
                 function tryRemoteLog2() {
                     trying = false;
                     remoteBuffer.shift();
@@ -1637,7 +1656,7 @@ if (typeof J$ === 'undefined') J$ = {};
 
                 this.remoteLog = function (message) {
                     if (message.length > MAX_BUF_SIZE) {
-                    	throw new Error("message too big!!!");
+                        throw new Error("message too big!!!");
                     }
                     remoteBuffer.push(message);
                     openSocketIfNotOpen();
@@ -1645,15 +1664,15 @@ if (typeof J$ === 'undefined') J$ = {};
                         tryRemoteLog();
                     }
                 };
-                
+
                 /**
                  * stop recording the trace and flush everything
                  */
                 this.stopTracing = function () {
-                	tracingDone = true;
-                	if (!IN_MEMORY_BROWSER_LOG) {
-                		this.flush();                		
-                	}
+                    tracingDone = true;
+                    if (!IN_MEMORY_BROWSER_LOG) {
+                        this.flush();
+                    }
                 };
             }
 
@@ -1680,10 +1699,10 @@ if (typeof J$ === 'undefined') J$ = {};
                             var FileLineReader = require('./utils/FileLineReader');
                             var traceFileName = process.argv[2] ? process.argv[2] : TRACE_FILE_NAME;
                             traceFh = new FileLineReader(traceFileName);
-                        	// change working directory to wherever trace file resides
-                        	var pth = require('path');
-                        	var traceFileDir = pth.dirname(pth.resolve(process.cwd(),traceFileName));
-                        	process.chdir(traceFileDir);
+                            // change working directory to wherever trace file resides
+                            var pth = require('path');
+                            var traceFileDir = pth.dirname(pth.resolve(process.cwd(), traceFileName));
+                            process.chdir(traceFileDir);
                         }
                         traceArray = [];
                         while (!done && (flag = traceFh.hasNextLine()) && i < MAX_SIZE) {
@@ -1783,18 +1802,18 @@ if (typeof J$ === 'undefined') J$ = {};
                 traceWriter = new TraceWriter();
                 this.onflush = traceWriter.onflush;
                 if (isBrowser) {
-                	if (!IN_MEMORY_BROWSER_LOG) {
-                    	this.command('reset');
+                    if (!IN_MEMORY_BROWSER_LOG) {
+                        this.command('reset');
                     }
                     // enable keyboard shortcut to stop tracing
                     window.addEventListener('keydown', function (e) {
-                    	// keyboard shortcut is Alt-Shift-T for now
-                    	if (e.altKey && e.shiftKey && e.keyCode === 84) {
-                    		traceWriter.stopTracing();
-                    		traceWriter.onflush(function () {
-                    			alert("trace flush complete");
-                    		});
-                    	}
+                        // keyboard shortcut is Alt-Shift-T for now
+                        if (e.altKey && e.shiftKey && e.keyCode === 84) {
+                            traceWriter.stopTracing();
+                            traceWriter.onflush(function () {
+                                alert("trace flush complete");
+                            });
+                        }
                     });
                 }
             }
@@ -1862,6 +1881,7 @@ if (typeof J$ === 'undefined') J$ = {};
         sandbox.Sr = Sr; // Script return
         sandbox.Rt = Rt; // returned value
         sandbox.Ra = Ra;
+        sandbox.Ex = Ex;
 
         sandbox.replay = rrEngine ? rrEngine.RR_replay : undefined;
         sandbox.onflush = rrEngine ? rrEngine.onflush : function () {

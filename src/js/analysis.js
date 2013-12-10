@@ -108,6 +108,8 @@ if (typeof J$ === 'undefined') J$ = {};
 //-------------------------------- Constants ---------------------------------
 
         var EVAL_ORG = eval;
+        var TO_STRING = Object.prototype.toString;
+        var TO_STRING_CALL = Object.prototype.toString.call;
 
         var PREFIX1 = "J$";
         var SPECIAL_PROP = "*" + PREFIX1 + "*";
@@ -1127,7 +1129,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     case "object":
                         if (val === null) {
                             typen = T_NULL;
-                        } else if (Object.prototype.toString.call(val) === '[object Array]') {
+                        } else if (TO_STRING_CALL.apply(TO_STRING, val) === '[object Array]') {
                             typen = T_ARRAY;
                         } else {
                             typen = T_OBJECT;

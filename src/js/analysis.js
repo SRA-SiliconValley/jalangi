@@ -110,6 +110,9 @@ if (typeof J$ === 'undefined') J$ = {};
         var EVAL_ORG = eval;
         var TO_STRING = Object.prototype.toString;
         var TO_STRING_CALL = Object.prototype.toString.call;
+        var HAS_OWN_PROPERTY = Object.prototype.hasOwnProperty;
+        var HAS_OWN_PROPERTY_CALL = Object.prototype.hasOwnProperty.call;
+
 
         var PREFIX1 = "J$";
         var SPECIAL_PROP = "*" + PREFIX1 + "*";
@@ -294,7 +297,7 @@ if (typeof J$ === 'undefined') J$ = {};
         }
 
         function HOP(obj, prop) {
-            return Object.prototype.hasOwnProperty.call(obj, prop);
+            return HAS_OWN_PROPERTY_CALL.apply(HAS_OWN_PROPERTY, [obj, prop]);
         }
 
 

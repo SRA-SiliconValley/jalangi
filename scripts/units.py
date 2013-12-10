@@ -42,7 +42,8 @@ tests = [
     "tests/unit/exception",
     "tests/unit/symbolic" ,
     "tests/unit/gettersetter" ,
-    "tests/unit/gettersetter2"
+    "tests/unit/gettersetter2",
+    "tests/unit/implicit-type"
 ]
 
 SCRIPT = "src/python/jalangi_command.py"

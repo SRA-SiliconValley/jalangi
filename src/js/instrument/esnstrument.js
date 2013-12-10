@@ -445,6 +445,12 @@
         return ret;
     }
 
+    function makeNumber(node, left) {
+        var ret = replaceInExpr(" + "+RP + "1 ",left);
+        transferLoc(ret, node);
+        return ret;
+    }
+
     function wrapLHSOfModStore(node, left, right) {
         var ret = replaceInExpr(RP + "1 = " + RP + "2",
             left, right);
@@ -837,9 +843,12 @@
         }
     }
 
-    function instrumentLoadModStore(node) {
+    function instrumentLoadModStore(node, isNumber) {
         if (node.left.type === 'Identifier') {
             var tmp0 = instrumentLoad(node.left);
+            if (isNumber) {
+                tmp0 = makeNumber(node, instrumentLoad(tmp0));
+            }
             var tmp1 = wrapRHSOfModStore(node.right, tmp0, node.right, node.operator.substring(0, node.operator.length - 1));
 
             var tmp2;
@@ -863,7 +872,7 @@
     function instrumentPreIncDec(node) {
         var right = createLiteralAst(1);
         var ret = wrapRHSOfModStore(node, node.argument, right, node.operator.substring(0, 1) + "=");
-        return instrumentLoadModStore(ret);
+        return instrumentLoadModStore(ret, true);
     }
 
     function adjustIncDec(op, ast) {

@@ -106,7 +106,6 @@ if (typeof J$ === 'undefined') J$ = {};
 
 //-------------------------------- Constants ---------------------------------
 
-        var GET_OWN_PROPERTY_NAMES = Object.getOwnPropertyNames;
         var EVAL_ORG = eval;
 
         var PREFIX1 = "J$";
@@ -157,6 +156,24 @@ if (typeof J$ === 'undefined') J$ = {};
             N_LOG_NULL_LIT = 25;
 
         //-------------------------------- End constants ---------------------------------
+
+        var GET_OWN_PROPERTY_NAMES = Object.getOwnPropertyNames;
+        Object.getOwnPropertyNames = function() {
+            var val = GET_OWN_PROPERTY_NAMES.apply(Object, arguments);
+            var idx = val.indexOf(SPECIAL_PROP);
+            if (idx > -1) {
+                val.splice(idx, 1);
+            }
+            idx = val.indexOf(SPECIAL_PROP2);
+            if (idx > -1) {
+                val.splice(idx, 1);
+            }
+            idx = val.indexOf(SPECIAL_PROP3);
+            if (idx > -1) {
+                val.splice(idx, 1);
+            }
+            return val;
+        }
 
 
         //-------------------------------------- Symbolic functions -----------------------------------------------------------
@@ -498,20 +515,6 @@ if (typeof J$ === 'undefined') J$ = {};
                         val = callAsConstructor(g, args);
                     } else {
                         val = g.apply(base, args);
-                        if (g === GET_OWN_PROPERTY_NAMES) {
-                            idx = val.indexOf(SPECIAL_PROP);
-                            if (idx > -1) {
-                                val.splice(idx, 1);
-                            }
-                            idx = val.indexOf(SPECIAL_PROP2);
-                            if (idx > -1) {
-                                val.splice(idx, 1);
-                            }
-                            idx = val.indexOf(SPECIAL_PROP3);
-                            if (idx > -1) {
-                                val.splice(idx, 1);
-                            }
-                        }
                     }
                 } else {
                     if (rrEngine) {

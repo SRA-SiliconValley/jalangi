@@ -106,6 +106,7 @@ if (typeof J$ === 'undefined') J$ = {};
 
 //-------------------------------- Constants ---------------------------------
 
+        var GET_OWN_PROPERTY_NAMES = Object.getOwnPropertyNames;
         var EVAL_ORG = eval;
 
         var PREFIX1 = "J$";
@@ -460,7 +461,7 @@ if (typeof J$ === 'undefined') J$ = {};
 
 
         function invokeFun(iid, base, f, args, isConstructor) {
-            var g, invoke, val, ic, tmp_rrEngine, tmpIsConstructorCall, tmpIsInstrumentedCaller;
+            var g, invoke, val, ic, tmp_rrEngine, tmpIsConstructorCall, tmpIsInstrumentedCaller, idx;
 
             var f_c = getConcrete(f);
 
@@ -497,6 +498,20 @@ if (typeof J$ === 'undefined') J$ = {};
                         val = callAsConstructor(g, args);
                     } else {
                         val = g.apply(base, args);
+                        if (g === GET_OWN_PROPERTY_NAMES) {
+                            idx = val.indexOf(SPECIAL_PROP);
+                            if (idx > -1) {
+                                val.splice(idx, 1);
+                            }
+                            idx = val.indexOf(SPECIAL_PROP2);
+                            if (idx > -1) {
+                                val.splice(idx, 1);
+                            }
+                            idx = val.indexOf(SPECIAL_PROP3);
+                            if (idx > -1) {
+                                val.splice(idx, 1);
+                            }
+                        }
                     }
                 } else {
                     if (rrEngine) {

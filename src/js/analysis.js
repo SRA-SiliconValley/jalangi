@@ -108,8 +108,6 @@ if (typeof J$ === 'undefined') J$ = {};
 //-------------------------------- Constants ---------------------------------
 
         var EVAL_ORG = eval;
-        var TO_STRING = Object.prototype.toString;
-        var TO_STRING_CALL = Object.prototype.toString.call;
         var HAS_OWN_PROPERTY = Object.prototype.hasOwnProperty;
         var HAS_OWN_PROPERTY_CALL = Object.prototype.hasOwnProperty.call;
 
@@ -440,7 +438,8 @@ if (typeof J$ === 'undefined') J$ = {};
 
         function callAsConstructor(Constructor, args) {
             if (isNative(Constructor)) {
-                return callAsNativeConstructor(Constructor, args);
+                var ret = callAsNativeConstructor(Constructor, args);
+                return ret;
             } else {
                 var Temp = function () {
                 }, inst, ret;
@@ -1114,7 +1113,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     case "object":
                         if (val === null) {
                             typen = T_NULL;
-                        } else if (TO_STRING_CALL.apply(TO_STRING, val) === '[object Array]') {
+                        } else if (Array.isArray(val)) {
                             typen = T_ARRAY;
                         } else {
                             typen = T_OBJECT;

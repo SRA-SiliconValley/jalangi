@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-// Author: Koushik Sen
- 
-
+// Author: Manu Sridharan
 var exc = false;
 try {
-    var y = x;
+    var str = "{x: y}";
+    var indirect = eval;
+    indirect(str);
 } catch (e) {
     exc = true;
 }
 
 console.log(exc);
-
-

@@ -29,10 +29,14 @@ var ncp = require('ncp').ncp;
 var stream = require("stream");
 var util = require("util");
 var assert = require('assert');
+var ArgumentParser = require('argparse').ArgumentParser;
+
 
 var Transform = stream.Transform;
 
 var instrumentInline = false;
+
+var excludePattern = null;
 
 // directory in which original app sits
 var appDir;
@@ -118,7 +122,12 @@ function transform(readStream, writeStream, file) {
 	if (extension === '.html') {
 		rewriteHtml(readStream, writeStream);
 	} else if (extension === '.js') {
-		instrumentJS(readStream, writeStream, file.name);
+	    if ((!excludePattern || file.name.indexOf(excludePattern) === -1)) {
+    		instrumentJS(readStream, writeStream, file.name);	        
+	    } else {
+	        console.log("excluding " + file.name);
+	        readStream.pipe(writeStream);
+	    }
 	} else {
 		readStream.pipe(writeStream);
 	}
@@ -150,4 +159,20 @@ function instDir(dir, outputDir) {
 }
 
 
-instDir(process.argv[2], process.argv[3]);
+var parser = new ArgumentParser({ addHelp: true, description: "Utility to apply Jalangi instrumentation to all files in a directory"});
+parser.addArgument(['-x', '--exclude'], { help: "do not instrument any scripts whose filename contains this substring" } );
+// TODO add back this option once we've fixed the relevant HTML parsing code
+//parser.addArgument(['-i', '--ignoreInline'], { help: "ignore all inline scripts", nargs: "?", defaultValue: false, constant: true});
+parser.addArgument(['inputDir'], { help: "directory containing files to instrument"});
+parser.addArgument(['outputDir'], { help: "directory in which to create instrumented copy"});
+
+var args = parser.parseArgs();
+if (args.exclude) {
+    excludePattern = args.exclude;
+}
+//if (args.ignoreInline) {
+//	instrumentInline = !args.ignoreInline;
+//}
+
+
+instDir(args.inputDir, args.outputDir);

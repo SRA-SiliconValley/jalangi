@@ -23,7 +23,6 @@ var esnstrument = require("../instrument/esnstrument");
 var instUtil = require("../instrument/instUtil");
 var fs = require('fs');
 var path = require("path");
-var urlParser = require("url");
 var mkdirp = require('mkdirp');
 var ncp = require('ncp').ncp;
 var stream = require("stream");
@@ -38,6 +37,8 @@ var instrumentInline = false;
 
 var excludePattern = null;
 
+var dumpSerializedASTs = false;
+
 // directory in which original app sits
 var appDir;
 
@@ -51,11 +52,15 @@ function createOrigScriptFilename(name) {
 function rewriteInlineScript(src, metadata) {
 	var instname = instUtil.createFilenameForScript(metadata.url);
 	var origname = createOrigScriptFilename(instname);
-	var instrumented = esnstrument.instrumentCode(src, true, origname, instname);
+	var instResult = esnstrument.instrumentCode(src, true, origname, instname, dumpSerializedASTs);
+	var instrumentedCode = instResult.code;
 	// TODO make this async?
 	fs.writeFileSync(path.join(copyDir, origname), src);
-	fs.writeFileSync(path.join(copyDir, instname), instrumented);
-	return instrumented;
+	fs.writeFileSync(path.join(copyDir, instname), instrumentedCode);
+	if (dumpSerializedASTs) {
+        fs.writeFileSync(instname + ".ast.json", JSON.stringify(instResult.serializedAST, undefined, 2), "utf8");	 
+	}
+	return instrumentedCode;
 }
 
 /**
@@ -104,7 +109,11 @@ InstrumentJSStream.prototype._transform = accumulateData;
 
 InstrumentJSStream.prototype._flush = function (cb) {
 	console.log("instrumenting " + this.origScriptName);
-	this.push(esnstrument.instrumentCode(this.data, true, this.origScriptName, this.instScriptName));
+	var instResult = esnstrument.instrumentCode(this.data, true, this.origScriptName, this.instScriptName, dumpSerializedASTs);
+	if (dumpSerializedASTs) {
+        fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(instResult.serializedAST, undefined, 2), "utf8");		    
+	}
+	this.push(instResult.code);
 	cb();
 };
 
@@ -160,6 +169,7 @@ function instDir(dir, outputDir) {
 
 
 var parser = new ArgumentParser({ addHelp: true, description: "Utility to apply Jalangi instrumentation to all files in a directory"});
+parser.addArgument(['-s', '--serialize'], { help: "dump serialized ASTs along with code", action:'storeTrue' } );
 parser.addArgument(['-x', '--exclude'], { help: "do not instrument any scripts whose filename contains this substring" } );
 // TODO add back this option once we've fixed the relevant HTML parsing code
 //parser.addArgument(['-i', '--ignoreInline'], { help: "ignore all inline scripts", nargs: "?", defaultValue: false, constant: true});
@@ -167,6 +177,9 @@ parser.addArgument(['inputDir'], { help: "directory containing files to instrume
 parser.addArgument(['outputDir'], { help: "directory in which to create instrumented copy"});
 
 var args = parser.parseArgs();
+if (args.serialize) {
+    dumpSerializedASTs = args.serialize;
+}
 if (args.exclude) {
     excludePattern = args.exclude;
 }

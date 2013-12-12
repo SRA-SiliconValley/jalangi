@@ -499,7 +499,7 @@
 
     function wrapEvalArg(ast) {
         var ret = replaceInExpr(
-            instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), false)",
+            instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), false).code",
             ast
         );
         transferLoc(ret, ast);
@@ -1249,9 +1249,11 @@
 	}
 	
     /**
+     * Instruments the provided code.
+     * 
      * @param {string} code The code to instrument
-     * @param {boolean} tryCatchAtTop Should a try-catch block be inserted
-     *          at the top-level of the instrumented code?
+     * @param {boolean} wrapProgram Should the instrumented code be wrapped with prefix code to load libraries,
+     * code to indicate script entry and exit, etc.? should be false for code being eval'd
      * @param {string} filename What is the "original" filename of the instrumented code?  
      *                 optional.  if the IID map file is open, it will be updated during
      *                 instrumentation with source locations pointing to this filename
@@ -1259,8 +1261,13 @@
      *                 If not provided, and the filename parameter is provided, defaults to
      *                 filename_jalangi_.js.  We need this filename because it gets written
      *                 into the trace produced by the instrumented code during record
+     * @param {boolean} serialize Should a serialized representation of the AST be provided?
+     * @return an object whose 'code' property is the instrumented code string, and whose
+     * 'serializedAST' property has a JSON representation of the serialized AST, of the serialize
+     * parameter was true
+     * 
      */
-    function instrumentCode(code, tryCatchAtTop, filename, instFileName) {
+    function instrumentCode(code, tryCatchAtTop, filename, instFileName, serialize) {
         var oldCondCount;
 
 		if (filename) {
@@ -1288,7 +1295,12 @@
                 condCount = oldCondCount;
             }
             var ret = newCode + "\n" + noInstr + "\n";
-            return ret;
+            if (serialize) {
+                var serialized = astUtil.serialize(newAst);
+                return { code: ret, serializedAST: serialized };
+            } else {
+                return {code : ret};                
+            }
         } else {
             return code;
         }

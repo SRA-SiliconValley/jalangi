@@ -51,7 +51,7 @@ function createOrigScriptFilename(name) {
 function rewriteInlineScript(src, metadata) {
 	var instname = instUtil.createFilenameForScript(metadata.url);
 	var origname = createOrigScriptFilename(instname);
-	var instrumented = esnstrument.instrumentCode(src, true, origname, instname);
+	var instrumented = esnstrument.instrumentCode(src, true, origname, instname).code;
 	// TODO make this async?
 	fs.writeFileSync(path.join(copyDir, origname), src);
 	fs.writeFileSync(path.join(copyDir, instname), instrumented);
@@ -104,7 +104,7 @@ InstrumentJSStream.prototype._transform = accumulateData;
 
 InstrumentJSStream.prototype._flush = function (cb) {
 	console.log("instrumenting " + this.origScriptName);
-	this.push(esnstrument.instrumentCode(this.data, true, this.origScriptName, this.instScriptName));
+	this.push(esnstrument.instrumentCode(this.data, true, this.origScriptName, this.instScriptName).code);
 	cb();
 };
 

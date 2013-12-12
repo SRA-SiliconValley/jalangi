@@ -43,9 +43,6 @@ var outputDir = "/tmp/instScripts";
 var ignoreInline = false;
 
 
-
-
-
 /**
  * performs Jalangi instrumentation, and writes associated data to disk.  Saves
  * the original script foo.js and the instrumented script foo_jalangi_.js
@@ -61,7 +58,7 @@ function rewriter(src, metadata) {
 	var filename = path.join(outputDir, basename);
 	// TODO check for file conflicts and handle appropriately
 	fs.writeFileSync(filename, src);
-	var instrumented = esnstrument.instrumentCode(src, true, basename);
+	var instrumented = esnstrument.instrumentCode(src, true, basename).code;
 	fs.writeFileSync(filename.replace(".js",esnstrument.fileSuffix+".js"), instrumented);
 	return instrumented;
 }

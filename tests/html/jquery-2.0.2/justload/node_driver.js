@@ -1,3 +1,5 @@
+/*jslint node: true */
+
 var jsdom = require("jsdom");
 var fs = require("fs");
 var jalangi = !!process.argv[2];

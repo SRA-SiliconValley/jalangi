@@ -18,7 +18,7 @@
 
 /*jslint node: true */
 
-var proxy = require("../../../../rewriting-proxy/proxy");
+var proxy = require("rewriting-proxy");
 var esnstrument = require("../instrument/esnstrument");
 var instUtil = require("../instrument/instUtil");
 var fs = require('fs');

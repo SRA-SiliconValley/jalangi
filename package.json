@@ -13,7 +13,8 @@
         "amdefine":"*",
         "argparse": "*",
         "mkdirp": "*",
-        "ncp": "*"
+        "ncp": "*",
+        "rewriting-proxy": "https://github.com/xiemaisi/rewriting-proxy/tarball/master"
     },
     "scripts": {
       "test": "python scripts/runalltests.py"

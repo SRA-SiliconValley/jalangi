@@ -25,7 +25,7 @@ var assert = require("assert"),
 
 	
 function checkCode(code) {
-	var ast = esprima.parse(esnstrument.instrumentCode(code, false));
+	var ast = esprima.parse(esnstrument.instrumentCode(code, false).code);
 	// NOTE: this is not a robust way to do a deep copy of ASTs,
 	// just good enough for unit tests
 	var astCopy = JSON.parse(JSON.stringify(ast));

@@ -223,12 +223,9 @@
             f === Math.round ||
             f === Math.sin ||
             f === Math.sqrt ||
-            f === Math.tan ) {
+            f === Math.tan) {
             return create_concrete_invoke(f);
         } else {
-            if (!sfuns) {
-                sfuns = require('./SymbolicFunctions3_jalangi_')
-            }
             if (f === String.prototype.indexOf) {
                 return getSingle(sfuns.string_indexOf);
             } else if (f === String.prototype.charCodeAt) {
@@ -247,7 +244,7 @@
                 return create_concrete_invoke(f);
             }
         }
-            return null;
+        return null;
     }
 
     function isNative(f) {
@@ -361,6 +358,7 @@
     var scriptCount = 0;
 
     function Se(iid, val) {
+        //pc.pushPC(pc.getPC());
         scriptCount++;
     }
 
@@ -375,9 +373,11 @@
         }
 
         if (ret2) {
-            console.log(pad+ret2);
+            console.log(pad + ret2);
         }
         pc.resetPC(undefined, pad);
+        //console.log("--------------------------------------------------"+ret2);
+        //pc.popPC();
         return ret2;
     }
 
@@ -580,7 +580,7 @@
         var ret2, aggrRet = pc.getReturnVal();
         ret2 = pc.generateInputs();
         if (ret2) {
-            console.log(pad+ret2);
+            console.log(pad + ret2);
         }
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
@@ -749,6 +749,14 @@
 
     sandbox.makeSymbolic = makeSymbolic;
     sandbox.addAxiom = addAxiom;
+
+    sandbox.postLoad = function () {
+        if (!sfuns) {
+            scriptCount++; // avoid generating an input
+            sfuns = require('./SymbolicFunctions3_jalangi_')
+            scriptCount--;
+        }
+    }
 
 }(module.exports));
 

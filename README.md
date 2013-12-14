@@ -202,6 +202,46 @@ You can now play the game for sometime.  Try two moves.  This will generate a ja
     export JALANGI_ANALYSIS=analyses/objectalloc/ObjectAllocationTrackerEngine
     node src/js/commands/replay.js jalangi_trace1
 
+### Record and replay using the proxy server.
+
+***
+
+Jalangi also provides a proxy server to instrument code from live web sites.  Here is how to instrument the annex app from above using the proxy server.
+
+First start a HTTP server by running the following command.  The command starts a simple Python based http server.
+
+	python scripts/jalangi.py server &
+
+Then, launch the combined proxy and Jalangi record-replay server.
+
+    node src/js/commands/jalangi_proxy.js
+    
+You will see output like the following:
+
+	writing output to /tmp/instScripts/site0
+	listening on port 8501
+	Fri Dec 13 2013 16:02:34 GMT-0800 (PST) Server is listening on port 8080
+	
+The proxy server is listening on port 8501, and the record-replay server on port 8080.  Instrumented scripts and the trace file will be written to `/tmp/instScripts/site0`.
+
+Now, configure your browser to use the proxy server.  The procedure will vary by operating system and by browser.  
+For browsers on Mac OS X, you can set the proxy server for a network adapter `Wi-Fi` with the following command:
+
+    sudo networksetup -setwebproxy Wi-Fi 127.0.0.1 8501 off
+
+To stop using the proxy, run `sudo networksetup -setwebproxystate Wi-Fi off`.
+
+Now, open Chrome and navigate to `http://127.0.0.1:8000/tests/tizen/annex/index.html` (*not* `index_jalangi_.html`).  You can now play the game for sometime.  Try two moves.  
+This will generate a jalangi_trace1 in the output directory `/tmp/instScripts/site0`.  Once you are done playing, kill the proxy server process to complete dumping of certain
+metadata.
+
+Now, you can run a dynamic analysis on the trace file by issuing the following commands.
+
+    export JALANGI_MODE=replay
+    export JALANGI_ANALYSIS=analyses/objectalloc/ObjectAllocationTrackerEngine
+    node src/js/commands/replay.js /tmp/instScripts/site0/jalangi_trace1
+
+
 ## Further examples of record and replay
 
 ***

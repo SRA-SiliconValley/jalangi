@@ -247,7 +247,7 @@ if (typeof J$ === 'undefined') J$ = {};
             //f === Function.prototype.call ||
                 f === Object.defineProperty ||
                     f === console.log ||
-                    f === RegExp.prototype.test ||
+                    (typeof getConcrete(arguments[0])==='string' && f === RegExp.prototype.test) || // fixes bug in minPathDev.js
                     f === String.prototype.indexOf ||
                     f === String.prototype.lastIndexOf ||
                     f === String.prototype.substring ||

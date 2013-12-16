@@ -59,6 +59,17 @@ class TestRecordReplayCommand:
             sys.exit(1)
         print commands.testrr(os.path.abspath(args[0]))
 
+class TestRecordReplayBrowserCommand:
+    name = "Browser Record-Replay Analysis"
+    description = "Test Record-Replay for Browser Script via PhantomJS" 
+    def execute(self, params):
+        parser = OptionParser()
+        (options, args) = parser.parse_args(args=params)
+        if len(args) < 1:
+            print "Invalid command line"
+            parser.print_help()
+            sys.exit(1)
+        print commands.testrr_browser(os.path.abspath(args[0]))
 
 class ServerCommand:
     name = "Server"
@@ -159,7 +170,8 @@ COMMANDS = {"instrument" : InstrumentCommand,
             "rerunall" : RerunAllCommand,
             "config" : RunConfigCommand,
             "server" : ServerCommand,
-            "rrserver" : RRServerCommand
+            "rrserver" : RRServerCommand,
+            "testrr_browser": TestRecordReplayBrowserCommand
 }
 
 def print_help():

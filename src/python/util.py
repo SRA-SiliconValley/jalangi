@@ -19,6 +19,7 @@ import os
 import subprocess
 import sys
 import shutil
+import tempfile
 from tempfile import NamedTemporaryFile
 import glob
 
@@ -181,7 +182,50 @@ def render_dot_files(put_dot, dot_files):
     with open("out.html", "w") as f:
         f.write("<br/>".join(htmls))
         f.write("\n")
+
+
+# generate a wrapper HTML file that just loads the provided scripts
+def gen_wrapper_html(js_files):
+    script_tags = ["<script src=\"%s\"></script>"%os.path.abspath(x) for x in js_files]
+    # create dummy HTML file loading js_file in /tmp
+    html = "<html><head></head><body>%s</body></html>"%"".join(script_tags)
+    return html
+
+
+def gen_wrapper_html_file(js_files, filename):
+    html = gen_wrapper_html(js_files)
+    dummy_file = open(filename, "w")
+    dummy_file.write(html)
+    dummy_file.close()
+
     
-    
-    
-    
+def run_normal_in_phantom(script,jalangi):
+    dummy_filename = os.path.join(tempfile.gettempdir(),"dummy.html")
+    gen_wrapper_html_file([script],dummy_filename)
+    phantom_args = ['phantomjs',os.path.join(jalangi.get_home(), 'scripts/phantomjs/loadnormal.js'),dummy_filename]
+    sp = subprocess.Popen(phantom_args,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = sp.communicate()
+    # if err:
+    #     print "std err"
+    #     print err
+    return out
+
+RUNTIME_SCRIPTS = ["src/js/analysis.js",
+                   "src/js/InputManager.js",
+                   "node_modules/escodegen/escodegen.browser.js",
+                   "node_modules/esprima/esprima.js",
+                   "src/js/utils/astUtil.js",
+                   "src/js/instrument/esnstrument.js"]
+
+# writes trace to jalangi_trace of working directory
+def record_in_phantom(script,jalangi):
+    dummy_filename = os.path.join(tempfile.gettempdir(),"dummy.html")
+    runtime = [os.path.join(jalangi.get_home(),s) for s in RUNTIME_SCRIPTS]
+    gen_wrapper_html_file(runtime + [script],dummy_filename)
+    phantom_args = ['phantomjs',os.path.join(jalangi.get_home(),'scripts/phantomjs/loadinst.js'),dummy_filename]
+    sp = subprocess.Popen(phantom_args,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = sp.communicate()
+    # if err:
+    #     print "std err"
+    #     print err
+    return out

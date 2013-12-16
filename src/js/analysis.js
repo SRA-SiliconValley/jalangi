@@ -129,8 +129,7 @@ if (typeof J$ === 'undefined') J$ = {};
         var TRACE_FILE_NAME = 'jalangi_trace';
         // should we keep the trace in memory in the browser?
         // TODO somehow make this a parameter
-        var IN_MEMORY_BROWSER_LOG = false;
-        //var IN_MEMORY_BROWSER_LOG = isBrowser;
+        var IN_MEMORY_BROWSER_LOG = isBrowser && window.__JALANGI_PHANTOM__;
 
         var T_NULL = 0,
             T_NUMBER = 1,
@@ -1098,10 +1097,19 @@ if (typeof J$ === 'undefined') J$ = {};
                     } else {
                         if (!HOP(val, SPECIAL_PROP)) {
                             if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
-                                Object.defineProperty(val, SPECIAL_PROP, {
-                                    enumerable:false,
-                                    writable:true
-                                });
+                                try {
+                                    Object.defineProperty(val, SPECIAL_PROP, {
+                                        enumerable:false,
+                                        writable:true
+                                    });
+                                } catch (e) {
+                                    if (isBrowser && window.__JALANGI_PHANTOM__) {
+                                        // known issue with older WebKit in PhantomJS
+                                        // ignoring seems to not cause anything too harmful
+                                    } else {
+                                        throw e;
+                                    }
+                                }
                             }
                             val[SPECIAL_PROP] = {};
                             val[SPECIAL_PROP][SPECIAL_PROP] = objectId;

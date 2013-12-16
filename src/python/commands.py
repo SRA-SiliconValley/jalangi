@@ -120,8 +120,8 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
          f.write("{}.js failed\n".format(filee))
     util.move_coverage(jalangi)
 
-
-def testrr (filee, jalangi=util.DEFAULT_INSTALL):
+# core logic for testing record-replay
+def testrr_helper (filee, jalangi, norm_fn, record_fn):
     try:
         shutil.rmtree("jalangi_tmp")
     except: pass
@@ -137,15 +137,15 @@ def testrr (filee, jalangi=util.DEFAULT_INSTALL):
         pass
     if not os.path.isfile("inputs.js"):
         util.mkempty("inputs.js")
-    print "---- Runing without instrumentation ----"
+    print "---- Running without instrumentation ----"
     try:
         os.remove("jalangi_trace")
     except:
         pass
-    norm = util.run_node_script(os.path.join(os.pardir,filee + ".js"), jalangi=jalangi)
+    norm = norm_fn(os.path.join(os.pardir,filee + ".js"), jalangi=jalangi)
     #(open("jalangi_normal", "w")).write(norm)
     print "---- Recording execution of {} ----".format(filee)
-    rec = record(os.path.join(os.pardir,filee), instrumented_f)
+    rec = record_fn(os.path.join(os.pardir,filee), instrumented_f)
     print "---- Replaying {} ----".format(filee)
     os.putenv("JALANGI_MODE", "replay")
     os.putenv("JALANGI_ANALYSIS", "none")
@@ -176,7 +176,22 @@ def testrr (filee, jalangi=util.DEFAULT_INSTALL):
         
     util.move_coverage(jalangi)
 
+# test record-replay for standalone script
+def testrr (filee, jalangi=util.DEFAULT_INSTALL):
+    testrr_helper(filee,jalangi,util.run_node_script,record)
 
+# test record-replay for browser script using PhantomJS
+def testrr_browser(filee, jalangi=util.DEFAULT_INSTALL):
+    testrr_helper(filee,jalangi,browser_run,browser_record)
+
+def browser_run(script,jalangi=util.DEFAULT_INSTALL):
+    return util.run_normal_in_phantom(script,jalangi)
+
+def browser_record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
+    print instrumented_f
+    real_inst_file = os.path.join(os.path.dirname(os.path.abspath(filee + ".js")),instrumented_f)
+    return util.record_in_phantom(real_inst_file,jalangi)
+    
 
 def symbolic (filee, inputs, analysis, jalangi=util.DEFAULT_INSTALL):
     try:

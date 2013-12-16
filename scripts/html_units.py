@@ -22,8 +22,8 @@ import os
 
 
 tests = [
-    "tests/html_unit/native_function_toString"
-#    "tests/html_unit/window_location"
+    "tests/html/unit/native_function_toString"
+#    "tests/html/unit/window_location"
 ]
 
 SCRIPT = "src/python/jalangi_command.py"

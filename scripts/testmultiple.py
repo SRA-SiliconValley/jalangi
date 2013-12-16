@@ -55,7 +55,6 @@ tests = [
     ("tests/unit/testme", 7),
     ("tests/unit/testme2", 2),
     ("tests/unit/testme3", 4),
-    ("tests/unit/testme3", 4),
     ("tests/unit/testme4", 5)
     ]
 SCRIPT = "src/python/jalangi_command.py"

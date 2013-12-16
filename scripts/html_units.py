@@ -23,6 +23,7 @@ import os
 
 tests = [
     "tests/html/unit/native_function_toString"
+#    "tests/html/jquery-2.0.2/jquery-2.0.2",
 #    "tests/html/unit/window_location"
 ]
 

@@ -49,7 +49,7 @@ def record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
     os.putenv("JALANGI_MODE", "record")
     os.putenv("JALANGI_ANALYSIS", "none")
     print instrumented_f
-    return util.run_node_script(os.path.join(os.path.dirname(filee + ".js"),instrumented_f), jalangi=jalangi)
+    return util.run_node_script(os.path.join(os.path.dirname(filee + ".js"),instrumented_f), jalangi=jalangi, savestderr=True)
     
 def instrument(filee,output_dir=".",jalangi=util.DEFAULT_INSTALL):
     """
@@ -69,9 +69,9 @@ def replay(f=None, jalangi=util.DEFAULT_INSTALL, analysis=None):
         os.putenv("JALANGI_ANALYSIS", util.get_analysis(analysis))
     if f != None:
         print "Hep",f 
-        return util.run_node_script(jalangi.replay_script(),f, jalangi=jalangi)
+        return util.run_node_script(jalangi.replay_script(),f, jalangi=jalangi, savestderr=True)
     else:
-        return util.run_node_script(jalangi.replay_script(), jalangi=jalangi)
+        return util.run_node_script(jalangi.replay_script(), jalangi=jalangi, savestderr=True)
 
 def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
     try:

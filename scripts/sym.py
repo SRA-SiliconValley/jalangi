@@ -67,7 +67,10 @@ tests = [
 def gen_args(expected):
     return ["concolic", "-i", str(expected)]
 
-success = testrunner.run_tests_with_expected(tests,gen_args)
+def my_fail_pred(case,out):
+    return not ("{}.js passed".format(case) in out)
+
+success = testrunner.run_tests_with_expected(tests,gen_args,fail_pred=my_fail_pred)
 if not success:
     exit(1)
     

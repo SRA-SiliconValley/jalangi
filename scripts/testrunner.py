@@ -22,7 +22,10 @@ import os
 
 SCRIPT = "src/python/jalangi_command.py"
 
-def run_tests(tests,script_args,pat="*" + sys.argv[1] + "*" if len(sys.argv) > 1 else None):
+def fail_pred_default(case,out):
+    return "Error:".format(case) in out or "{}.js failed".format(case) in out    
+    
+def run_tests(tests,script_args,fail_pred=fail_pred_default,pat="*" + sys.argv[1] + "*" if len(sys.argv) > 1 else None):
     """
     Runs a set of tests, printing output on test outcomes.
 
@@ -57,7 +60,7 @@ def run_tests(tests,script_args,pat="*" + sys.argv[1] + "*" if len(sys.argv) > 1
             out = check_output(["python", SCRIPT] + script_args + [case], stderr=subprocess.STDOUT)
         except CalledProcessError as e:
             out = e.output
-        if "{}.js failed".format(case) in out:
+        if fail_pred(case,out):
             print "{} failed".format(case)
             failed = failed + 1;
             print out
@@ -68,7 +71,7 @@ def run_tests(tests,script_args,pat="*" + sys.argv[1] + "*" if len(sys.argv) > 1
     print "Fail: {}".format(failed)
     return failed == 0
 
-def run_tests_with_expected(tests_and_expected,script_args_fn,pat="*" + sys.argv[1] + "*" if len(sys.argv) > 1 else None):
+def run_tests_with_expected(tests_and_expected,script_args_fn,fail_pred=fail_pred_default,pat="*" + sys.argv[1] + "*" if len(sys.argv) > 1 else None):
     # TODO pass in (test,expected) pairs.  script_args should be a function from expected to list of str
     failed = 0
     try:
@@ -84,12 +87,12 @@ def run_tests_with_expected(tests_and_expected,script_args_fn,pat="*" + sys.argv
             out = check_output(["python", SCRIPT] +  script_args_fn(expected) + [case], stderr=subprocess.STDOUT)
         except CalledProcessError as e:
             out = e.output
-        if "{}.js passed".format(case) in out:
-            print "{} passed".format(case)
-        else:
-            print "{}.js failed:".format(case)
-            print out
+        if fail_pred(case,out):
+            print "{} failed".format(case)
             failed = failed + 1;
+            print out
+        else:
+            print "{}.js passed:".format(case)
     print "\nPass: {}".format(total - failed)
     print "Fail: {}".format(failed)
     return failed == 0

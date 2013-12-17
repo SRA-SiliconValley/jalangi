@@ -199,7 +199,7 @@ def gen_wrapper_html_file(js_files, filename):
     dummy_file.close()
 
     
-def run_normal_in_phantom(script,jalangi):
+def run_normal_in_phantom(script,jalangi=DEFAULT_INSTALL):
     dummy_filename = os.path.join(tempfile.gettempdir(),"dummy.html")
     gen_wrapper_html_file([script],dummy_filename)
     phantom_args = ['phantomjs',os.path.join(jalangi.get_home(), 'scripts/phantomjs/loadnormal.js'),dummy_filename]
@@ -218,7 +218,7 @@ RUNTIME_SCRIPTS = ["src/js/analysis.js",
                    "src/js/instrument/esnstrument.js"]
 
 # writes trace to jalangi_trace of working directory
-def record_in_phantom(script,jalangi):
+def record_in_phantom(script,jalangi=DEFAULT_INSTALL):
     dummy_filename = os.path.join(tempfile.gettempdir(),"dummy.html")
     runtime = [os.path.join(jalangi.get_home(),s) for s in RUNTIME_SCRIPTS]
     gen_wrapper_html_file(runtime + [script],dummy_filename)

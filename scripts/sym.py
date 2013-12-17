@@ -1,8 +1,20 @@
-from subprocess import check_output, CalledProcessError
-import subprocess
-import sys
-import fnmatch
-import os
+# Copyright 2013 Samsung Information Systems America, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Author: Simon Jensen
+
+import testrunner
 
 
 tests = [
@@ -52,32 +64,10 @@ tests = [
     ("tests/unit/switch-complex", 4),
     ("tests/unit/qsort", 24)]
 
-SCRIPT = "src/python/jalangi_command.py"
-failed = 0
-pat = "*" + sys.argv[1] + "*" if len(sys.argv) > 1 else None
-try:
-    os.remove("jalangi_test_results")
-    os.remove("jalangi_sym_test_results")
-except:pass
-if pat != None:
-    tests = [(c,e) for (c,e) in tests if fnmatch.fnmatch(c,pat)]
-total = len(tests)
-print "Running {} tests".format(total)
-for (case, expected) in tests:
-    try:
-        #out = check_output("python {} concolic -i {} {}".format(SCRIPT, expected, case), stderr=subprocess.STDOUT)
-        out = check_output(["python", SCRIPT, "concolic", "-i", str(expected), case], stderr=subprocess.STDOUT)
-    except CalledProcessError as e:
-        out = e.output
-    if "{}.js passed".format(case) in out:
-        print "{} passed".format(case)
-    else:
-        print "{}.js failed:".format(case)
-        print out
-        failed = failed + 1;
+def gen_args(expected):
+    return ["concolic", "-i", str(expected)]
 
-print "\nPass: {}".format(total - failed)
-print "Fail: {}".format(failed)
-
-if failed > 0:
+success = testrunner.run_tests_with_expected(tests,gen_args)
+if not success:
     exit(1)
+    

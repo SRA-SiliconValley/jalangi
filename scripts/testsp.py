@@ -1,8 +1,19 @@
-from subprocess import check_output, CalledProcessError
-import sys
-import subprocess
-import fnmatch
-import os
+# Copyright 2013 Samsung Information Systems America, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Author: Simon Jensen
+import testrunner
 
 tests = [
     "tests/sunspider1/3d-cube",
@@ -30,30 +41,7 @@ tests = [
     "tests/sunspider1/bitops-nsieve-bits",
     "tests/sunspider1/crypto-aes"
     ]
-SCRIPT = "src/python/jalangi_command.py"
-failed = 0
-try:
-    os.remove("jalangi_test_results")
-except :pass
-pat = "*" + sys.argv[1] + "*" if len(sys.argv) > 1 else None
-if pat != None:
-    tests = [c for c in tests if fnmatch.fnmatch(c,pat)]
-total = len(tests)
-print "Running {} tests".format(total)
-for case in tests:
-    try:
-        out = check_output(["python", SCRIPT, "testrr", case], stderr=subprocess.STDOUT)
-    except CalledProcessError as e:
-        out = e.output
-    if "{}.js failed".format(case) in out:
-        print "{} failed".format(case)
-        failed = failed + 1;
-        print out
-    else:
-        print "{}.js passed:".format(case)
 
-print "\nPass: {}".format(total - failed)
-print "Fail: {}".format(failed)
-
-if failed > 0:
+success = testrunner.run_tests(tests,["testrr"])
+if not success:
     exit(1)

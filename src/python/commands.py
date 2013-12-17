@@ -122,7 +122,7 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
     util.move_coverage(jalangi)
 
 # core logic for testing record-replay
-def testrr_helper (filee, jalangi, norm_fn, record_fn):
+def testrr_helper (filee, jalangi, norm_fn, record_fn, instrument_fn=instrument):
     try:
         shutil.rmtree("jalangi_tmp")
     except: pass
@@ -130,7 +130,7 @@ def testrr_helper (filee, jalangi, norm_fn, record_fn):
     os.mkdir("jalangi_tmp/out")
     os.putenv("JALANGI_HOME", jalangi.get_home())
     os.chdir("jalangi_tmp")
-    (instrumented_f, out) = instrument(os.path.join(os.pardir,filee), jalangi=jalangi)
+    (instrumented_f, out) = instrument_fn(os.path.join(os.pardir,filee), jalangi=jalangi)
     try:                    # Ignore failures on first iteration
         os.remove("inputs.js")
         shutil.copy("jalangi_inputs{}.js".format(i), "inputs.js")
@@ -192,7 +192,20 @@ def browser_record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
     print instrumented_f
     real_inst_file = os.path.join(os.path.dirname(os.path.abspath(filee + ".js")),instrumented_f)
     return util.record_in_phantom(real_inst_file,jalangi)
+
+def testrr_app(filee, jalangi=util.DEFAULT_INSTALL):
+    testrr_helper(filee,jalangi,app_run,app_record,app_instrument)
+
+def app_instrument(filee,jalangi=util.DEFAULT_INSTALL):
+    print "---- Instrumenting {} ----" .format(filee)
+    util.run_node_script_std(jalangi.inst_dir_script(), '--jalangi_root', jalangi.get_home(), '--direct_in_output', filee, ".", jalangi=jalangi)
+    return (".", "")
     
+def app_run(app_dir,jalangi=util.DEFAULT_INSTALL):
+    return util.run_html_in_phantom(os.path.join(app_dir,'index.html'),util.NORMAL_PHANTOM_SCRIPT,jalangi)
+
+def app_record(app_dir,inst_app_dir,jalangi=util.DEFAULT_INSTALL):
+    return util.run_html_in_phantom(os.path.join(inst_app_dir,'index.html'),util.INST_PHANTOM_SCRIPT,jalangi)
 
 def symbolic (filee, inputs, analysis, jalangi=util.DEFAULT_INSTALL):
     try:

@@ -43,6 +43,9 @@ class JalangiInstall:
     def instrumentation_script(self):
         return self.get_home() + "/src/js/instrument/esnstrument.js"
 
+    def inst_dir_script(self):
+        return self.get_home() + "/src/js/commands/instrumentDir.js"
+
     def replay_script(self):
         return self.get_home() + "/src/js/commands/replay.js"
 
@@ -198,11 +201,15 @@ def gen_wrapper_html_file(js_files, filename):
     dummy_file.write(html)
     dummy_file.close()
 
+NORMAL_PHANTOM_SCRIPT = 'scripts/phantomjs/loadnormal.js'
     
 def run_normal_in_phantom(script,jalangi=DEFAULT_INSTALL):
     dummy_filename = os.path.join(tempfile.gettempdir(),"dummy.html")
     gen_wrapper_html_file([script],dummy_filename)
-    phantom_args = ['phantomjs',os.path.join(jalangi.get_home(), 'scripts/phantomjs/loadnormal.js'),dummy_filename]
+    return run_html_in_phantom(dummy_filename,NORMAL_PHANTOM_SCRIPT,jalangi)
+
+def run_html_in_phantom(html_filename,phantom_script,jalangi=DEFAULT_INSTALL):
+    phantom_args = ['phantomjs',os.path.join(jalangi.get_home(), phantom_script),html_filename]
     sp = subprocess.Popen(phantom_args,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = sp.communicate()
     # if err:
@@ -217,15 +224,12 @@ RUNTIME_SCRIPTS = ["src/js/analysis.js",
                    "src/js/utils/astUtil.js",
                    "src/js/instrument/esnstrument.js"]
 
+INST_PHANTOM_SCRIPT = 'scripts/phantomjs/loadinst.js'
+
 # writes trace to jalangi_trace of working directory
 def record_in_phantom(script,jalangi=DEFAULT_INSTALL):
     dummy_filename = os.path.join(tempfile.gettempdir(),"dummy.html")
     runtime = [os.path.join(jalangi.get_home(),s) for s in RUNTIME_SCRIPTS]
     gen_wrapper_html_file(runtime + [script],dummy_filename)
-    phantom_args = ['phantomjs',os.path.join(jalangi.get_home(),'scripts/phantomjs/loadinst.js'),dummy_filename]
-    sp = subprocess.Popen(phantom_args,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = sp.communicate()
-    # if err:
-    #     print "std err"
-    #     print err
-    return out
+    return run_html_in_phantom(dummy_filename,INST_PHANTOM_SCRIPT,jalangi)
+

@@ -39,6 +39,12 @@ var excludePattern = null;
 
 var dumpSerializedASTs = false;
 
+// Jalangi root directory; current working directory by default
+var jalangiRoot;
+
+// should we store instrumented app directly in the output directory?
+var directInOutput = false;
+
 // directory in which original app sits
 var appDir;
 
@@ -81,12 +87,12 @@ HTMLRewriteStream.prototype._transform = accumulateData;
 
 HTMLRewriteStream.prototype._flush = function (cb) {
 	if (instrumentInline) {
-		this.push(proxy.rewriteHTML(this.data, "http://foo.com", rewriteInlineScript, instUtil.getHeaderCode()));	
+		this.push(proxy.rewriteHTML(this.data, "http://foo.com", rewriteInlineScript, instUtil.getHeaderCode(jalangiRoot)));	
 	} else {
 		// just inject our header code
 		var headIndex = this.data.indexOf("<head>");
 		assert.ok(headIndex !== -1, "couldn't find head element");
-		var newHTML = this.data.slice(0, headIndex+6) + "<script>" + instUtil.getHeaderCode() + "</script>" + this.data.slice(headIndex+6);
+		var newHTML = this.data.slice(0, headIndex+6) + "<script>" + instUtil.getHeaderCode(jalangiRoot) + "</script>" + this.data.slice(headIndex+6);
 		this.push(newHTML);
 	}
 	cb();
@@ -150,8 +156,12 @@ function transform(readStream, writeStream, file) {
 function instDir(dir, outputDir) {
 	// first, copy everything
 	appDir = path.resolve(process.cwd(), dir);
-	var basename = path.basename(dir);
-	copyDir = outputDir + "/" + basename;
+	if (directInOutput) {
+	    copyDir = outputDir;
+    } else {
+        var basename = path.basename(dir);
+        copyDir = path.join(outputDir, basename);
+	}
 	mkdirp.sync(copyDir);
 	esnstrument.openIIDMapFile(copyDir);
 	// write an empty 'inputs.js' file here, to make replay happy
@@ -173,6 +183,8 @@ parser.addArgument(['-s', '--serialize'], { help: "dump serialized ASTs along wi
 parser.addArgument(['-x', '--exclude'], { help: "do not instrument any scripts whose filename contains this substring" } );
 // TODO add back this option once we've fixed the relevant HTML parsing code
 //parser.addArgument(['-i', '--ignoreInline'], { help: "ignore all inline scripts", nargs: "?", defaultValue: false, constant: true});
+parser.addArgument(['--jalangi_root'], { help: "Jalangi root directory, if not working directory" } );
+parser.addArgument(['--direct_in_output'], { help: "Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' } );
 parser.addArgument(['inputDir'], { help: "directory containing files to instrument"});
 parser.addArgument(['outputDir'], { help: "directory in which to create instrumented copy"});
 
@@ -182,6 +194,12 @@ if (args.serialize) {
 }
 if (args.exclude) {
     excludePattern = args.exclude;
+}
+if (args.jalangi_root) {
+    jalangiRoot = args.jalangi_root;
+}
+if (args.direct_in_output) {
+    directInOutput = args.direct_in_output;
 }
 //if (args.ignoreInline) {
 //	instrumentInline = !args.ignoreInline;

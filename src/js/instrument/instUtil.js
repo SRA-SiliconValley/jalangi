@@ -18,6 +18,7 @@
 
 /*jslint node: true */
 var fs = require('fs');
+var path = require('path');
 var urlParser = require('url');
 
 
@@ -35,13 +36,21 @@ var headerSources = ["src/js/analysis.js",
 /**
  * concatenates required scripts for Jalangi to run in the browser into a single string
  */
-// TODO this assumes we are run from root Jalangi directory.  Allow for parameter / environment variable?
-var headerCode = "";
-headerSources.forEach(function (src) {
-	headerCode += fs.readFileSync(src);
-});
+var headerCode;
 
-function getHeaderCode() {
+function headerCodeInit(root) {
+    headerSources.forEach(function (src) {
+        if (root) {
+            src = path.join(root, src);
+        }
+    	headerCode += fs.readFileSync(src);
+    });    
+}
+
+function getHeaderCode(root) {
+    if (!headerCode) {
+        headerCodeInit(root);
+    }
 	return headerCode;
 }
 

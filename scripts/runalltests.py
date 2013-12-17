@@ -23,7 +23,7 @@ def call_fail(l):
 
 call_fail(["python", "scripts/units.py"])
 call_fail(["python", "scripts/unitsv.py"])
-#call_fail(["python", "scripts/html_units.py"])
+call_fail(["python", "scripts/html_units.py"])
 call_fail(["python", "scripts/sym.py"])
 call_fail(["python", "scripts/testmultiple.py"])
 call_fail(["python", "scripts/testsp.py"])

@@ -26,7 +26,7 @@ from time import sleep
 import webbrowser
 
 
-def analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
+def analysis(analysis, browser_rec, filee, jalangi=util.DEFAULT_INSTALL):
     try:
         shutil.rmtree("jalangi_tmp")
     except: pass
@@ -36,13 +36,14 @@ def analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
     (instrumented_f,out) = instrument(filee, jalangi=jalangi)
     util.mkempty("inputs.js")
     print "---- Recording execution of {} ----".format(filee)
-    os.putenv("JALANGI_MODE", "record")
-    os.putenv("JALANGI_ANALYSIS", "none")
-    util.run_node_script_std(os.path.join(os.path.dirname(filee + ".js"),instrumented_f), jalangi=jalangi)
+    if browser_rec:
+        browser_record(filee, instrumented_f,jalangi)
+    else:
+        record(filee, instrumented_f, jalangi)
     print "---- Replaying {} ----".format(filee)
     os.putenv("JALANGI_MODE", "replay")
     os.putenv("JALANGI_ANALYSIS", analysis)
-    util.run_node_script_std(jalangi.replay_script(), jalangi=jalangi)
+    util.run_node_script_std(jalangi.replay_script(), jalangi=jalangi, savestderr=True)
     util.move_coverage(jalangi)
 
 def record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):

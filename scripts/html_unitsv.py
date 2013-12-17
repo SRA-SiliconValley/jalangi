@@ -14,20 +14,16 @@
 
 # Author: Manu Sridharan
 
-from subprocess import call
+import testrunner
 
-def call_fail(l):
-    if call(l) != 0:
-        print "{} failed".format(" ".join(l))
-        exit(1)
 
-call_fail(["python", "scripts/units.py"])
-call_fail(["python", "scripts/unitsv.py"])
-call_fail(["python", "scripts/html_units.py"])
-call_fail(["python", "scripts/html_unitsv.py"])
-call_fail(["python", "scripts/sym.py"])
-call_fail(["python", "scripts/testmultiple.py"])
-call_fail(["python", "scripts/testsp.py"])
-call_fail(["python", "scripts/testspv.py"])
-call_fail(["python", "scripts/testoctane.py"])
-call_fail(["python", "scripts/testoctanev.py"])
+tests = [
+    "tests/html/unit/native_function_toString",
+    "tests/html/unit/window_location"
+#    "tests/html/jquery-2.0.2/jquery-2.0.2",
+]
+
+success = testrunner.run_tests(tests,["analyze", "-a", "analyses/trackallvalues/TrackValuesEngine", "-b"])
+if not success:
+    exit(1)
+

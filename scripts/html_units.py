@@ -22,9 +22,9 @@ import os
 
 
 tests = [
-    "tests/html/unit/native_function_toString"
+    "tests/html/unit/native_function_toString",
+    "tests/html/unit/window_location"
 #    "tests/html/jquery-2.0.2/jquery-2.0.2",
-#    "tests/html/unit/window_location"
 ]
 
 SCRIPT = "src/python/jalangi_command.py"

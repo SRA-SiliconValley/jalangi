@@ -102,16 +102,27 @@
         } else {
             aggregatePC = aggregatePC.or(pathConstraint);
         }
+        if (pad) {
+            if (pathIndex.length<=0) {
+                console.log(pad+"Returning current function");
+            } else {
+                console.log(pad+"Backtracking current function");
+            }
+            console.log(pad+"  Path constraint in BDD form "+pathConstraint.toString());
+            console.log(pad+"                  in predicate form "+getFormulaFromBDD(pathConstraint).toString());
+        }
         if (pathIndex.length<=0) {
             pathConstraint = aggregatePC;
-            console.log(pad+"Done with all paths.");
         } else {
             solution = pathIndex[pathIndex.length-1].solution;
             pathConstraint = pathIndex[pathIndex.length-1].pc;
         }
-        console.log(pad+"Aggregate path constraint "+pathConstraint.toString());
-        console.log(pad+getFormulaFromBDD(pathConstraint).toString());
-        console.log(pad+"Return value "+returnVal);
+        if (pad) {
+            console.log(pad+"  Aggregate path constraint in BDD form "+pathConstraint.toString());
+            console.log(pad+"                          in predicate form "+getFormulaFromBDD(pathConstraint).toString());
+            console.log(pad+"  Aggregate return value "+returnVal);
+        }
+
 
         pathCount++;
         returnValue = returnVal;
@@ -351,7 +362,7 @@
         }
     }
 
-    function branchBoth(iid, falseBranch, trueBranch, lastVal) {
+    function branchBoth(iid, falseBranch, trueBranch, lastVal, pad) {
         var v, ret, tmp;
         if ((v = getNext()) !== undefined) {
             ret = v;
@@ -368,6 +379,9 @@
                 }
                 ret = false;
                 addAxiom(falseBranch, true);
+                if (pad) {
+                    console.log(pad+"  taking false branch");
+                }
             } else if (isSatisfiable(trueBranch)) {
                 if (tmp = getSolution(falseBranch, true)) {
                     setNext({done:false, branch:true, solution: tmp, pc: falseBranch, lastVal: lastVal, iid:iid});
@@ -378,6 +392,9 @@
                 }
                 ret = true;
                 addAxiom(trueBranch, true);
+                if (pad) {
+                    console.log(pad+"  taking true branch");
+                }
             } else {
                 throw new Error("Both branches are not feasible.  This is not possible.")
             }
@@ -407,7 +424,7 @@
     }
 
 
-    function generateInputs(forceWrite) {
+    function generateInputs(pad, forceWrite) {
         var elem;
 
         while(pathIndex.length > 0) {
@@ -425,7 +442,7 @@
         updateSolution();
         var ret = (pathIndex.length > 0);
         if (ret || forceWrite) {
-            //console.log("Writing the input "+JSON.stringify(solution));
+            if (pad) console.log(pad+"Generated the input "+JSON.stringify(solution));
             solver.writeInputs(solution, []);
             //console.log("-------------");
             //console.log("nLiterals "+literalToFormulas.length+" "+JSON.stringify(literalToFormulas));
@@ -436,7 +453,7 @@
         if (pathCount > MAX_PATH_COUNT) {
             pathIndex = [];
         }
-        ret = (pathIndex.length > 0)?"backtrack at "+getIIDInfo(elem.iid):false;
+        ret = (pathIndex.length > 0);
         return ret;
     }
 

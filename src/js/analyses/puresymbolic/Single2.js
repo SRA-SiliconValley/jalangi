@@ -1081,7 +1081,7 @@
     }
 
     function endExecution() {
-        pc.generateInputs();
+        pc.generateInputs("  ");
     }
 
     sandbox.U = U; // Unary operation

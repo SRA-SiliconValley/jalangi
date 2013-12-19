@@ -246,7 +246,7 @@ if (typeof J$ === 'undefined') J$ = {};
             //f === Function.prototype.call ||
                 f === Object.defineProperty ||
                     f === console.log ||
-                    (typeof getConcrete(arguments[0])==='string' && f === RegExp.prototype.test) || // fixes bug in minPathDev.js
+                    (typeof getConcrete(arguments[0]) === 'string' && f === RegExp.prototype.test) || // fixes bug in minPathDev.js
                     f === String.prototype.indexOf ||
                     f === String.prototype.lastIndexOf ||
                     f === String.prototype.substring ||
@@ -700,7 +700,11 @@ if (typeof J$ === 'undefined') J$ = {};
             if (exceptionVal !== undefined) {
                 tmp = exceptionVal;
                 exceptionVal = undefined;
-                throw tmp;
+                if ((mode === MODE_REPLAY && scriptCount > 0) || isBrowserReplay) {
+                    throw tmp;
+                } else {
+                    console.log(tmp);
+                }
             }
         }
 

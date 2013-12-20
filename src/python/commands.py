@@ -182,16 +182,34 @@ def testrr (filee, jalangi=util.DEFAULT_INSTALL):
     testrr_helper(filee,jalangi,util.run_node_script,record)
 
 # test record-replay for browser script using PhantomJS
-def testrr_browser(filee, jalangi=util.DEFAULT_INSTALL):
-    testrr_helper(filee,jalangi,browser_run,browser_record)
+def testrr_browser(selenium, filee, jalangi=util.DEFAULT_INSTALL):
+    if selenium:
+        try:
+            import selenium_util
+        except ImportError:
+            print "Selenium not installed"
+            return
+        testrr_helper(filee,jalangi,selenium_browser_run,selenium_browser_record)
+    else:
+        testrr_helper(filee,jalangi,browser_run,browser_record)
 
 def browser_run(script,jalangi=util.DEFAULT_INSTALL):
     return util.run_normal_in_phantom(script,jalangi)
+
+def selenium_browser_run(script,jalangi=util.DEFAULT_INSTALL):
+    import selenium_util
+    return selenium_util.run_normal(script,jalangi)
 
 def browser_record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
     print instrumented_f
     real_inst_file = os.path.join(os.path.dirname(os.path.abspath(filee + ".js")),instrumented_f)
     return util.record_in_phantom(real_inst_file,jalangi)
+
+def selenium_browser_record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
+    import selenium_util
+    print instrumented_f
+    real_inst_file = os.path.join(os.path.dirname(os.path.abspath(filee + ".js")),instrumented_f)
+    return selenium_util.record(real_inst_file,jalangi)
 
 def testrr_app(filee, jalangi=util.DEFAULT_INSTALL):
     testrr_helper(filee,jalangi,app_run,app_record,app_instrument)

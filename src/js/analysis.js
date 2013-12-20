@@ -130,7 +130,7 @@ if (typeof J$ === 'undefined') J$ = {};
         var TRACE_FILE_NAME = 'jalangi_trace';
         // should we keep the trace in memory in the browser?
         // TODO somehow make this a parameter
-        var IN_MEMORY_BROWSER_LOG = isBrowser && window.__JALANGI_PHANTOM__;
+        var IN_MEMORY_BROWSER_LOG = isBrowser && (window.__JALANGI_PHANTOM__ || window.__JALANGI_SELENIUM__);
 
         var T_NULL = 0,
             T_NUMBER = 1,

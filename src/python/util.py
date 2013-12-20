@@ -188,15 +188,18 @@ def render_dot_files(put_dot, dot_files):
 
 
 # generate a wrapper HTML file that just loads the provided scripts
-def gen_wrapper_html(js_files):
+def gen_wrapper_html(js_files,inline=None):
     script_tags = ["<script src=\"%s\"></script>"%os.path.abspath(x) for x in js_files]
     # create dummy HTML file loading js_file in /tmp
-    html = "<html><head></head><body>%s</body></html>"%"".join(script_tags)
+    html = "<html><head></head><body>"
+    if inline != None:
+        html += "<script>" + inline + "</script>"
+    html += "%s</body></html>"%"".join(script_tags)
     return html
 
 
-def gen_wrapper_html_file(js_files, filename):
-    html = gen_wrapper_html(js_files)
+def gen_wrapper_html_file(js_files, filename,inline=None):
+    html = gen_wrapper_html(js_files,inline)
     dummy_file = open(filename, "w")
     dummy_file.write(html)
     dummy_file.close()

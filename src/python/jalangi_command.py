@@ -66,12 +66,14 @@ class TestRecordReplayBrowserCommand:
     description = "Test Record-Replay for Browser Script via PhantomJS" 
     def execute(self, params):
         parser = OptionParser()
+        parser.add_option("--selenium", action="store_true",dest="selenium",
+                          help="Record using Selenium", default=False)
         (options, args) = parser.parse_args(args=params)
         if len(args) < 1:
             print "Invalid command line"
             parser.print_help()
             sys.exit(1)
-        print commands.testrr_browser(os.path.abspath(args[0]))
+        print commands.testrr_browser(options.selenium, os.path.abspath(args[0]))
 
 class TestRecordReplayAppCommand:
     name = "App Record-Replay Analysis"

@@ -41,6 +41,7 @@ if (typeof J$ === 'undefined') J$ = {};
     var rrEngine;
     var executionIndex;
     var branchCoverageInfo;
+    var LOG_ALL_READS_AND_BRANCHES = false;
 
     mode = (function (str) {
         switch (str) {
@@ -348,17 +349,19 @@ if (typeof J$ === 'undefined') J$ = {};
         }
 
 
+        var loadAndBranchLogs = [];
+
         function printValueForTesting(loc, iid, val) {
-            return;
+            if (!LOG_ALL_READS_AND_BRANCHES) return;
             var type = typeof val;
             if (type !== 'object' && type !== 'function') {
-                console.log(loc + ":" + iid + ":" + type + ":" + val);
+                loadAndBranchLogs.push(loc + ":" + iid + ":" + type + ":" + val);
             } else if (val === null) {
-                console.log(loc + ":" + iid + ":" + type + ":" + val);
+                loadAndBranchLogs.push(loc + ":" + iid + ":" + type + ":" + val);
             } else if (HOP(val, SPECIAL_PROP) && HOP(val[SPECIAL_PROP], SPECIAL_PROP)) {
-                console.log(loc + ":" + iid + ":" + type + ":" + val[SPECIAL_PROP][SPECIAL_PROP]);
+                loadAndBranchLogs.push(loc + ":" + iid + ":" + type + ":" + val[SPECIAL_PROP][SPECIAL_PROP]);
             } else {
-                console.log(loc + ":" + iid + ":" + type + ":object");
+                loadAndBranchLogs.push(loc + ":" + iid + ":" + type + ":object");
             }
         }
 
@@ -552,7 +555,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     rrEngine.RR_updateRecordedObject(val);
                 }
             }
-            printValueForTesting(2, iid, val);
+            printValueForTesting("Ret", iid, val);
             return val;
         }
 
@@ -582,7 +585,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     rrEngine.RR_updateRecordedObject(val);
                 }
             }
-            printValueForTesting(1, iid, val);
+            printValueForTesting("J$.G", iid, val);
             return val;
         }
 
@@ -760,7 +763,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     rrEngine.RR_updateRecordedObject(val);
                 }
             }
-            printValueForTesting(3, iid, val);
+            printValueForTesting("J$.R", iid, val);
             return val;
         }
 
@@ -976,7 +979,7 @@ if (typeof J$ === 'undefined') J$ = {};
             if (branchCoverageInfo) {
                 branchCoverageInfo.updateBranchInfo(iid, ret);
             }
-
+            printValueForTesting("J$.C2", iid, left_c ? 1 : 0);
             log.log("B" + iid + ":" + (left_c ? 1 : 0));
             return left_c;
         };
@@ -1004,6 +1007,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 branchCoverageInfo.updateBranchInfo(iid, ret);
             }
 
+            printValueForTesting("J$.C ", iid, left_c ? 1 : 0);
             log.log("B" + iid + ":" + (left_c ? 1 : 0));
             return left_c;
         }
@@ -1259,10 +1263,18 @@ if (typeof J$ === 'undefined') J$ = {};
                 traceWriter.logToFile(line);
             }
 
-            function checkPath(ret, iid) {
+            function checkPath(ret, iid, fun) {
                 if (ret === undefined || ret[F_IID] !== iid) {
-                    seriousWarnPrint(iid, "Path deviation at record = [" + ret + "] iid = " + iid + " index = " + traceInfo.getPreviousIndex());
-                    throw new Error("Path deviation at record = [" + ret + "] iid = " + iid + " index = " + traceInfo.getPreviousIndex());
+                    if (fun === N_LOG_RETURN) {
+                        throw undefined;  // a native function call has thrown an exception
+                    } else {
+                        if (LOG_ALL_READS_AND_BRANCHES) {
+                            console.log()
+                            require('fs').writeFileSync("readAndBranchLogs.replay", JSON.stringify(loadAndBranchLogs, undefined, 4), "utf8");
+                        }
+                        seriousWarnPrint(iid, "Path deviation at record = [" + ret + "] iid = " + iid + " index = " + traceInfo.getPreviousIndex());
+                        throw new Error("Path deviation at record = [" + ret + "] iid = " + iid + " index = " + traceInfo.getPreviousIndex());
+                    }
                 }
             }
 
@@ -1508,7 +1520,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     logValue(iid, tmp, fun);
                 } else if (mode === MODE_REPLAY) {
                     ret = traceInfo.getCurrent();
-                    checkPath(ret, iid);
+                    checkPath(ret, iid, fun);
                     traceInfo.next();
                     debugPrint("Index:" + traceInfo.getPreviousIndex());
                     val = syncValue(ret, val, iid);
@@ -1850,6 +1862,7 @@ if (typeof J$ === 'undefined') J$ = {};
                         if (e.altKey && e.shiftKey && e.keyCode === 84) {
                             traceWriter.stopTracing();
                             traceWriter.onflush(function () {
+                                if (LOG_ALL_READS_AND_BRANCHES) console.save(loadAndBranchLogs, "readAndBranchLogs.record");
                                 alert("trace flush complete");
                             });
                         }
@@ -1859,6 +1872,33 @@ if (typeof J$ === 'undefined') J$ = {};
         }
 
         //----------------------------------- End Record Replay Engine ---------------------------------
+
+        (function (console) {
+
+            console.save = function (data, filename) {
+
+                if (!data) {
+                    console.error('Console.save: No data')
+                    return;
+                }
+
+                if (!filename) filename = 'console.json'
+
+                if (typeof data === "object") {
+                    data = JSON.stringify(data, undefined, 4)
+                }
+
+                var blob = new Blob([data], {type:'text/json'}),
+                    e = document.createEvent('MouseEvents'),
+                    a = document.createElement('a')
+
+                a.download = filename
+                a.href = window.URL.createObjectURL(blob)
+                a.dataset.downloadurl = ['text/json', a.download, a.href].join(':')
+                e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+                a.dispatchEvent(e)
+            }
+        })(console);
 
         // initialize rrEngine, sandbox.analysis, executionIndex, and require.uncache
         executionIndex = new ExecutionIndex();

@@ -196,11 +196,34 @@ Finally launch the jalangi server and the html page by running
     killall node
     python scripts/jalangi.py rrserver http://127.0.0.1:8000/tests/tizen/annex/index_jalangi_.html
 
-You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  You can run a dynamic analysis on the trace file by issuing the following commands.
+You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  To ensure the trace is completely flushed, press `Alt+Shift+T` in the browser, and then close the browser window.  You can run a dynamic analysis on the trace file by issuing the following commands.
 
     export JALANGI_MODE=replay
     export JALANGI_ANALYSIS=analyses/objectalloc/ObjectAllocationTrackerEngine
     node src/js/commands/replay.js jalangi_trace1
+
+### Instrument a local web application.
+
+***
+
+Jalangi provides a script for instrumenting a locally-stored web application, by instrumenting all discovered scripts on disk.  Here is how to instrument the annex app using this script.  First, run the `instrumentDir.js` script to instrument the app:
+
+    node src/js/commands/instrumentDir.js tests/tizen/annex /tmp
+
+This creates an instrumented copy of annex in `/tmp/annex`.  To see other options for `instrumentDir.js`, run it with the `-h` option.
+
+Then, lauch the Jalangi server and the HTML page by running
+
+    killall node
+    python scripts/jalangi.py rrserver file:///tmp/annex/index.html
+
+You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  To ensure the trace is completely flushed, press `Alt+Shift+T` in the browser, and then close the browser window.  You can run a dynamic analysis on the trace file by issuing the following commands (not that this differs slightly from above, due to the need to copy the trace):
+
+    export JALANGI_MODE=replay
+    export JALANGI_ANALYSIS=analyses/objectalloc/ObjectAllocationTrackerEngine
+    cp jalangi_trace1 /tmp/annex
+    node src/js/commands/replay.js /tmp/annex/jalangi_trace1
+
 
 ### Record and replay using the proxy server.
 
@@ -231,8 +254,7 @@ For browsers on Mac OS X, you can set the proxy server for a network adapter `Wi
 
 To stop using the proxy, run `sudo networksetup -setwebproxystate Wi-Fi off`.
 
-Now, open Chrome and navigate to `http://127.0.0.1:8000/tests/tizen/annex/index.html` (*not* `index_jalangi_.html`).  You can now play the game for sometime.  Try two moves.  
-This will generate a jalangi_trace1 in the output directory `/tmp/instScripts/site0`.  Once you are done playing, kill the proxy server process to complete dumping of certain
+Now, open Chrome and navigate to `http://127.0.0.1:8000/tests/tizen/annex/index.html` (*not* `index_jalangi_.html`).  You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the output directory `/tmp/instScripts/site0`.  To ensure the trace is completely flushed, press `Alt+Shift+T` in the browser, and then close the browser window.  Once you are done playing, kill the proxy server process to complete dumping of certain
 metadata.
 
 Now, you can run a dynamic analysis on the trace file by issuing the following commands.

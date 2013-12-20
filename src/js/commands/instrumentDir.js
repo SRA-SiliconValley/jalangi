@@ -92,7 +92,7 @@ HTMLRewriteStream.prototype._flush = function (cb) {
 		// just inject our header code
 		var headIndex = this.data.indexOf("<head>");
 		assert.ok(headIndex !== -1, "couldn't find head element");
-		var newHTML = this.data.slice(0, headIndex+6) + "<script>" + instUtil.getHeaderCode(jalangiRoot) + "</script>" + this.data.slice(headIndex+6);
+		var newHTML = this.data.slice(0, headIndex+6) + instUtil.getHeaderCodeAsScriptTags(jalangiRoot) + this.data.slice(headIndex+6);
 		this.push(newHTML);
 	}
 	cb();

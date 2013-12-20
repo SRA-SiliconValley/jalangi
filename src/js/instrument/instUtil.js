@@ -54,6 +54,21 @@ function getHeaderCode(root) {
 	return headerCode;
 }
 
+/**
+ * returns an HTML string of <script> tags, one of each header file, with the
+ * absolute path of the header file
+ */
+function getHeaderCodeAsScriptTags(root) {
+    var ret = "";
+    headerSources.forEach(function (src) {
+       if (root) {
+           src = path.join(root,src);           
+       } 
+       ret += "<script src=\"" + path.resolve(src) + "\"></script>";
+    });
+    return ret;
+}
+
 var inlineRegexp = /#(inline|event-handler|js-url)/;
 
 /**
@@ -77,5 +92,6 @@ function createFilenameForScript(url) {
 }
 
 exports.getHeaderCode = getHeaderCode;
+exports.getHeaderCodeAsScriptTags = getHeaderCodeAsScriptTags;
 exports.isInlineScript = isInlineScript;
 exports.createFilenameForScript = createFilenameForScript;

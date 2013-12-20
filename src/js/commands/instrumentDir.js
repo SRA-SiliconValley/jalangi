@@ -45,6 +45,8 @@ var jalangiRoot;
 // should we store instrumented app directly in the output directory?
 var directInOutput = false;
 
+var selenium = false;
+
 // directory in which original app sits
 var appDir;
 
@@ -92,7 +94,11 @@ HTMLRewriteStream.prototype._flush = function (cb) {
 		// just inject our header code
 		var headIndex = this.data.indexOf("<head>");
 		assert.ok(headIndex !== -1, "couldn't find head element");
-		var newHTML = this.data.slice(0, headIndex+6) + instUtil.getHeaderCodeAsScriptTags(jalangiRoot) + this.data.slice(headIndex+6);
+		var headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot);
+		if (selenium) {
+		    headerLibs = "<script>window.__JALANGI_SELENIUM__ = true;</script>" + headerLibs;
+		}
+		var newHTML = this.data.slice(0, headIndex+6) + headerLibs + this.data.slice(headIndex+6);
 		this.push(newHTML);
 	}
 	cb();
@@ -185,6 +191,7 @@ parser.addArgument(['-x', '--exclude'], { help: "do not instrument any scripts w
 //parser.addArgument(['-i', '--ignoreInline'], { help: "ignore all inline scripts", nargs: "?", defaultValue: false, constant: true});
 parser.addArgument(['--jalangi_root'], { help: "Jalangi root directory, if not working directory" } );
 parser.addArgument(['--direct_in_output'], { help: "Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' } );
+parser.addArgument(['--selenium'], { help: "Insert code so scripts can detect they are running under Selenium", action:'storeTrue' } );
 parser.addArgument(['inputDir'], { help: "directory containing files to instrument"});
 parser.addArgument(['outputDir'], { help: "directory in which to create instrumented copy"});
 
@@ -200,6 +207,9 @@ if (args.jalangi_root) {
 }
 if (args.direct_in_output) {
     directInOutput = args.direct_in_output;
+}
+if (args.selenium) {
+    selenium = args.selenium;
 }
 //if (args.ignoreInline) {
 //	instrumentInline = !args.ignoreInline;

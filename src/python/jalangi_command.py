@@ -77,7 +77,7 @@ class TestRecordReplayBrowserCommand:
 
 class TestRecordReplayAppCommand:
     name = "App Record-Replay Analysis"
-    description = "Test Record-Replay for App via PhantomJS" 
+    description = "Test Record-Replay for App via Selenium" 
     def execute(self, params):
         parser = OptionParser()
         (options, args) = parser.parse_args(args=params)

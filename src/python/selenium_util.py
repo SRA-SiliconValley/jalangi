@@ -30,7 +30,7 @@ def run_normal(script,jalangi=util.DEFAULT_INSTALL):
 
 def get_regression_msgs_and_trace(driver):
     msgs = get_regression_msgs(driver)
-    trace = driver.execute_script("return window.J$.trace_output.join(\"\")")
+    trace = driver.execute_script("return window.J$.trace_output.join(\"\")").encode('utf-8')
     trace_file = open("jalangi_trace", "w")
     trace_file.write(trace)
     trace_file.close()

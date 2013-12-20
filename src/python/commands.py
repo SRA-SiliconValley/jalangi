@@ -216,14 +216,16 @@ def testrr_app(filee, jalangi=util.DEFAULT_INSTALL):
 
 def app_instrument(filee,jalangi=util.DEFAULT_INSTALL):
     print "---- Instrumenting {} ----" .format(filee)
-    util.run_node_script_std(jalangi.inst_dir_script(), '--jalangi_root', jalangi.get_home(), '--direct_in_output', filee, ".", jalangi=jalangi)
+    util.run_node_script_std(jalangi.inst_dir_script(), '--jalangi_root', jalangi.get_home(), '--direct_in_output', '--selenium', filee, ".", jalangi=jalangi)
     return (".", "")
     
 def app_run(app_dir,jalangi=util.DEFAULT_INSTALL):
-    return util.run_html_in_phantom(os.path.join(app_dir,'index.html'),util.NORMAL_PHANTOM_SCRIPT,jalangi)
+    import selenium_util
+    return selenium_util.run_html_in_selenium(os.path.abspath(os.path.join(app_dir,'index.html')),selenium_util.get_regression_msgs)
 
 def app_record(app_dir,inst_app_dir,jalangi=util.DEFAULT_INSTALL):
-    return util.run_html_in_phantom(os.path.join(inst_app_dir,'index.html'),util.INST_PHANTOM_SCRIPT,jalangi)
+    import selenium_util
+    return selenium_util.run_html_in_selenium(os.path.abspath(os.path.join(inst_app_dir,'index.html')),selenium_util.get_regression_msgs_and_trace)
 
 def symbolic (filee, inputs, analysis, jalangi=util.DEFAULT_INSTALL):
     try:

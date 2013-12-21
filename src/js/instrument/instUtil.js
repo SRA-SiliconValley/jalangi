@@ -58,13 +58,18 @@ function getHeaderCode(root) {
  * returns an HTML string of <script> tags, one of each header file, with the
  * absolute path of the header file
  */
-function getHeaderCodeAsScriptTags(root) {
+function getHeaderCodeAsScriptTags(root,relative) {
     var ret = "";
     headerSources.forEach(function (src) {
-       if (root) {
-           src = path.join(root,src);           
-       } 
-       ret += "<script src=\"" + path.resolve(src) + "\"></script>";
+		if (root) {
+			src = path.join(root,src);
+		}
+		if (relative) {
+			src = path.relative(process.cwd(),src);			
+		} else {
+			src = path.resolve(src);
+		}
+		ret += "<script src=\"" + src + "\"></script>";
     });
     return ret;
 }

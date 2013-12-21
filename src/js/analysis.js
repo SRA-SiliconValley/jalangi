@@ -129,7 +129,6 @@ if (typeof J$ === 'undefined') J$ = {};
         var MAX_BUF_SIZE = 64000;
         var TRACE_FILE_NAME = 'jalangi_trace';
         // should we keep the trace in memory in the browser?
-        // TODO somehow make this a parameter
         var IN_MEMORY_BROWSER_LOG = isBrowser && (window.__JALANGI_PHANTOM__ || window.__JALANGI_SELENIUM__);
 
         var T_NULL = 0,

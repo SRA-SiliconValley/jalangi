@@ -9,10 +9,12 @@ import sys
 import tempfile
 
 def run_html_in_selenium(html_filename,selenium_fn):
+    run_url_in_selenium('file://' + html_filename,selenium_fn)
+
+def run_url_in_selenium(url,selenium_fn):
     driver = webdriver.Chrome()
     driver.set_window_size(1280,1024)
-    # go to the google home page
-    driver.get('file://' + html_filename)
+    driver.get(url)
     try:
         return selenium_fn(driver)
     finally:

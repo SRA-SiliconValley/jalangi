@@ -24,7 +24,7 @@ from shutil import copyfile
 from subprocess import Popen
 from time import sleep
 import webbrowser
-
+import subprocess
 
 def analysis(analysis, browser_rec, filee, jalangi=util.DEFAULT_INSTALL):
     try:
@@ -216,16 +216,43 @@ def testrr_app(filee, jalangi=util.DEFAULT_INSTALL):
 
 def app_instrument(filee,jalangi=util.DEFAULT_INSTALL):
     print "---- Instrumenting {} ----" .format(filee)
-    util.run_node_script_std(jalangi.inst_dir_script(), '--jalangi_root', jalangi.get_home(), '--direct_in_output', '--selenium', filee, ".", jalangi=jalangi)
+    util.run_node_script_std(jalangi.inst_dir_script(),
+                             '--jalangi_root', jalangi.get_home(),
+                             '--direct_in_output',
+                             '--selenium',
+                             '--relative',
+                             filee, ".", jalangi=jalangi)
     return (".", "")
-    
+
 def app_run(app_dir,jalangi=util.DEFAULT_INSTALL):
     import selenium_util
-    return selenium_util.run_html_in_selenium(os.path.abspath(os.path.join(app_dir,'index.html')),selenium_util.get_regression_msgs)
+    # start up web server in parent directory
+    os.chdir("..")
+    sp = subprocess.Popen(["python","-m","SimpleHTTPServer","8181"])    
+    os.chdir("jalangi_tmp")
+    try:
+        html_to_load = os.path.join(os.path.splitext(app_dir)[0],'index.html')
+        url = "http://localhost:8181/" + os.path.relpath(html_to_load,jalangi.get_home())
+        result = selenium_util.run_url_in_selenium(url,
+                                                   selenium_util.get_regression_msgs)
+        return result
+    finally:
+        sp.kill()
 
 def app_record(app_dir,inst_app_dir,jalangi=util.DEFAULT_INSTALL):
     import selenium_util
-    return selenium_util.run_html_in_selenium(os.path.abspath(os.path.join(inst_app_dir,'index.html')),selenium_util.get_regression_msgs_and_trace)
+    # start up web server in parent directory
+    os.chdir("..")
+    sp = subprocess.Popen(["python","-m","SimpleHTTPServer","8181"])    
+    os.chdir("jalangi_tmp")
+    try:
+        url = "http://localhost:8181/" + os.path.relpath(os.path.abspath(os.path.join(inst_app_dir,'index.html')),
+                                                                     jalangi.get_home())
+        result = selenium_util.run_url_in_selenium(url,
+                                                   selenium_util.get_regression_msgs_and_trace)
+        return result
+    finally:
+        sp.kill()
 
 def symbolic (filee, inputs, analysis, jalangi=util.DEFAULT_INSTALL):
     try:

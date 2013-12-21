@@ -42,6 +42,9 @@ var dumpSerializedASTs = false;
 // Jalangi root directory; current working directory by default
 var jalangiRoot;
 
+// should we use relative paths in <script> tags for runtime libs?
+
+var relative = false;
 // should we store instrumented app directly in the output directory?
 var directInOutput = false;
 
@@ -94,7 +97,7 @@ HTMLRewriteStream.prototype._flush = function (cb) {
 		// just inject our header code
 		var headIndex = this.data.indexOf("<head>");
 		assert.ok(headIndex !== -1, "couldn't find head element");
-		var headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot);
+		var headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot,relative);
 		if (selenium) {
 		    headerLibs = "<script>window.__JALANGI_SELENIUM__ = true;</script>" + headerLibs;
 		}
@@ -192,6 +195,7 @@ parser.addArgument(['-x', '--exclude'], { help: "do not instrument any scripts w
 parser.addArgument(['--jalangi_root'], { help: "Jalangi root directory, if not working directory" } );
 parser.addArgument(['--direct_in_output'], { help: "Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' } );
 parser.addArgument(['--selenium'], { help: "Insert code so scripts can detect they are running under Selenium", action:'storeTrue' } );
+parser.addArgument(['--relative'], { help: "Use paths relative to working directory in injected <script> tags", action:'storeTrue' } );
 parser.addArgument(['inputDir'], { help: "directory containing files to instrument"});
 parser.addArgument(['outputDir'], { help: "directory in which to create instrumented copy"});
 
@@ -210,6 +214,9 @@ if (args.direct_in_output) {
 }
 if (args.selenium) {
     selenium = args.selenium;
+}
+if (args.relative) {
+    relative = args.relative;
 }
 //if (args.ignoreInline) {
 //	instrumentInline = !args.ignoreInline;

@@ -152,7 +152,7 @@ def testrr_helper (filee, jalangi, norm_fn, record_fn, instrument_fn=instrument)
     os.putenv("JALANGI_ANALYSIS", "none")
     rep = replay()
     (open("jalangi_replay", "w")).write(rep)
-    #print rep
+    print rep
     try:
 	    wcl = util.count_lines("jalangi_trace")
 	

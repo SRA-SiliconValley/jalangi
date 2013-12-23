@@ -705,7 +705,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 if ((mode === MODE_REPLAY && scriptCount > 0) || isBrowserReplay) {
                     throw tmp;
                 } else {
-                    console.log(tmp);
+                    process.stderr.write(String(tmp));
                 }
             }
         }

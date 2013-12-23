@@ -90,6 +90,8 @@ util.inherits(HTMLRewriteStream, Transform);
 
 HTMLRewriteStream.prototype._transform = accumulateData;
 
+var seleniumCode = "window.__jalangi_errormsgs__ = []; window.onerror = function(errorMsg) { window.__jalangi_errormsgs__.push(errorMsg); }; window.__JALANGI_SELENIUM__ = true;";
+
 HTMLRewriteStream.prototype._flush = function (cb) {
 	if (instrumentInline) {
 		this.push(proxy.rewriteHTML(this.data, "http://foo.com", rewriteInlineScript, instUtil.getHeaderCode(jalangiRoot)));	
@@ -99,7 +101,7 @@ HTMLRewriteStream.prototype._flush = function (cb) {
 		assert.ok(headIndex !== -1, "couldn't find head element");
 		var headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot,relative);
 		if (selenium) {
-		    headerLibs = "<script>window.__JALANGI_SELENIUM__ = true;</script>" + headerLibs;
+		    headerLibs = "<script>" + seleniumCode + "</script>" + headerLibs;
 		}
 		var newHTML = this.data.slice(0, headIndex+6) + headerLibs + this.data.slice(headIndex+6);
 		this.push(newHTML);

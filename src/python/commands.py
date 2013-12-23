@@ -25,6 +25,7 @@ from subprocess import Popen
 from time import sleep
 import webbrowser
 import subprocess
+import sys
 
 def analysis(analysis, browser_rec, filee, jalangi=util.DEFAULT_INSTALL):
     try:
@@ -224,17 +225,33 @@ def app_instrument(filee,jalangi=util.DEFAULT_INSTALL):
                              filee, ".", jalangi=jalangi)
     return (".", "")
 
+def get_app_exercise_fn(app_dir):
+    old_sys_path = list(sys.path)
+    exercise_fn = None
+    try:
+        sys.path.append(app_dir)
+        import app_exercise
+        exercise_fn = app_exercise.exercise
+    except ImportError:
+        pass
+    finally:
+        sys.path = old_sys_path
+    return exercise_fn
+    
 def app_run(app_dir,jalangi=util.DEFAULT_INSTALL):
     import selenium_util
     # start up web server in parent directory
+    # get rid of .js appended by default
+    app_dir = os.path.splitext(app_dir)[0]
     os.chdir("..")
     sp = subprocess.Popen(["python","-m","SimpleHTTPServer","8181"])    
     os.chdir("jalangi_tmp")
     try:
-        html_to_load = os.path.join(os.path.splitext(app_dir)[0],'index.html')
+        exercise_fn = get_app_exercise_fn(app_dir)
+        html_to_load = os.path.join(app_dir,'index.html')
         url = "http://localhost:8181/" + os.path.relpath(html_to_load,jalangi.get_home())
         result = selenium_util.run_url_in_selenium(url,
-                                                   selenium_util.get_regression_msgs)
+                                                   selenium_util.get_regression_msgs(False,exercise_fn))
         return result
     finally:
         sp.kill()
@@ -246,10 +263,11 @@ def app_record(app_dir,inst_app_dir,jalangi=util.DEFAULT_INSTALL):
     sp = subprocess.Popen(["python","-m","SimpleHTTPServer","8181"])    
     os.chdir("jalangi_tmp")
     try:
+        exercise_fn = get_app_exercise_fn(inst_app_dir)
         url = "http://localhost:8181/" + os.path.relpath(os.path.abspath(os.path.join(inst_app_dir,'index.html')),
                                                                      jalangi.get_home())
         result = selenium_util.run_url_in_selenium(url,
-                                                   selenium_util.get_regression_msgs_and_trace)
+                                                   selenium_util.get_regression_msgs_and_trace(False,exercise_fn))
         return result
     finally:
         sp.kill()

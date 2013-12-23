@@ -43,7 +43,6 @@ def exercise(driver):
     element.click()
     element = driver.find_element(by=By.ID, value="buttonequal")    
     element.click()
-    time.sleep(3)
     
 
 

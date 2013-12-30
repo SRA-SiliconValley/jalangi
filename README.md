@@ -183,7 +183,7 @@ You can run origin of null and undefined tracker on a toy example by issuing the
 
 ***
 
-First start a HTTP server by running the following command.  The command starts a simple Python based http server.
+First start a HTTP server by running the following command.  The command starts a simple Python-based HTTP server, running on port 8181 by default.
 
 	python scripts/jalangi.py server &
 
@@ -194,7 +194,7 @@ Then instrument the JavaScript files that you want to analyze.  You also need to
 Finally launch the jalangi server and the html page by running
 
     killall node
-    python scripts/jalangi.py rrserver http://127.0.0.1:8000/tests/tizen/annex/index_jalangi_.html
+    python scripts/jalangi.py rrserver http://127.0.0.1:8181/tests/tizen/annex/index_jalangi_.html
 
 You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  To ensure the trace is completely flushed, press `Alt+Shift+T` in the browser, and then close the browser window.  You can run a dynamic analysis on the trace file by issuing the following commands.
 
@@ -254,7 +254,7 @@ For browsers on Mac OS X, you can set the proxy server for a network adapter `Wi
 
 To stop using the proxy, run `sudo networksetup -setwebproxystate Wi-Fi off`.
 
-Now, open Chrome and navigate to `http://127.0.0.1:8000/tests/tizen/annex/index.html` (*not* `index_jalangi_.html`).  You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the output directory `/tmp/instScripts/site0`.  To ensure the trace is completely flushed, press `Alt+Shift+T` in the browser, and then close the browser window.  Once you are done playing, kill the proxy server process to complete dumping of certain
+Now, open Chrome and navigate to `http://127.0.0.1:8181/tests/tizen/annex/index.html` (*not* `index_jalangi_.html`).  You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the output directory `/tmp/instScripts/site0`.  To ensure the trace is completely flushed, press `Alt+Shift+T` in the browser, and then close the browser window.  Once you are done playing, kill the proxy server process to complete dumping of certain
 metadata.
 
 Now, you can run a dynamic analysis on the trace file by issuing the following commands.
@@ -271,7 +271,7 @@ Now, you can run a dynamic analysis on the trace file by issuing the following c
     node src/js/instrument/esnstrument.js tests/tizen/calculator/js/jquery-1.7.2.min.js tests/tizen/calculator/js/peg-0.6.2.min.js tests/tizen/calculator/js/calc.js
 
     killall node
-    python scripts/jalangi.py rrserver http://127.0.0.1:8000/tests/tizen/calculator/index_jalangi_.html
+    python scripts/jalangi.py rrserver http://127.0.0.1:8181/tests/tizen/calculator/index_jalangi_.html
 
     export JALANGI_MODE=replay
     export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine
@@ -281,7 +281,7 @@ Now, you can run a dynamic analysis on the trace file by issuing the following c
 
     node src/js/instrument/esnstrument.js tests/tizen/go/js/go.js tests/tizen/go/lib/jquery-1.7.1.min.js
     killall node
-    python scripts/jalangi.py rrserver http://127.0.0.1:8000/tests/tizen/go/index_jalangi_.html
+    python scripts/jalangi.py rrserver http://127.0.0.1:8181/tests/tizen/go/index_jalangi_.html
 
     export JALANGI_MODE=replay
     export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine
@@ -301,7 +301,7 @@ Then instrument the JavaScript files that you want to analyze.  You also need to
 
 Finally open the following webpage in Chrome and open the JavaScript console to see a log of all NaN values read during the execution.
 
-    open http://127.0.0.1:8000/tests/tizen/annex/index_direct.html
+    open http://127.0.0.1:8181/tests/tizen/annex/index_direct.html
 
 Jalangi runs the analysis described in src/js/analyses/logundefinedread/logUndefinedRead.js.  Note that we have added the following lines in index_direct.html to perform
 the analysis directly in the browser.  In summary, window.JALANGI_MODE must be set to 'inbrowser' and J$.analysis must be set to a suitable analysis object. In the

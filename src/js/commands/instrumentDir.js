@@ -193,7 +193,7 @@ var parser = new ArgumentParser({ addHelp: true, description: "Utility to apply 
 parser.addArgument(['-s', '--serialize'], { help: "dump serialized ASTs along with code", action:'storeTrue' } );
 parser.addArgument(['-x', '--exclude'], { help: "do not instrument any scripts whose filename contains this substring" } );
 // TODO add back this option once we've fixed the relevant HTML parsing code
-//parser.addArgument(['-i', '--ignoreInline'], { help: "ignore all inline scripts", nargs: "?", defaultValue: false, constant: true});
+parser.addArgument(['-i', '--instrumentInline'], { help: "instrument inline scripts", action:'storeTrue'});
 parser.addArgument(['--jalangi_root'], { help: "Jalangi root directory, if not working directory" } );
 parser.addArgument(['--direct_in_output'], { help: "Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' } );
 parser.addArgument(['--selenium'], { help: "Insert code so scripts can detect they are running under Selenium", action:'storeTrue' } );
@@ -220,9 +220,9 @@ if (args.selenium) {
 if (args.relative) {
     relative = args.relative;
 }
-//if (args.ignoreInline) {
-//	instrumentInline = !args.ignoreInline;
-//}
+if (args.instrumentInline) {
+	instrumentInline = args.instrumentInline;
+}
 
 
 instDir(args.inputDir, args.outputDir);

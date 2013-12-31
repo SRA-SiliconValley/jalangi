@@ -1349,6 +1349,9 @@ if (typeof J$ === 'undefined') J$ = {};
                 frame = evalFrames.pop();
             };
 
+            /**
+             * getField
+             */
             this.RR_G = function (iid, base, offset, val) {
                 var base_c, type;
 
@@ -1363,6 +1366,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     } else if (!HOP(base_c, SPECIAL_PROP)) {
                         return this.RR_L(iid, val, N_LOG_GETFIELD);
                     } else if (base_c[SPECIAL_PROP][offset] === val ||
+                        // TODO what is going on with this condition?
                         (val !== val && base_c[SPECIAL_PROP][offset] !== base_c[SPECIAL_PROP][offset])) {
                         seqNo++;
                         return val;

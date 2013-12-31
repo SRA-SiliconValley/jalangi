@@ -560,6 +560,7 @@ if (typeof J$ === 'undefined') J$ = {};
 
         //var globalInstrumentationInfo;
 
+        // getField (property read)
         function G(iid, base, offset, norr) {
             if (offset === SPECIAL_PROP || offset === SPECIAL_PROP2 || offset === SPECIAL_PROP3) {
                 return undefined;
@@ -588,6 +589,7 @@ if (typeof J$ === 'undefined') J$ = {};
             return val;
         }
 
+        // putField (property write)
         function P(iid, base, offset, val) {
             if (offset === SPECIAL_PROP || offset === SPECIAL_PROP2 || offset === SPECIAL_PROP3) {
                 return undefined;
@@ -614,6 +616,7 @@ if (typeof J$ === 'undefined') J$ = {};
             return val;
         }
 
+        // Function call (e.g., f())
         function F(iid, f, isConstructor) {
             return function () {
                 var base = this;
@@ -621,6 +624,7 @@ if (typeof J$ === 'undefined') J$ = {};
             }
         }
 
+        // Method call (e.g., e.f())
         function M(iid, base, offset, isConstructor) {
             return function () {
                 var f = G(iid, base, offset);
@@ -628,6 +632,7 @@ if (typeof J$ === 'undefined') J$ = {};
             };
         }
 
+        // Function enter
         function Fe(iid, val, dis /* this */) {
             executionIndex.executionIndexCall();
             if (rrEngine) {
@@ -640,6 +645,7 @@ if (typeof J$ === 'undefined') J$ = {};
             }
         }
 
+        // Function exit
         function Fr(iid) {
             var ret = false, tmp;
             executionIndex.executionIndexReturn();
@@ -649,6 +655,8 @@ if (typeof J$ === 'undefined') J$ = {};
             if (sandbox.analysis && sandbox.analysis.functionExit) {
                 ret = sandbox.analysis.functionExit(iid);
             }
+            // if there was an uncaught exception, throw it
+            // here, to preserve exceptional control flow
             if (exceptionVal !== undefined) {
                 tmp = exceptionVal;
                 exceptionVal = undefined;
@@ -657,15 +665,19 @@ if (typeof J$ === 'undefined') J$ = {};
             return ret;
         }
 
-
+        // Uncaught exception
         function Ex(iid, e) {
             exceptionVal = e;
         }
 
+        // Return statement
         function Rt(iid, val) {
             return returnVal = val;
         }
 
+        // Actual return from function, invoked from 'finally' block
+        // added around every function by instrumentation.  Reads
+        // the return value stored by call to Rt()
         function Ra() {
             var ret = returnVal;
             returnVal = undefined;
@@ -676,7 +688,7 @@ if (typeof J$ === 'undefined') J$ = {};
             return ret;
         }
 
-
+        // Script enter
         function Se(iid, val) {
             scriptCount++;
             if (rrEngine) {
@@ -687,6 +699,7 @@ if (typeof J$ === 'undefined') J$ = {};
             }
         }
 
+        // Script exit
         function Sr(iid) {
             var tmp;
             scriptCount--;
@@ -710,10 +723,13 @@ if (typeof J$ === 'undefined') J$ = {};
             }
         }
 
+        // Ignore argument (identity).
+        // TODO Why do we need this?
         function I(val) {
             return val;
         }
 
+        // object/function/regexp/array Literal
         function T(iid, val, type) {
             if (sandbox.analysis && sandbox.analysis.literalPre) {
                 sandbox.analysis.literalPre(iid, val);
@@ -731,6 +747,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 val[SPECIAL_PROP2] = true;
             }
 
+            // inform analysis, which may modify the literal
             if (sandbox.analysis && sandbox.analysis.literal) {
                 val = sandbox.analysis.literal(iid, val);
                 if (rrEngine) {
@@ -741,6 +758,9 @@ if (typeof J$ === 'undefined') J$ = {};
             return val;
         }
 
+        // hash in for-in
+        // E.g., given code 'for (p in x) { ... }',
+        // H is invoked with the value of x
         function H(iid, val) {
             if (rrEngine) {
                 val = rrEngine.RR_H(iid, val);
@@ -748,7 +768,7 @@ if (typeof J$ === 'undefined') J$ = {};
             return val;
         }
 
-
+        // variable read
         function R(iid, name, val, isGlobal) {
             if (sandbox.analysis && sandbox.analysis.readPre) {
                 sandbox.analysis.readPre(iid, name, val, isGlobal);
@@ -766,6 +786,7 @@ if (typeof J$ === 'undefined') J$ = {};
             return val;
         }
 
+        // variable write
         function W(iid, name, val, lhs) {
             if (sandbox.analysis && sandbox.analysis.writePre) {
                 sandbox.analysis.writePre(iid, name, val, lhs);
@@ -779,6 +800,7 @@ if (typeof J$ === 'undefined') J$ = {};
             return val;
         }
 
+        // variable declaration (Init)
         function N(iid, name, val, isArgumentSync) {
             if (rrEngine) {
                 rrEngine.RR_N(iid, name, val, isArgumentSync);
@@ -789,7 +811,8 @@ if (typeof J$ === 'undefined') J$ = {};
             return val;
         }
 
-
+        // Modify and assign +=, -= ...
+        // TODO is this dead or still used?
         function A(iid, base, offset, op) {
             var oprnd1 = G(iid, base, offset);
             return function (oprnd2) {
@@ -798,6 +821,7 @@ if (typeof J$ === 'undefined') J$ = {};
             };
         }
 
+        // Binary operation
         function B(iid, op, left, right) {
             var left_c, right_c, result_c;
 
@@ -899,6 +923,7 @@ if (typeof J$ === 'undefined') J$ = {};
         }
 
 
+        // Unary operation
         function U(iid, op, left) {
             var left_c, result_c;
 
@@ -950,6 +975,9 @@ if (typeof J$ === 'undefined') J$ = {};
             return lastVal;
         };
 
+        // Switch key
+        // E.g., for 'switch (x) { ... }',
+        // C1 is invoked with value of x
         function C1(iid, left) {
             var left_c;
 
@@ -958,6 +986,7 @@ if (typeof J$ === 'undefined') J$ = {};
             return left_c;
         };
 
+        // case label inside switch
         function C2(iid, left) {
             var left_c, ret;
             executionIndex.executionIndexInc(iid);
@@ -983,6 +1012,7 @@ if (typeof J$ === 'undefined') J$ = {};
             return left_c;
         };
 
+        // Expression in conditional
         function C(iid, left) {
             var left_c, ret;
             executionIndex.executionIndexInc(iid);

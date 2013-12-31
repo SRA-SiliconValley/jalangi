@@ -16,7 +16,8 @@
 
 // Author: Koushik Sen
 
-/*global astUtil esprima require escodegen process __dirname __filename console window module exports J$ */
+/*jslint node: true browser: true */
+/*global astUtil esprima escodegen J$ */
 (function (sandbox) {
     if (typeof esprima === 'undefined') {
         esprima = require("esprima");
@@ -263,7 +264,7 @@
             fs = require('fs');
             var smapFile = outputDir ? (require('path').join(outputDir, SMAP_FILE_NAME)) : SMAP_FILE_NAME;
             traceWfh = fs.openSync(smapFile, 'w');
-            writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var filename;\n");
+            writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var orig2Inst = sandbox.orig2Inst = {}; var filename;\n");
         }
     }
 
@@ -1277,6 +1278,7 @@
 			// TODO add parameters to allow these paths to be distinct
             writeLineToIIDMap("filename = \"" + filename + "\";\n");			
             instCodeFileName = instFileName ? instFileName : makeInstCodeFileName(filename);
+            writeLineToIIDMap("orig2Inst[filename] = \"" + instCodeFileName + "\";\n");
 		}
         if (typeof  code === "string" && code.indexOf(noInstr) < 0) {
             if (!tryCatchAtTop) {
@@ -1344,6 +1346,7 @@
 //            console.timeEnd("load")
             wrapProgramNode = true;
             instCodeFileName = makeInstCodeFileName(filename);
+            writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(),instCodeFileName)) + "\";\n");
             var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
             //console.log(JSON.stringify(newAst, null, '\t'));
 

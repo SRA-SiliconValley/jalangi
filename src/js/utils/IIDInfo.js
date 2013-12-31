@@ -16,6 +16,7 @@
 
 // Author: Koushik Sen
 
+/*jslint node: true */
 /*global J$ */
 module.exports = (function(){
     var isInit = false;

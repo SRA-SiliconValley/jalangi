@@ -423,7 +423,7 @@ if (typeof J$ === 'undefined') J$ = {};
         //----------------------------------- Begin Jalangi Library backend ---------------------------------
 
         var isInstrumentedCaller = false, isConstructorCall = false;
-        var returnVal;
+        var returnVal = [];
         var exceptionVal;
         var scriptCount = 0;
         var lastVal;
@@ -639,7 +639,7 @@ if (typeof J$ === 'undefined') J$ = {};
             if (rrEngine) {
                 rrEngine.RR_Fe(iid, val, dis);
             }
-            returnVal = undefined;
+            returnVal.push(undefined);
             exceptionVal = undefined;
             if (sandbox.analysis && sandbox.analysis.functionEnter) {
                 sandbox.analysis.functionEnter(iid, val, dis);
@@ -673,15 +673,16 @@ if (typeof J$ === 'undefined') J$ = {};
 
         // Return statement
         function Rt(iid, val) {
-            return returnVal = val;
+            returnVal.push(val);
+            return val;
         }
 
         // Actual return from function, invoked from 'finally' block
         // added around every function by instrumentation.  Reads
         // the return value stored by call to Rt()
         function Ra() {
-            var ret = returnVal;
-            returnVal = undefined;
+            var ret = returnVal.pop();
+            //returnVal = undefined;
             exceptionVal = undefined;
             if (sandbox.analysis && sandbox.analysis.return_) {
                 ret = sandbox.analysis.return_(ret);

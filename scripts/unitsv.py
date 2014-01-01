@@ -55,6 +55,7 @@ tests = [
     "tests/unit/gettersetter" ,
     "tests/unit/gettersetter2" ,
     "tests/unit/implicit-type",
+    "tests/unit/prototype_property",
     "tests/unit/getownpropnames"
 ]
 

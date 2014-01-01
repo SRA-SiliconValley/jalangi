@@ -161,7 +161,8 @@ if (typeof J$ === 'undefined') J$ = {};
             N_LOG_NUMBER_LIT = 22,
             N_LOG_BOOLEAN_LIT = 23,
             N_LOG_UNDEFINED_LIT = 24,
-            N_LOG_NULL_LIT = 25;
+            N_LOG_NULL_LIT = 25,
+            N_LOG_GETFIELD_OWN = 26;
 
         //-------------------------------- End constants ---------------------------------
 
@@ -1371,20 +1372,22 @@ if (typeof J$ === 'undefined') J$ = {};
                         seqNo++;
                         return val;
                     } else {
-                        if (isSafeToCallGetOrSet(base_c, offset, false)) {
+                        if (HOP(base_c,offset) && isSafeToCallGetOrSet(base_c, offset, false)) {
                             base_c[SPECIAL_PROP][offset] = val;
+                            return this.RR_L(iid, val, N_LOG_GETFIELD_OWN);
                         }
                         return this.RR_L(iid, val, N_LOG_GETFIELD);
                     }
                 } else if (mode === MODE_REPLAY) {
-                    if (traceInfo.getCurrent() === undefined) {
+                    var rec;
+                    if ((rec = traceInfo.getCurrent()) === undefined) {
                         traceInfo.next();
                         skippedGetFields++;
                         return val;
                     } else {
                         val = this.RR_L(iid, val, N_LOG_GETFIELD);
                         base_c = getConcrete(base);
-                        if (isSafeToCallGetOrSet(base_c, offset, false)) {
+                        if (rec[F_FUNNAME] === N_LOG_GETFIELD_OWN) {
                             base_c[offset] = val;
                         }
                         return val;

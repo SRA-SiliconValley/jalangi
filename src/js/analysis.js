@@ -162,6 +162,7 @@ if (typeof J$ === 'undefined') J$ = {};
             N_LOG_BOOLEAN_LIT = 23,
             N_LOG_UNDEFINED_LIT = 24,
             N_LOG_NULL_LIT = 25,
+            // property read *directly* from an object (not from the prototype chain)
             N_LOG_GETFIELD_OWN = 26;
 
         //-------------------------------- End constants ---------------------------------
@@ -423,6 +424,10 @@ if (typeof J$ === 'undefined') J$ = {};
         //----------------------------------- Begin Jalangi Library backend ---------------------------------
 
         var isInstrumentedCaller = false, isConstructorCall = false;
+        // stack of return values from instrumented functions.
+        // we need to keep a stack since a function may return and then
+        // have another function call in a finally block (see test
+        // call_in_finally.js)
         var returnVal = [];
         var exceptionVal;
         var scriptCount = 0;
@@ -1374,6 +1379,10 @@ if (typeof J$ === 'undefined') J$ = {};
                         return val;
                     } else {
                         if (HOP(base_c,offset) && isSafeToCallGetOrSet(base_c, offset, false)) {
+                            // add the field to the shadow value, so we don't need to log
+                            // future reads.  Only do so if the property is defined directly
+                            // on the object, to avoid incorrectly adding the property to
+                            // the object directly during replay (see test prototype_property.js)
                             base_c[SPECIAL_PROP][offset] = val;
                             return this.RR_L(iid, val, N_LOG_GETFIELD_OWN);
                         }
@@ -1388,6 +1397,7 @@ if (typeof J$ === 'undefined') J$ = {};
                     } else {
                         val = this.RR_L(iid, val, N_LOG_GETFIELD);
                         base_c = getConcrete(base);
+                        // only add direct object properties
                         if (rec[F_FUNNAME] === N_LOG_GETFIELD_OWN) {
                             base_c[offset] = val;
                         }

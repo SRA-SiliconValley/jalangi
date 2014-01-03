@@ -223,7 +223,7 @@ def run_html_in_phantom(html_filename,phantom_script,jalangi=DEFAULT_INSTALL):
 RUNTIME_SCRIPTS = ["src/js/analysis.js",
                    "src/js/InputManager.js",
                    "node_modules/escodegen/escodegen.browser.js",
-                   "node_modules/esprima/esprima.js",
+                   "node_modules/acorn/acorn.js",
                    "src/js/utils/astUtil.js",
                    "src/js/instrument/esnstrument.js"]
 

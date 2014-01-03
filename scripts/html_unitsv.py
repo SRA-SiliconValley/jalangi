@@ -19,8 +19,8 @@ import testrunner
 
 tests = [
     "tests/html/unit/native_function_toString",
-    "tests/html/unit/window_location"
-#    "tests/html/jquery-2.0.2/jquery-2.0.2",
+    "tests/html/unit/window_location",
+    "tests/html/jquery-2.0.2/jquery-2.0.2"
 ]
 
 success = testrunner.run_tests(tests,["analyze", "-a", "analyses/trackallvalues/TrackValuesEngine", "-b"])

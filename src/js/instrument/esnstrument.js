@@ -17,9 +17,10 @@
 // Author: Koushik Sen
 
 /*jslint node: true browser: true */
-/*global astUtil esprima escodegen J$ */
+/*global astUtil acorn escodegen J$ */
 (function (sandbox) {
-    if (typeof esprima === 'undefined') {
+    if (typeof acorn === 'undefined') {
+        acorn = require("acorn");
         esprima = require("esprima");
         escodegen = require('escodegen');
         astUtil = require("./../utils/astUtil");
@@ -192,7 +193,7 @@
                 return node;
             }
         };
-        var ast = esprima.parse(code);
+        var ast = acorn.parse(code);
         var newAst = astUtil.transformAst(ast, visitorReplaceInExpr, undefined, undefined, true);
         //console.log(newAst);
         return newAst.body;
@@ -1229,7 +1230,8 @@
 
     function transformString(code, visitorsPost, visitorsPre) {
 //        console.time("parse")
-        var newAst = esprima.parse(code, {loc:true, range:true});
+        //var newAst = esprima.parse(code, {loc:true, range:true});
+        var newAst = acorn.parse(code, {locations:true, ranges:true});
 //        console.timeEnd("parse")
 //        console.time("transform")
         addScopes(newAst);
@@ -1238,6 +1240,7 @@
             newAst = astUtil.transformAst(newAst, visitorsPost[i], visitorsPre[i], astUtil.CONTEXT.RHS);
         }
 //        console.timeEnd("transform")
+//        console.log(JSON.stringify(newAst,null,"  "));
         return newAst;
     }
 

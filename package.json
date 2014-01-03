@@ -3,10 +3,11 @@
     "version":"0.1.0",
     "description":"dynamic analysis framework for JavaScript",
     "dependencies":{
+        "acorn": "*",
         "cover":"*",
         "websocket":"*",
         "source-map":"*",
-        "esprima":"*",
+        "esprima": "*",
         "estraverse":"*",
         "escodegen":"*",
         "execSync":"*",
@@ -14,7 +15,7 @@
         "argparse": "*",
         "mkdirp": "*",
         "ncp": "*",
-        "rewriting-proxy": "https://github.com/xiemaisi/rewriting-proxy/tarball/master"
+        "rewriting-proxy": "*"
     },
     "scripts": {
       "test": "python scripts/runalltests.py"

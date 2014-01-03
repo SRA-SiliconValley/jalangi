@@ -117,9 +117,9 @@ function transformAst(object, visitorPost, visitorPre, context, noIgnore) {
                     newContext = CONTEXT.IGNORE;
                 } else if (context === CONTEXT.PARAMS) {
                     newContext = CONTEXT.IGNORE;
-                } else if (type === 'Property' && key === 'value' && object.kind === 'get') {
+                } else if (object.key && key === 'value' && object.kind === 'get') {
                     newContext = CONTEXT.GETTER;
-                } else if (type === 'Property' && key === 'value' && object.kind === 'set') {
+                } else if (object.key && key === 'value' && object.kind === 'set') {
                     newContext = CONTEXT.SETTER;
                 } else {
                     newContext = CONTEXT.RHS;

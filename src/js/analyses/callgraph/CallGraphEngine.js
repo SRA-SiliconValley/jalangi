@@ -36,31 +36,47 @@
         }
 
         this.endExecution = function () {
-            for (var callerIId in callerIidToCalleeIidsMap) {
+            var sortingArr = [];
+
+            for (var iid in iidToInvocationCount) {
+                if (HOP(iidToInvocationCount,iid)) {
+                    sortingArr.push([iid, iidToInvocationCount[iid]]);
+                }
+            }
+            sortingArr.sort(function(a,b) {
+               return b[1] - a[1];
+            });
+
+            var i, len = sortingArr.length;
+            for (i=0; i<len; i++) {
+                var callerIId = sortingArr[i][0];
+                console.log("Function "+iidToFunName[callerIId]+" defined at "+getIIDInfo(callerIId)+" was invoked "+iidToInvocationCount[callerIId]+" time(s) and it called:");
                 if (HOP(callerIidToCalleeIidsMap,callerIId)) {
-                    console.log("Function "+iidToFunName[callerIId]+" defined at "+getIIDInfo(callerIId)+" called:");
                     var callees = callerIidToCalleeIidsMap[callerIId];
                     for (var calleeIid in callees) {
                         if (HOP(callees,calleeIid)) {
                             var callSites = callees[calleeIid];
                             for (var callSite in callSites) {
                                 if (HOP(callSites, callSite)){
-                                    console.log("    at "+getIIDInfo(callSite)+" function "+ iidToFunName[calleeIid]+" defined at "+getIIDInfo(calleeIid));
+                                    console.log("    function "+ iidToFunName[calleeIid]+" defined at "+getIIDInfo(calleeIid)+" "+callSites[callSite]+" time(s) at call site "+getIIDInfo(callSite));
                                 }
                             }
                         }
                     }
+                } else {
+                    console.log("    none")
                 }
             }
             console.log("Generating CallGraph.json ...");
             // store the call graph by serializing  callerIidToCalleeIidsMap and iidToFunName
-            require('fs').writeFileSync("CallGraph.json", JSON.stringify([iidToFunName, callerIidToCalleeIidsMap], undefined, 4), "utf8");
+            require('fs').writeFileSync("CallGraph.json", JSON.stringify([iidToFunName,iidToInvocationCount, callerIidToCalleeIidsMap], undefined, 4), "utf8");
         }
 
-        var callerIidToCalleeIidsMap = {}; // caller iid => callee iid => iid of call site => true
-        var iidToFunName = {};
+        var callerIidToCalleeIidsMap = {}; // caller iid => callee iid => iid of call site => count
+        var iidToFunName = {0:"Program"}; // function iid => function name
+        var iidToInvocationCount = {0:1}; // function iid => number of times the function is invoked
 
-        var callStack = [];
+        var callStack = [0];
         var invokedAtIid;
 
         this.invokeFunPre = function (iid, f, base, args, isConstructor) {
@@ -76,8 +92,18 @@
             if (!HOP(callees,iid)) {
                 callees[iid] = {};
             }
-            callees[iid][invokedAtIid] = true;
+            var callee = callees[iid]
+            if (!HOP(callee,invokedAtIid)) {
+                callee[invokedAtIid] = 0;
+            }
+            callee[invokedAtIid] = callee[invokedAtIid] + 1;
             iidToFunName[iid] = fun.name;
+            if (!HOP(iidToInvocationCount,iid)) {
+                iidToInvocationCount[iid] = 1;
+            } else {
+                iidToInvocationCount[iid] = iidToInvocationCount[iid] + 1;
+            }
+
             callStack.push(iid);
         }
 

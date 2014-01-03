@@ -240,6 +240,9 @@ def get_app_exercise_fn(app_dir):
     
 def app_run(app_dir,jalangi=util.DEFAULT_INSTALL):
     import selenium_util
+    selenium_util.set_chromedriver_loc(os.path.abspath(os.path.join(jalangi.get_home(),
+                                                                      "thirdparty",
+                                                                      "chromedriver.exe" if sys.platform == 'win32' else "chromedriver")))
     # start up web server in parent directory
     # get rid of .js appended by default
     app_dir = os.path.splitext(app_dir)[0]
@@ -258,6 +261,9 @@ def app_run(app_dir,jalangi=util.DEFAULT_INSTALL):
 
 def app_record(app_dir,inst_app_dir,jalangi=util.DEFAULT_INSTALL):
     import selenium_util
+    selenium_util.set_chromedriver_loc(os.path.abspath(os.path.join(jalangi.get_home(),
+                                                                      "thirdparty",
+                                                                      "chromedriver.exe" if sys.platform == 'win32' else "chromedriver")))
     # start up web server in parent directory
     os.chdir("..")
     sp = subprocess.Popen(["python","-m","SimpleHTTPServer","8181"])    

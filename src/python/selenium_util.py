@@ -23,11 +23,19 @@ import os
 import sys
 import tempfile
 
+chromedriver_loc = ""
+
+def set_chromedriver_loc(path):
+    global chromedriver_loc
+    chromedriver_loc = path
+
 def run_html_in_selenium(html_filename,selenium_fn):
     return run_url_in_selenium('file://' + html_filename,selenium_fn)
 
 def run_url_in_selenium(url,selenium_fn):
-    driver = webdriver.Chrome()
+    global chromedriver_loc
+    os.environ["webdriver.chrome.driver"] = chromedriver_loc
+    driver = webdriver.Chrome(chromedriver_loc)
     driver.set_window_size(1280,1024)
     driver.get(url)
     try:

@@ -19,8 +19,9 @@ import testrunner
 
 tests = [
     "tests/html/unit/native_function_toString",
-    "tests/html/unit/window_location"
-#    "tests/html/jquery-2.0.2/jquery-2.0.2",
+    "tests/html/unit/window_location",
+    "tests/html/jquery-2.0.2/jquery-2.0.2"
+#    "tests/html/mootools/mootools-core-1.4.5-full-nocompat"
 ]
 
 success = testrunner.run_tests(tests,["testrr_browser"])

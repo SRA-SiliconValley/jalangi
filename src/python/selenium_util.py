@@ -17,6 +17,7 @@
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait # available since 2.4.0
 from selenium.webdriver.support import expected_conditions as EC # available since 2.26.0
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import time
 import util
 import os
@@ -32,10 +33,14 @@ def set_chromedriver_loc(path):
 def run_html_in_selenium(html_filename,selenium_fn):
     return run_url_in_selenium('file://' + html_filename,selenium_fn)
 
+# creates a WebDriver for Chrome, loads the URL, and then
+# executes selenium_fn on the driver and returns the result
 def run_url_in_selenium(url,selenium_fn):
     global chromedriver_loc
+    d = DesiredCapabilities.CHROME
+    d['loggingPrefs'] = { 'browser':'ALL' }
     os.environ["webdriver.chrome.driver"] = chromedriver_loc
-    driver = webdriver.Chrome(chromedriver_loc)
+    driver = webdriver.Chrome(executable_path=chromedriver_loc,desired_capabilities=d)
     driver.set_window_size(1280,1024)
     driver.get(url)
     try:
@@ -43,27 +48,37 @@ def run_url_in_selenium(url,selenium_fn):
     finally:
         driver.quit()
 
-def get_regression_msgs(capture_errors, exercise_fn=None):
-    def real_driver(driver):
-        WebDriverWait(driver,10).until(lambda driver: driver.execute_script("return document.readyState") == "complete")
-        if exercise_fn != None:
-            exercise_fn(driver)
-        result = ""
-        if capture_errors:
-            err_msg_code = """
-            return (window.__jalangi_errormsgs__ && window.__jalangi_errormsgs__.length > 0) ? window.__jalangi_errormsgs__.join("") : "";
-            """
-            result += driver.execute_script(err_msg_code)        
-        return result + driver.execute_script("return (window.__regression_msg) ? (window.__regression_msg + \'\\n\'): \"\"")
-    return real_driver
-
-
+# JavaScript code to capture error messages from browser
 on_error_handler_code = """
 window.__jalangi_errormsgs__ = [];
 window.onerror = function(errorMsg) {
   window.__jalangi_errormsgs__.push(errorMsg);
 };
 """
+
+
+# returns a function that, when invoked with a driver:
+# (1) runs the exercise_fn on the driver, if given
+# (2) returns the error messages from the browser, followed by the browser's console.log output
+def get_regression_msgs(capture_errors, exercise_fn=None):
+    def real_driver(driver):
+        WebDriverWait(driver,10).until(lambda driver: driver.execute_script("return document.readyState") == "complete")
+        if exercise_fn != None:
+            exercise_fn(driver)
+        # result string will include error messages and then console.log messages
+        result = ""
+        if capture_errors:
+            err_msg_code = """
+            return (window.__jalangi_errormsgs__ && window.__jalangi_errormsgs__.length > 0) ? window.__jalangi_errormsgs__.join("") : "";
+            """
+            result += driver.execute_script(err_msg_code)
+        # log messages
+        log_msgs = [x['message'].split()[2] for x in driver.get_log('browser') if x['source'] == 'console-api']
+        if len(log_msgs) > 0:
+            result += '\n'.join(log_msgs) + '\n'
+        return result
+    return real_driver
+
 
 def run_normal(script,jalangi=util.DEFAULT_INSTALL):
     dummy_filename = os.path.join(tempfile.gettempdir(),"dummy.html")

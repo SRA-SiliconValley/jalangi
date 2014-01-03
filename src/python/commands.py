@@ -38,7 +38,7 @@ def analysis(analysis, browser_rec, filee, jalangi=util.DEFAULT_INSTALL):
     util.mkempty("inputs.js")
     print "---- Recording execution of {} ----".format(filee)
     if browser_rec:
-        browser_record(filee, instrumented_f,jalangi)
+        selenium_browser_record(filee, instrumented_f,jalangi)
     else:
         record(filee, instrumented_f, jalangi)
     print "---- Replaying {} ----".format(filee)
@@ -183,31 +183,22 @@ def testrr (filee, jalangi=util.DEFAULT_INSTALL):
     testrr_helper(filee,jalangi,util.run_node_script,record)
 
 # test record-replay for browser script using PhantomJS
-def testrr_browser(selenium, filee, jalangi=util.DEFAULT_INSTALL):
-    if selenium:
-        try:
-            import selenium_util
-        except ImportError:
-            print "Selenium not installed"
-            return
-        testrr_helper(filee,jalangi,selenium_browser_run,selenium_browser_record)
-    else:
-        testrr_helper(filee,jalangi,browser_run,browser_record)
+def testrr_browser(filee, jalangi=util.DEFAULT_INSTALL):
+    testrr_helper(filee,jalangi,selenium_browser_run,selenium_browser_record)
 
-def browser_run(script,jalangi=util.DEFAULT_INSTALL):
-    return util.run_normal_in_phantom(script,jalangi)
+def load_selenium(jalangi):
+    import selenium_util
+    selenium_util.set_chromedriver_loc(os.path.abspath(os.path.join(jalangi.get_home(),
+                                                                      "thirdparty",
+                                                                      "chromedriver.exe" if sys.platform == 'win32' else "chromedriver")))
+    return selenium_util
 
 def selenium_browser_run(script,jalangi=util.DEFAULT_INSTALL):
-    import selenium_util
+    selenium_util = load_selenium(jalangi)
     return selenium_util.run_normal(script,jalangi)
 
-def browser_record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
-    print instrumented_f
-    real_inst_file = os.path.join(os.path.dirname(os.path.abspath(filee + ".js")),instrumented_f)
-    return util.record_in_phantom(real_inst_file,jalangi)
-
 def selenium_browser_record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
-    import selenium_util
+    selenium_util = load_selenium(jalangi)
     print instrumented_f
     real_inst_file = os.path.join(os.path.dirname(os.path.abspath(filee + ".js")),instrumented_f)
     return selenium_util.record(real_inst_file,jalangi)
@@ -239,10 +230,7 @@ def get_app_exercise_fn(app_dir):
     return exercise_fn
     
 def app_run(app_dir,jalangi=util.DEFAULT_INSTALL):
-    import selenium_util
-    selenium_util.set_chromedriver_loc(os.path.abspath(os.path.join(jalangi.get_home(),
-                                                                      "thirdparty",
-                                                                      "chromedriver.exe" if sys.platform == 'win32' else "chromedriver")))
+    selenium_util = load_selenium(jalangi)
     # start up web server in parent directory
     # get rid of .js appended by default
     app_dir = os.path.splitext(app_dir)[0]
@@ -260,10 +248,7 @@ def app_run(app_dir,jalangi=util.DEFAULT_INSTALL):
         sp.kill()
 
 def app_record(app_dir,inst_app_dir,jalangi=util.DEFAULT_INSTALL):
-    import selenium_util
-    selenium_util.set_chromedriver_loc(os.path.abspath(os.path.join(jalangi.get_home(),
-                                                                      "thirdparty",
-                                                                      "chromedriver.exe" if sys.platform == 'win32' else "chromedriver")))
+    selenium_util = load_selenium(jalangi)
     # start up web server in parent directory
     os.chdir("..")
     sp = subprocess.Popen(["python","-m","SimpleHTTPServer","8181"])    

@@ -7,7 +7,6 @@
         "cover":"*",
         "websocket":"*",
         "source-map":"*",
-        "esprima": "*",
         "estraverse":"*",
         "escodegen":"*",
         "execSync":"*",

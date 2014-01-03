@@ -21,7 +21,6 @@
 (function (sandbox) {
     if (typeof acorn === 'undefined') {
         acorn = require("acorn");
-        esprima = require("esprima");
         escodegen = require('escodegen');
         astUtil = require("./../utils/astUtil");
     }
@@ -1230,7 +1229,7 @@
 
     function transformString(code, visitorsPost, visitorsPre) {
 //        console.time("parse")
-        //var newAst = esprima.parse(code, {loc:true, range:true});
+//        var newAst = esprima.parse(code, {loc:true, range:true});
         var newAst = acorn.parse(code, {locations:true, ranges:true});
 //        console.timeEnd("parse")
 //        console.time("transform")

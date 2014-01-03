@@ -34,7 +34,7 @@ def call_fail(l):
 
 # selenium Python bindings, using pip
 print "---> Installing selenium for Python"
-call_fail(["pip","install","selenium"])
+call_fail(["easy_install","selenium"])
 
 # chromedriver
 os.chdir("thirdparty");

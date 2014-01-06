@@ -69,7 +69,7 @@ function rewriteInlineScript(src, metadata) {
 	fs.writeFileSync(path.join(copyDir, origname), src);
 	fs.writeFileSync(path.join(copyDir, instname), instrumentedCode);
 	if (dumpSerializedASTs) {
-        fs.writeFileSync(instname + ".ast.json", JSON.stringify(instResult.serializedAST, undefined, 2), "utf8");	 
+        fs.writeFileSync(path.join(copyDir, instname + ".ast.json"), JSON.stringify(instResult.serializedAST, undefined, 2), "utf8");	 
 	}
 	return instrumentedCode;
 }

@@ -163,7 +163,8 @@ if (typeof J$ === 'undefined') J$ = {};
             N_LOG_UNDEFINED_LIT = 24,
             N_LOG_NULL_LIT = 25,
         // property read *directly* from an object (not from the prototype chain)
-            N_LOG_GETFIELD_OWN = 26;
+            N_LOG_GETFIELD_OWN = 26,
+            N_LOG_OPERATION = 27;
 
         //-------------------------------- End constants ---------------------------------
 
@@ -843,7 +844,7 @@ if (typeof J$ === 'undefined') J$ = {};
 
         // Binary operation
         function B(iid, op, left, right) {
-            var left_c, right_c, result_c;
+            var left_c, right_c, result_c, isArith = false;
 
             if (sandbox.analysis && sandbox.analysis.binaryPre) {
                 sandbox.analysis.binaryPre(iid, op, left, right);
@@ -854,39 +855,51 @@ if (typeof J$ === 'undefined') J$ = {};
 
             switch (op) {
                 case "+":
+                    isArith = true;
                     result_c = left_c + right_c;
                     break;
                 case "-":
+                    isArith = true;
                     result_c = left_c - right_c;
                     break;
                 case "*":
+                    isArith = true;
                     result_c = left_c * right_c;
                     break;
                 case "/":
+                    isArith = true;
                     result_c = left_c / right_c;
                     break;
                 case "%":
+                    isArith = true;
                     result_c = left_c % right_c;
                     break;
                 case "<<":
+                    isArith = true;
                     result_c = left_c << right_c;
                     break;
                 case ">>":
+                    isArith = true;
                     result_c = left_c >> right_c;
                     break;
                 case ">>>":
+                    isArith = true;
                     result_c = left_c >>> right_c;
                     break;
                 case "<":
+                    isArith = true;
                     result_c = left_c < right_c;
                     break;
                 case ">":
+                    isArith = true;
                     result_c = left_c > right_c;
                     break;
                 case "<=":
+                    isArith = true;
                     result_c = left_c <= right_c;
                     break;
                 case ">=":
+                    isArith = true;
                     result_c = left_c >= right_c;
                     break;
                 case "==":
@@ -902,12 +915,15 @@ if (typeof J$ === 'undefined') J$ = {};
                     result_c = left_c !== right_c;
                     break;
                 case "&":
+                    isArith = true;
                     result_c = left_c & right_c;
                     break;
                 case "|":
+                    isArith = true;
                     result_c = left_c | right_c;
                     break;
                 case "^":
+                    isArith = true;
                     result_c = left_c ^ right_c;
                     break;
                 case "instanceof":
@@ -933,6 +949,22 @@ if (typeof J$ === 'undefined') J$ = {};
                     break;
             }
 
+            if (rrEngine) {
+                var type1 = typeof left_c;
+                var type2 = typeof right_c;
+                var flag1 = (type1 === "object" || type1 === "function")
+                    && !(left_c instanceof String)
+                    && !(left_c instanceof Number)
+                    && !(left_c instanceof Boolean)
+                var flag2 = (type2 === "object" || type2 === "function")
+                    && !(right_c instanceof String)
+                    && !(right_c instanceof Number)
+                    && !(right_c instanceof Boolean)
+                if (isArith && ( flag1 || flag2)) {
+                    //console.log(" type1 "+type1+" type2 "+type2+" op "+op+ " iid "+iid);
+                    result_c = rrEngine.RR_L(iid, result_c, N_LOG_OPERATION);
+                }
+            }
             if (sandbox.analysis && sandbox.analysis.binary) {
                 result_c = sandbox.analysis.binary(iid, op, left, right, result_c);
                 if (rrEngine) {
@@ -945,7 +977,7 @@ if (typeof J$ === 'undefined') J$ = {};
 
         // Unary operation
         function U(iid, op, left) {
-            var left_c, result_c;
+            var left_c, result_c, isArith = false;
 
             if (sandbox.analysis && sandbox.analysis.unaryPre) {
                 sandbox.analysis.unaryPre(iid, op, left);
@@ -955,12 +987,15 @@ if (typeof J$ === 'undefined') J$ = {};
 
             switch (op) {
                 case "+":
+                    isArith = true;
                     result_c = +left_c;
                     break;
                 case "-":
+                    isArith = true;
                     result_c = -left_c;
                     break;
                 case "~":
+                    isArith = true;
                     result_c = ~left_c;
                     break;
                 case "!":
@@ -974,6 +1009,16 @@ if (typeof J$ === 'undefined') J$ = {};
                     break;
             }
 
+            if (rrEngine) {
+                var type1 = typeof left_c;
+                var flag1 = (type1 === "object" || type1 === "function")
+                    && !(left_c instanceof String)
+                    && !(left_c instanceof Number)
+                    && !(left_c instanceof Boolean)
+                if (isArith && flag1) {
+                    result_c = rrEngine.RR_L(iid, result_c, N_LOG_OPERATION);
+                }
+            }
             if (sandbox.analysis && sandbox.analysis.unary) {
                 result_c = sandbox.analysis.unary(iid, op, left, result_c);
                 if (rrEngine) {

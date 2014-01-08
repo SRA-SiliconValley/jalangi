@@ -162,7 +162,7 @@ if (typeof J$ === 'undefined') J$ = {};
             N_LOG_BOOLEAN_LIT = 23,
             N_LOG_UNDEFINED_LIT = 24,
             N_LOG_NULL_LIT = 25,
-            // property read *directly* from an object (not from the prototype chain)
+        // property read *directly* from an object (not from the prototype chain)
             N_LOG_GETFIELD_OWN = 26;
 
         //-------------------------------- End constants ---------------------------------
@@ -601,6 +601,12 @@ if (typeof J$ === 'undefined') J$ = {};
                 return undefined;
             }
 
+            // window.location.hash = hash calls a function out of nowhere.
+            // fix needs a call to RR_replay and setting isInstrumentedCaller to false
+            // the following patch is not elegant
+            var tmpIsInstrumentedCaller = isInstrumentedCaller;
+            isInstrumentedCaller = false;
+
             var base_c = getConcrete(base);
             if (sandbox.analysis && sandbox.analysis.putFieldPre) {
                 val = sandbox.analysis.putFieldPre(iid, base, offset, val);
@@ -619,6 +625,13 @@ if (typeof J$ === 'undefined') J$ = {};
                 val = sandbox.analysis.putField(iid, base, offset, val);
             }
 
+            // the following patch is not elegant
+            if (rrEngine && ((offset + "") === "hash")) {
+                rrEngine.RR_replay(offset);
+            }
+
+            // the following patch is not elegant
+            isInstrumentedCaller = tmpIsInstrumentedCaller;
             return val;
         }
 
@@ -1378,7 +1391,7 @@ if (typeof J$ === 'undefined') J$ = {};
                         seqNo++;
                         return val;
                     } else {
-                        if (HOP(base_c,offset) && isSafeToCallGetOrSet(base_c, offset, false)) {
+                        if (HOP(base_c, offset) && isSafeToCallGetOrSet(base_c, offset, false)) {
                             // add the field to the shadow value, so we don't need to log
                             // future reads.  Only do so if the property is defined directly
                             // on the object, to avoid incorrectly adding the property to
@@ -1592,7 +1605,7 @@ if (typeof J$ === 'undefined') J$ = {};
                 }
             };
 
-            this.RR_replay = function () {
+            this.RR_replay = function (isPutFieldContext) {
                 if (mode === MODE_REPLAY) {
                     while (true) {
                         var ret = traceInfo.getCurrent();
@@ -1612,6 +1625,9 @@ if (typeof J$ === 'undefined') J$ = {};
                             }
                         }
                         if (ret[F_FUNNAME] === N_LOG_FUNCTION_ENTER) {
+                            if (isPutFieldContext) {
+                                console.log("Putfield offset " + isPutFieldContext);
+                            }
                             f = getConcrete(syncValue(ret, undefined, 0));
                             ret = traceInfo.getNext();
                             var dis = syncValue(ret, undefined, 0);

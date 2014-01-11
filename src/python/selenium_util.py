@@ -73,7 +73,7 @@ def get_regression_msgs(capture_errors, exercise_fn=None):
             """
             result += driver.execute_script(err_msg_code)
         # log messages
-        log_msgs = [x['message'].split()[2] for x in driver.get_log('browser') if x['source'] == 'console-api']
+        log_msgs = [x['message'].split(' ', 2)[2] for x in driver.get_log('browser') if x['source'] == 'console-api' and x['level'] == 'INFO']
         if len(log_msgs) > 0:
             result += '\n'.join(log_msgs) + '\n'
         return result

@@ -145,14 +145,18 @@ def testrr_helper (filee, jalangi, norm_fn, record_fn, instrument_fn=instrument)
     except:
         pass
     norm = norm_fn(os.path.join(os.pardir,filee + ".js"), jalangi=jalangi)
-    #(open("jalangi_normal", "w")).write(norm)
+    with open("jalangi_normal", "w") as normfile:
+        normfile.write(norm)
     print "---- Recording execution of {} ----".format(filee)
     rec = record_fn(os.path.join(os.pardir,filee), instrumented_f)
+    with open("jalangi_record", "w") as recfile:
+        recfile.write(rec)
     print "---- Replaying {} ----".format(filee)
     os.putenv("JALANGI_MODE", "replay")
     os.putenv("JALANGI_ANALYSIS", "none")
     rep = replay()
-    (open("jalangi_replay", "w")).write(rep)
+    with open("jalangi_replay", "w") as repfile:
+        repfile.write(rep)
     print rep
     try:
 	    wcl = util.count_lines("jalangi_trace")
@@ -173,7 +177,7 @@ def testrr_helper (filee, jalangi, norm_fn, record_fn, instrument_fn=instrument)
         import difflib
         with open("../jalangi_test_results", 'a') as f:
             f.write("\n")
-            for line in difflib.unified_diff(rec.splitlines(1), rep.splitlines(1), fromfile='replay.{}'.format(filee), tofile='record.{}'.format(filee)):
+            for line in difflib.unified_diff(rec.splitlines(1), rep.splitlines(1), fromfile='record.{}'.format(filee), tofile='replay.{}'.format(filee)):
                 f.write(line)
         
     util.move_coverage(jalangi)

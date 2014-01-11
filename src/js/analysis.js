@@ -1670,9 +1670,9 @@ if (typeof J$ === 'undefined') J$ = {};
                             }
                         }
                         if (ret[F_FUNNAME] === N_LOG_FUNCTION_ENTER) {
-                            if (isPutFieldContext) {
-                                console.log("Putfield offset " + isPutFieldContext);
-                            }
+//                            if (isPutFieldContext) {
+//                                console.log("Putfield offset " + isPutFieldContext);
+//                            }
                             f = getConcrete(syncValue(ret, undefined, 0));
                             ret = traceInfo.getNext();
                             var dis = syncValue(ret, undefined, 0);

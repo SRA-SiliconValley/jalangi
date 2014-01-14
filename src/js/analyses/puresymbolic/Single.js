@@ -419,7 +419,7 @@
 
 
     function invokeEval(base, f, args) {
-        return f.call(base,J$.instrumentCode(args[0],false).code);
+        return f.call(base,J$.instrumentCode(args[0],{wrapProgram: false}).code);
     }
 
 

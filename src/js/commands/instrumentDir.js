@@ -63,7 +63,13 @@ function createOrigScriptFilename(name) {
 function rewriteInlineScript(src, metadata) {
 	var instname = instUtil.createFilenameForScript(metadata.url);
 	var origname = createOrigScriptFilename(instname);
-	var instResult = esnstrument.instrumentCode(src, true, origname, instname, dumpSerializedASTs);
+    var options = {
+        wrapProgram: true,
+        filename: origname,
+        instFileName: instname,
+        serialize: dumpSerializedASTs
+    };
+	var instResult = esnstrument.instrumentCode(src, options);
 	var instrumentedCode = instResult.code;
 	// TODO make this async?
 	fs.writeFileSync(path.join(copyDir, origname), src);
@@ -126,7 +132,13 @@ InstrumentJSStream.prototype._transform = accumulateData;
 
 InstrumentJSStream.prototype._flush = function (cb) {
 	console.log("instrumenting " + this.origScriptName);
-	var instResult = esnstrument.instrumentCode(this.data, true, this.origScriptName, this.instScriptName, dumpSerializedASTs);
+    var options = {
+        wrapProgram: true,
+        filename: this.origScriptName,
+        instFileName: this.instScriptName,
+        serialize: dumpSerializedASTs
+    };
+	var instResult = esnstrument.instrumentCode(this.data, options);
 	if (dumpSerializedASTs) {
         fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(instResult.serializedAST, undefined, 2), "utf8");		    
 	}

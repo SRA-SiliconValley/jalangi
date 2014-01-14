@@ -20,12 +20,12 @@
 /*global describe it */
 var assert = require("assert"),
 	astUtil = require("./../src/js/utils/astUtil.js"),
-	esprima = require("esprima"),
+	acorn = require("acorn"),
     esnstrument = require("./../src/js/instrument/esnstrument");
 
 	
 function checkCode(code) {
-	var ast = esprima.parse(esnstrument.instrumentCode(code, false).code);
+	var ast = acorn.parse(esnstrument.instrumentCode(code, {wrapProgram: false}).code);
 	// NOTE: this is not a robust way to do a deep copy of ASTs,
 	// just good enough for unit tests
 	var astCopy = JSON.parse(JSON.stringify(ast));

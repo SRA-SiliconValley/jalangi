@@ -500,7 +500,7 @@
 
     function wrapEvalArg(ast) {
         var ret = replaceInExpr(
-            instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), false).code",
+            instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false}).code",
             ast
         );
         transferLoc(ret, ast);
@@ -1250,35 +1250,41 @@
 	function makeInstCodeFileName(name) {
 		return name.replace(".js", FILESUFFIX1 + ".js")
 	}
-	
+
     /**
      * Instruments the provided code.
-     * 
+     *
      * @param {string} code The code to instrument
-     * @param {boolean} wrapProgram Should the instrumented code be wrapped with prefix code to load libraries,
+     * @param {{wrapProgram: boolean, filename: string, instFileName: string, serialize: boolean }} options
+     *    Options for code generation:
+     *      'wrapProgram': Should the instrumented code be wrapped with prefix code to load libraries,
      * code to indicate script entry and exit, etc.? should be false for code being eval'd
-     * @param {string} filename What is the "original" filename of the instrumented code?  
+     *      'filename': What is the "original" filename of the instrumented code?
      *                 optional.  if the IID map file is open, it will be updated during
      *                 instrumentation with source locations pointing to this filename
-     * @param {string} instFileName What should the filename for the instrumented code be?
+            'instFileName': What should the filename for the instrumented code be?
      *                 If not provided, and the filename parameter is provided, defaults to
      *                 filename_jalangi_.js.  We need this filename because it gets written
      *                 into the trace produced by the instrumented code during record
-     * @param {boolean} serialize Should a serialized representation of the AST be provided?
-     * @return an object whose 'code' property is the instrumented code string, and whose
-     * 'serializedAST' property has a JSON representation of the serialized AST, of the serialize
+            'serialize': Should a serialized representation of the AST be provided?
+     * @return {{code:string, serializedAST: string}} an object whose 'code' property is the instrumented code string,
+     * and whose 'serializedAST' property has a JSON representation of the serialized AST, of the serialize
      * parameter was true
-     * 
+     *
      */
-    function instrumentCode(code, tryCatchAtTop, filename, instFileName, serialize) {
-        var oldCondCount;
+    function instrumentCode(code, options) {
+        var oldCondCount,
+            tryCatchAtTop = options.wrapProgram,
+            filename = options.filename,
+            instFileName = options.instFileName,
+            serialize = options.serialize;
 
 		if (filename) {
 			// this works under the assumption that the app root directory,
 			// the directory in which the sourcemap file is written, and
 			// the current working directory are all the same during replay
 			// TODO add parameters to allow these paths to be distinct
-            writeLineToIIDMap("filename = \"" + filename + "\";\n");			
+            writeLineToIIDMap("filename = \"" + filename + "\";\n");
             instCodeFileName = instFileName ? instFileName : makeInstCodeFileName(filename);
             writeLineToIIDMap("orig2Inst[filename] = \"" + instCodeFileName + "\";\n");
 		}
@@ -1287,7 +1293,7 @@
                 // this means we are inside an eval
                 // set to 3 so condition ids inside eval'd code won't conflict
                 // with containing script          
-                // TODO what aboue multiple levels of nested evals?  
+                // TODO what about multiple levels of nested evals?
                 oldCondCount = condCount;
                 condCount = 3;
             }

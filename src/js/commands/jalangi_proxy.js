@@ -58,7 +58,7 @@ function rewriter(src, metadata) {
 	var filename = path.join(outputDir, basename);
 	// TODO check for file conflicts and handle appropriately
 	fs.writeFileSync(filename, src);
-	var instrumented = esnstrument.instrumentCode(src, true, basename).code;
+	var instrumented = esnstrument.instrumentCode(src, { wrapProgram: true, filename: basename}).code;
 	fs.writeFileSync(filename.replace(".js",esnstrument.fileSuffix+".js"), instrumented);
 	return instrumented;
 }

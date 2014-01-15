@@ -692,6 +692,7 @@ if (typeof J$ === 'undefined') J$ = {};
 
         // Return statement
         function Rt(iid, val) {
+            returnVal.pop();
             returnVal.push(val);
             return val;
         }

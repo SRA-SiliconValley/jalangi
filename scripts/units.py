@@ -57,7 +57,9 @@ tests = [
     "tests/unit/implicit-type",
     "tests/unit/prototype_property",
     "tests/unit/call_in_finally",
-    "tests/unit/getownpropnames"
+    "tests/unit/getownpropnames",
+    "tests/unit/type_conversion",
+    "tests/unit/call_in_finally_2"
 ]
 
 success = testrunner.run_tests(tests,["testrr"])

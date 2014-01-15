@@ -652,6 +652,8 @@
 
     function wrapScriptBodyWithTryCatch(node, body) {
         printIidToLoc(node);
+        var iid1 = getIid();
+        printIidToLoc(node);
         var l = labelCounter++;
         var ret = replaceInStatement(
             "function n() { jalangiLabel" + l + ": while(true) { try {" + RP + "1} catch(" + astUtil.JALANGI_VAR +
@@ -659,7 +661,7 @@
                 astUtil.JALANGI_VAR + "e.stack);\n  " + logUncaughtExceptionFunName + "(" + RP + "2," + astUtil.JALANGI_VAR +
                 "e); } finally { if (" + logScriptExitFunName + "(" +
                 RP + "3)) continue jalangiLabel" + l + ";\n else \n  break jalangiLabel" + l + ";\n }\n }}", body,
-            getIid(),
+            iid1,
             getIid()
         );
         //console.log(JSON.stringify(ret));
@@ -671,6 +673,8 @@
 
     function wrapFunBodyWithTryCatch(node, body) {
         printIidToLoc(node);
+        var iid1 = getIid();
+        printIidToLoc(node);
         var l = labelCounter++;
         var ret = replaceInStatement(
             "function n() { jalangiLabel" + l + ": while(true) { try {" + RP + "1} catch(" + astUtil.JALANGI_VAR +
@@ -678,7 +682,7 @@
                 astUtil.JALANGI_VAR + "e.stack);\n " + logUncaughtExceptionFunName + "(" + RP + "2," + astUtil.JALANGI_VAR +
                 "e); } finally { if (" + logFunctionReturnFunName + "(" +
                 RP + "3)) continue jalangiLabel" + l + ";\n else \n  return " + logReturnAggrFunName + "();\n }\n }}", body,
-            getIid(),
+            iid1,
             getIid()
         );
         //console.log(JSON.stringify(ret));

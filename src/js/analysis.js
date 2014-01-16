@@ -1687,6 +1687,9 @@ if (typeof J$ === 'undefined') J$ = {};
                                 var pth = require('path');
                                 var filep = pth.resolve(path);
                                 require(filep);
+                                // a browser can load a script multiple times.  So,
+                                // we need to remove the script from Node's cache,
+                                // in case it gets loaded again
                                 require.uncache(filep);
                             }
                         } else {
@@ -2022,12 +2025,22 @@ if (typeof J$ === 'undefined') J$ = {};
 
 
         if (!isBrowser && typeof require === 'function') {
+            /**
+             * remove a loaded module from Node's cache
+             * @param moduleName the name of the module
+             */
             require.uncache = function (moduleName) {
                 require.searchCache(moduleName, function (mod) {
                     delete require.cache[mod.id];
                 });
             };
 
+            /**
+             * apply an operation to a module already loaded and
+             * cached by Node
+             * @param moduleName the name of the module
+             * @param callback the operation to perform
+             */
             require.searchCache = function (moduleName, callback) {
                 var mod = require.resolve(moduleName);
 

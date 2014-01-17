@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Samsung Information Systems America, Inc.
+ * Copyright 2014 Samsung Information Systems America, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,12 @@
  * limitations under the License.
  */
 
-// Author: Koushik Sen
+// Author: Manu Sridharan
 
-/*jslint node: true */
-/*global J$ */
 var analysis = require('./../analysis');
-// TODO pass in analysis name
-analysis.init("replay");
+analysis.init("record");
 require('./../InputManager');
 require('./../instrument/esnstrument');
-try {
-//    console.log("Starting replay ...")
-    var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
-    var traceFileName = process.argv[2] ? process.argv[2] : DEFAULT_TRACE_FILE_NAME;
-    J$.replay(traceFileName);
-} finally {
-    J$.endExecution();
-}
+var script = process.argv[2];
+var path = require('path');
+require(path.resolve(script));

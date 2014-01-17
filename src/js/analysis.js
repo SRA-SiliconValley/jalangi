@@ -134,7 +134,6 @@
             var SERIOUS_WARN = false;
             // make MAX_BUF_SIZE slightly less than 2^16, to allow over low-level overheads
             var MAX_BUF_SIZE = 64000;
-            var TRACE_FILE_NAME = 'jalangi_trace';
             // should we keep the trace in memory in the browser?
             var IN_MEMORY_BROWSER_LOG = isBrowser && (window.__JALANGI_PHANTOM__ || window.__JALANGI_SELENIUM__);
 
@@ -635,7 +634,7 @@
 
                 // the following patch is not elegant
                 if (rrEngine && ((offset + "") === "hash")) {
-                    rrEngine.RR_replay(offset);
+                    rrEngine.RR_replay();
                 }
 
                 // the following patch is not elegant
@@ -1658,8 +1657,12 @@
                     }
                 };
 
-                this.RR_replay = function (isPutFieldContext) {
+                this.RR_replay = function (traceFileName) {
                     if (mode === MODE_REPLAY) {
+                        if (traceFileName) {
+                            traceInfo.setTraceFileName(traceFileName);
+                        }
+
                         while (true) {
                             var ret = traceInfo.getCurrent();
                             if (typeof ret !== 'object') {
@@ -1678,9 +1681,6 @@
                                 }
                             }
                             if (ret[F_FUNNAME] === N_LOG_FUNCTION_ENTER) {
-//                            if (isPutFieldContext) {
-//                                console.log("Putfield offset " + isPutFieldContext);
-//                            }
                                 f = getConcrete(syncValue(ret, undefined, 0));
                                 ret = traceInfo.getNext();
                                 var dis = syncValue(ret, undefined, 0);
@@ -1848,6 +1848,8 @@
 
 
                 function TraceReader() {
+
+                    var traceFileName = null;
                     var traceArray = [];
                     var traceIndex = 0;
                     var currentIndex = 0;
@@ -1856,6 +1858,7 @@
                     var traceFh;
                     var done = false;
                     var curRecord = null;
+
 
 
                     function cacheRecords() {
@@ -1867,7 +1870,6 @@
                         if (currentIndex >= frontierIndex) {
                             if (!traceFh) {
                                 var FileLineReader = require('./utils/FileLineReader');
-                                var traceFileName = process.argv[2] ? process.argv[2] : TRACE_FILE_NAME;
                                 traceFh = new FileLineReader(traceFileName);
                                 // change working directory to wherever trace file resides
                                 var pth = require('path');
@@ -1887,6 +1889,10 @@
                                 done = true;
                             }
                         }
+                    }
+
+                    this.setTraceFileName = function (tFN) {
+                        traceFileName = tFN;
                     }
 
                     this.addRecord = function (line) {

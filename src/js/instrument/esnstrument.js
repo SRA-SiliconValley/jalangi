@@ -716,26 +716,26 @@
 //        return ret;
 //    }
 
-    function prependScriptBody(node, body) {
-        var path = require('path');
-        var preFile = path.resolve(__dirname, '../analysis.js');
-        var inputManagerFile = path.resolve(__dirname, '../InputManager.js');
-        var thisFile = path.resolve(__filename);
-//        var inputFile = path.resolve(process.cwd()+"/inputs.js");
-
-        var n_code = 'if (typeof window ==="undefined") {\n' +
-            '    require("' + sanitizePath(preFile) + '");\n' +
-            '    require("' + sanitizePath(inputManagerFile) + '");\n' +
-            '    require("' + sanitizePath(thisFile) + '");\n' +
-            '    require(process.cwd()+"/inputs.js");\n' +
-            '}\n';
-        var ret = replaceInStatement(n_code +
-            "\n{" + RP + "1}\n",
-            body
-        );
-        transferLoc(ret[0], node);
-        return ret;
-    }
+//    function prependScriptBody(node, body) {
+//        var path = require('path');
+//        var preFile = path.resolve(__dirname, '../analysis.js');
+//        var inputManagerFile = path.resolve(__dirname, '../InputManager.js');
+//        var thisFile = path.resolve(__filename);
+////        var inputFile = path.resolve(process.cwd()+"/inputs.js");
+//
+//        var n_code = 'if (typeof window ==="undefined") {\n' +
+//            '    require("' + sanitizePath(preFile) + '");\n' +
+//            '    require("' + sanitizePath(inputManagerFile) + '");\n' +
+//            '    require("' + sanitizePath(thisFile) + '");\n' +
+//            '    require(process.cwd()+"/inputs.js");\n' +
+//            '}\n';
+//        var ret = replaceInStatement(n_code +
+//            "\n{" + RP + "1}\n",
+//            body
+//        );
+//        transferLoc(ret[0], node);
+//        return ret;
+//    }
 
     function syncDefuns(node, scope, isScript) {
         var ret = [];
@@ -1088,8 +1088,8 @@
         "Program":function (node) {
             if (wrapProgramNode) {
                 var body = wrapScriptBodyWithTryCatch(node, node.body);
-                var ret = prependScriptBody(node, body);
-                node.body = ret;
+//                var ret = prependScriptBody(node, body);
+                node.body = body;
 
             }
             return node;

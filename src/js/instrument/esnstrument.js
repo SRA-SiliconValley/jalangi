@@ -168,9 +168,9 @@
         return fs.readFileSync(filename, "utf8");
     }
 
-	// name of the file containing the instrumented code
-	var instCodeFileName;
-	
+    // name of the file containing the instrumented code
+    var instCodeFileName;
+
 // J$_i in expression context will replace it by an AST
 // {J$_i} will replace the body of the block statement with an array of statements passed as argument
 
@@ -448,7 +448,7 @@
     }
 
     function makeNumber(node, left) {
-        var ret = replaceInExpr(" + "+RP + "1 ",left);
+        var ret = replaceInExpr(" + " + RP + "1 ", left);
         transferLoc(ret, node);
         return ret;
     }
@@ -650,6 +650,16 @@
 
     var labelCounter = 0;
 
+    function wrapForInBody(node, body, name) {
+        printIidToLoc(node);
+        var ret = replaceInStatement(
+            "function n() { " + logInitFunName + "(" + RP + "1, '" + name + "'," + name + ",false);\n {" + RP + "2}}", getIid(), [body]);
+
+        ret = ret[0].body;
+        transferLoc(ret, node);
+        return ret;
+    }
+
     function wrapScriptBodyWithTryCatch(node, body) {
         printIidToLoc(node);
         var iid1 = getIid();
@@ -781,11 +791,11 @@
     /**
      * instruments entry of a script.  Adds the script entry (J$.Se) callback,
      * and the J$.N init callbacks for locals.
-     * 
+     *
      */
     function instrumentScriptEntryExit(node, body0) {
-        var modFile = (typeof instCodeFileName === "string")?
-            instCodeFileName:
+        var modFile = (typeof instCodeFileName === "string") ?
+            instCodeFileName :
             "internal";
         var body = createCallAsScriptEnterStatement(node, modFile).
             concat(syncDefuns(node, scope, true)).
@@ -1051,6 +1061,13 @@
         "ForInStatement":function (node) {
             var ret = wrapHash(node.right, node.right);
             node.right = ret;
+            var name;
+            if (node.left.type === 'VariableDeclaration') {
+                name = node.left.declarations[0].id.name;
+            } else {
+                name = node.left.name;
+            }
+            node.body = wrapForInBody(node, node.body, name);
             return node;
         },
         "ReturnStatement":function (node) {
@@ -1251,9 +1268,9 @@
     // the code will not be instrumented
     var noInstr = "// JALANGI DO NOT INSTRUMENT";
 
-	function makeInstCodeFileName(name) {
-		return name.replace(".js", FILESUFFIX1 + ".js")
-	}
+    function makeInstCodeFileName(name) {
+        return name.replace(".js", FILESUFFIX1 + ".js")
+    }
 
     /**
      * Instruments the provided code.
@@ -1266,11 +1283,11 @@
      *      'filename': What is the "original" filename of the instrumented code?
      *                 optional.  if the IID map file is open, it will be updated during
      *                 instrumentation with source locations pointing to this filename
-            'instFileName': What should the filename for the instrumented code be?
+     'instFileName': What should the filename for the instrumented code be?
      *                 If not provided, and the filename parameter is provided, defaults to
      *                 filename_jalangi_.js.  We need this filename because it gets written
      *                 into the trace produced by the instrumented code during record
-            'serialize': Should a serialized representation of the AST be provided?
+     'serialize': Should a serialized representation of the AST be provided?
      * @return {{code:string, serializedAST: string}} an object whose 'code' property is the instrumented code string,
      * and whose 'serializedAST' property has a JSON representation of the serialized AST, of the serialize
      * parameter was true
@@ -1283,15 +1300,15 @@
             instFileName = options.instFileName,
             serialize = options.serialize;
 
-		if (filename) {
-			// this works under the assumption that the app root directory,
-			// the directory in which the sourcemap file is written, and
-			// the current working directory are all the same during replay
-			// TODO add parameters to allow these paths to be distinct
+        if (filename) {
+            // this works under the assumption that the app root directory,
+            // the directory in which the sourcemap file is written, and
+            // the current working directory are all the same during replay
+            // TODO add parameters to allow these paths to be distinct
             writeLineToIIDMap("filename = \"" + filename + "\";\n");
             instCodeFileName = instFileName ? instFileName : makeInstCodeFileName(filename);
             writeLineToIIDMap("orig2Inst[filename] = \"" + instCodeFileName + "\";\n");
-		}
+        }
         if (typeof  code === "string" && code.indexOf(noInstr) < 0) {
             if (!tryCatchAtTop) {
                 // this means we are inside an eval
@@ -1311,9 +1328,9 @@
             var ret = newCode + "\n" + noInstr + "\n";
             if (serialize) {
                 var serialized = astUtil.serialize(newAst);
-                return { code: ret, serializedAST: serialized };
+                return { code:ret, serializedAST:serialized };
             } else {
-                return {code : ret};                
+                return {code:ret};
             }
         } else {
             return code;
@@ -1351,14 +1368,14 @@
         openIIDMapFile();
         for (i = 2; i < args.length; i++) {
             var filename = args[i];
-            writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(),filename)) + "\";\n");
+            writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
             console.log("Instrumenting " + filename + " ...");
 //            console.time("load")
             var code = getCode(filename);
 //            console.timeEnd("load")
             wrapProgramNode = true;
             instCodeFileName = makeInstCodeFileName(filename);
-            writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(),instCodeFileName)) + "\";\n");
+            writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(), instCodeFileName)) + "\";\n");
             var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
             //console.log(JSON.stringify(newAst, null, '\t'));
 

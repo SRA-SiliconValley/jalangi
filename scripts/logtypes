@@ -57,4 +57,8 @@ echo -n "N_LOG_HASH"
 grep ",19]" $1 | wc -l
 echo -n "N_LOG_SPECIAL"
 grep ",20]" $1 | wc -l
+echo -n "N_LOG_OPERATION"
+grep ",27]" $1 | wc -l
+echo -n "N_LOG_GETFIELD_OWN"
+grep ",26]" $1 | wc -l
 

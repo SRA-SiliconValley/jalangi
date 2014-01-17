@@ -18,9 +18,14 @@
 
 /*jslint node: true */
 /*global J$ */
-require('./../analysis');
+var analysis = require('./../analysis');
+// TODO pass in analysis name
+analysis.init("replay");
+require('./../InputManager');
+require('./../instrument/esnstrument');
 try {
 //    console.log("Starting replay ...")
+    // TODO pass trace location as parameter
     J$.replay();
 } finally {
     J$.endExecution();

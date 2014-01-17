@@ -34,9 +34,31 @@
         MODE_NO_RR = 4,
         MODE_DIRECT = 5;
 
-    // TODO isBrowser should not be a parameter? --MS
-    function init(sandbox,isBrowser,mode,analysis_script) {
+    var isBrowser = !(typeof exports !== 'undefined' && this.exports !== exports);
 
+
+    function init(mode_name,analysis_script) {
+
+        var mode = (function (str) {
+            switch (str) {
+                case "record" :
+                    return MODE_RECORD;
+                case "replay":
+                    return MODE_REPLAY;
+                case "analysis":
+                    return MODE_NO_RR_IGNORE_UNINSTRUMENTED;
+                case "inbrowser":
+                    return MODE_NO_RR;
+                case "symbolic":
+                    return MODE_DIRECT;
+                default:
+                    return MODE_RECORD;
+            }
+        })(mode_name);
+
+        // create J$ global variable to hold analysis runtime
+        if (typeof J$ === 'undefined') J$ = {};
+        var sandbox = J$;
         var isBrowserReplay;
         var rrEngine;
         var executionIndex;
@@ -2085,30 +2107,13 @@
         }
     }
 
-    if (typeof J$ === 'undefined') J$ = {};
 
-    var isBrowser = !(typeof exports !== 'undefined' && this.exports !== exports);
+    if (isBrowser) {
+        init(window.JALANGI_MODE);
+    } else { // node.js
+        exports.init = init;
+    }
 
-    var mode = (function (str) {
-        switch (str) {
-            case "record" :
-                return MODE_RECORD;
-            case "replay":
-                return MODE_REPLAY;
-            case "analysis":
-                return MODE_NO_RR_IGNORE_UNINSTRUMENTED;
-            case "inbrowser":
-                return MODE_NO_RR;
-            case "symbolic":
-                return MODE_DIRECT;
-            default:
-                return MODE_RECORD;
-        }
-    }(isBrowser ? window.JALANGI_MODE : process.env.JALANGI_MODE));
-
-    var ANALYSIS = !isBrowser ? process.env.JALANGI_ANALYSIS : undefined;
-
-    init(J$,isBrowser,mode,ANALYSIS);
 })();
 
 

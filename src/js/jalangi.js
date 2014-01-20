@@ -17,12 +17,14 @@
 // Author: Manu Sridharan
 
 /*jslint node: true */
-
+/*global process */
 // top level node.js API for Jalangi
 
 var esnstrument = require('./instrument/esnstrument');
 var fs = require('fs');
 var path = require('path');
+var fork = require('child_process').fork;
+var Q = require("q");
 
 /**
  * Instrument a JavaScript file.
@@ -42,13 +44,33 @@ function instrument(inputFileName, outputFileName) {
     fs.writeFileSync(outputFileName, instCode);
 }
 
+function runChildAndCaptureOutput(forkedProcess) {
+    var child_stdout = "", child_stderr = "", deferred = Q.defer();
+    forkedProcess.stdout.on('data', function (data) {
+        child_stdout += data;
+    });
+    forkedProcess.stderr.on('data', function (data) {
+        child_stderr += data;
+    });
+    forkedProcess.on('close', function (code) {
+        deferred.resolve({ exitCode: code, stdout: child_stdout, stderr: child_stderr });
+    });
+    return deferred.promise;
+
+}
+
 /**
  * record execution of an instrumented script
- * TODO support instrumented code reading from process.argv?
  * @param instCodeFile the instrumented code
- * @param traceFile file in which to record trace
+ * @return a promise that gets resolved at the end of recording.  The promise
+ * is resolved with an object with properties:
+ *     'exitCode': the exit code from the process doing recording
+ *     'stdout': the stdout of the record process
+ *     'stderr': the stderr of the record process
  */
-function record(instCodeFile, traceFile) {
+function record(instCodeFile) {
+    return runChildAndCaptureOutput(fork(path.resolve(__dirname, "./commands/record.js"),
+        [instCodeFile], { silent: true }));
 }
 
 /**
@@ -56,6 +78,8 @@ function record(instCodeFile, traceFile) {
  * @param traceFile the trace to replay
  */
 function replay(traceFile) {
+    return runChildAndCaptureOutput(fork(path.resolve(__dirname, "./commands/replay.js"),
+        [traceFile], { silent: true }));
 }
 
 exports.instrument = instrument;

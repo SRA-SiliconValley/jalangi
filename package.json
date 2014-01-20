@@ -15,7 +15,8 @@
         "mkdirp": "*",
         "ncp": "*",
         "rewriting-proxy": "*",
-        "mocha": "*"
+        "mocha": "*",
+        "q": "*"
     },
     "scripts": {
       "test": "./node_modules/.bin/mocha node_test/*.js && python scripts/runalltests.py"

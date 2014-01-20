@@ -18,15 +18,20 @@
 
 /*jslint node: true */
 /*global J$ */
+var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
+var traceFileName = DEFAULT_TRACE_FILE_NAME, clientAnalysis;
+if (process.argv[2]) {
+    traceFileName = process.argv[2];
+    if (process.argv[3]) {
+        clientAnalysis = process.argv[3];
+    }
+}
 var analysis = require('./../analysis');
-// TODO pass in analysis name
-analysis.init("replay");
+analysis.init("replay", clientAnalysis);
 require('./../InputManager');
 require('./../instrument/esnstrument');
 try {
 //    console.log("Starting replay ...")
-    var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
-    var traceFileName = process.argv[2] ? process.argv[2] : DEFAULT_TRACE_FILE_NAME;
     J$.setTraceFileName(traceFileName);
     J$.replay();
 } finally {

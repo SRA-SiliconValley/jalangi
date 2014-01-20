@@ -16,8 +16,6 @@
 
 // Author: Manu Sridharan
 
-/*jslint node: true */
-/*global process */
 // top level node.js API for Jalangi
 
 var esnstrument = require('./instrument/esnstrument');
@@ -77,9 +75,16 @@ function record(instCodeFile) {
  * replay an execution
  * @param traceFile the trace to replay
  */
-function replay(traceFile) {
+function replay(traceFile, clientAnalysis) {
+    var cliArgs = [];
+    if (traceFile) {
+        cliArgs.push(traceFile);
+        if (clientAnalysis) {
+            cliArgs.push(clientAnalysis);
+        }
+    }
     return runChildAndCaptureOutput(fork(path.resolve(__dirname, "./commands/replay.js"),
-        [traceFile], { silent: true }));
+        cliArgs, { silent: true }));
 }
 
 exports.instrument = instrument;

@@ -2024,7 +2024,7 @@
             executionIndex = new ExecutionIndex();
 
             if (analysis_script && analysis_script.indexOf('Engine') >= 0 && mode !== MODE_RECORD) {
-                var SymbolicEngine = require('./' + analysis_script);
+                var SymbolicEngine = require(analysis_script);
                 sandbox.analysis = new SymbolicEngine(executionIndex);
             }
             if (mode === MODE_RECORD || mode === MODE_REPLAY) {

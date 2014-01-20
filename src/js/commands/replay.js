@@ -27,7 +27,8 @@ try {
 //    console.log("Starting replay ...")
     var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
     var traceFileName = process.argv[2] ? process.argv[2] : DEFAULT_TRACE_FILE_NAME;
-    J$.replay(traceFileName);
+    J$.setTraceFileName(traceFileName);
+    J$.replay();
 } finally {
     J$.endExecution();
 }

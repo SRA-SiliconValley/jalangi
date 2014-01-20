@@ -56,8 +56,8 @@
             }
         })(mode_name);
 
-        // create J$ global variable to hold analysis runtime
-        if (typeof J$ === 'undefined') J$ = {};
+        // create / reset J$ global variable to hold analysis runtime
+        J$ = {};
         var sandbox = J$;
         var isBrowserReplay;
         var rrEngine;
@@ -1136,7 +1136,7 @@
                     return new RecordReplayEngine();
                 }
 
-                var traceInfo, traceWriter;
+                var traceInfo, traceWriter, traceFileName;
                 var seqNo = 0;
 
                 var frame = {};
@@ -1657,12 +1657,8 @@
                     }
                 };
 
-                this.RR_replay = function (traceFileName) {
+                this.RR_replay = function () {
                     if (mode === MODE_REPLAY) {
-                        if (traceFileName) {
-                            traceInfo.setTraceFileName(traceFileName);
-                        }
-
                         while (true) {
                             var ret = traceInfo.getCurrent();
                             if (typeof ret !== 'object') {
@@ -1727,7 +1723,7 @@
 
                     function getFileHanlde() {
                         if (traceWfh === undefined) {
-                            traceWfh = fs.openSync(TRACE_FILE_NAME, 'w');
+                            traceWfh = fs.openSync(traceFileName, 'w');
                         }
                         return traceWfh;
                     }
@@ -1849,7 +1845,6 @@
 
                 function TraceReader() {
 
-                    var traceFileName = null;
                     var traceArray = [];
                     var traceIndex = 0;
                     var currentIndex = 0;
@@ -1889,10 +1884,6 @@
                                 done = true;
                             }
                         }
-                    }
-
-                    this.setTraceFileName = function (tFN) {
-                        traceFileName = tFN;
                     }
 
                     this.addRecord = function (line) {
@@ -1968,6 +1959,10 @@
                         return traceIndex - 1;
                     };
 
+                }
+
+                this.setTraceFileName = function (tFN) {
+                    traceFileName = tFN;
                 }
 
 
@@ -2108,6 +2103,7 @@
             sandbox.addRecord = rrEngine ? rrEngine.addRecord : undefined;
 
             sandbox.log = log;
+            sandbox.setTraceFileName = rrEngine ? rrEngine.setTraceFileName : undefined;
 
 
         }

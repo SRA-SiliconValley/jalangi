@@ -702,41 +702,6 @@
         return ret;
     }
 
-//    function wrapScriptBodyWithTryCatch(node, body) {
-//        printIidToLoc(node);
-//        var ret = replaceInStatement("try {"+RP+"1} catch("+astUtil.JALANGI_VAR+
-//                "e) { console.log("+astUtil.JALANGI_VAR+"e); console.log("+
-//                astUtil.JALANGI_VAR+"e.stack); throw "+astUtil.JALANGI_VAR+
-//                "e; } finally { "+logScriptExitFunName+"("+
-//                RP+"2); }",
-//            body,
-//            getIid()
-//        );
-//        transferLoc(ret[0], node);
-//        return ret;
-//    }
-
-//    function prependScriptBody(node, body) {
-//        var path = require('path');
-//        var preFile = path.resolve(__dirname, '../analysis.js');
-//        var inputManagerFile = path.resolve(__dirname, '../InputManager.js');
-//        var thisFile = path.resolve(__filename);
-////        var inputFile = path.resolve(process.cwd()+"/inputs.js");
-//
-//        var n_code = 'if (typeof window ==="undefined") {\n' +
-//            '    require("' + sanitizePath(preFile) + '");\n' +
-//            '    require("' + sanitizePath(inputManagerFile) + '");\n' +
-//            '    require("' + sanitizePath(thisFile) + '");\n' +
-//            '    require(process.cwd()+"/inputs.js");\n' +
-//            '}\n';
-//        var ret = replaceInStatement(n_code +
-//            "\n{" + RP + "1}\n",
-//            body
-//        );
-//        transferLoc(ret[0], node);
-//        return ret;
-//    }
-
     function syncDefuns(node, scope, isScript) {
         var ret = [];
         if (!isScript) {

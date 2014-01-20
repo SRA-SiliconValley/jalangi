@@ -16,10 +16,17 @@
 
 // Author: Manu Sridharan
 
+/*jslint node: true */
+/*global process */
+/*global J$ */
+
 var analysis = require('./../analysis');
 analysis.init("record");
 require('./../InputManager');
 require('./../instrument/esnstrument');
+var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
+// TODO allow trace file as command-line parameter
+J$.setTraceFileName(DEFAULT_TRACE_FILE_NAME);
 var script = process.argv[2];
 var path = require('path');
 require(path.resolve(script));

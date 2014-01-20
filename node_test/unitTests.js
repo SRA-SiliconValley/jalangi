@@ -48,26 +48,30 @@ var trackValuesAnalysis = path.resolve("src/js/analyses/trackallvalues/TrackValu
 function runTest(script) {
     // capture normal output
     var normalProcess = child_process.fork(script, [], {silent: true});
-    var normOut, recordOut, replayOut;
+    var normOut;
+    function checkResult(result) {
+        assert.equal(normOut, result.stdout);
+        assert.equal("", result.stderr);
+        assert.equal(0, result.exitCode);
+    }
     return runChildAndCaptureOutput(normalProcess).then(function (result) {
         normOut = result.stdout;
+        checkResult(result);
         jalangi.instrument(script, instScriptFile);
         return jalangi.record(instScriptFile);
     }).then(function (result) {
-        recordOut = result.stdout;
-        assert.equal(normOut, recordOut);
+        checkResult(result);
         return jalangi.replay("jalangi_trace");
     }).then(function (result) {
-        replayOut = result.stdout;
-        assert.equal(recordOut,replayOut);
+        checkResult(result);
         return jalangi.replay("jalangi_trace",trackValuesAnalysis);
     }).then(function (result) {
-        assert.equal(recordOut, result.stdout);
+        checkResult(result);
     });
 }
 
 
-var tests = [
+var unit_tests = [
     "instrument-test",
     "array_length",
     "assign",
@@ -113,11 +117,72 @@ var tests = [
     "while"];
 
 describe('unit tests', function () {
-    tests.forEach(function (test) {
-        it('should handle test ' + test, function (done) {
+    unit_tests.forEach(function (test) {
+        it('should handle unit test ' + test, function (done) {
             var testFile = "tests/unit/" + test + ".js";
             runTest(testFile).then(function () { done(); }).done();
         });
     });
 });
 
+
+var sunspider = [
+    "3d-cube",
+    "3d-morph",
+    "3d-raytrace",
+    "access-binary-trees",
+    "access-fannkuch",
+    "access-nbody",
+    "access-nsieve",
+    "bitops-3bit-bits-in-byte",
+    "bitops-bitwise-and",
+    "controlflow-recursive",
+    "crypto-md5",
+    "crypto-sha1",
+    "date-format-tofte",
+    "date-format-xparb",
+    "math-cordic",
+    "math-partial-sums",
+    "math-spectral-norm",
+    "regexp-dna",
+    "string-fasta",
+    "string-tagcloud",
+    "string-unpack-code",
+    "bitops-nsieve-bits",
+    "crypto-aes"
+];
+
+
+describe('sunspider', function () {
+    this.timeout(60000);
+    sunspider.forEach(function (test) {
+        it('should handle sunspider test ' + test, function (done) {
+            var testFile = "tests/sunspider1/" + test + ".js";
+            runTest(testFile).then(function () { done(); }).done();
+        });
+    });
+});
+
+var octane = [
+    "richards",
+    "deltablue",
+    "crypto",
+    "raytrace",
+    "earley-boyer",
+    "regexp",
+    "splay",
+    "navier-stokes",
+    "code-load",
+    "gbemu",
+    "box2d"
+];
+
+describe('octane', function () {
+    this.timeout(240000);
+    octane.forEach(function (test) {
+        it('should handle octane test ' + test, function (done) {
+            var testFile = "tests/octane/" + test + ".js";
+            runTest(testFile).then(function () { done(); }).done();
+        });
+    });
+});

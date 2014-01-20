@@ -16,10 +16,13 @@
 
 // Author: Manu Sridharan
 
+/*jslint node: true */
+
 // top level node.js API for Jalangi
 
-var esnstrument = require("./instrument/esnstrument");
-var fs = require("fs");
+var esnstrument = require('./instrument/esnstrument');
+var fs = require('fs');
+var path = require('path');
 
 /**
  * Instrument a JavaScript file.
@@ -35,7 +38,7 @@ function instrument(inputFileName, outputFileName) {
         filename: inputFileName,
         instFileName: outputFileName
     };
-    var instCode = esnstrument.instrumentCode(inputCode, options);
+    var instCode = esnstrument.instrumentCode(inputCode, options).code;
     fs.writeFileSync(outputFileName, instCode);
 }
 
@@ -46,5 +49,15 @@ function instrument(inputFileName, outputFileName) {
  * @param traceFile file in which to record trace
  */
 function record(instCodeFile, traceFile) {
-
 }
+
+/**
+ * replay an execution
+ * @param traceFile the trace to replay
+ */
+function replay(traceFile) {
+}
+
+exports.instrument = instrument;
+exports.record = record;
+exports.replay = replay;

@@ -154,7 +154,7 @@ var sunspider = [
 
 
 describe('sunspider', function () {
-    this.timeout(60000);
+    this.timeout(600000);
     sunspider.forEach(function (test) {
         it('should handle sunspider test ' + test, function (done) {
             var testFile = "tests/sunspider1/" + test + ".js";
@@ -178,7 +178,7 @@ var octane = [
 ];
 
 describe('octane', function () {
-    this.timeout(240000);
+    this.timeout(600000);
     octane.forEach(function (test) {
         it('should handle octane test ' + test, function (done) {
             var testFile = "tests/octane/" + test + ".js";

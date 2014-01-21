@@ -106,6 +106,7 @@
 
             // TODO get rid of this --MS
             if (analysis_script === "analyses/puresymbolic/Multiple") {
+                console.log("got here");
                 sandbox.analysis.postLoad();
             }
 

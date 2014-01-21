@@ -91,13 +91,9 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
             util.mkempty("inputs.js")
         print "==== Input {} ====".format(i)
         print "---- Recording execution of {} ----".format(filee)
-        os.putenv("JALANGI_MODE", "record")
-        os.putenv("JALANGI_ANALYSIS", "none")
-        util.run_node_script_std(os.path.join(os.path.dirname(os.path.join(os.pardir,filee) + ".js"),instrumented_f), jalangi=jalangi)
+        print record(os.path.join(os.pardir,filee),instrumented_f,jalangi=jalangi)
         print "---- Replaying {} ----".format(filee)
-        os.putenv("JALANGI_MODE", "replay")
-        os.putenv("JALANGI_ANALYSIS", "analyses/concolic/SymbolicEngine")
-        util.run_node_script_std(jalangi.replay_script(), jalangi=jalangi)
+        print replay(jalangi=jalangi,analysis="./analyses/concolic/SymbolicEngine")
         
         try:
             iters = int(util.head("jalangi_tail",1)[0])
@@ -279,9 +275,7 @@ def symbolic (filee, inputs, analysis, jalangi=util.DEFAULT_INSTALL):
             pass
         if not os.path.isfile("inputs.js"):
             util.mkempty("inputs.js")
-        os.putenv("JALANGI_MODE", "symbolic")
-        os.putenv("JALANGI_ANALYSIS", analysis)
-        util.run_node_script_std(os.path.join(os.path.dirname(os.path.join(os.pardir,filee) + ".js"),instrumented_f), jalangi=jalangi, savestderr=True)
+        util.run_node_script_std(jalangi.symbolic_script(), analysis, os.path.join(os.path.dirname(os.path.join(os.pardir,filee) + ".js"),instrumented_f), jalangi=jalangi, savestderr=True)
         try:
             iters = int(util.head("jalangi_tail",1)[0])
         except: pass

@@ -515,7 +515,7 @@ if (typeof J$ === 'undefined') J$ = {};
 
             var arr = getSymbolicFunctionToInvokeAndLog(f_c, isConstructor);
             tmpIsInstrumentedCaller = isInstrumentedCaller;
-            ic = isInstrumentedCaller = f_c === undefined || HOP(f_c, SPECIAL_PROP2) || typeof f_c !== "function";
+            ic = isInstrumentedCaller = f_c === undefined || HOP(f_c, SPECIAL_PROP2) || (typeof f_c !== "function" && !(isBrowser && f_c === XMLHttpRequest));
 
             if (mode === MODE_RECORD || mode === MODE_NO_RR) {
                 invoke = true;
@@ -1249,6 +1249,8 @@ if (typeof J$ === 'undefined') J$ = {};
                             typen = T_NULL;
                         } else if (Array.isArray(val)) {
                             typen = T_ARRAY;
+                        } else if (isBrowser && val === XMLHttpRequest) {
+                            typen = T_FUNCTION;
                         } else {
                             typen = T_OBJECT;
                         }

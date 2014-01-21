@@ -24,9 +24,12 @@ if (process.argv.length < 4) {
 }
 clientAnalysis = process.argv[2];
 script = process.argv[3];
+// load InputManager2 *before* analysis,
+// as symbolic analysis may load instrumented
+// files that rely on InputManager2 symbols
+require('./../InputManager2');
 var analysis = require('./../analysis');
 analysis.init("symbolic", clientAnalysis);
-require('./../InputManager2');
 require('./../instrument/esnstrument');
 require(process.cwd() + '/inputs.js');
 var path = require('path');

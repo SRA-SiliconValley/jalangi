@@ -57,7 +57,9 @@
         })(mode_name);
 
         // create / reset J$ global variable to hold analysis runtime
-        J$ = {};
+        if (typeof J$ === 'undefined') {
+            J$ = {};
+        }
         var sandbox = J$;
         var isBrowserReplay;
         var rrEngine;

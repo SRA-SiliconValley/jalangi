@@ -117,6 +117,7 @@ var unit_tests = [
     "while"];
 
 describe('unit tests', function () {
+    this.timeout(600000);
     unit_tests.forEach(function (test) {
         it('should handle unit test ' + test, function (done) {
             var testFile = "tests/unit/" + test + ".js";

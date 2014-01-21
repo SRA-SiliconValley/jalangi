@@ -30,6 +30,7 @@ var analysis = require('./../analysis');
 analysis.init("replay", clientAnalysis);
 require('./../InputManager');
 require('./../instrument/esnstrument');
+require(process.cwd() + '/inputs.js');
 try {
 //    console.log("Starting replay ...")
     J$.setTraceFileName(traceFileName);

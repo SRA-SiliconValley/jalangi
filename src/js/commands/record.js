@@ -24,6 +24,7 @@ var analysis = require('./../analysis');
 analysis.init("record");
 require('./../InputManager');
 require('./../instrument/esnstrument');
+require(process.cwd() + '/inputs.js');
 var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
 // TODO allow trace file as command-line parameter
 J$.setTraceFileName(DEFAULT_TRACE_FILE_NAME);

@@ -74,6 +74,7 @@ function record(instCodeFile) {
 /**
  * replay an execution
  * @param traceFile the trace to replay
+ * @param clientAnalysis the analysis to run during replay
  */
 function replay(traceFile, clientAnalysis) {
     var cliArgs = [];

@@ -28,5 +28,6 @@ var analysis = require('./../analysis');
 analysis.init("symbolic", clientAnalysis);
 require('./../InputManager');
 require('./../instrument/esnstrument');
+require(process.cwd() + '/inputs.js');
 var path = require('path');
 require(path.resolve(script));

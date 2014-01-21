@@ -26,7 +26,7 @@ clientAnalysis = process.argv[2];
 script = process.argv[3];
 var analysis = require('./../analysis');
 analysis.init("symbolic", clientAnalysis);
-require('./../InputManager');
+require('./../InputManager2');
 require('./../instrument/esnstrument');
 require(process.cwd() + '/inputs.js');
 var path = require('path');

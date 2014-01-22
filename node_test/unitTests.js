@@ -16,8 +16,8 @@
 
 // Author: Manu Sridharan
 
-/* global describe */
-/* global it */
+/*global describe */
+/*global it */
 
 var assert = require('assert'),
     child_process = require('child_process'),
@@ -44,6 +44,9 @@ function runChildAndCaptureOutput(forkedProcess) {
 // handle require() calls from test scripts
 var instScriptFile = "tests/unit/instScript_jalangi_.js";
 
+//var traceFile = "/tmp/jalangi_trace";
+var traceFile = "jalangi_trace";
+
 var trackValuesAnalysis = path.resolve("src/js/analyses/trackallvalues/TrackValuesEngine.js");
 function runTest(script) {
     // capture normal output
@@ -58,13 +61,13 @@ function runTest(script) {
         normOut = result.stdout;
         checkResult(result);
         jalangi.instrument(script, instScriptFile);
-        return jalangi.record(instScriptFile);
+        return jalangi.record(instScriptFile, traceFile);
     }).then(function (result) {
         checkResult(result);
-        return jalangi.replay("jalangi_trace");
+        return jalangi.replay(traceFile);
     }).then(function (result) {
         checkResult(result);
-        return jalangi.replay("jalangi_trace",trackValuesAnalysis);
+        return jalangi.replay(traceFile,trackValuesAnalysis);
     }).then(function (result) {
         checkResult(result);
     });

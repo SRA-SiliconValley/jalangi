@@ -18,11 +18,14 @@
 
 // top level node.js API for Jalangi
 
+/*global __dirname */
+
 var esnstrument = require('./instrument/esnstrument');
 var fs = require('fs');
 var path = require('path');
 var fork = require('child_process').fork;
 var Q = require("q");
+
 
 /**
  * Instrument a JavaScript file.
@@ -32,6 +35,10 @@ var Q = require("q");
  * @param outputFileName the output file for the instrumented code
  */
 function instrument(inputFileName, outputFileName) {
+    // make all paths absolute, for simplicity
+    // TODO make this optional
+    inputFileName = path.resolve(inputFileName);
+    outputFileName = path.resolve(outputFileName);
     var inputCode = String(fs.readFileSync(inputFileName));
     var options = {
         wrapProgram: true,
@@ -59,22 +66,27 @@ function runChildAndCaptureOutput(forkedProcess) {
 
 /**
  * record execution of an instrumented script
- * @param instCodeFile the instrumented code
+ * @param {string} instCodeFile the instrumented code
+ * @param {string} [traceFile=jalangi_trace] path to trace file
  * @return a promise that gets resolved at the end of recording.  The promise
  * is resolved with an object with properties:
  *     'exitCode': the exit code from the process doing recording
  *     'stdout': the stdout of the record process
  *     'stderr': the stderr of the record process
  */
-function record(instCodeFile) {
+function record(instCodeFile, traceFile) {
+    var cliArgs = [instCodeFile];
+    if (traceFile) {
+        cliArgs.push(traceFile);
+    }
     return runChildAndCaptureOutput(fork(path.resolve(__dirname, "./commands/record.js"),
-        [instCodeFile], { silent: true }));
+        cliArgs, { silent: true }));
 }
 
 /**
  * replay an execution
- * @param traceFile the trace to replay
- * @param clientAnalysis the analysis to run during replay
+ * @param {string} [traceFile=jalangi_trace] the trace to replay
+ * @param {string} [clientAnalysis] the analysis to run during replay
  */
 function replay(traceFile, clientAnalysis) {
     var cliArgs = [];

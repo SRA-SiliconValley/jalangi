@@ -37,7 +37,7 @@
     var isBrowser = !(typeof exports !== 'undefined' && this.exports !== exports);
 
 
-    function init(mode_name,analysis_script) {
+    function init(mode_name, analysis_script) {
 
         var mode = (function (str) {
             switch (str) {
@@ -495,7 +495,7 @@
                     rrEngine.RR_evalBegin();
                 }
                 try {
-                    return f(sandbox.instrumentCode(getConcrete(args[0]), {wrapProgram: false}).code);
+                    return f(sandbox.instrumentCode(getConcrete(args[0]), {wrapProgram:false}).code);
                 } finally {
                     if (rrEngine) {
                         rrEngine.RR_evalEnd();
@@ -669,6 +669,9 @@
                 returnVal.push(undefined);
                 exceptionVal = undefined;
                 if (sandbox.analysis && sandbox.analysis.functionEnter) {
+                    if (rrEngine) {
+                        val = rrEngine.RR_getConcolicValue(val);
+                    }
                     sandbox.analysis.functionEnter(iid, val, dis);
                 }
             }
@@ -1405,6 +1408,20 @@
                     traceWriter.remoteLog(rec);
                 };
 
+                this.RR_getConcolicValue = function (obj) {
+                    var val = getConcrete(obj);
+                    if (val === obj && val !== undefined && val !== null && HOP(val, SPECIAL_PROP)) {
+                        var id = val[SPECIAL_PROP][SPECIAL_PROP];
+                        if ((val === objectMap[id]) !== undefined) {
+                            return val;
+                        } else {
+                            return obj;
+                        }
+                    } else {
+                        return obj;
+                    }
+                };
+
                 this.RR_updateRecordedObject = function (obj) {
                     var val = getConcrete(obj);
                     if (val !== obj && val !== undefined && val !== null && HOP(val, SPECIAL_PROP)) {
@@ -1855,7 +1872,6 @@
                     var traceFh;
                     var done = false;
                     var curRecord = null;
-
 
 
                     function cacheRecords() {

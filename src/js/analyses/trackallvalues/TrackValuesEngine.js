@@ -39,10 +39,11 @@
         }
 
         this.literal = function(iid, val) {
-            if (typeof val !== 'function')
+            if (typeof val !== 'function') {
                 return annotateValue(val, iid);
-            else
+            } else {
                 return val;
+            }
         };
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
@@ -66,7 +67,11 @@
             } else {
                 return val;
             }
-        }
+        };
+
+        this.endExecution = function () {
+            return "done";
+        };
     }
     module.exports = TrackValuesEngine;
 }(module));

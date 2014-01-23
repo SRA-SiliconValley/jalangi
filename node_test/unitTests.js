@@ -70,6 +70,7 @@ function runTest(script) {
         return jalangi.replay(traceFile,trackValuesAnalysis);
     }).then(function (result) {
         checkResult(result);
+        assert.equal("done", result.result);
     });
 }
 

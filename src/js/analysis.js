@@ -1123,7 +1123,7 @@
                 //console.log("Reads Skipped, GetFields Skipped, Total Logs (unoptimized), Total Logs (optimized), % of skips that are local reads, % of reduction in logging = "+
                 //    skippedReads+" , "+skippedGetFields+" , "+unoptimizedLogs+" , "+optimizedLogs+ " , "+pSkippedReads+"% , "+pOptimizedLogs+"%");
                 if (sandbox.analysis && sandbox.analysis.endExecution) {
-                    sandbox.analysis.endExecution();
+                    return sandbox.analysis.endExecution();
                 }
             }
 

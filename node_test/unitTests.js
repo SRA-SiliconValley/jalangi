@@ -48,6 +48,9 @@ var instScriptFile = "tests/unit/instScript_jalangi_.js";
 var traceFile = "jalangi_trace";
 
 var trackValuesAnalysis = path.resolve("src/js/analyses/trackallvalues/TrackValuesEngine.js");
+
+var testVal = "hello";
+
 function runTest(script) {
     // capture normal output
     var normalProcess = child_process.fork(script, [], {silent: true});
@@ -67,10 +70,10 @@ function runTest(script) {
         return jalangi.replay(traceFile);
     }).then(function (result) {
         checkResult(result);
-        return jalangi.replay(traceFile,trackValuesAnalysis);
+        return jalangi.replay(traceFile,trackValuesAnalysis, testVal);
     }).then(function (result) {
         checkResult(result);
-        assert.equal("done", result.result);
+        assert.equal(testVal, result.result);
     });
 }
 

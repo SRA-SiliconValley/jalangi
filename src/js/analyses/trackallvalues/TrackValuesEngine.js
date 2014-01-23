@@ -38,6 +38,14 @@
             }
         }
 
+        // a dummy result to return, set by init().
+        // just used for testing purposes
+        var resultToReturn;
+
+        this.init = function(val) {
+            resultToReturn = val;
+        };
+
         this.literal = function(iid, val) {
             if (typeof val !== 'function') {
                 return annotateValue(val, iid);
@@ -70,7 +78,7 @@
         };
 
         this.endExecution = function () {
-            return "done";
+            return resultToReturn ? resultToReturn : "done";
         };
     }
     module.exports = TrackValuesEngine;

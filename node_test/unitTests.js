@@ -19,63 +19,14 @@
 /*global describe */
 /*global it */
 
-var assert = require('assert'),
-    child_process = require('child_process'),
-    jalangi = require('./../src/js/jalangi'),
-    Q = require('q'),
-    path = require('path');
+var testUtil = require('./testUtil');
 
-function runChildAndCaptureOutput(forkedProcess) {
-    var child_stdout = "", child_stderr = "", deferred = Q.defer();
-    forkedProcess.stdout.on('data', function (data) {
-        child_stdout += data;
-    });
-    forkedProcess.stderr.on('data', function (data) {
-        child_stderr += data;
-    });
-    forkedProcess.on('close', function (code) {
-        deferred.resolve({ exitCode: code, stdout: child_stdout, stderr: child_stderr });
-    });
-    return deferred.promise;
-
-}
 
 // this needs to be inside the tests/unit folder to
 // handle require() calls from test scripts
 var instScriptFile = "tests/unit/instScript_jalangi_.js";
 
-//var traceFile = "/tmp/jalangi_trace";
-var traceFile = "jalangi_trace";
 
-var trackValuesAnalysis = path.resolve("src/js/analyses/trackallvalues/TrackValuesEngine.js");
-
-var testVal = "hello";
-
-function runTest(script) {
-    // capture normal output
-    var normalProcess = child_process.fork(script, [], {silent: true});
-    var normOut;
-    function checkResult(result) {
-        assert.equal(normOut, result.stdout);
-        assert.equal("", result.stderr);
-        assert.equal(0, result.exitCode);
-    }
-    return runChildAndCaptureOutput(normalProcess).then(function (result) {
-        normOut = result.stdout;
-        checkResult(result);
-        jalangi.instrument(script, instScriptFile);
-        return jalangi.record(instScriptFile, traceFile);
-    }).then(function (result) {
-        checkResult(result);
-        return jalangi.replay(traceFile);
-    }).then(function (result) {
-        checkResult(result);
-        return jalangi.replay(traceFile,trackValuesAnalysis, testVal);
-    }).then(function (result) {
-        checkResult(result);
-        assert.equal(testVal, result.result);
-    });
-}
 
 
 var unit_tests = [
@@ -128,69 +79,10 @@ describe('unit tests', function () {
     unit_tests.forEach(function (test) {
         it('should handle unit test ' + test, function (done) {
             var testFile = "tests/unit/" + test + ".js";
-            runTest(testFile).then(function () { done(); }).done();
+            testUtil.runTest(testFile,instScriptFile).then(function () { done(); }).done();
         });
     });
 });
 
 
-var sunspider = [
-    "3d-cube",
-    "3d-morph",
-    "3d-raytrace",
-    "access-binary-trees",
-    "access-fannkuch",
-    "access-nbody",
-    "access-nsieve",
-    "bitops-3bit-bits-in-byte",
-    "bitops-bitwise-and",
-    "controlflow-recursive",
-    "crypto-md5",
-    "crypto-sha1",
-    "date-format-tofte",
-    "date-format-xparb",
-    "math-cordic",
-    "math-partial-sums",
-    "math-spectral-norm",
-    "regexp-dna",
-    "string-fasta",
-    "string-tagcloud",
-    "string-unpack-code",
-    "bitops-nsieve-bits",
-    "crypto-aes"
-];
 
-
-describe('sunspider', function () {
-    this.timeout(600000);
-    sunspider.forEach(function (test) {
-        it('should handle sunspider test ' + test, function (done) {
-            var testFile = "tests/sunspider1/" + test + ".js";
-            runTest(testFile).then(function () { done(); }).done();
-        });
-    });
-});
-
-var octane = [
-    "richards",
-    "deltablue",
-    "crypto",
-    "raytrace",
-    "earley-boyer",
-    "regexp",
-    "splay",
-    "navier-stokes",
-    "code-load",
-    "gbemu",
-    "box2d"
-];
-
-describe('octane', function () {
-    this.timeout(600000);
-    octane.forEach(function (test) {
-        it('should handle octane test ' + test, function (done) {
-            var testFile = "tests/octane/" + test + ".js";
-            runTest(testFile).then(function () { done(); }).done();
-        });
-    });
-});

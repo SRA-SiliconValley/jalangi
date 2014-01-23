@@ -21,11 +21,10 @@
 /*global __dirname */
 
 var esnstrument = require('./instrument/esnstrument');
+var procUtil = require('./utils/procUtil');
 var fs = require('fs');
 var path = require('path');
 var fork = require('child_process').fork;
-var Q = require("q");
-
 
 /**
  * Instrument a JavaScript file.
@@ -49,32 +48,13 @@ function instrument(inputFileName, outputFileName) {
     fs.writeFileSync(outputFileName, instCode);
 }
 
-function runChildAndCaptureOutput(forkedProcess) {
-    var child_stdout = "", child_stderr = "", result, deferred = Q.defer();
-    forkedProcess.stdout.on('data', function (data) {
-        child_stdout += data;
-    });
-    forkedProcess.stderr.on('data', function (data) {
-        child_stderr += data;
-    });
-    // handle message with a result field, holding the analysis result
-    forkedProcess.on('message', function (m) {
-        if (m.result) {
-            result = m.result;
-        }
-    });
-    forkedProcess.on('close', function (code) {
-        deferred.resolve({ exitCode: code, stdout: child_stdout, stderr: child_stderr, result: result });
-    });
-    return deferred.promise;
 
-}
 
 /**
  * record execution of an instrumented script
  * @param {string} instCodeFile the instrumented code
  * @param {string} [traceFile=jalangi_trace] path to trace file
- * @return a promise that gets resolved at the end of recording.  The promise
+ * @return promise|Q.promise promise that gets resolved at the end of recording.  The promise
  * is resolved with an object with properties:
  *     'exitCode': the exit code from the process doing recording
  *     'stdout': the stdout of the record process
@@ -85,7 +65,7 @@ function record(instCodeFile, traceFile) {
     if (traceFile) {
         cliArgs.push(traceFile);
     }
-    return runChildAndCaptureOutput(fork(path.resolve(__dirname, "./commands/record.js"),
+    return procUtil.runChildAndCaptureOutput(fork(path.resolve(__dirname, "./commands/record.js"),
         cliArgs, { silent: true }));
 }
 
@@ -94,7 +74,7 @@ function record(instCodeFile, traceFile) {
  * @param {string} [traceFile=jalangi_trace] the trace to replay
  * @param {string} [clientAnalysis] the analysis to run during replay
  * @param {object} [initParam] parameter to pass to client init() function
- * @return a promise that gets resolved at the end of recording.  The promise
+ * @return promise|Q.promise promise that gets resolved at the end of recording.  The promise
  * is resolved with an object with properties:
  *     'exitCode': the exit code from the process doing replay
  *     'stdout': the stdout of the replay process
@@ -112,7 +92,7 @@ function replay(traceFile, clientAnalysis, initParam) {
     var forkedProcess = fork(path.resolve(__dirname, "./commands/replay.js"),
         cliArgs, { silent: true });
     forkedProcess.send({initParam: initParam});
-    return runChildAndCaptureOutput(forkedProcess);
+    return procUtil.runChildAndCaptureOutput(forkedProcess);
 }
 
 exports.instrument = instrument;

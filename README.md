@@ -62,7 +62,7 @@ If you have a fresh installation of Ubuntu, you can install all the requirements
 If Installation succeeds, you should see the following message:
 
     ---> Installation successful.
-    ---> run python scripts/runalltests.py to make sure all tests pass
+    ---> run 'npm test' to make sure all tests pass
 
 A Lubuntu virtual machine with pre-installed jalangi can be downloaded from http://srl.cs.berkeley.edu/~ksen/jalangi4.zip.
 You need VirtualBox available at https://www.virtualbox.org/ to run the virtual machine.
@@ -94,9 +94,13 @@ tests/sunspider1/.
 
     python scripts/testspv.py
 
-Run all of the above tests.
+We also have test drivers implemented in JavaScript using [mocha](http://visionmedia.github.io/mocha/), located under `node_test`.  So, to run the basic unit tests, you can do:
 
-    python scripts/runalltests.py
+    ./node_modules/.bin/mocha --reporter spec node_test/unitTests.js
+
+To run the entire test suite, simply run:
+
+    npm test
     
 ### Other Scripts
 

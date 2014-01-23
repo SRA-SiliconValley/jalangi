@@ -50,15 +50,21 @@ function instrument(inputFileName, outputFileName) {
 }
 
 function runChildAndCaptureOutput(forkedProcess) {
-    var child_stdout = "", child_stderr = "", deferred = Q.defer();
+    var child_stdout = "", child_stderr = "", result, deferred = Q.defer();
     forkedProcess.stdout.on('data', function (data) {
         child_stdout += data;
     });
     forkedProcess.stderr.on('data', function (data) {
         child_stderr += data;
     });
+    // handle message with a result field, holding the analysis result
+    forkedProcess.on('message', function (m) {
+        if (m.result) {
+            result = m.result;
+        }
+    });
     forkedProcess.on('close', function (code) {
-        deferred.resolve({ exitCode: code, stdout: child_stdout, stderr: child_stderr });
+        deferred.resolve({ exitCode: code, stdout: child_stdout, stderr: child_stderr, result: result });
     });
     return deferred.promise;
 
@@ -87,8 +93,15 @@ function record(instCodeFile, traceFile) {
  * replay an execution
  * @param {string} [traceFile=jalangi_trace] the trace to replay
  * @param {string} [clientAnalysis] the analysis to run during replay
+ * @param {object} [initParam] parameter to pass to client init() function
+ * @return a promise that gets resolved at the end of recording.  The promise
+ * is resolved with an object with properties:
+ *     'exitCode': the exit code from the process doing replay
+ *     'stdout': the stdout of the replay process
+ *     'stderr': the stderr of the replay process
+ *     'result': the result returned by the analysis run during replay, if any
  */
-function replay(traceFile, clientAnalysis) {
+function replay(traceFile, clientAnalysis, initParam) {
     var cliArgs = [];
     if (traceFile) {
         cliArgs.push(traceFile);
@@ -96,8 +109,10 @@ function replay(traceFile, clientAnalysis) {
             cliArgs.push(clientAnalysis);
         }
     }
-    return runChildAndCaptureOutput(fork(path.resolve(__dirname, "./commands/replay.js"),
-        cliArgs, { silent: true }));
+    var forkedProcess = fork(path.resolve(__dirname, "./commands/replay.js"),
+        cliArgs, { silent: true });
+    forkedProcess.send({initParam: initParam});
+    return runChildAndCaptureOutput(forkedProcess);
 }
 
 exports.instrument = instrument;

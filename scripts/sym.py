@@ -62,7 +62,8 @@ tests = [
     ("tests/unit/regex9", 2),
     ("tests/unit/switchs1", 5),
     ("tests/unit/switch-complex", 4),
-    ("tests/unit/qsort", 24)]
+    ("tests/unit/qsort", 24)
+]
 
 def gen_args(expected):
     return ["concolic", "-i", str(expected)]

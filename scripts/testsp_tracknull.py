@@ -43,7 +43,7 @@ total = len(tests)
 print "Running {} tests".format(total)
 for (case, expected) in tests:
     try:
-        call(["python", SCRIPT, "analyze", "-a", "analyses/trackundefinednull/UndefinedNullTrackingEngine", case])
+        call(["python", SCRIPT, "analyze", "-a", "./analyses/trackundefinednull/UndefinedNullTrackingEngine", case])
     except CalledProcessError as e:
         pass
 

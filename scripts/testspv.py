@@ -45,6 +45,6 @@ tests = [
     "tests/sunspider1/string-base64"
     ]
 
-success = testrunner.run_tests(tests,["analyze", "-a", "analyses/trackallvalues/TrackValuesEngine"])
+success = testrunner.run_tests(tests,["analyze", "-a", "./analyses/trackallvalues/TrackValuesEngine"])
 if not success:
     exit(1)

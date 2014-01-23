@@ -16,13 +16,11 @@
 
 // Author: Koushik Sen
 
+/*global J$ */
+
 if (typeof J$ === 'undefined') {
     J$ = {};
 }
-
-if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
-    require('./InputManager2')
-} else {
 
 
 (function(sandbox){
@@ -120,5 +118,3 @@ if (typeof process !== 'undefined' && process.env.JALANGI_MODE === 'symbolic') {
         sandbox.addAxiom = function() {};
     }
 }(J$));
-
-}

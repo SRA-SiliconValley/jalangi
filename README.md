@@ -133,8 +133,8 @@ program.  Then run the following command to perform concolic testing:
     python scripts/jalangi.py concolic -i 100000 testme
 
 The -i argument bounds the total number of test inputs.  The
-command generates a set of input files in the directory jalangi_tmp.
-The input files start with the prefix jalangi_inputs.  Once the inputs
+command generates a set of input files in the directory `jalangi_tmp`.
+The input files start with the prefix `jalangi_inputs`.  Once the inputs
 are generated, you can run testme.js on those inputs by giving the
 following command:
 
@@ -161,23 +161,23 @@ created during an execution along with some auxiliary information.
 The analysis can be performed on a file testme.js by invoking the
 following command:
 
-    python scripts/jalangi.py analyze -a analyses/objectalloc/ObjectAllocationTrackerEngine testme
+    python scripts/jalangi.py analyze -a ./analyses/objectalloc/ObjectAllocationTrackerEngine testme
 
 For example, try running the analysis on a sunspider benchmark by issuing the following command:
 
-    python scripts/jalangi.py analyze -a analyses/objectalloc/ObjectAllocationTrackerEngine tests/sunspider1/crypto-aes
+    python scripts/jalangi.py analyze -a ./analyses/objectalloc/ObjectAllocationTrackerEngine tests/sunspider1/crypto-aes
 
 Similarly, you can run a likely type inference analysis on another sunspider benchmark by calling the following command and you will notice some warnings.
 
-    python scripts/jalangi.py analyze -a analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-sha1
+    python scripts/jalangi.py analyze -a ./analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-sha1
 
 Run the following to perform a simple form of taint analysis.
 
-	python scripts/jalangi.py analyze -a analyses/simpletaint/SimpleTaintEngine tests/sunspider1/crypto-sha1
+	python scripts/jalangi.py analyze -a ./analyses/simpletaint/SimpleTaintEngine tests/sunspider1/crypto-sha1
 
 You can run origin of null and undefined tracker on a toy example by issuing the following command:
 
-    python scripts/jalangi.py analyze -a analyses/trackundefinednull/UndefinedNullTrackingEngine tests/unit/track_undef_null
+    python scripts/jalangi.py analyze -a ./analyses/trackundefinednull/UndefinedNullTrackingEngine tests/unit/track_undef_null
 
 ### Record and replay a web application.
 
@@ -198,9 +198,7 @@ Finally launch the jalangi server and the html page by running
 
 You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  To ensure the trace is completely flushed, press `Alt+Shift+T` in the browser, and then close the browser window.  You can run a dynamic analysis on the trace file by issuing the following commands.
 
-    export JALANGI_MODE=replay
-    export JALANGI_ANALYSIS=analyses/objectalloc/ObjectAllocationTrackerEngine
-    node src/js/commands/replay.js jalangi_trace1
+    node src/js/commands/replay.js jalangi_trace1 ./analyses/objectalloc/ObjectAllocationTrackerEngine
 
 ### Instrument a local web application.
 
@@ -219,10 +217,8 @@ Then, lauch the Jalangi server and the HTML page by running
 
 You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  To ensure the trace is completely flushed, press `Alt+Shift+T` in the browser, and then close the browser window.  You can run a dynamic analysis on the trace file by issuing the following commands (not that this differs slightly from above, due to the need to copy the trace):
 
-    export JALANGI_MODE=replay
-    export JALANGI_ANALYSIS=analyses/objectalloc/ObjectAllocationTrackerEngine
     cp jalangi_trace1 /tmp/annex
-    node src/js/commands/replay.js /tmp/annex/jalangi_trace1
+    node src/js/commands/replay.js /tmp/annex/jalangi_trace1 ./analyses/objectalloc/ObjectAllocationTrackerEngine
 
 
 ### Record and replay using the proxy server.
@@ -259,9 +255,7 @@ metadata.
 
 Now, you can run a dynamic analysis on the trace file by issuing the following commands.
 
-    export JALANGI_MODE=replay
-    export JALANGI_ANALYSIS=analyses/objectalloc/ObjectAllocationTrackerEngine
-    node src/js/commands/replay.js /tmp/instScripts/site0/jalangi_trace1
+    node src/js/commands/replay.js /tmp/instScripts/site0/jalangi_trace1 ./analyses/objectalloc/ObjectAllocationTrackerEngine
 
 
 ## Further examples of record and replay
@@ -273,9 +267,7 @@ Now, you can run a dynamic analysis on the trace file by issuing the following c
     killall node
     python scripts/jalangi.py rrserver http://127.0.0.1:8181/tests/tizen/calculator/index_jalangi_.html
 
-    export JALANGI_MODE=replay
-    export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine
-    node src/js/commands/replay.js jalangi_trace1
+    node src/js/commands/replay.js jalangi_trace1 ./analyses/likelytype/LikelyTypeInferEngine
 
 ***
 
@@ -283,9 +275,7 @@ Now, you can run a dynamic analysis on the trace file by issuing the following c
     killall node
     python scripts/jalangi.py rrserver http://127.0.0.1:8181/tests/tizen/go/index_jalangi_.html
 
-    export JALANGI_MODE=replay
-    export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine
-    node src/js/commands/replay.js jalangi_trace1
+    node src/js/commands/replay.js jalangi_trace1 ./analyses/likelytype/LikelyTypeInferEngine
 
 ### In browser analysis of a web application.
 
@@ -304,7 +294,7 @@ Finally open the following webpage in Chrome and open the JavaScript console to 
     open http://127.0.0.1:8181/tests/tizen/annex/index_direct.html
 
 Jalangi runs the analysis described in src/js/analyses/logundefinedread/logUndefinedRead.js.  Note that we have added the following lines in index_direct.html to perform
-the analysis directly in the browser.  In summary, window.JALANGI_MODE must be set to 'inbrowser' and J$.analysis must be set to a suitable analysis object. In the
+the analysis directly in the browser.  In summary, `window.JALANGI_MODE` must be set to 'inbrowser' and J$.analysis must be set to a suitable analysis object. In the
 in-browser mode, one must not use ConcolicValue to wrap a program value.  However, one could use shadow execution to collect statistics.
 
     <script>window.JALANGI_MODE='inbrowser'</script>

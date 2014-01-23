@@ -38,11 +38,20 @@
             }
         }
 
+        // a dummy result to return, set by init().
+        // just used for testing purposes
+        var resultToReturn;
+
+        this.init = function(val) {
+            resultToReturn = val;
+        };
+
         this.literal = function(iid, val) {
-            if (typeof val !== 'function')
+            if (typeof val !== 'function') {
                 return annotateValue(val, iid);
-            else
+            } else {
                 return val;
+            }
         };
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
@@ -66,7 +75,11 @@
             } else {
                 return val;
             }
-        }
+        };
+
+        this.endExecution = function () {
+            return resultToReturn ? resultToReturn : "done";
+        };
     }
     module.exports = TrackValuesEngine;
 }(module));

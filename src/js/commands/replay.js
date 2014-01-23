@@ -18,10 +18,40 @@
 
 /*jslint node: true */
 /*global J$ */
-require('./../analysis');
-try {
+var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
+var traceFileName = DEFAULT_TRACE_FILE_NAME, clientAnalysis;
+if (process.argv[2]) {
+    traceFileName = process.argv[2];
+    if (process.argv[3]) {
+        clientAnalysis = process.argv[3];
+    }
+}
+function runAnalysis(initParam) {
+    var analysis = require('./../analysis');
+    analysis.init("replay", clientAnalysis);
+    if (initParam) {
+        J$.analysis.init(initParam);
+    }
+    require('./../InputManager');
+    require('./../instrument/esnstrument');
+    require(process.cwd() + '/inputs.js');
+    try {
 //    console.log("Starting replay ...")
-    J$.replay();
-} finally {
-    J$.endExecution();
+        J$.setTraceFileName(traceFileName);
+        J$.replay();
+    } finally {
+        var result = J$.endExecution();
+        if (process.send && clientAnalysis) {
+            // we assume send is synchronous
+            process.send({result: result});
+        }
+    }
+    process.exit();
+}
+if (process.send) {
+    process.on('message', function (m) {
+        runAnalysis(m.initParam);
+    });
+} else {
+    runAnalysis(null);
 }

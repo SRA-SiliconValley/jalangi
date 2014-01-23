@@ -49,6 +49,12 @@ class JalangiInstall:
     def replay_script(self):
         return self.get_home() + "/src/js/commands/replay.js"
 
+    def record_script(self):
+        return self.get_home() + "/src/js/commands/record.js"
+
+    def symbolic_script(self):
+        return self.get_home() + "/src/js/commands/symbolic.js"
+
     def analyses(self):
         return os.listdir(self.get_home() + "/src/js/analyses")
 

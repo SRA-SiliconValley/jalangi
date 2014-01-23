@@ -23,7 +23,7 @@ tests = [
     "tests/html/jquery-2.0.2/jquery-2.0.2"
 ]
 
-success = testrunner.run_tests(tests,["analyze", "-a", "analyses/trackallvalues/TrackValuesEngine", "-b"])
+success = testrunner.run_tests(tests,["analyze", "-a", "./analyses/trackallvalues/TrackValuesEngine", "-b"])
 if not success:
     exit(1)
 

@@ -62,6 +62,6 @@ tests = [
     "tests/unit/call_in_finally_2"
 ]
 
-success = testrunner.run_tests(tests,["analyze", "-a", "analyses/trackallvalues/TrackValuesEngine"])
+success = testrunner.run_tests(tests,["analyze", "-a", "./analyses/trackallvalues/TrackValuesEngine"])
 if not success:
     exit(1)

@@ -42,19 +42,22 @@ function getInstOutputFile(filePath) {
  * esnstrument.js or instrumentDir.js.
  *
  * @param {string} inputFile the file to be instrumented
- * @param {{ outputFile: string, iidMap: boolean, serialize: boolean }} [options] options for instrumentation, including:
+ * @param {{ outputFile: string, iidMap: boolean, serialize: boolean, relative: boolean }} [options] options for instrumentation, including:
  *     'outputFileName': the desired output file for instrumented code.  If not provided, a temp file is used
  *     'iidMap': should an IID map file be generated with source locations?  defaults to false
  *     'serialize': should ASTs be serialized? defaults to false
+ *     'relative': should we use relative path references to the input file?
  * @return {{ outputFile: string, iidMapFile: string, astJSONFile: string }} output file locations, as appropriate
  *          based on the options
  */
 function instrument(inputFileName, options) {
     // make all paths absolute, for simplicity
     // TODO make absolute paths optional?
-    inputFileName = path.resolve(inputFileName);
     if (!options) {
         options = {};
+    }
+    if (!options.relative) {
+        inputFileName = path.resolve(inputFileName);
     }
     var outputFileName = getInstOutputFile(options.outputFile);
     var iidMapFile, astJSONFile;

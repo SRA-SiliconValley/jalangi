@@ -193,7 +193,7 @@ First start a HTTP server by running the following command.  The command starts 
 
 Then instrument the JavaScript files that you want to analyze.  You also need to modify index.html so that it loads some library files and the instrumented files.
 
-    node src/js/instrument/esnstrument.js tests/tizen/annex/js/annex.js tests/tizen/annex/lib/jquery-1.6.2.min.js
+    node src/js/instrument/esnstrument.js tests/tizen/annex/js/annex.js tests/tizen/annex/lib/jquery-1.6.2.js
 
 Finally launch the jalangi server and the html page by running
 

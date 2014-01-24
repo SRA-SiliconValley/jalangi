@@ -101,6 +101,18 @@ We also have test drivers implemented in JavaScript using [mocha](http://visionm
 To run the entire test suite, simply run:
 
     npm test
+
+### Run Browser Tests
+
+Some automated tests can be run in the browser, using [Selenium](http://docs.seleniumhq.org/).  To run these tests, first install the relevant dependencies:
+
+    sudo python scripts/install-dev.py
+
+(`sudo` is needed to install the Python Selenium bindings.)  Then, to run all browser tests, do:
+
+    python scripts/runbrowsertests.py
+
+You should see Chrome windows opening and closing as the tests are run.
     
 ### Other Scripts
 

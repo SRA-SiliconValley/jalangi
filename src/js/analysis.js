@@ -1412,7 +1412,7 @@
                     var val = getConcrete(obj);
                     if (val === obj && val !== undefined && val !== null && HOP(val, SPECIAL_PROP)) {
                         var id = val[SPECIAL_PROP][SPECIAL_PROP];
-                        if ((val === objectMap[id]) !== undefined) {
+                        if ((val = objectMap[id]) !== undefined) {
                             return val;
                         } else {
                             return obj;
@@ -1699,7 +1699,7 @@
                                 f = getConcrete(syncValue(ret, undefined, 0));
                                 ret = traceInfo.getNext();
                                 var dis = syncValue(ret, undefined, 0);
-                                f(dis);
+                                f.call(dis);
                             } else if (ret[F_FUNNAME] === N_LOG_SCRIPT_ENTER) {
                                 var path = getConcrete(syncValue(ret, undefined, 0));
                                 if (isBrowserReplay) {

@@ -22,9 +22,6 @@ var assert = require('assert'),
     procUtil = require('./../src/js/utils/procUtil'),
     path = require('path');
 
-//var traceFile = "/tmp/jalangi_trace";
-var traceFile = "jalangi_trace";
-
 var trackValuesAnalysis = path.resolve("src/js/analyses/trackallvalues/TrackValuesEngine.js");
 
 var testVal = "hello";
@@ -39,7 +36,7 @@ var testVal = "hello";
 function runTest(script, instScriptFile) {
     // capture normal output
     var normalProcess = child_process.fork(script, [], {silent: true});
-    var normOut;
+    var normOut, traceFile;
     function checkResult(result) {
         assert.equal(normOut, result.stdout);
         assert.equal("", result.stderr);
@@ -48,9 +45,10 @@ function runTest(script, instScriptFile) {
         normOut = result.stdout;
         checkResult(result);
         var instResult = jalangi.instrument(script, { outputFile: instScriptFile });
-        return jalangi.record(instResult.outputFile, traceFile);
+        return jalangi.record(instResult.outputFile);
     }).then(function (result) {
             checkResult(result);
+            traceFile = result.traceFile;
             return jalangi.replay(traceFile);
         }).then(function (result) {
             checkResult(result);

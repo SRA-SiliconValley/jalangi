@@ -91,20 +91,21 @@ function instrument(inputFileName, options) {
 /**
  * record execution of an instrumented script
  * @param {string} instCodeFile the instrumented code
- * @param {string} [traceFile=jalangi_trace] path to trace file
+ * @param {string} [traceFile] path to trace file
  * @return promise|Q.promise promise that gets resolved at the end of recording.  The promise
  * is resolved with an object with properties:
- *     'exitCode': the exit code from the process doing recording
  *     'stdout': the stdout of the record process
  *     'stderr': the stderr of the record process
+ *     'traceFile': the location of the trace file
  */
 function record(instCodeFile, traceFile) {
     var cliArgs = [instCodeFile];
-    if (traceFile) {
-        cliArgs.push(traceFile);
+    if (!traceFile) {
+        traceFile = temp.path();
     }
+    cliArgs.push(traceFile);
     return procUtil.runChildAndCaptureOutput(fork(path.resolve(__dirname, "./commands/record.js"),
-        cliArgs, { silent: true }));
+        cliArgs, { silent: true }), { traceFile: traceFile });
 }
 
 /**

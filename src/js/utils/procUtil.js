@@ -26,6 +26,7 @@ var Q = require("q");
  * Runs a process created via the node child_process API and captures its output.
  *
  * @param forkedProcess the process
+ * @param {object} [extraOutput] additional properties to be copied to result
  * @returns {promise|Q.promise} A promise that, when process execution completes normally, is
  * resolved with an object with the following properties:
  *     'stdout': the stdout output of the process
@@ -37,7 +38,7 @@ var Q = require("q");
  *     with a value similar to above, except that 'exitCode' holds the exit code.
  *
  */
-function runChildAndCaptureOutput(forkedProcess) {
+function runChildAndCaptureOutput(forkedProcess, extraOutput) {
     var child_stdout = "", child_stderr = "", result, deferred = Q.defer();
     forkedProcess.stdout.on('data', function (data) {
         child_stdout += data;
@@ -52,18 +53,24 @@ function runChildAndCaptureOutput(forkedProcess) {
         }
     });
     forkedProcess.on('close', function (code) {
-        if (code !== 0) {
-            deferred.reject({
-                exitCode: code,
-                stdout: child_stdout,
-                stderr: child_stderr,
-                result: result,
-                toString: function () {
-                    return child_stderr;
-                }
+        var resultVal = {
+            exitCode: code,
+            stdout: child_stdout,
+            stderr: child_stderr,
+            result: result,
+            toString: function () {
+                return child_stderr;
+            }
+        };
+        if (extraOutput) {
+            Object.keys(extraOutput).forEach(function (k) {
+                resultVal[k] = extraOutput[k];
             });
+        }
+        if (code !== 0) {
+            deferred.reject(resultVal);
         } else {
-            deferred.resolve({ exitCode: code, stdout: child_stdout, stderr: child_stderr, result: result });
+            deferred.resolve(resultVal);
         }
     });
     return deferred.promise;

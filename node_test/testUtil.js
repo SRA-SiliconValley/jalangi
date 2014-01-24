@@ -34,7 +34,7 @@ var testVal = "hello";
  * @param script the script to test
  * @param instScriptFile file in which to store the instrumented script
  * @return promise|Q.promise promise that resolves when testing is completed, yielding no value, but will
- * be rejected if any assertion fails
+ * be rejected if any assertion fails.  Caller *must* handle reject or failure will be swallowed.
  */
 function runTest(script, instScriptFile) {
     // capture normal output
@@ -43,7 +43,6 @@ function runTest(script, instScriptFile) {
     function checkResult(result) {
         assert.equal(normOut, result.stdout);
         assert.equal("", result.stderr);
-        assert.equal(0, result.exitCode);
     }
     return procUtil.runChildAndCaptureOutput(normalProcess).then(function (result) {
         normOut = result.stdout;

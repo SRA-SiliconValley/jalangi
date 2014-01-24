@@ -25,27 +25,65 @@ var procUtil = require('./utils/procUtil');
 var fs = require('fs');
 var path = require('path');
 var fork = require('child_process').fork;
+var temp = require('temp');
+temp.track();
 
+function getInstOutputFile(filePath) {
+    if (filePath) {
+        return path.resolve(filePath);
+    } else {
+        return temp.path({suffix: '.js'});
+    }
+}
 /**
  * Instrument a JavaScript file.
- * TODO support IID maps
- * TODO operate on code strings instead of files
- * @param inputFileName the file to be instrumented
- * @param outputFileName the output file for the instrumented code
+ *
+ * Note that the API does yet support instrumenting multiple files that must execute together; for that, use
+ * esnstrument.js or instrumentDir.js.
+ *
+ * @param {string} inputFile the file to be instrumented
+ * @param {{ outputFile: string, iidMap: boolean, serialize: boolean }} [options] options for instrumentation, including:
+ *     'outputFileName': the desired output file for instrumented code.  If not provided, a temp file is used
+ *     'iidMap': should an IID map file be generated with source locations?  defaults to false
+ *     'serialize': should ASTs be serialized? defaults to false
+ * @return {{ outputFile: string, iidMapFile: string, astJSONFile: string }} output file locations, as appropriate
+ *          based on the options
  */
-function instrument(inputFileName, outputFileName) {
+function instrument(inputFileName, options) {
     // make all paths absolute, for simplicity
-    // TODO make this optional
+    // TODO make absolute paths optional?
     inputFileName = path.resolve(inputFileName);
-    outputFileName = path.resolve(outputFileName);
+    if (!options) {
+        options = {};
+    }
+    var outputFileName = getInstOutputFile(options.outputFile);
+    var iidMapFile, astJSONFile;
     var inputCode = String(fs.readFileSync(inputFileName));
-    var options = {
+    if (options.iidMap) {
+        esnstrument.openIIDMapFile(temp.dir);
+        iidMapFile = path.join(temp.dir, "jalangi_sourcemap.js");
+    }
+    var instCodeOptions = {
         wrapProgram: true,
         filename: inputFileName,
-        instFileName: outputFileName
+        instFileName: outputFileName,
+        serialize: options.serialize
     };
-    var instCode = esnstrument.instrumentCode(inputCode, options).code;
+    var instResult = esnstrument.instrumentCode(inputCode, instCodeOptions);
+    var instCode = instResult.code;
     fs.writeFileSync(outputFileName, instCode);
+    if (options.iidMap) {
+        esnstrument.closeIIDMapFile();
+    }
+    if (options.serialize) {
+        astJSONFile = outputFileName + ".ast.json";
+        fs.writeFileSync(astJSONFile, JSON.stringify(instResult.serializedAST, undefined, 2), "utf8");
+    }
+    return {
+        outputFile: outputFileName,
+        iidMapFile: iidMapFile,
+        astJSONFile: astJSONFile
+    };
 }
 
 

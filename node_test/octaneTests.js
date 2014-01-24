@@ -20,8 +20,6 @@
 /*global it */
 var testUtil = require('./testUtil');
 
-var instScriptFile = "instScript_jalangi_.js";
-
 var octane = [
     "richards",
     "deltablue",
@@ -42,7 +40,7 @@ describe('octane', function () {
     octane.forEach(function (test) {
         it('should handle octane test ' + test, function (done) {
             var testFile = "tests/octane/" + test + ".js";
-            testUtil.runTest(testFile,instScriptFile).then(function () { done(); }).done();
+            testUtil.runTest(testFile).then(function () { done(); }).done();
         });
     });
 });

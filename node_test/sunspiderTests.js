@@ -21,8 +21,6 @@
 
 var testUtil = require('./testUtil');
 
-var instScriptFile = "instScript_jalangi_.js";
-
 var sunspider = [
     "3d-cube",
     "3d-morph",
@@ -55,7 +53,7 @@ describe('sunspider', function () {
     sunspider.forEach(function (test) {
         it('should handle sunspider test ' + test, function (done) {
             var testFile = "tests/sunspider1/" + test + ".js";
-            testUtil.runTest(testFile,instScriptFile).then(function () { done(); }).done();
+            testUtil.runTest(testFile).then(function () { done(); }).done();
         });
     });
 });

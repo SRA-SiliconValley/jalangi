@@ -31,8 +31,8 @@ var testVal = "hello";
 
 /**
  * test record and replay for a script
- * @param script the script to test
- * @param instScriptFile file in which to store the instrumented script
+ * @param {string} script the script to test
+ * @param {string} [instScriptFile] file in which to store the instrumented script
  * @return promise|Q.promise promise that resolves when testing is completed, yielding no value, but will
  * be rejected if any assertion fails.  Caller *must* handle reject or failure will be swallowed.
  */
@@ -47,8 +47,8 @@ function runTest(script, instScriptFile) {
     return procUtil.runChildAndCaptureOutput(normalProcess).then(function (result) {
         normOut = result.stdout;
         checkResult(result);
-        jalangi.instrument(script, instScriptFile);
-        return jalangi.record(instScriptFile, traceFile);
+        var instResult = jalangi.instrument(script, { outputFile: instScriptFile });
+        return jalangi.record(instResult.outputFile, traceFile);
     }).then(function (result) {
             checkResult(result);
             return jalangi.replay(traceFile);

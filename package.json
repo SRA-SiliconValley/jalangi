@@ -16,7 +16,8 @@
         "ncp": "*",
         "rewriting-proxy": "*",
         "mocha": "*",
-        "q": "*"
+        "q": "*",
+        "temp": "*"
     },
     "scripts": {
       "test": "./node_modules/.bin/mocha --reporter spec node_test/*.js && python scripts/runalltests.py"

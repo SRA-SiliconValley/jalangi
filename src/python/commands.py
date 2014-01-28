@@ -208,6 +208,7 @@ def app_instrument(filee,jalangi=util.DEFAULT_INSTALL):
                              '--direct_in_output',
                              '--selenium',
                              '--relative',
+                             '--copy_runtime',
                              filee, ".", jalangi=jalangi)
     return (".", "")
 

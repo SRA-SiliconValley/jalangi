@@ -43,7 +43,7 @@ function headerCodeInit(root) {
         if (root) {
             src = path.join(root, src);
         }
-    	headerCode += fs.readFileSync(src);
+        headerCode += fs.readFileSync(src);
     });    
 }
 
@@ -99,4 +99,5 @@ function createFilenameForScript(url) {
 exports.getHeaderCode = getHeaderCode;
 exports.getHeaderCodeAsScriptTags = getHeaderCodeAsScriptTags;
 exports.isInlineScript = isInlineScript;
+exports.headerSources = headerSources;
 exports.createFilenameForScript = createFilenameForScript;

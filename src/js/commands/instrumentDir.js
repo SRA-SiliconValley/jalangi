@@ -50,6 +50,8 @@ var directInOutput = false;
 
 var selenium = false;
 
+var copyRuntime = false;
+
 // directory in which original app sits
 var appDir;
 
@@ -98,16 +100,32 @@ HTMLRewriteStream.prototype._transform = accumulateData;
 
 var seleniumCode = "window.__jalangi_errormsgs__ = []; window.onerror = function(errorMsg) { window.__jalangi_errormsgs__.push(errorMsg); }; window.__JALANGI_SELENIUM__ = true;";
 
+var jalangiRuntimeDir = "jalangiRuntime";
+
 HTMLRewriteStream.prototype._flush = function (cb) {
-	if (instrumentInline) {
+    function getContainedRuntimeScriptTags() {
+        var result = "";
+        instUtil.headerSources.forEach(function (file) {
+           var fileName = path.join(jalangiRuntimeDir, path.basename(file));
+           result += "<script src=\"" + fileName + "\"></script>";
+        });
+        return result;
+    }
+
+    if (instrumentInline) {
 		this.push(proxy.rewriteHTML(this.data, "http://foo.com", rewriteInlineScript, instUtil.getHeaderCode(jalangiRoot)));	
 	} else {
 		// just inject our header code
 		var headIndex = this.data.indexOf("<head>");
 		assert.ok(headIndex !== -1, "couldn't find head element");
-		var headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot,relative);
+        var headerLibs;
+        if (copyRuntime) {
+            headerLibs = getContainedRuntimeScriptTags();
+        } else {
+            headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot,relative);
+        }
 		if (selenium) {
-		    headerLibs = "<script>" + seleniumCode + "</script>" + headerLibs;
+            headerLibs = "<script>" + seleniumCode + "</script>" + headerLibs;
 		}
 		var newHTML = this.data.slice(0, headIndex+6) + headerLibs + this.data.slice(headIndex+6);
 		this.push(newHTML);
@@ -140,7 +158,7 @@ InstrumentJSStream.prototype._flush = function (cb) {
     };
 	var instResult = esnstrument.instrumentCode(this.data, options);
 	if (dumpSerializedASTs) {
-        fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(instResult.serializedAST, undefined, 2), "utf8");		    
+        fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(instResult.serializedAST, undefined, 2), "utf8");
 	}
 	this.push(instResult.code);
 	cb();
@@ -160,16 +178,28 @@ function transform(readStream, writeStream, file) {
 	if (extension === '.html') {
 		rewriteHtml(readStream, writeStream);
 	} else if (extension === '.js') {
-	    if ((!excludePattern || file.name.indexOf(excludePattern) === -1)) {
-    		instrumentJS(readStream, writeStream, file.name);	        
-	    } else {
-	        console.log("excluding " + file.name);
-	        readStream.pipe(writeStream);
-	    }
+        if ((!excludePattern || file.name.indexOf(excludePattern) === -1)) {
+            instrumentJS(readStream, writeStream, file.name);
+        } else {
+            console.log("excluding " + file.name);
+            readStream.pipe(writeStream);
+        }
 	} else {
 		readStream.pipe(writeStream);
 	}
 }
+
+var copyJalangiRuntime = function () {
+    var outputDir = path.join(copyDir,jalangiRuntimeDir);
+    mkdirp.sync(outputDir);
+    instUtil.headerSources.forEach(function (srcFile) {
+        if (jalangiRoot) {
+            srcFile = path.join(jalangiRoot, srcFile);
+        }
+        var outputFile = path.join(outputDir,path.basename(srcFile));
+        fs.writeFileSync(outputFile,String(fs.readFileSync(srcFile)));
+    });
+};
 
 /**
  * Instruments all .js files found under dir, and re-writes index.html
@@ -179,8 +209,8 @@ function transform(readStream, writeStream, file) {
 function instDir(dir, outputDir) {
 	// first, copy everything
 	appDir = path.resolve(process.cwd(), dir);
-	if (directInOutput) {
-	    copyDir = outputDir;
+    if (directInOutput) {
+        copyDir = outputDir;
     } else {
         var basename = path.basename(dir);
         copyDir = path.join(outputDir, basename);
@@ -189,13 +219,16 @@ function instDir(dir, outputDir) {
 	esnstrument.openIIDMapFile(copyDir);
 	// write an empty 'inputs.js' file here, to make replay happy
 	// TODO make this filename more robust against name collisions
-	fs.writeFileSync(path.join(copyDir, "inputs.js"), "");	
+	fs.writeFileSync(path.join(copyDir, "inputs.js"), "");
+    if (copyRuntime) {
+        copyJalangiRuntime();
+    }
 	var callback = function (err) {
-	 if (err) {
-	   return console.error(err);
-	 }
-	 esnstrument.closeIIDMapFile();
-	 console.log('done!');
+     if (err) {
+       return console.error(err);
+     }
+     esnstrument.closeIIDMapFile();
+     console.log('done!');
 	};
 	ncp(dir,copyDir, {transform: transform}, callback);
 }
@@ -207,9 +240,10 @@ parser.addArgument(['-x', '--exclude'], { help: "do not instrument any scripts w
 // TODO add back this option once we've fixed the relevant HTML parsing code
 parser.addArgument(['-i', '--instrumentInline'], { help: "instrument inline scripts", action:'storeTrue'});
 parser.addArgument(['--jalangi_root'], { help: "Jalangi root directory, if not working directory" } );
-parser.addArgument(['--direct_in_output'], { help: "Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' } );
+parser.addArgument(['-d', '--direct_in_output'], { help: "Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' } );
 parser.addArgument(['--selenium'], { help: "Insert code so scripts can detect they are running under Selenium", action:'storeTrue' } );
 parser.addArgument(['--relative'], { help: "Use paths relative to working directory in injected <script> tags", action:'storeTrue' } );
+parser.addArgument(['-c', '--copy_runtime'], { help: "Copy Jalangi runtime files into instrumented app in jalangi_rt sub-directory", action:'storeTrue'});
 parser.addArgument(['inputDir'], { help: "directory containing files to instrument"});
 parser.addArgument(['outputDir'], { help: "directory in which to create instrumented copy"});
 
@@ -234,6 +268,10 @@ if (args.relative) {
 }
 if (args.instrumentInline) {
 	instrumentInline = args.instrumentInline;
+}
+
+if (args.copy_runtime) {
+    copyRuntime = args.copy_runtime;
 }
 
 

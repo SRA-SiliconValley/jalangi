@@ -137,7 +137,7 @@
             // make MAX_BUF_SIZE slightly less than 2^16, to allow over low-level overheads
             var MAX_BUF_SIZE = 64000;
             // should we keep the trace in memory in the browser?
-            var IN_MEMORY_BROWSER_LOG = isBrowser && (window.__JALANGI_PHANTOM__ || window.__JALANGI_SELENIUM__);
+            var IN_MEMORY_TRACE = isBrowser && (window.__JALANGI_IN_MEMORY_TRACE__);
 
             var T_NULL = 0,
                 T_NUMBER = 1,
@@ -1735,7 +1735,7 @@
                     // so don't record any more events
                     var tracingDone = false;
 
-                    if (IN_MEMORY_BROWSER_LOG) {
+                    if (IN_MEMORY_TRACE) {
                         // attach the buffer to the sandbox
                         sandbox.trace_output = buffer;
                     }
@@ -1773,7 +1773,7 @@
                     };
 
                     this.flush = function () {
-                        if (IN_MEMORY_BROWSER_LOG) {
+                        if (IN_MEMORY_TRACE) {
                             // no need to flush anything
                             return;
                         }
@@ -1855,7 +1855,7 @@
                      */
                     this.stopTracing = function () {
                         tracingDone = true;
-                        if (!IN_MEMORY_BROWSER_LOG) {
+                        if (!IN_MEMORY_TRACE) {
                             this.flush();
                         }
                     };
@@ -1991,7 +1991,7 @@
                     traceWriter = new TraceWriter();
                     this.onflush = traceWriter.onflush;
                     if (isBrowser) {
-                        if (!IN_MEMORY_BROWSER_LOG) {
+                        if (!IN_MEMORY_TRACE) {
                             this.command('reset');
                         }
                         // enable keyboard shortcut to stop tracing

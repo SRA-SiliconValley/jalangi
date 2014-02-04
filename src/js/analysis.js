@@ -2041,7 +2041,7 @@
             // initialize rrEngine, sandbox.analysis, executionIndex, and require.uncache
             executionIndex = new ExecutionIndex();
 
-            if (analysis_script && analysis_script.indexOf('Engine') >= 0 && mode !== MODE_RECORD) {
+            if (analysis_script && mode !== MODE_RECORD) {
                 var SymbolicEngine = require(analysis_script);
                 sandbox.analysis = new SymbolicEngine(executionIndex);
             }

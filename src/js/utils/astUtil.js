@@ -159,6 +159,20 @@ function serialize(root) {
         'FunctionExpression':handleFun
     };
 
+    function canMakeSymbolic(node) {
+        if (node.callee.object) {
+            var callee = node.callee;
+            // we can replace calls to J$ functions with a SymbolicReference iff they have an IID as their first
+            // argument.  'instrumentCode' and 'getConcrete' do not take an IID.
+            // TODO are we missing other cases?
+            if (callee.object.name === 'J$' && callee.property.name !== "instrumentCode" &&
+                callee.property.name !== "getConcrete" && node.arguments[0]) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     var visitorPost = {
         'CallExpression':function (node) {
             try {
@@ -166,7 +180,7 @@ function serialize(root) {
                     iidToAstTable[node.arguments[0].value] = parentFunOrScript;
                     parentReplacement.value = node.arguments[0].value;
                     return node;
-                } else if (node.callee.object && node.callee.object.name === 'J$' && node.arguments[0]) {
+                } else if (canMakeSymbolic(node)) {
                     iidToAstTable[node.arguments[0].value] = node;
                     return {type:"SymbolicReference", value:node.arguments[0].value};
                 }

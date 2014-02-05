@@ -25,13 +25,19 @@ var assert = require("assert"),
 
 	
 function checkCode(code) {
-	var ast = acorn.parse(esnstrument.instrumentCode(code, {wrapProgram: false}).code);
+    var instCode = esnstrument.instrumentCode(code, {wrapProgram: false}).code;
+//    console.log(instCode);
+	var ast = acorn.parse(instCode);
 	// NOTE: this is not a robust way to do a deep copy of ASTs,
 	// just good enough for unit tests
+
+//    console.log("init:\n" + JSON.stringify(ast,undefined,2));
 	var astCopy = JSON.parse(JSON.stringify(ast));
 	var table = astUtil.serialize(ast);
 	// assert.deepEqual(ast,astCopy); would fail here
+//    console.log("serialized:\n" + JSON.stringify(ast,undefined,2));
 	astUtil.deserialize(table);
+//    console.log("deserialized:\n" + JSON.stringify(ast,undefined,2));
 	assert.deepEqual(ast,astCopy);
 }
 
@@ -43,5 +49,8 @@ describe('astSerialization', function () {
 		it('should handle basic 2', function () {
 			checkCode("function foo() { return 2+3+4+5+6+7+8; }");
 		});
+        it('should handle eval', function () {
+            checkCode("function foo() { eval(this); }");
+        });
 	});
 });

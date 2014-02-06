@@ -165,7 +165,21 @@ InstrumentJSStream.prototype._flush = function (cb) {
     };
 	var instResult = esnstrument.instrumentCode(this.data, options);
 	if (dumpSerializedASTs) {
-        fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(instResult.serializedAST, undefined, 2), "utf8");
+        // TODO remove code duplication with jalangi.js
+        var serializedAST = instResult.serializedAST;
+        var topLevelExprs = instResult.topLevelExprs;
+        if (topLevelExprs) {
+            // update serialized AST table to include top-level expr info
+            topLevelExprs.forEach(function (iid) {
+                var entry = serializedAST[iid];
+                if (!entry) {
+                    entry = {};
+                    serializedAST[iid] = entry;
+                }
+                entry.topLevelExpr = true;
+            });
+        }
+        fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(serializedAST, undefined, 2), "utf8");
 	}
 	this.push(instResult.code);
 	cb();

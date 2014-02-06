@@ -79,8 +79,22 @@ function instrument(inputFileName, options) {
         esnstrument.closeIIDMapFile();
     }
     if (options.serialize) {
+        var serializedAST = instResult.serializedAST;
+        var topLevelExprs = instResult.topLevelExprs;
+        if (topLevelExprs) {
+            // update serialized AST table to include top-level expr info
+            topLevelExprs.forEach(function (iid) {
+                var entry = serializedAST[iid];
+                if (!entry) {
+                    entry = {};
+                    serializedAST[iid] = entry;
+                }
+                entry.topLevelExpr = true;
+            });
+        }
+        // TODO choose a better file name here
         astJSONFile = outputFileName + ".ast.json";
-        fs.writeFileSync(astJSONFile, JSON.stringify(instResult.serializedAST, undefined, 2), "utf8");
+        fs.writeFileSync(astJSONFile, JSON.stringify(serializedAST, undefined, 2), "utf8");
     }
     return {
         outputFile: outputFileName,

@@ -220,9 +220,19 @@
 
     var inc = 4;
     // current static identifier for each conditional expression
-    var condCount = 0 + inc;
-    var iid = 1 + inc;
-    var opIid = 2 + inc;
+    var condCount;
+    var iid;
+    var opIid;
+
+    function resetIIDCounters() {
+        condCount = 0+inc;
+        iid = 1+inc;
+        opIid = 2+inc;
+    }
+
+    // initial reset
+    resetIIDCounters();
+
 
     function getIid() {
         var tmpIid = iid;
@@ -1111,6 +1121,7 @@
     };
 
     var exprDepth = 0;
+    var topLevelExprs;
     var visitorIdentifyTopLevelExprPre = {
         "CallExpression":function (node) {
             if (node.callee.type === 'MemberExpression' &&
@@ -1135,8 +1146,7 @@
                         funName === 'C2' ||
                         funName === '_'
                         )) {
-                    // to Manu: node.arguments[0].value should be stored in a file
-                    // console.log(node.arguments[0].value);
+                    topLevelExprs.push(node.arguments[0].value);
                 }
                 exprDepth++;
             }
@@ -1366,6 +1376,7 @@
                 condCount = 3;
             }
             wrapProgramNode = tryCatchAtTop;
+            topLevelExprs = [];
             var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
             var newCode = escodegen.generate(newAst);
 
@@ -1375,7 +1386,7 @@
             var ret = newCode + "\n" + noInstr + "\n";
             if (serialize) {
                 var serialized = astUtil.serialize(newAst);
-                return { code:ret, serializedAST:serialized };
+                return { code:ret, serializedAST:serialized, topLevelExprs: topLevelExprs };
             } else {
                 return {code:ret};
             }
@@ -1423,7 +1434,7 @@
             wrapProgramNode = true;
             instCodeFileName = makeInstCodeFileName(filename);
             writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(), instCodeFileName)) + "\";\n");
-            var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
+            var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
             //console.log(JSON.stringify(newAst, null, '\t'));
 
             var newFileOnly = path.basename(instCodeFileName);
@@ -1452,6 +1463,7 @@
         sandbox.fileSuffix = FILESUFFIX1;
         sandbox.openIIDMapFile = openIIDMapFile;
         sandbox.closeIIDMapFile = closeIIDMapFile;
+        sandbox.resetIIDCounters = resetIIDCounters;
     }
 }((typeof J$ === 'undefined') ? (typeof exports === 'undefined' ? undefined : exports) : J$));
 

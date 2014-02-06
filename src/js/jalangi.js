@@ -104,7 +104,7 @@ function instrument(inputFileName, options) {
 function record(instCodeFile, traceFile) {
     var cliArgs = [instCodeFile];
     if (!traceFile) {
-        traceFile = temp.path();
+        traceFile = temp.path({suffix: '.trace'});
     }
     cliArgs.push(traceFile);
     return procUtil.runChildAndCaptureOutput(fork(path.resolve(__dirname, "./commands/record.js"),

@@ -171,17 +171,25 @@ function serialize(root) {
             }
         }
         return false;
-    };
+    }
 
+    function setSerializedAST(iid, ast) {
+        var entry = iidToAstTable[iid];
+        if (!entry) {
+            entry = {};
+            iidToAstTable[iid] = entry;
+        }
+        entry.serializedAST = ast;
+    }
     var visitorPost = {
         'CallExpression':function (node) {
             try {
                 if (node.callee.object && node.callee.object.name === 'J$' && (node.callee.property.name === 'Se' || node.callee.property.name === 'Fe')) {
-                    iidToAstTable[node.arguments[0].value] = parentFunOrScript;
+                    setSerializedAST(node.arguments[0].value, parentFunOrScript);
                     parentReplacement.value = node.arguments[0].value;
                     return node;
                 } else if (canMakeSymbolic(node)) {
-                    iidToAstTable[node.arguments[0].value] = node;
+                    setSerializedAST(node.arguments[0].value, node);
                     return {type:"SymbolicReference", value:node.arguments[0].value};
                 }
                 return node;
@@ -203,13 +211,19 @@ function serialize(root) {
  */
 function deserialize(iidToAstTable) {
 	Object.keys(iidToAstTable).forEach(function (iid) {
-		var curAst = iidToAstTable[iid];
-		var visitorPost = {
-			'SymbolicReference': function (node) {
-				return iidToAstTable[node.value];
-			}	
-		};
-		transformAst(curAst, visitorPost);
+		var curAst = iidToAstTable[iid].serializedAST;
+        if (curAst) {
+            var visitorPost = {
+                'SymbolicReference': function (node) {
+                    var targetAST = iidToAstTable[node.value].serializedAST;
+                    if (!targetAST) {
+                        throw "bad symbolic reference";
+                    }
+                    return targetAST;
+                }
+            };
+            transformAst(curAst, visitorPost);
+        }
 	});
 }
 

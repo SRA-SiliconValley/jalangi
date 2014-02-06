@@ -1110,6 +1110,52 @@
         "ForStatement":funCond
     };
 
+    var exprDepth = 0;
+    var visitorIdentifyTopLevelExprPre = {
+        "CallExpression":function (node) {
+            if (node.callee.type === 'MemberExpression' &&
+                node.callee.object.type === 'Identifier' &&
+                node.callee.object.name === astUtil.JALANGI_VAR) {
+                var funName = node.callee.property.name;
+                if (exprDepth === 0 &&
+                    (funName === 'F' ||
+                        funName === 'M' ||
+                        funName === 'A' ||
+                        funName === 'P' ||
+                        funName === 'G' ||
+                        funName === 'R' ||
+                        funName === 'W' ||
+                        funName === 'H' ||
+                        funName === 'T' ||
+                        funName === 'Rt' ||
+                        funName === 'B' ||
+                        funName === 'U' ||
+                        funName === 'C' ||
+                        funName === 'C1' ||
+                        funName === 'C2' ||
+                        funName === '_'
+                        )) {
+                    // to Manu: node.arguments[0].value should be stored in a file
+                    // console.log(node.arguments[0].value);
+                }
+                exprDepth++;
+            }
+        }
+    };
+
+    var visitorIdentifyTopLevelExprPost = {
+        "CallExpression":function (node) {
+            if (node.callee.type === 'MemberExpression' &&
+                node.callee.object.type === 'Identifier' &&
+                node.callee.object.name === astUtil.JALANGI_VAR) {
+                exprDepth--;
+            }
+            return node;
+        }
+    };
+
+
+
     function addScopes(ast) {
 
         function Scope(parent) {
@@ -1284,7 +1330,7 @@
                 condCount = 3;
             }
             wrapProgramNode = tryCatchAtTop;
-            var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
+            var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
             var newCode = escodegen.generate(newAst);
 
             if (!tryCatchAtTop) {
@@ -1341,7 +1387,7 @@
             wrapProgramNode = true;
             instCodeFileName = makeInstCodeFileName(filename);
             writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(), instCodeFileName)) + "\";\n");
-            var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
+            var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
             //console.log(JSON.stringify(newAst, null, '\t'));
 
             var newFileOnly = path.basename(instCodeFileName);

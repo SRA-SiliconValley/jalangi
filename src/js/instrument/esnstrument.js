@@ -1173,6 +1173,13 @@
             }
         };
 
+        Scope.prototype.hasOwnVar = function (name) {
+            var s = this;
+            if (s && HOP(s.vars, name))
+                return s.vars[name];
+            return null;
+        };
+
         Scope.prototype.hasVar = function (name) {
             var s = this;
             while (s !== null) {
@@ -1210,6 +1217,10 @@
 
         var currentScope = null;
 
+        // rename arguments to J$_arguments
+        var fromName = 'arguments';
+        var toName = astUtil.JALANGI_VAR+"_arguments";
+
         function handleFun(node) {
             var oldScope = currentScope;
             currentScope = new Scope(currentScope);
@@ -1217,6 +1228,9 @@
             if (node.type === 'FunctionDeclaration') {
                 oldScope.addVar(node.id.name, "defun", node.loc);
                 MAP(node.params, function (param) {
+                    if (param.name === fromName) {         // rename arguments to J$_arguments
+                        param.name = toName;
+                    }
                     currentScope.addVar(param.name, "arg");
                 });
             } else if (node.type === 'FunctionExpression') {
@@ -1224,6 +1238,9 @@
                     currentScope.addVar(node.id.name, "lambda");
                 }
                 MAP(node.params, function (param) {
+                    if (param.name === fromName) {         // rename arguments to J$_arguments
+                        param.name = toName;
+                    }
                     currentScope.addVar(param.name, "arg");
                 });
             }
@@ -1253,7 +1270,26 @@
         var visitorPost = {
             'Program':popScope,
             'FunctionDeclaration':popScope,
-            'FunctionExpression':popScope
+            'FunctionExpression':popScope,
+            'Identifier':function (node, context) {         // rename arguments to J$_arguments
+                if (context === astUtil.CONTEXT.RHS  && node.name === fromName && currentScope.hasOwnVar(toName)) {
+                    node.name = toName;
+                }
+                return node;
+            },
+            "UpdateExpression":function (node) {         // rename arguments to J$_arguments
+                if (node.argument.type === 'Identifier' && node.argument.name === fromName && currentScope.hasOwnVar(toName)) {
+                    node.argument.name = toName;
+                }
+                return node;
+            },
+            "AssignmentExpression":function (node) {         // rename arguments to J$_arguments
+                if (node.left.type === 'Identifier' && node.left.name === fromName && currentScope.hasOwnVar(toName)) {
+                    node.left.name = toName;
+                }
+                return node;
+            }
+
         };
         astUtil.transformAst(ast, visitorPost, visitorPre);
     }

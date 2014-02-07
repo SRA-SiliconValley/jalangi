@@ -65,6 +65,7 @@ var unit_tests = [
     "op_assign",
     "prototype_property",
     "scope_rr",
+    "shadow-arguments-real",
     "switch",
     "switch2",
     "string",

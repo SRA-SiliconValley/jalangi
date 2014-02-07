@@ -751,7 +751,7 @@
                     if ((mode === MODE_REPLAY && scriptCount > 0) || isBrowserReplay) {
                         throw tmp;
                     } else {
-                        console.error(String(tmp));
+                        console.error(tmp.stack);
                     }
                 }
             }

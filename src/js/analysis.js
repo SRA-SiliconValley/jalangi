@@ -1225,7 +1225,12 @@
                                         }
                                     }
                                 }
-                                val[SPECIAL_PROP] = {};
+                                if (val.__proto__ && val.__proto__[SPECIAL_PROP])
+                                    val[SPECIAL_PROP] = Object.create(val.__proto__[SPECIAL_PROP]);
+                                else
+                                    val[SPECIAL_PROP] = {};
+
+//                                val[SPECIAL_PROP] = Object.create(val[SPECIAL_PROP]);
                                 val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
 //                            console.log("oid:"+objectId);
                                 objectId = objectId + 2;
@@ -1286,7 +1291,11 @@
                                 writable:true
                             });
                         }
-                        val[SPECIAL_PROP] = {};
+                        if (val.__proto__ && val.__proto__[SPECIAL_PROP])
+                            val[SPECIAL_PROP] = Object.create(val.__proto__[SPECIAL_PROP]);
+                        else
+                            val[SPECIAL_PROP] = {};
+                        //val[SPECIAL_PROP] = Object.create(val[SPECIAL_PROP]);
                         val[SPECIAL_PROP][SPECIAL_PROP] = id = literalId;
                         literalId = literalId + 2;
                         // changes due to getter or setter method
@@ -1352,7 +1361,10 @@
                                     writable:true
                                 });
                             }
-                            obj[SPECIAL_PROP] = {};
+                            if (obj.__proto__ && obj.__proto__[SPECIAL_PROP])
+                                obj[SPECIAL_PROP] = Object.create(obj.__proto__[SPECIAL_PROP]);
+                            else
+                                obj[SPECIAL_PROP] = {};
                             obj[SPECIAL_PROP][SPECIAL_PROP] = recordedValue;
                             objectMap[recordedValue] = ((obj === replayValue) ? oldReplayValue : obj);
                         }

@@ -705,6 +705,9 @@
             function Rt(iid, val) {
                 returnVal.pop();
                 returnVal.push(val);
+                if (sandbox.analysis && sandbox.analysis.return_) {
+                    val = sandbox.analysis.return_(val);
+                }
                 return val;
             }
 
@@ -715,9 +718,6 @@
                 var ret = returnVal.pop();
                 //returnVal = undefined;
                 exceptionVal = undefined;
-                if (sandbox.analysis && sandbox.analysis.return_) {
-                    ret = sandbox.analysis.return_(ret);
-                }
                 return ret;
             }
 

@@ -47,7 +47,7 @@ function getInstOutputFile(filePath) {
  *     'iidMap': should an IID map file be generated with source locations?  defaults to false
  *     'serialize': should ASTs be serialized? defaults to false
  *     'relative': should we use relative path references to the input file?
- * @return {{ outputFile: string, iidMapFile: string, astJSONFile: string }} output file locations, as appropriate
+ * @return {{ outputFile: string, iidMapFile: string, iidMetadataFile: string }} output file locations, as appropriate
  *          based on the options
  */
 function instrument(inputFileName, options) {
@@ -60,7 +60,7 @@ function instrument(inputFileName, options) {
         inputFileName = path.resolve(inputFileName);
     }
     var outputFileName = getInstOutputFile(options.outputFile);
-    var iidMapFile, astJSONFile;
+    var iidMapFile, iidMetadataFile;
     var inputCode = String(fs.readFileSync(inputFileName));
     if (options.iidMap) {
         esnstrument.openIIDMapFile(temp.dir);
@@ -70,7 +70,7 @@ function instrument(inputFileName, options) {
         wrapProgram: true,
         filename: inputFileName,
         instFileName: outputFileName,
-        serialize: options.serialize
+        metadata: options.serialize
     };
     var instResult = esnstrument.instrumentCode(inputCode, instCodeOptions);
     var instCode = instResult.code;
@@ -79,27 +79,15 @@ function instrument(inputFileName, options) {
         esnstrument.closeIIDMapFile();
     }
     if (options.serialize) {
-        var serializedAST = instResult.serializedAST;
-        var topLevelExprs = instResult.topLevelExprs;
-        if (topLevelExprs) {
-            // update serialized AST table to include top-level expr info
-            topLevelExprs.forEach(function (iid) {
-                var entry = serializedAST[iid];
-                if (!entry) {
-                    entry = {};
-                    serializedAST[iid] = entry;
-                }
-                entry.topLevelExpr = true;
-            });
-        }
+        var metadata = instResult.iidMetadata;
         // TODO choose a better file name here
-        astJSONFile = outputFileName + ".ast.json";
-        fs.writeFileSync(astJSONFile, JSON.stringify(serializedAST, undefined, 2), "utf8");
+        iidMetadataFile = outputFileName + ".ast.json";
+        fs.writeFileSync(iidMetadataFile, JSON.stringify(metadata, undefined, 2), "utf8");
     }
     return {
         outputFile: outputFileName,
         iidMapFile: iidMapFile,
-        astJSONFile: astJSONFile
+        iidMetadataFile: iidMetadataFile
     };
 }
 

@@ -161,25 +161,12 @@ InstrumentJSStream.prototype._flush = function (cb) {
         wrapProgram: true,
         filename: this.origScriptName,
         instFileName: this.instScriptName,
-        serialize: dumpSerializedASTs
+        metadata: dumpSerializedASTs
     };
 	var instResult = esnstrument.instrumentCode(this.data, options);
 	if (dumpSerializedASTs) {
-        // TODO remove code duplication with jalangi.js
-        var serializedAST = instResult.serializedAST;
-        var topLevelExprs = instResult.topLevelExprs;
-        if (topLevelExprs) {
-            // update serialized AST table to include top-level expr info
-            topLevelExprs.forEach(function (iid) {
-                var entry = serializedAST[iid];
-                if (!entry) {
-                    entry = {};
-                    serializedAST[iid] = entry;
-                }
-                entry.topLevelExpr = true;
-            });
-        }
-        fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(serializedAST, undefined, 2), "utf8");
+        var metadata = instResult.iidMetadata;
+        fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(metadata, undefined, 2), "utf8");
 	}
 	this.push(instResult.code);
 	cb();

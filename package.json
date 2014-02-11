@@ -14,7 +14,7 @@
         "argparse": "*",
         "mkdirp": "*",
         "ncp": "*",
-        "rewriting-proxy": "https://github.com/xiemaisi/rewriting-proxy/tarball/old-html5",
+        "rewriting-proxy": "*",
         "mocha": "*",
         "q": "*",
         "temp": "*"

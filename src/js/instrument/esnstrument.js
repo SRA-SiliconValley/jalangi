@@ -1144,8 +1144,7 @@
                         funName === 'U' ||
                         funName === 'C' ||
                         funName === 'C1' ||
-                        funName === 'C2' ||
-                        funName === '_'
+                        funName === 'C2'
                         )) {
                     topLevelExprs.push(node.arguments[0].value);
                 }

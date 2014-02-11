@@ -66,8 +66,8 @@ describe('topLevelExprs', function () {
     it('should handle multi-statement function', function() {
         checkCode("function foo() { fizz(); x = 3+5+baz().f; }", [9,33]);
     });
-//    it('should handle function declared in object literal', function() {
-//        checkCode("var x = { foo: function() { fizz(); x = 3+5+baz().f; } };",  [9,33,53]);
-//    });
+    it('should handle function declared in object literal', function() {
+        checkCode("var x = { foo: function() { fizz(); x = 3+5+baz().f; } };",  [53,9,33]);
+    });
 
 });

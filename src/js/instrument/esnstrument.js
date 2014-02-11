@@ -1121,6 +1121,7 @@
     };
 
     var exprDepth = 0;
+    var exprDepthStack = [];
     var topLevelExprs;
     var visitorIdentifyTopLevelExprPre = {
         "CallExpression":function (node) {
@@ -1150,7 +1151,16 @@
                 }
                 exprDepth++;
             }
+        },
+        "FunctionExpression":function (node, context) {
+            exprDepthStack.push(exprDepth);
+            exprDepth = 0;
+        },
+        "FunctionDeclaration":function (node) {
+            exprDepthStack.push(exprDepth);
+            exprDepth = 0;
         }
+
     };
 
     var visitorIdentifyTopLevelExprPost = {
@@ -1160,6 +1170,14 @@
                 node.callee.object.name === astUtil.JALANGI_VAR) {
                 exprDepth--;
             }
+            return node;
+        },
+        "FunctionExpression":function (node, context) {
+            exprDepth = exprDepthStack.pop();
+            return node;
+        },
+        "FunctionDeclaration":function (node) {
+            exprDepth = exprDepthStack.pop();
             return node;
         }
     };

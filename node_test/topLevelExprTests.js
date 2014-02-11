@@ -79,8 +79,8 @@ describe('topLevelExprs', function () {
     it('should handle function declared in object literal', function() {
         checkCode("var x = { foo: function() { fizz(); x = 3+5+baz().f; } };",  [9,33,53]);
     });
-//    it('should handle function called with object literal', function() {
-//        checkCode("var x = function() {}; x({'0': 1, '1' : 2});",  []);
-//    });
+    it('should handle function called with object literal', function() {
+        checkCode("var x = function() {}; x({'0': 1, '1' : 2});",  [17,37]);
+    });
 
 });

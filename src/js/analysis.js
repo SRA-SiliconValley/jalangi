@@ -328,7 +328,7 @@
             }
 
             function HOP(obj, prop) {
-                return HAS_OWN_PROPERTY_CALL.apply(HAS_OWN_PROPERTY, [obj, prop]);
+                return (prop+""==='__proto__') || HAS_OWN_PROPERTY_CALL.apply(HAS_OWN_PROPERTY, [obj, prop]);
             }
 
 
@@ -582,14 +582,18 @@
                 }
 
                 var base_c = getConcrete(base);
+                if (rrEngine) {
+                    base_c = rrEngine.RR_preG(iid, base, offset);
+                }
+
                 if (sandbox.analysis && sandbox.analysis.getFieldPre) {
                     sandbox.analysis.getFieldPre(iid, base, offset);
                 }
-                var val = base_c[getConcrete(offset)];
+                var val = getConcrete(base)[getConcrete(offset)];
 
 
                 if (rrEngine && !norr) {
-                    val = rrEngine.RR_G(iid, base, offset, val);
+                    val = rrEngine.RR_G(iid, base_c, offset, val);
                 }
                 if (sandbox.analysis && sandbox.analysis.getField) {
                     var tmp_rrEngine = rrEngine;
@@ -1346,11 +1350,15 @@
                                     };
                                 }
                             }
+                            try {
                             if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
                                 Object.defineProperty(obj, SPECIAL_PROP, {
                                     enumerable:false,
                                     writable:true
                                 });
+                            }
+                            } catch(ex) {
+
                             }
                             obj[SPECIAL_PROP] = {};
                             obj[SPECIAL_PROP][SPECIAL_PROP] = recordedValue;
@@ -1440,15 +1448,27 @@
                     frame = evalFrames.pop();
                 };
 
+
+                this.RR_preG = function (iid, base, offset) {
+                    var base_c = getConcrete(base);
+
+                    while(base_c && this.RR_Load(iid,!HOP(base_c, offset),!(base_c[SPECIAL_PROP] && HOP(base_c[SPECIAL_PROP],offset)))) {
+                        base_c = getConcrete(sandbox.G(iid, base_c, '__proto__'));
+                    }
+                    if (!base_c) {
+                        base_c = getConcrete(base);
+                    }
+                    return base_c;
+                };
+
                 /**
                  * getField
                  */
-                this.RR_G = function (iid, base, offset, val) {
-                    var base_c, type;
+                this.RR_G = function (iid, base_c, offset, val) {
+                    var type;
 
                     offset = getConcrete(offset);
                     if (mode === MODE_RECORD) {
-                        base_c = getConcrete(base);
                         if ((type = typeof base_c) === 'string' ||
                             type === 'number' ||
                             type === 'boolean') {
@@ -1480,7 +1500,6 @@
                             return val;
                         } else {
                             val = this.RR_L(iid, val, N_LOG_GETFIELD);
-                            base_c = getConcrete(base);
                             // only add direct object properties
                             if (rec[F_FUNNAME] === N_LOG_GETFIELD_OWN) {
                                 base_c[offset] = val;
@@ -1545,6 +1564,31 @@
                             }
                         } else {
                             ret = trackedFrame[name] = this.RR_L(iid, val, N_LOG_READ);
+                        }
+                    } else {
+                        ret = val;
+                    }
+                    return ret;
+                };
+
+                this.RR_Load = function (iid, val, sval) {
+                    //var ret, trackedVal, trackedFrame, tmp;
+                    var ret;
+
+                    if (mode === MODE_RECORD) {
+                        if (sval === val ||
+                            (val !== val && sval !== sval)) {
+                            seqNo++;
+                            ret = val;
+                        } else {
+                            ret = this.RR_L(iid, val, N_LOG_READ);
+                        }
+                    } else if (mode === MODE_REPLAY) {
+                        if (traceInfo.getCurrent() === undefined) {
+                            traceInfo.next();
+                            ret = val;
+                        } else {
+                            ret = this.RR_L(iid, val, N_LOG_READ);
                         }
                     } else {
                         ret = val;

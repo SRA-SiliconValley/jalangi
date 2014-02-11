@@ -1347,6 +1347,22 @@
         return name.replace(".js", FILESUFFIX1 + ".js")
     }
 
+    function getMetadata(newAst) {
+        var serialized = astUtil.serialize(newAst);
+        if (topLevelExprs) {
+            // update serialized AST table to include top-level expr info
+            topLevelExprs.forEach(function (iid) {
+                var entry = serialized[iid];
+                if (!entry) {
+                    entry = {};
+                    serialized[iid] = entry;
+                }
+                entry.topLevelExpr = true;
+            });
+        }
+        return serialized;
+    }
+
     /**
      * Instruments the provided code.
      *
@@ -1403,20 +1419,7 @@
             }
             var ret = newCode + "\n" + noInstr + "\n";
             if (metadata) {
-                var serialized = astUtil.serialize(newAst);
-                if (topLevelExprs) {
-                    // update serialized AST table to include top-level expr info
-                    topLevelExprs.forEach(function (iid) {
-                        var entry = serialized[iid];
-                        if (!entry) {
-                            entry = {};
-                            serialized[iid] = entry;
-                        }
-                        entry.topLevelExpr = true;
-                    });
-                }
-
-                return { code:ret, iidMetadata: serialized };
+                return { code:ret, iidMetadata: getMetadata(newAst) };
             } else {
                 return {code:ret};
             }
@@ -1435,20 +1438,23 @@
         }
 
 
-        var saveCode = function (code, filename, fileOnly) {
+        var saveCode = function (code, filename, fileOnly, metadata) {
             var n_code = code + "\n" + noInstr + "\n";
             n_code += '\n//@ sourceMappingURL=' + fileOnly + '.map';
             fs.writeFileSync(filename, n_code, "utf8");
+            if (metadata) {
+                fs.writeFileSync(filename + ".ast.json", JSON.stringify(metadata, undefined, 2), "utf8");
+            }
             fs.writeFileSync(COVERAGE_FILE_NAME, JSON.stringify({"covered":0, "branches":condCount / inc * 2, "coverage":[]}), "utf8");
         };
 
 
         openIIDMapFile();
 
-        var serialize = false;
+        var collectMetadata = false;
         i = 2;
-        if (args[i] === "--serialize") {
-            serialize = true;
+        if (args[i] === "--metadata") {
+            collectMetadata = true;
             i++;
         }
         for ( ; i < args.length; i++) {
@@ -1475,7 +1481,11 @@
             var n_code = escodegen.generate(newAst);
 //            console.timeEnd("generate")
 //            console.time("save")
-            saveCode(n_code, instCodeFileName, newFileOnly);
+            if (collectMetadata) {
+                saveCode(n_code, instCodeFileName, newFileOnly, getMetadata(newAst));
+            } else {
+                saveCode(n_code, instCodeFileName, newFileOnly);
+            }
 //            console.timeEnd("save")
         }
         closeIIDMapFile();

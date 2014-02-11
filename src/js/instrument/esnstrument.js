@@ -1129,10 +1129,8 @@
                 node.callee.object.type === 'Identifier' &&
                 node.callee.object.name === astUtil.JALANGI_VAR) {
                 var funName = node.callee.property.name;
-                if (exprDepth === 0 &&
-                    (funName === 'F' ||
-                        funName === 'M' ||
-                        funName === 'A' ||
+                if ((exprDepth === 0 &&
+                    (funName === 'A' ||
                         funName === 'P' ||
                         funName === 'G' ||
                         funName === 'R' ||
@@ -1145,12 +1143,24 @@
                         funName === 'C' ||
                         funName === 'C1' ||
                         funName === 'C2'
-                        )) {
+                        )) ||
+                    (exprDepth === 1 &&
+                        (funName === 'F' ||
+                            funName === 'M'))) {
+                    console.log(node.arguments[0].value);
                     topLevelExprs.push(node.arguments[0].value);
                 }
                 exprDepth++;
+            } else if (node.callee.type === 'CallExpression' &&
+                node.callee.callee.type === 'MemberExpression' &&
+                node.callee.callee.object.type === 'Identifier' &&
+                node.callee.callee.object.name === astUtil.JALANGI_VAR &&
+                (node.callee.callee.property.name === 'F' ||
+                    node.callee.callee.property.name === 'M')) {
+                exprDepth++;
             }
-        },
+        }
+        ,
         "FunctionExpression":function (node, context) {
             exprDepthStack.push(exprDepth);
             exprDepth = 0;
@@ -1168,9 +1178,17 @@
                 node.callee.object.type === 'Identifier' &&
                 node.callee.object.name === astUtil.JALANGI_VAR) {
                 exprDepth--;
+            } else if (node.callee.type === 'CallExpression' &&
+                node.callee.callee.type === 'MemberExpression' &&
+                node.callee.callee.object.type === 'Identifier' &&
+                node.callee.callee.object.name === astUtil.JALANGI_VAR &&
+                (node.callee.callee.property.name === 'F' ||
+                    node.callee.callee.property.name === 'M')) {
+                exprDepth--;
             }
             return node;
-        },
+        }
+        ,
         "FunctionExpression":function (node, context) {
             exprDepth = exprDepthStack.pop();
             return node;
@@ -1503,6 +1521,7 @@
         sandbox.resetIIDCounters = resetIIDCounters;
     }
 }((typeof J$ === 'undefined') ? (typeof exports === 'undefined' ? undefined : exports) : J$));
+
 
 
 //console.log(transformString("var x = 3 * 4;", visitor1));

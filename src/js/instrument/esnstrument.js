@@ -1147,7 +1147,6 @@
                     (exprDepth === 1 &&
                         (funName === 'F' ||
                             funName === 'M'))) {
-                    console.log(node.arguments[0].value);
                     topLevelExprs.push(node.arguments[0].value);
                 }
                 exprDepth++;

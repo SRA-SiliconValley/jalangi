@@ -331,6 +331,30 @@
                 return (prop+""==='__proto__') || HAS_OWN_PROPERTY_CALL.apply(HAS_OWN_PROPERTY, [obj, prop]);
             }
 
+            function hasGetterSetter(obj, prop, isGetter) {
+                if (typeof Object.getOwnPropertyDescriptor !== 'function') {
+                    return true;
+                }
+                while (obj !== null) {
+                    if (typeof obj !== 'object' && typeof obj !== 'function') {
+                        return false;
+                    }
+                    var desc = Object.getOwnPropertyDescriptor(obj, prop);
+                    if (desc !== undefined) {
+                        if (isGetter && typeof desc.get === 'function') {
+                            return true;
+                        }
+                        if (!isGetter && typeof desc.set === 'function') {
+                            return true;
+                        }
+                    } else if (HOP(obj, prop)) {
+                        return false;
+                    }
+                    obj = obj.__proto__;
+                }
+                return false;
+            }
+
 
             function debugPrint(s) {
                 if (DEBUG) {
@@ -476,7 +500,8 @@
             }
 
             function callAsConstructor(Constructor, args) {
-                if (isNative(Constructor)) {
+//                if (isNative(Constructor)) {
+                if (true) {
                     var ret = callAsNativeConstructor(Constructor, args);
                     return ret;
                 } else {
@@ -589,7 +614,7 @@
                 if (sandbox.analysis && sandbox.analysis.getFieldPre) {
                     sandbox.analysis.getFieldPre(iid, base, offset);
                 }
-                var val = getConcrete(base)[getConcrete(offset)];
+                var val = base_c[getConcrete(offset)];
 
 
                 if (rrEngine && !norr) {
@@ -1179,29 +1204,6 @@
                     head.appendChild(script);
                 }
 
-                function isSafeToCallGetOrSet(obj, prop, isGetter) {
-                    if (typeof Object.getOwnPropertyDescriptor !== 'function') {
-                        return false;
-                    }
-                    while (obj !== null) {
-                        if (typeof obj !== 'object' && typeof obj !== 'function') {
-                            return true;
-                        }
-                        var desc = Object.getOwnPropertyDescriptor(obj, prop);
-                        if (desc !== undefined) {
-                            if (isGetter && typeof desc.get === 'function') {
-                                return false;
-                            }
-                            if (!isGetter && typeof desc.set === 'function') {
-                                return false;
-                            }
-                        } else if (HOP(obj, prop)) {
-                            return true;
-                        }
-                        obj = obj.__proto__;
-                    }
-                    return true;
-                }
 
                 function printableValue(val) {
                     var value, typen = getNumericType(val), ret = [];
@@ -1229,7 +1231,7 @@
                                         }
                                     }
                                 }
-                                val[SPECIAL_PROP] = {};
+                                val[SPECIAL_PROP] = Object.create(null);
                                 val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
 //                            console.log("oid:"+objectId);
                                 objectId = objectId + 2;
@@ -1296,7 +1298,7 @@
                         // changes due to getter or setter method
                         for (var offset in val) {
                             if (offset !== SPECIAL_PROP && offset !== SPECIAL_PROP2 && HOP(val, offset)) {
-                                if (isSafeToCallGetOrSet(val, offset, true))
+                                if (!hasGetterSetter(val, offset, true))
                                     val[SPECIAL_PROP][offset] = val[offset];
                             }
                         }
@@ -1360,7 +1362,7 @@
                             } catch(ex) {
 
                             }
-                            obj[SPECIAL_PROP] = {};
+                            obj[SPECIAL_PROP] = Object.create(null);
                             obj[SPECIAL_PROP][SPECIAL_PROP] = recordedValue;
                             objectMap[recordedValue] = ((obj === replayValue) ? oldReplayValue : obj);
                         }
@@ -1450,12 +1452,16 @@
 
 
                 this.RR_preG = function (iid, base, offset) {
-                    var base_c = getConcrete(base);
+                    var base_c = getConcrete(base), tmp;
 
-                    while(base_c && this.RR_Load(iid,!HOP(base_c, offset),!(base_c[SPECIAL_PROP] && HOP(base_c[SPECIAL_PROP],offset)))) {
+                    if (hasGetterSetter(base_c, offset, true)) {
+                        return base_c;
+                    }
+                    while(base_c &&
+                        this.RR_Load(iid, !HOP(base_c, offset), !(base_c[SPECIAL_PROP] && HOP(base_c[SPECIAL_PROP],offset)))) {
                         base_c = getConcrete(sandbox.G(iid, base_c, '__proto__'));
                     }
-                    if (!base_c) {
+                    if (!base_c || tmp) {
                         base_c = getConcrete(base);
                     }
                     return base_c;
@@ -1465,7 +1471,7 @@
                  * getField
                  */
                 this.RR_G = function (iid, base_c, offset, val) {
-                    var type;
+                    var type, tmp;
 
                     offset = getConcrete(offset);
                     if (mode === MODE_RECORD) {
@@ -1476,13 +1482,13 @@
                             return val;
                         } else if (!HOP(base_c, SPECIAL_PROP)) {
                             return this.RR_L(iid, val, N_LOG_GETFIELD);
-                        } else if (base_c[SPECIAL_PROP][offset] === val ||
-                            // TODO what is going on with this condition?
-                            (val !== val && base_c[SPECIAL_PROP][offset] !== base_c[SPECIAL_PROP][offset])) {
+                        } else if ((HOP(base_c[SPECIAL_PROP], offset) && ((tmp=base_c[SPECIAL_PROP][offset]) === val)) ||
+                            // TODO what is going on with this condition? This is isNaN check
+                            (val !== val && tmp !== tmp)) {
                             seqNo++;
                             return val;
                         } else {
-                            if (HOP(base_c, offset) && isSafeToCallGetOrSet(base_c, offset, false)) {
+                            if (HOP(base_c, offset) && !hasGetterSetter(base_c, offset, false)) {
                                 // add the field to the shadow value, so we don't need to log
                                 // future reads.  Only do so if the property is defined directly
                                 // on the object, to avoid incorrectly adding the property to
@@ -1502,7 +1508,8 @@
                             val = this.RR_L(iid, val, N_LOG_GETFIELD);
                             // only add direct object properties
                             if (rec[F_FUNNAME] === N_LOG_GETFIELD_OWN) {
-                                base_c[offset] = val;
+                                // do not store ConcreteValue to __proto__
+                                base_c[offset] = (offset==='__proto__')?getConcrete(val):val;
                             }
                             return val;
                         }

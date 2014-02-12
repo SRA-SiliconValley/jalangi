@@ -163,6 +163,7 @@
                 N_LOG_RETURN = 13,
                 N_LOG_REGEXP_LIT = 14,
                 N_LOG_READ = 17,
+                N_LOG_LOAD = 18,
                 N_LOG_HASH = 19,
                 N_LOG_SPECIAL = 20,
                 N_LOG_STRING_LIT = 21,
@@ -1231,7 +1232,7 @@
                                         }
                                     }
                                 }
-                                val[SPECIAL_PROP] = Object.create(null);
+                                val[SPECIAL_PROP] = {};//Object.create(null);
                                 val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
 //                            console.log("oid:"+objectId);
                                 objectId = objectId + 2;
@@ -1362,7 +1363,7 @@
                             } catch(ex) {
 
                             }
-                            obj[SPECIAL_PROP] = Object.create(null);
+                            obj[SPECIAL_PROP] = {};//Object.create(null);
                             obj[SPECIAL_PROP][SPECIAL_PROP] = recordedValue;
                             objectMap[recordedValue] = ((obj === replayValue) ? oldReplayValue : obj);
                         }
@@ -1453,6 +1454,10 @@
 
                 this.RR_preG = function (iid, base, offset) {
                     var base_c = getConcrete(base), tmp;
+                    var type = typeof base_c;
+                    if (type !== 'object' && type !== 'function') {
+                        return base_c;
+                    }
 
                     if (hasGetterSetter(base_c, offset, true)) {
                         return base_c;
@@ -1461,7 +1466,7 @@
                         this.RR_Load(iid, !HOP(base_c, offset), !(base_c[SPECIAL_PROP] && HOP(base_c[SPECIAL_PROP],offset)))) {
                         base_c = getConcrete(sandbox.G(iid, base_c, '__proto__'));
                     }
-                    if (!base_c || tmp) {
+                    if (!base_c) {
                         base_c = getConcrete(base);
                     }
                     return base_c;
@@ -1482,9 +1487,9 @@
                             return val;
                         } else if (!HOP(base_c, SPECIAL_PROP)) {
                             return this.RR_L(iid, val, N_LOG_GETFIELD);
-                        } else if ((HOP(base_c[SPECIAL_PROP], offset) && ((tmp=base_c[SPECIAL_PROP][offset]) === val)) ||
+                        } else if (HOP(base_c[SPECIAL_PROP], offset) && ((tmp=base_c[SPECIAL_PROP][offset]) === val ||
                             // TODO what is going on with this condition? This is isNaN check
-                            (val !== val && tmp !== tmp)) {
+                            (val !== val && tmp !== tmp))) {
                             seqNo++;
                             return val;
                         } else {
@@ -1588,14 +1593,14 @@
                             seqNo++;
                             ret = val;
                         } else {
-                            ret = this.RR_L(iid, val, N_LOG_READ);
+                            ret = this.RR_L(iid, val, N_LOG_LOAD);
                         }
                     } else if (mode === MODE_REPLAY) {
                         if (traceInfo.getCurrent() === undefined) {
                             traceInfo.next();
                             ret = val;
                         } else {
-                            ret = this.RR_L(iid, val, N_LOG_READ);
+                            ret = this.RR_L(iid, val, N_LOG_LOAD);
                         }
                     } else {
                         ret = val;

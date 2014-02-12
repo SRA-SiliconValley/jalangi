@@ -7,15 +7,16 @@ import operator
 
 print sys.argv[1]
 ins = open( sys.argv[1], "r" )
-array = []
+array = {}
 count = 0
 iids = {}
 for line in ins:
 	record = json.loads(line)
-	if record[2] in iids:
-		iids[record[2]] = iids[record[2]] + 1
+	key = str(record[2])+":"+str(record[4])
+	if key in iids:
+		iids[key] = iids[key] + 1
 	else: 
-		iids[record[2]] = 1
+		iids[key] = 1
 	count = count + 1
 ins.close()
 stats = sorted(iids.iteritems(), key=operator.itemgetter(1), reverse=True)

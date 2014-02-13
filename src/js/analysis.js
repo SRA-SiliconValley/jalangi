@@ -342,7 +342,24 @@
             }
 
             function decodeNaNandInfForJSON(key, value) {
-                return value === "Infinity"  ? Infinity : (value === 'NaN'?NaN:value);
+                if ( value === "Infinity") {
+                    return Infinity;
+                } else if (value === 'NaN') {
+                    return NaN;
+                } else {
+                    return value;
+                }
+            }
+
+            function fixForStringNaN(record) {
+                if (record[F_TYPE] == T_STRING) {
+                    if (record[F_VALUE] !== record[F_VALUE]) {
+                        record[F_VALUE] = 'NaN';
+                    } else if (record[F_VALUE] === Infinity) {
+                        record[F_VALUE] = 'Infinity';
+                    }
+
+                }
             }
 
             function debugPrint(s) {
@@ -1378,7 +1395,7 @@
                     ret[F_IID] = iid;
                     ret[F_FUNNAME] = funName;
                     ret[F_SEQ] = seqNo++;
-                    var line = JSON.stringify(ret /*, encodeNaNandInfForJSON */) + "\n";
+                    var line = JSON.stringify(ret , encodeNaNandInfForJSON ) + "\n";
                     traceWriter.logToFile(line);
                 }
 
@@ -1904,7 +1921,8 @@
                             }
                             traceArray = [];
                             while (!done && (flag = traceFh.hasNextLine()) && i < MAX_SIZE) {
-                                record = JSON.parse(traceFh.nextLine()/*,decodeNaNandInfForJSON*/);
+                                record = JSON.parse(traceFh.nextLine(),decodeNaNandInfForJSON);
+                                fixForStringNaN(record);
                                 traceArray.push(record);
                                 debugPrint(i + ":" + JSON.stringify(record /*, encodeNaNandInfForJSON*/));
                                 frontierIndex++;
@@ -1918,7 +1936,8 @@
                     }
 
                     this.addRecord = function (line) {
-                        var record = JSON.parse(line/*, decodeNaNandInfForJSON*/);
+                        var record = JSON.parse(line, decodeNaNandInfForJSON);
+                        fixForStringNaN(record);
                         traceArray.push(record);
                         debugPrint(JSON.stringify(record /*, encodeNaNandInfForJSON*/));
                         frontierIndex++;

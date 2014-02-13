@@ -28,10 +28,20 @@ var assert = require("assert"),
     esnstrument = require("./../src/js/instrument/esnstrument");
 
 
+function collectTopLevel(instResult) {
+    var result = [];
+    Object.keys(instResult).forEach(function (iid) {
+        if (instResult[iid].topLevelExpr) {
+            result.push(iid);
+        }
+    });
+    return result;
+}
+
 function checkCode(code, expectedTopLevel) {
     esnstrument.resetIIDCounters();
-    var instResult = esnstrument.instrumentCode(code, {wrapProgram: false, serialize: true });
-    var topLevelResult = instResult.topLevelExprs;
+    var instResult = esnstrument.instrumentCode(code, {wrapProgram: false, metadata: true });
+    var topLevelResult = collectTopLevel(instResult.iidMetadata);
     assert.deepEqual(topLevelResult, expectedTopLevel);
 }
 
@@ -66,8 +76,11 @@ describe('topLevelExprs', function () {
     it('should handle multi-statement function', function() {
         checkCode("function foo() { fizz(); x = 3+5+baz().f; }", [9,33]);
     });
-//    it('should handle function declared in object literal', function() {
-//        checkCode("var x = { foo: function() { fizz(); x = 3+5+baz().f; } };",  [9,33,53]);
-//    });
+    it('should handle function declared in object literal', function() {
+        checkCode("var x = { foo: function() { fizz(); x = 3+5+baz().f; } };",  [9,33,53]);
+    });
+    it('should handle function called with object literal', function() {
+        checkCode("var x = function() {}; x({'0': 1, '1' : 2});",  [17,37]);
+    });
 
 });

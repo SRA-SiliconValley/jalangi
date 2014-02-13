@@ -1121,6 +1121,7 @@
     };
 
     var exprDepth = 0;
+    var exprDepthStack = [];
     var topLevelExprs;
     var visitorIdentifyTopLevelExprPre = {
         "CallExpression":function (node) {
@@ -1128,10 +1129,8 @@
                 node.callee.object.type === 'Identifier' &&
                 node.callee.object.name === astUtil.JALANGI_VAR) {
                 var funName = node.callee.property.name;
-                if (exprDepth === 0 &&
-                    (funName === 'F' ||
-                        funName === 'M' ||
-                        funName === 'A' ||
+                if ((exprDepth === 0 &&
+                    (funName === 'A' ||
                         funName === 'P' ||
                         funName === 'G' ||
                         funName === 'R' ||
@@ -1143,14 +1142,33 @@
                         funName === 'U' ||
                         funName === 'C' ||
                         funName === 'C1' ||
-                        funName === 'C2' ||
-                        funName === '_'
-                        )) {
+                        funName === 'C2'
+                        )) ||
+                    (exprDepth === 1 &&
+                        (funName === 'F' ||
+                            funName === 'M'))) {
                     topLevelExprs.push(node.arguments[0].value);
                 }
                 exprDepth++;
+            } else if (node.callee.type === 'CallExpression' &&
+                node.callee.callee.type === 'MemberExpression' &&
+                node.callee.callee.object.type === 'Identifier' &&
+                node.callee.callee.object.name === astUtil.JALANGI_VAR &&
+                (node.callee.callee.property.name === 'F' ||
+                    node.callee.callee.property.name === 'M')) {
+                exprDepth++;
             }
         }
+        ,
+        "FunctionExpression":function (node, context) {
+            exprDepthStack.push(exprDepth);
+            exprDepth = 0;
+        },
+        "FunctionDeclaration":function (node) {
+            exprDepthStack.push(exprDepth);
+            exprDepth = 0;
+        }
+
     };
 
     var visitorIdentifyTopLevelExprPost = {
@@ -1159,7 +1177,23 @@
                 node.callee.object.type === 'Identifier' &&
                 node.callee.object.name === astUtil.JALANGI_VAR) {
                 exprDepth--;
+            } else if (node.callee.type === 'CallExpression' &&
+                node.callee.callee.type === 'MemberExpression' &&
+                node.callee.callee.object.type === 'Identifier' &&
+                node.callee.callee.object.name === astUtil.JALANGI_VAR &&
+                (node.callee.callee.property.name === 'F' ||
+                    node.callee.callee.property.name === 'M')) {
+                exprDepth--;
             }
+            return node;
+        }
+        ,
+        "FunctionExpression":function (node, context) {
+            exprDepth = exprDepthStack.pop();
+            return node;
+        },
+        "FunctionDeclaration":function (node) {
+            exprDepth = exprDepthStack.pop();
             return node;
         }
     };
@@ -1329,6 +1363,22 @@
         return name.replace(".js", FILESUFFIX1 + ".js")
     }
 
+    function getMetadata(newAst) {
+        var serialized = astUtil.serialize(newAst);
+        if (topLevelExprs) {
+            // update serialized AST table to include top-level expr info
+            topLevelExprs.forEach(function (iid) {
+                var entry = serialized[iid];
+                if (!entry) {
+                    entry = {};
+                    serialized[iid] = entry;
+                }
+                entry.topLevelExpr = true;
+            });
+        }
+        return serialized;
+    }
+
     /**
      * Instruments the provided code.
      *
@@ -1344,8 +1394,8 @@
      *                 If not provided, and the filename parameter is provided, defaults to
      *                 filename_jalangi_.js.  We need this filename because it gets written
      *                 into the trace produced by the instrumented code during record
-     'serialize': Should a serialized representation of the AST be provided?
-     * @return {{code:string, serializedAST: string}} an object whose 'code' property is the instrumented code string,
+     'metadata': Should metadata about IIDs be provided (currently serialized ASTs and top-level expressions)?
+     * @return {{code:string, iidMetadata: object}} an object whose 'code' property is the instrumented code string,
      * and whose 'serializedAST' property has a JSON representation of the serialized AST, of the serialize
      * parameter was true
      *
@@ -1355,7 +1405,7 @@
             tryCatchAtTop = options.wrapProgram,
             filename = options.filename,
             instFileName = options.instFileName,
-            serialize = options.serialize;
+            metadata = options.metadata;
 
         if (filename) {
             // this works under the assumption that the app root directory,
@@ -1384,9 +1434,8 @@
                 condCount = oldCondCount;
             }
             var ret = newCode + "\n" + noInstr + "\n";
-            if (serialize) {
-                var serialized = astUtil.serialize(newAst);
-                return { code:ret, serializedAST:serialized, topLevelExprs: topLevelExprs };
+            if (metadata) {
+                return { code:ret, iidMetadata: getMetadata(newAst) };
             } else {
                 return {code:ret};
             }
@@ -1404,27 +1453,27 @@
             return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
         }
 
-        var saveCode = function (code, filename, fileOnly) {
-//            var preFile = path.resolve(__dirname,'analysis.js');
-//            var inputManagerFile = path.resolve(__dirname,'InputManager.js');
-//            var thisFile = path.resolve(__filename);
-//            var inputFile = path.resolve(process.cwd()+"/inputs.js");
 
-//            var n_code = 'if (typeof window ==="undefined") {\n' +
-//                '    require("'+preFile+'");\n' +
-//                '    require("'+inputManagerFile+'");\n' +
-//                '    require("'+thisFile+'");\n' +
-//                '    require("'+inputFile+'");\n' +
-//                '}\n'+
+        var saveCode = function (code, filename, fileOnly, metadata) {
             var n_code = code + "\n" + noInstr + "\n";
             n_code += '\n//@ sourceMappingURL=' + fileOnly + '.map';
             fs.writeFileSync(filename, n_code, "utf8");
+            if (metadata) {
+                fs.writeFileSync(filename + ".ast.json", JSON.stringify(metadata, undefined, 2), "utf8");
+            }
             fs.writeFileSync(COVERAGE_FILE_NAME, JSON.stringify({"covered":0, "branches":condCount / inc * 2, "coverage":[]}), "utf8");
         };
 
 
         openIIDMapFile();
-        for (i = 2; i < args.length; i++) {
+
+        var collectMetadata = false;
+        i = 2;
+        if (args[i] === "--metadata") {
+            collectMetadata = true;
+            i++;
+        }
+        for ( ; i < args.length; i++) {
             var filename = args[i];
             writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
             console.log("Instrumenting " + filename + " ...");
@@ -1434,7 +1483,8 @@
             wrapProgramNode = true;
             instCodeFileName = makeInstCodeFileName(filename);
             writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(), instCodeFileName)) + "\";\n");
-            var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
+            topLevelExprs = [];
+            var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
             //console.log(JSON.stringify(newAst, null, '\t'));
 
             var newFileOnly = path.basename(instCodeFileName);
@@ -1447,7 +1497,11 @@
             var n_code = escodegen.generate(newAst);
 //            console.timeEnd("generate")
 //            console.time("save")
-            saveCode(n_code, instCodeFileName, newFileOnly);
+            if (collectMetadata) {
+                saveCode(n_code, instCodeFileName, newFileOnly, getMetadata(newAst));
+            } else {
+                saveCode(n_code, instCodeFileName, newFileOnly);
+            }
 //            console.timeEnd("save")
         }
         closeIIDMapFile();
@@ -1466,6 +1520,7 @@
         sandbox.resetIIDCounters = resetIIDCounters;
     }
 }((typeof J$ === 'undefined') ? (typeof exports === 'undefined' ? undefined : exports) : J$));
+
 
 
 //console.log(transformString("var x = 3 * 4;", visitor1));

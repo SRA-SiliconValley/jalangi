@@ -1489,7 +1489,7 @@
                         return base_c;
                     }
 
-                    if (hasGetterSetter(base_c, offset, true)) {
+                    if (this.RR_Load(iid, hasGetterSetter(base_c, offset, true), false)) {
                         return base_c;
                     }
                     while(base_c &&

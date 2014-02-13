@@ -138,10 +138,12 @@ def testrr_helper (filee, jalangi, norm_fn, record_fn, instrument_fn=instrument)
     norm = norm_fn(os.path.join(os.pardir,filee + ".js"), jalangi=jalangi)
     with open("jalangi_normal", "w") as normfile:
         normfile.write(norm)
+    print norm
     print "---- Recording execution of {} ----".format(filee)
     rec = record_fn(os.path.join(os.pardir,filee), instrumented_f)
     with open("jalangi_record", "w") as recfile:
         recfile.write(rec)
+    print rec
     print "---- Replaying {} ----".format(filee)
     os.putenv("JALANGI_MODE", "replay")
     os.putenv("JALANGI_ANALYSIS", "none")

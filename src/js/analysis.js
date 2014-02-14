@@ -418,15 +418,31 @@
 
             function printValueForTesting(loc, iid, val) {
                 if (!LOG_ALL_READS_AND_BRANCHES) return;
-                var type = typeof val;
+                var type = typeof val, str;
                 if (type !== 'object' && type !== 'function') {
-                    loadAndBranchLogs.push(loc + ":" + iid + ":" + type + ":" + val);
+                    str = loc + ":" + iid + ":" + type + ":" + val;
+                    if (isBrowser)
+                        loadAndBranchLogs.push(str);
+                    else
+                        console.log(str);
                 } else if (val === null) {
-                    loadAndBranchLogs.push(loc + ":" + iid + ":" + type + ":" + val);
+                    str = loc + ":" + iid + ":" + type + ":" + val;
+                    if (isBrowser)
+                        loadAndBranchLogs.push(str);
+                    else
+                        console.log(str);
                 } else if (HOP(val, SPECIAL_PROP) && HOP(val[SPECIAL_PROP], SPECIAL_PROP)) {
-                    loadAndBranchLogs.push(loc + ":" + iid + ":" + type + ":" + val[SPECIAL_PROP][SPECIAL_PROP]);
+                    str = loc + ":" + iid + ":" + type + ":" + val[SPECIAL_PROP][SPECIAL_PROP];
+                    if (isBrowser)
+                        loadAndBranchLogs.push(str);
+                    else
+                        console.log(str);
                 } else {
-                    loadAndBranchLogs.push(loc + ":" + iid + ":" + type + ":object");
+                    str = loc + ":" + iid + ":" + type + ":object";
+                    if (isBrowser)
+                        loadAndBranchLogs.push(str);
+                    else
+                        console.log(str);
                 }
             }
 
@@ -638,11 +654,11 @@
                 }
 
                 var base_c = getConcrete(base);
-                if (rrEngine) {
-                    base_c = rrEngine.RR_preG(iid, base, offset);
-                }
+//                if (rrEngine) {
+//                    base_c = rrEngine.RR_preG(iid, base, offset);
+//                }
 
-                if (sandbox.analysis && sandbox.analysis.getFieldPre) {
+                if (sandbox.analysis && sandbox.analysis.getFieldPre && getConcrete(offset) !== '__proto__') {
                     sandbox.analysis.getFieldPre(iid, base, offset);
                 }
                 var val = base_c[getConcrete(offset)];
@@ -651,7 +667,7 @@
                 if (rrEngine && !norr) {
                     val = rrEngine.RR_G(iid, base_c, offset, val);
                 }
-                if (sandbox.analysis && sandbox.analysis.getField) {
+                if (sandbox.analysis && sandbox.analysis.getField && getConcrete(offset) !== '__proto__') {
                     var tmp_rrEngine = rrEngine;
                     rrEngine = null;
                     val = sandbox.analysis.getField(iid, base, offset, val);
@@ -1484,19 +1500,25 @@
 
                 this.RR_preG = function (iid, base, offset) {
                     var base_c = getConcrete(base), tmp;
-                    var type = typeof base_c;
-                    if (type !== 'object' && type !== 'function') {
+//                    return base_c;
+                    offset = getConcrete(offset);
+                    if (offset === '__proto__') {
                         return base_c;
                     }
+
+//                    var type = typeof base_c;
+//                    if (type !== 'object' && type !== 'function') {
+//                        return base_c;
+//                    }
 
                     if (this.RR_Load(iid, hasGetterSetter(base_c, offset, true), false)) {
                         return base_c;
                     }
-                    while(base_c &&
+                    while(base_c !== null &&
                         this.RR_Load(iid, !HOP(base_c, offset), !(base_c[SPECIAL_PROP] && HOP(base_c[SPECIAL_PROP],offset)))) {
                         base_c = getConcrete(sandbox.G(iid, base_c, '__proto__'));
                     }
-                    if (!base_c) {
+                    if (base_c===null) {
                         base_c = getConcrete(base);
                     }
                     return base_c;
@@ -1506,9 +1528,10 @@
                  * getField
                  */
                 this.RR_G = function (iid, base_c, offset, val) {
-                    var type, tmp;
+                    var type, tmp, mod_offset;
 
                     offset = getConcrete(offset);
+                    mod_offset = (offset==='__proto__'?SPECIAL_PROP+offset:offset);
                     if (mode === MODE_RECORD) {
                         if ((type = typeof base_c) === 'string' ||
                             type === 'number' ||
@@ -1517,7 +1540,7 @@
                             return val;
                         } else if (!HOP(base_c, SPECIAL_PROP)) {
                             return this.RR_L(iid, val, N_LOG_GETFIELD);
-                        } else if (HOP(base_c[SPECIAL_PROP], offset) && ((tmp=base_c[SPECIAL_PROP][offset]) === val ||
+                        } else if (HOP(base_c[SPECIAL_PROP], mod_offset) && ((tmp=base_c[SPECIAL_PROP][mod_offset]) === val ||
                             // TODO what is going on with this condition? This is isNaN check
                             (val !== val && tmp !== tmp))) {
                             seqNo++;
@@ -1528,7 +1551,7 @@
                                 // future reads.  Only do so if the property is defined directly
                                 // on the object, to avoid incorrectly adding the property to
                                 // the object directly during replay (see test prototype_property.js)
-                                base_c[SPECIAL_PROP][offset] = val;
+                                base_c[SPECIAL_PROP][mod_offset] = val;
                                 return this.RR_L(iid, val, N_LOG_GETFIELD_OWN);
                             }
                             return this.RR_L(iid, val, N_LOG_GETFIELD);

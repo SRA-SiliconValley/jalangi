@@ -60,7 +60,8 @@ tests = [
     "tests/unit/getownpropnames",
     "tests/unit/type_conversion",
     "tests/unit/call_in_finally_2",
-    "tests/unit/JSON_nan_bug"
+    "tests/unit/JSON_nan_bug",
+    "tests/unit/str_proto"
 ]
 
 success = testrunner.run_tests(tests,["testrr"])

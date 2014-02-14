@@ -329,7 +329,7 @@
             }
 
             function HOP(obj, prop) {
-                return (prop+""==='__proto__') || HAS_OWN_PROPERTY_CALL.apply(HAS_OWN_PROPERTY, [obj, prop]);
+                return (prop + "" === '__proto__') || HAS_OWN_PROPERTY_CALL.apply(HAS_OWN_PROPERTY, [obj, prop]);
             }
 
             function hasGetterSetter(obj, prop, isGetter) {
@@ -358,16 +358,16 @@
 
 
             function encodeNaNandInfForJSON(key, value) {
-                    if (value === Infinity) {
-                        return "Infinity";
-                    } else if (value !== value) {
-                        return "NaN";
-                    }
-                    return value;
+                if (value === Infinity) {
+                    return "Infinity";
+                } else if (value !== value) {
+                    return "NaN";
+                }
+                return value;
             }
 
             function decodeNaNandInfForJSON(key, value) {
-                if ( value === "Infinity") {
+                if (value === "Infinity") {
                     return Infinity;
                 } else if (value === 'NaN') {
                     return NaN;
@@ -1229,7 +1229,7 @@
 
                 var objectId = 1;
                 var objectMap = [];
-
+                var createdMockObject = false;
                 /*
                  type enumerations are
                  null is 0
@@ -1280,6 +1280,7 @@
                                 }
                                 val[SPECIAL_PROP] = {};//Object.create(null);
                                 val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
+                                createdMockObject = true;
 //                            console.log("oid:"+objectId);
                                 objectId = objectId + 2;
                             }
@@ -1365,6 +1366,7 @@
                     }
                 }
 
+
                 function syncValue(recordedArray, replayValue, iid) {
                     var oldReplayValue = replayValue, tmp;
                     ;
@@ -1400,17 +1402,18 @@
                                 }
                             }
                             try {
-                            if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
-                                Object.defineProperty(obj, SPECIAL_PROP, {
-                                    enumerable:false,
-                                    writable:true
-                                });
-                            }
-                            } catch(ex) {
+                                if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
+                                    Object.defineProperty(obj, SPECIAL_PROP, {
+                                        enumerable:false,
+                                        writable:true
+                                    });
+                                }
+                            } catch (ex) {
 
                             }
                             obj[SPECIAL_PROP] = {};//Object.create(null);
                             obj[SPECIAL_PROP][SPECIAL_PROP] = recordedValue;
+                            createdMockObject = true;
                             objectMap[recordedValue] = ((obj === replayValue) ? oldReplayValue : obj);
                         }
                         return (obj === replayValue) ? oldReplayValue : obj;
@@ -1422,7 +1425,7 @@
                     ret[F_IID] = iid;
                     ret[F_FUNNAME] = funName;
                     ret[F_SEQ] = seqNo++;
-                    var line = JSON.stringify(ret , encodeNaNandInfForJSON ) + "\n";
+                    var line = JSON.stringify(ret, encodeNaNandInfForJSON) + "\n";
                     traceWriter.logToFile(line);
                 }
 
@@ -1498,9 +1501,20 @@
                 };
 
 
+                this.syncPrototypeChain = function (iid, obj) {
+                    var proto;
+
+                    if ((proto = this.RR_Load(iid, obj.__proto__, undefined)) !== null) {
+                        if (mode === MODE_RECORD) {
+                            obj[SPECIAL_PROP].__proto__ = proto[SPECIAL_PROP];
+                        } else if (mode === MODE_REPLAY) {
+                            obj.__proto__ = getConcrete(proto);
+                        }
+                    }
+                };
+
                 this.RR_preG = function (iid, base, offset) {
                     var base_c = getConcrete(base), tmp;
-//                    return base_c;
                     offset = getConcrete(offset);
                     if (offset === '__proto__') {
                         return base_c;
@@ -1514,11 +1528,11 @@
                     if (this.RR_Load(iid, hasGetterSetter(base_c, offset, true), false)) {
                         return base_c;
                     }
-                    while(base_c !== null &&
-                        this.RR_Load(iid, !HOP(base_c, offset), !(base_c[SPECIAL_PROP] && HOP(base_c[SPECIAL_PROP],offset)))) {
+                    while (base_c !== null &&
+                        this.RR_Load(iid, !HOP(base_c, offset), !(base_c[SPECIAL_PROP] && HOP(base_c[SPECIAL_PROP], offset)))) {
                         base_c = getConcrete(sandbox.G(iid, base_c, '__proto__'));
                     }
-                    if (base_c===null) {
+                    if (base_c === null) {
                         base_c = getConcrete(base);
                     }
                     return base_c;
@@ -1531,7 +1545,7 @@
                     var type, tmp, mod_offset;
 
                     offset = getConcrete(offset);
-                    mod_offset = (offset==='__proto__'?SPECIAL_PROP+offset:offset);
+                    mod_offset = (offset === '__proto__' ? SPECIAL_PROP + offset : offset);
                     if (mode === MODE_RECORD) {
                         if ((type = typeof base_c) === 'string' ||
                             type === 'number' ||
@@ -1540,9 +1554,9 @@
                             return val;
                         } else if (!HOP(base_c, SPECIAL_PROP)) {
                             return this.RR_L(iid, val, N_LOG_GETFIELD);
-                        } else if (HOP(base_c[SPECIAL_PROP], mod_offset) && ((tmp=base_c[SPECIAL_PROP][mod_offset]) === val ||
+                        } else if ((tmp = base_c[SPECIAL_PROP][mod_offset]) === val ||
                             // TODO what is going on with this condition? This is isNaN check
-                            (val !== val && tmp !== tmp))) {
+                            (val !== val && tmp !== tmp)) {
                             seqNo++;
                             return val;
                         } else {
@@ -1567,7 +1581,7 @@
                             // only add direct object properties
                             if (rec[F_FUNNAME] === N_LOG_GETFIELD_OWN) {
                                 // do not store ConcreteValue to __proto__
-                                base_c[offset] = (offset==='__proto__')?getConcrete(val):val;
+                                base_c[offset] = (offset === '__proto__') ? getConcrete(val) : val;
                             }
                             return val;
                         }
@@ -1756,14 +1770,18 @@
                 this.RR_L = function (iid, val, fun) {
                     var ret, tmp;
                     if (mode === MODE_RECORD) {
+                        createdMockObject = false;
                         tmp = printableValue(val);
                         logValue(iid, tmp, fun);
+                        if (createdMockObject) this.syncPrototypeChain(iid, val);
                     } else if (mode === MODE_REPLAY) {
                         ret = traceInfo.getCurrent();
                         checkPath(ret, iid, fun);
                         traceInfo.next();
                         debugPrint("Index:" + traceInfo.getPreviousIndex());
+                        createdMockObject = false;
                         val = syncValue(ret, val, iid);
+                        if (createdMockObject) this.syncPrototypeChain(iid, val);
                     }
                     return val;
                 };
@@ -2000,7 +2018,7 @@
                             }
                             traceArray = [];
                             while (!done && (flag = traceFh.hasNextLine()) && i < MAX_SIZE) {
-                                record = JSON.parse(traceFh.nextLine(),decodeNaNandInfForJSON);
+                                record = JSON.parse(traceFh.nextLine(), decodeNaNandInfForJSON);
                                 fixForStringNaN(record);
                                 traceArray.push(record);
                                 debugPrint(i + ":" + JSON.stringify(record /*, encodeNaNandInfForJSON*/));

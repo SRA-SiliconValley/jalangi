@@ -23,6 +23,7 @@ gettersetter
 gettersetter2
 getownpropnames
 implicit-type
+JSON_nan_bug
 label
 local_inc_dec
 monkeypatch

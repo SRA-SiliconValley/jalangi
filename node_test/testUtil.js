@@ -20,7 +20,7 @@ var assert = require('assert'),
     child_process = require('child_process'),
     jalangi = require('./../src/js/jalangi'),
     procUtil = require('./../src/js/utils/procUtil'),
-    path = require('path');
+    path = require('path'), execSync = require('execSync');
 
 var trackValuesAnalysis = path.resolve("src/js/analyses/trackallvalues/TrackValuesEngine.js");
 
@@ -35,24 +35,28 @@ var testVal = "hello";
  */
 function runTest(script, instScriptFile) {
     // capture normal output
-    var normalProcess = child_process.fork(script, [], {silent: true});
+    var normalProcess = child_process.fork(script, [], {silent:true});
     var normOut, traceFile;
+
     function checkResult(result) {
         assert.equal(normOut, result.stdout);
         assert.equal("", result.stderr);
     }
+
     return procUtil.runChildAndCaptureOutput(normalProcess).then(function (result) {
         normOut = result.stdout;
         checkResult(result);
-        var instResult = jalangi.instrument(script, { outputFile: instScriptFile });
+        var instResult = jalangi.instrument(script, { outputFile:instScriptFile });
         return jalangi.record(instResult.outputFile);
     }).then(function (result) {
             checkResult(result);
             traceFile = result.traceFile;
+            var result = execSync.run("wc -l " + traceFile);
+            //console.log(result.stdout);
             return jalangi.replay(traceFile);
         }).then(function (result) {
             checkResult(result);
-            return jalangi.replay(traceFile,trackValuesAnalysis, testVal);
+            return jalangi.replay(traceFile, trackValuesAnalysis, testVal);
         }).then(function (result) {
             checkResult(result);
             assert.equal(testVal, result.result);

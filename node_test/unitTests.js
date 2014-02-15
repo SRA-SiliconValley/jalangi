@@ -20,7 +20,7 @@
 /*global it */
 
 var testUtil = require('./testUtil');
-
+var fs = require('fs');
 
 // this needs to be inside the tests/unit folder to
 // handle require() calls from test scripts
@@ -28,52 +28,7 @@ var instScriptFile = "tests/unit/instScript_jalangi_.js";
 
 
 
-
-var unit_tests = [
-    "instrument-test",
-    "array_length",
-    "assign",
-    "async_events",
-    "boolean",
-    "call_in_finally",
-    "call_in_finally_2",
-    "call_order1",
-    "cond",
-    "cons_no_arg",
-    "delete",
-    "do_while",
-    "eval_global",
-    "eval_opt",
-    "eval_scope",
-    "exception",
-    "field_inc",
-    "field_read",
-    "for_and_seq",
-    "for_in",
-    "fun_call",
-    "gettersetter",
-    "gettersetter2",
-    "getownpropnames",
-    "implicit-type",
-    "label",
-    "local_inc_dec",
-    "monkeypatch",
-    "method_sub",
-    "null_instr",
-    "object_lit",
-    "object_tracking",
-    "op_assign",
-    "prototype_property",
-    "scope_rr",
-    "shadow-arguments-real",
-    "switch",
-    "switch2",
-    "string",
-    "symbolic",
-    "try_catch_finally_2",
-    "type_conversion",
-    "vars",
-    "while"];
+var unit_tests = String(fs.readFileSync("tests/unit/unitTests.txt")).split('\n');
 
 describe('unit tests', function () {
     this.timeout(600000);

@@ -1504,6 +1504,7 @@
                 this.syncPrototypeChain = function (iid, obj) {
                     var proto;
 
+                    obj = getConcrete(obj);
                     if ((proto = this.RR_Load(iid, obj.__proto__, undefined)) !== null) {
                         if (mode === MODE_RECORD) {
                             obj[SPECIAL_PROP].__proto__ = proto[SPECIAL_PROP];
@@ -1768,20 +1769,24 @@
 
 
                 this.RR_L = function (iid, val, fun) {
-                    var ret, tmp;
+                    var ret, tmp, old;
                     if (mode === MODE_RECORD) {
+                        old = createdMockObject;
                         createdMockObject = false;
                         tmp = printableValue(val);
                         logValue(iid, tmp, fun);
                         if (createdMockObject) this.syncPrototypeChain(iid, val);
+                        createdMockObject = old;
                     } else if (mode === MODE_REPLAY) {
                         ret = traceInfo.getCurrent();
                         checkPath(ret, iid, fun);
                         traceInfo.next();
                         debugPrint("Index:" + traceInfo.getPreviousIndex());
+                        old = createdMockObject;
                         createdMockObject = false;
                         val = syncValue(ret, val, iid);
                         if (createdMockObject) this.syncPrototypeChain(iid, val);
+                        createdMockObject = old;
                     }
                     return val;
                 };

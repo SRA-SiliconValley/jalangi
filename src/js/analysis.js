@@ -1505,11 +1505,13 @@
                     var proto;
 
                     obj = getConcrete(obj);
-                    if ((proto = this.RR_Load(iid, obj.__proto__, undefined)) !== null) {
+                    proto = obj.__proto__;
+                    var oid = this.RR_Load(iid, (proto && HOP(proto,SPECIAL_PROP))?proto[SPECIAL_PROP][SPECIAL_PROP]:undefined, undefined);
+                    if (oid) {
                         if (mode === MODE_RECORD) {
                             obj[SPECIAL_PROP].__proto__ = proto[SPECIAL_PROP];
                         } else if (mode === MODE_REPLAY) {
-                            obj.__proto__ = getConcrete(proto);
+                            obj.__proto__ = getConcrete(objectMap[oid]);
                         }
                     }
                 };

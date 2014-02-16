@@ -22,6 +22,7 @@
 var testUtil = require('./testUtil');
 
 var sunspider = [
+    "crypto-aes",
     "3d-cube",
     "3d-morph",
     "3d-raytrace",
@@ -43,8 +44,7 @@ var sunspider = [
     "string-fasta",
     "string-tagcloud",
     "string-unpack-code",
-    "bitops-nsieve-bits",
-    "crypto-aes"
+    "bitops-nsieve-bits"
 ];
 
 

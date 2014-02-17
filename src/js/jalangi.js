@@ -35,13 +35,39 @@ function getInstOutputFile(filePath) {
         return temp.path({suffix: '.js'});
     }
 }
+
+/**
+ * write IID metadata to file.  We write the output line by line,
+ * as calling JSON.stringify on the entire metadata object can
+ * cause a memory explosion for large inputs.
+ *
+ * @param metadata {Object} the metadata
+ * @param filename {string} output filename
+ */
+function writeMetadataToFile(metadata, filename) {
+    var fd = fs.openSync(filename, 'w');
+    fs.writeSync(fd, "{\n");
+    var iids = Object.keys(metadata);
+    for (var i = 0; i < iids.length; i++) {
+        var iid = iids[i];
+        fs.writeSync(fd, "  \"" + iid + "\": ");
+        var curMetadata = metadata[iid];
+        fs.writeSync(fd, JSON.stringify(curMetadata));
+        if (i < iids.length - 1) {
+            fs.writeSync(fd, ",");
+        }
+        fs.writeSync(fd,"\n");
+    }
+    fs.writeSync(fd, "}\n");
+    fs.closeSync(fd);
+}
 /**
  * Instrument a JavaScript file.
  *
  * Note that the API does yet support instrumenting multiple files that must execute together; for that, use
  * esnstrument.js or instrumentDir.js.
  *
- * @param {string} inputFile the file to be instrumented
+ * @param {string} inputFileName the file to be instrumented
  * @param {{ outputFile: string, iidMap: boolean, serialize: boolean, relative: boolean }} [options] options for instrumentation, including:
  *     'outputFileName': the desired output file for instrumented code.  If not provided, a temp file is used
  *     'iidMap': should an IID map file be generated with source locations?  defaults to false
@@ -82,7 +108,7 @@ function instrument(inputFileName, options) {
         var metadata = instResult.iidMetadata;
         // TODO choose a better file name here
         iidMetadataFile = outputFileName + ".ast.json";
-        fs.writeFileSync(iidMetadataFile, JSON.stringify(metadata, undefined, 2), "utf8");
+        writeMetadataToFile(metadata, iidMetadataFile);
     }
     return {
         outputFile: outputFileName,

@@ -1,13 +1,16 @@
 function F() {
-    this.x = 1;
+    this.x = 0;
 }
 
+F.prototype.bar = function() {
+    this.x=1;
+};
+
 F.prototype.foo = function() {
-    this.x = 2;
+    this.bar();
 };
 
 var x = new F();
-
 x.foo();
 x.foo();
 x.foo();
@@ -31,3 +34,6 @@ x.foo();
 x.foo();
 x.foo();
 x.foo();
+x.foo();
+x.foo();
+console.log("done");

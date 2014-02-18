@@ -22,3 +22,6 @@ with open ("tests/unit/unitTests.txt", "r") as unitsFile:
     if not success:
         exit(1)
 
+success = testrunner.run_tests(tests,["analyze", "-a", "./analyses/trackallvalues/TrackValuesEngine"])
+if not success:
+    exit(1)

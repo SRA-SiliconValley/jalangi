@@ -163,6 +163,7 @@
                 N_LOG_RETURN = 13,
                 N_LOG_REGEXP_LIT = 14,
                 N_LOG_READ = 17,
+                N_LOG_LOAD = 18,
                 N_LOG_HASH = 19,
                 N_LOG_SPECIAL = 20,
                 N_LOG_STRING_LIT = 21,
@@ -328,21 +329,45 @@
             }
 
             function HOP(obj, prop) {
-                return HAS_OWN_PROPERTY_CALL.apply(HAS_OWN_PROPERTY, [obj, prop]);
+                return (prop + "" === '__proto__') || HAS_OWN_PROPERTY_CALL.apply(HAS_OWN_PROPERTY, [obj, prop]);
+            }
+
+            function hasGetterSetter(obj, prop, isGetter) {
+                if (typeof Object.getOwnPropertyDescriptor !== 'function') {
+                    return true;
+                }
+                while (obj !== null) {
+                    if (typeof obj !== 'object' && typeof obj !== 'function') {
+                        return false;
+                    }
+                    var desc = Object.getOwnPropertyDescriptor(obj, prop);
+                    if (desc !== undefined) {
+                        if (isGetter && typeof desc.get === 'function') {
+                            return true;
+                        }
+                        if (!isGetter && typeof desc.set === 'function') {
+                            return true;
+                        }
+                    } else if (HOP(obj, prop)) {
+                        return false;
+                    }
+                    obj = obj.__proto__;
+                }
+                return false;
             }
 
 
             function encodeNaNandInfForJSON(key, value) {
-                    if (value === Infinity) {
-                        return "Infinity";
-                    } else if (value !== value) {
-                        return "NaN";
-                    }
-                    return value;
+                if (value === Infinity) {
+                    return "Infinity";
+                } else if (value !== value) {
+                    return "NaN";
+                }
+                return value;
             }
 
             function decodeNaNandInfForJSON(key, value) {
-                if ( value === "Infinity") {
+                if (value === "Infinity") {
                     return Infinity;
                 } else if (value === 'NaN') {
                     return NaN;
@@ -393,15 +418,31 @@
 
             function printValueForTesting(loc, iid, val) {
                 if (!LOG_ALL_READS_AND_BRANCHES) return;
-                var type = typeof val;
+                var type = typeof val, str;
                 if (type !== 'object' && type !== 'function') {
-                    loadAndBranchLogs.push(loc + ":" + iid + ":" + type + ":" + val);
+                    str = loc + ":" + iid + ":" + type + ":" + val;
+                    if (isBrowser)
+                        loadAndBranchLogs.push(str);
+                    else
+                        console.log(str);
                 } else if (val === null) {
-                    loadAndBranchLogs.push(loc + ":" + iid + ":" + type + ":" + val);
+                    str = loc + ":" + iid + ":" + type + ":" + val;
+                    if (isBrowser)
+                        loadAndBranchLogs.push(str);
+                    else
+                        console.log(str);
                 } else if (HOP(val, SPECIAL_PROP) && HOP(val[SPECIAL_PROP], SPECIAL_PROP)) {
-                    loadAndBranchLogs.push(loc + ":" + iid + ":" + type + ":" + val[SPECIAL_PROP][SPECIAL_PROP]);
+                    str = loc + ":" + iid + ":" + type + ":" + val[SPECIAL_PROP][SPECIAL_PROP];
+                    if (isBrowser)
+                        loadAndBranchLogs.push(str);
+                    else
+                        console.log(str);
                 } else {
-                    loadAndBranchLogs.push(loc + ":" + iid + ":" + type + ":object");
+                    str = loc + ":" + iid + ":" + type + ":object";
+                    if (isBrowser)
+                        loadAndBranchLogs.push(str);
+                    else
+                        console.log(str);
                 }
             }
 
@@ -506,7 +547,8 @@
             }
 
             function callAsConstructor(Constructor, args) {
-                if (isNative(Constructor)) {
+//                if (isNative(Constructor)) {
+                if (true) {
                     var ret = callAsNativeConstructor(Constructor, args);
                     return ret;
                 } else {
@@ -612,16 +654,20 @@
                 }
 
                 var base_c = getConcrete(base);
-                if (sandbox.analysis && sandbox.analysis.getFieldPre) {
+//                if (rrEngine) {
+//                    base_c = rrEngine.RR_preG(iid, base, offset);
+//                }
+
+                if (sandbox.analysis && sandbox.analysis.getFieldPre && getConcrete(offset) !== '__proto__') {
                     sandbox.analysis.getFieldPre(iid, base, offset);
                 }
                 var val = base_c[getConcrete(offset)];
 
 
                 if (rrEngine && !norr) {
-                    val = rrEngine.RR_G(iid, base, offset, val);
+                    val = rrEngine.RR_G(iid, base_c, offset, val);
                 }
-                if (sandbox.analysis && sandbox.analysis.getField) {
+                if (sandbox.analysis && sandbox.analysis.getField && getConcrete(offset) !== '__proto__') {
                     var tmp_rrEngine = rrEngine;
                     rrEngine = null;
                     val = sandbox.analysis.getField(iid, base, offset, val);
@@ -1183,7 +1229,7 @@
 
                 var objectId = 1;
                 var objectMap = [];
-
+                var createdMockObject = false;
                 /*
                  type enumerations are
                  null is 0
@@ -1205,29 +1251,6 @@
                     head.appendChild(script);
                 }
 
-                function isSafeToCallGetOrSet(obj, prop, isGetter) {
-                    if (typeof Object.getOwnPropertyDescriptor !== 'function') {
-                        return false;
-                    }
-                    while (obj !== null) {
-                        if (typeof obj !== 'object' && typeof obj !== 'function') {
-                            return true;
-                        }
-                        var desc = Object.getOwnPropertyDescriptor(obj, prop);
-                        if (desc !== undefined) {
-                            if (isGetter && typeof desc.get === 'function') {
-                                return false;
-                            }
-                            if (!isGetter && typeof desc.set === 'function') {
-                                return false;
-                            }
-                        } else if (HOP(obj, prop)) {
-                            return true;
-                        }
-                        obj = obj.__proto__;
-                    }
-                    return true;
-                }
 
                 function printableValue(val) {
                     var value, typen = getNumericType(val), ret = [];
@@ -1255,8 +1278,9 @@
                                         }
                                     }
                                 }
-                                val[SPECIAL_PROP] = {};
+                                val[SPECIAL_PROP] = {};//Object.create(null);
                                 val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
+                                createdMockObject = true;
 //                            console.log("oid:"+objectId);
                                 objectId = objectId + 2;
                             }
@@ -1322,7 +1346,7 @@
                         // changes due to getter or setter method
                         for (var offset in val) {
                             if (offset !== SPECIAL_PROP && offset !== SPECIAL_PROP2 && HOP(val, offset)) {
-                                if (isSafeToCallGetOrSet(val, offset, true))
+                                if (!hasGetterSetter(val, offset, true))
                                     val[SPECIAL_PROP][offset] = val[offset];
                             }
                         }
@@ -1341,6 +1365,7 @@
                         return recordedValue;
                     }
                 }
+
 
                 function syncValue(recordedArray, replayValue, iid) {
                     var oldReplayValue = replayValue, tmp;
@@ -1376,14 +1401,19 @@
                                     };
                                 }
                             }
-                            if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
-                                Object.defineProperty(obj, SPECIAL_PROP, {
-                                    enumerable:false,
-                                    writable:true
-                                });
+                            try {
+                                if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
+                                    Object.defineProperty(obj, SPECIAL_PROP, {
+                                        enumerable:false,
+                                        writable:true
+                                    });
+                                }
+                            } catch (ex) {
+
                             }
-                            obj[SPECIAL_PROP] = {};
+                            obj[SPECIAL_PROP] = {};//Object.create(null);
                             obj[SPECIAL_PROP][SPECIAL_PROP] = recordedValue;
+                            createdMockObject = true;
                             objectMap[recordedValue] = ((obj === replayValue) ? oldReplayValue : obj);
                         }
                         return (obj === replayValue) ? oldReplayValue : obj;
@@ -1395,7 +1425,7 @@
                     ret[F_IID] = iid;
                     ret[F_FUNNAME] = funName;
                     ret[F_SEQ] = seqNo++;
-                    var line = JSON.stringify(ret , encodeNaNandInfForJSON ) + "\n";
+                    var line = JSON.stringify(ret, encodeNaNandInfForJSON) + "\n";
                     traceWriter.logToFile(line);
                 }
 
@@ -1470,15 +1500,56 @@
                     frame = evalFrames.pop();
                 };
 
+
+                this.syncPrototypeChain = function (iid, obj) {
+                    var proto;
+
+                    obj = getConcrete(obj);
+                    proto = obj.__proto__;
+                    var oid = this.RR_Load(iid, (proto && HOP(proto,SPECIAL_PROP))?proto[SPECIAL_PROP][SPECIAL_PROP]:undefined, undefined);
+                    if (oid) {
+                        if (mode === MODE_RECORD) {
+                            obj[SPECIAL_PROP].__proto__ = proto[SPECIAL_PROP];
+                        } else if (mode === MODE_REPLAY) {
+                            obj.__proto__ = getConcrete(objectMap[oid]);
+                        }
+                    }
+                };
+
+                this.RR_preG = function (iid, base, offset) {
+                    var base_c = getConcrete(base), tmp;
+                    offset = getConcrete(offset);
+                    if (offset === '__proto__') {
+                        return base_c;
+                    }
+
+//                    var type = typeof base_c;
+//                    if (type !== 'object' && type !== 'function') {
+//                        return base_c;
+//                    }
+
+                    if (this.RR_Load(iid, hasGetterSetter(base_c, offset, true), false)) {
+                        return base_c;
+                    }
+                    while (base_c !== null &&
+                        this.RR_Load(iid, !HOP(base_c, offset), !(base_c[SPECIAL_PROP] && HOP(base_c[SPECIAL_PROP], offset)))) {
+                        base_c = getConcrete(sandbox.G(iid, base_c, '__proto__'));
+                    }
+                    if (base_c === null) {
+                        base_c = getConcrete(base);
+                    }
+                    return base_c;
+                };
+
                 /**
                  * getField
                  */
-                this.RR_G = function (iid, base, offset, val) {
-                    var base_c, type;
+                this.RR_G = function (iid, base_c, offset, val) {
+                    var type, tmp, mod_offset;
 
                     offset = getConcrete(offset);
+                    mod_offset = (offset === '__proto__' ? SPECIAL_PROP + offset : offset);
                     if (mode === MODE_RECORD) {
-                        base_c = getConcrete(base);
                         if ((type = typeof base_c) === 'string' ||
                             type === 'number' ||
                             type === 'boolean') {
@@ -1486,18 +1557,18 @@
                             return val;
                         } else if (!HOP(base_c, SPECIAL_PROP)) {
                             return this.RR_L(iid, val, N_LOG_GETFIELD);
-                        } else if (base_c[SPECIAL_PROP][offset] === val ||
-                            // TODO what is going on with this condition?
-                            (val !== val && base_c[SPECIAL_PROP][offset] !== base_c[SPECIAL_PROP][offset])) {
+                        } else if ((tmp = base_c[SPECIAL_PROP][mod_offset]) === val ||
+                            // TODO what is going on with this condition? This is isNaN check
+                            (val !== val && tmp !== tmp)) {
                             seqNo++;
                             return val;
                         } else {
-                            if (HOP(base_c, offset) && isSafeToCallGetOrSet(base_c, offset, false)) {
+                            if (HOP(base_c, offset) && !hasGetterSetter(base_c, offset, false)) {
                                 // add the field to the shadow value, so we don't need to log
                                 // future reads.  Only do so if the property is defined directly
                                 // on the object, to avoid incorrectly adding the property to
                                 // the object directly during replay (see test prototype_property.js)
-                                base_c[SPECIAL_PROP][offset] = val;
+                                base_c[SPECIAL_PROP][mod_offset] = val;
                                 return this.RR_L(iid, val, N_LOG_GETFIELD_OWN);
                             }
                             return this.RR_L(iid, val, N_LOG_GETFIELD);
@@ -1510,10 +1581,10 @@
                             return val;
                         } else {
                             val = this.RR_L(iid, val, N_LOG_GETFIELD);
-                            base_c = getConcrete(base);
                             // only add direct object properties
                             if (rec[F_FUNNAME] === N_LOG_GETFIELD_OWN) {
-                                base_c[offset] = val;
+                                // do not store ConcreteValue to __proto__
+                                base_c[offset] = (offset === '__proto__') ? getConcrete(val) : val;
                             }
                             return val;
                         }
@@ -1575,6 +1646,31 @@
                             }
                         } else {
                             ret = trackedFrame[name] = this.RR_L(iid, val, N_LOG_READ);
+                        }
+                    } else {
+                        ret = val;
+                    }
+                    return ret;
+                };
+
+                this.RR_Load = function (iid, val, sval) {
+                    //var ret, trackedVal, trackedFrame, tmp;
+                    var ret;
+
+                    if (mode === MODE_RECORD) {
+                        if (sval === val ||
+                            (val !== val && sval !== sval)) {
+                            seqNo++;
+                            ret = val;
+                        } else {
+                            ret = this.RR_L(iid, val, N_LOG_LOAD);
+                        }
+                    } else if (mode === MODE_REPLAY) {
+                        if (traceInfo.getCurrent() === undefined) {
+                            traceInfo.next();
+                            ret = val;
+                        } else {
+                            ret = this.RR_L(iid, val, N_LOG_LOAD);
                         }
                     } else {
                         ret = val;
@@ -1675,16 +1771,24 @@
 
 
                 this.RR_L = function (iid, val, fun) {
-                    var ret, tmp;
+                    var ret, tmp, old;
                     if (mode === MODE_RECORD) {
+                        old = createdMockObject;
+                        createdMockObject = false;
                         tmp = printableValue(val);
                         logValue(iid, tmp, fun);
+                        if (createdMockObject) this.syncPrototypeChain(iid, val);
+                        createdMockObject = old;
                     } else if (mode === MODE_REPLAY) {
                         ret = traceInfo.getCurrent();
                         checkPath(ret, iid, fun);
                         traceInfo.next();
                         debugPrint("Index:" + traceInfo.getPreviousIndex());
+                        old = createdMockObject;
+                        createdMockObject = false;
                         val = syncValue(ret, val, iid);
+                        if (createdMockObject) this.syncPrototypeChain(iid, val);
+                        createdMockObject = old;
                     }
                     return val;
                 };
@@ -1921,7 +2025,7 @@
                             }
                             traceArray = [];
                             while (!done && (flag = traceFh.hasNextLine()) && i < MAX_SIZE) {
-                                record = JSON.parse(traceFh.nextLine(),decodeNaNandInfForJSON);
+                                record = JSON.parse(traceFh.nextLine(), decodeNaNandInfForJSON);
                                 fixForStringNaN(record);
                                 traceArray.push(record);
                                 debugPrint(i + ":" + JSON.stringify(record /*, encodeNaNandInfForJSON*/));

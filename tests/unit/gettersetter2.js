@@ -18,15 +18,10 @@ function C() {
 C.prototype = o;
 
 var x = new C();
-console.log("--------------");
 console.log(x.val);
-console.log("--------------");
 x.val = 5;
-console.log("--------------");
 console.log(x.val);
-console.log("--------------");
 console.log(o.val);
-console.log("--------------");
 
 
 var desc = Object.getOwnPropertyDescriptor(x, 'val');

@@ -168,7 +168,12 @@ InstrumentJSStream.prototype._flush = function (cb) {
         var metadata = instResult.iidMetadata;
         fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(metadata, undefined, 2), "utf8");
 	}
-	this.push(instResult.code);
+    if (typeof instResult === 'string') {
+        // this can occur if it's a script we're not supposed to instrument
+        this.push(instResult);
+    } else {
+        this.push(instResult.code);
+    }
 	cb();
 };
 

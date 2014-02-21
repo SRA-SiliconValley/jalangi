@@ -28,6 +28,8 @@ var urlParser = require('url');
 var headerSources = ["src/js/Constants.js",
     "src/js/Config.js",
     "src/js/Globals.js",
+    "src/js/TraceWriter.js",
+    "src/js/TraceReader.js",
     "src/js/RecordReplayEngine.js",
     "src/js/analysis.js",
     "src/js/InputManager.js",
@@ -35,7 +37,7 @@ var headerSources = ["src/js/Constants.js",
     "node_modules/acorn/acorn.js",
     "src/js/utils/astUtil.js",
     "src/js/instrument/esnstrument.js"];
-					
+
 
 /**
  * concatenates required scripts for Jalangi to run in the browser into a single string
@@ -48,32 +50,32 @@ function headerCodeInit(root) {
             src = path.join(root, src);
         }
         headerCode += fs.readFileSync(src);
-    });    
+    });
 }
 
 function getHeaderCode(root) {
     if (!headerCode) {
         headerCodeInit(root);
     }
-	return headerCode;
+    return headerCode;
 }
 
 /**
  * returns an HTML string of <script> tags, one of each header file, with the
  * absolute path of the header file
  */
-function getHeaderCodeAsScriptTags(root,relative) {
+function getHeaderCodeAsScriptTags(root, relative) {
     var ret = "";
     headerSources.forEach(function (src) {
-		if (root) {
-			src = path.join(root,src);
-		}
-		if (relative) {
-			src = path.relative(process.cwd(),src);			
-		} else {
-			src = path.resolve(src);
-		}
-		ret += "<script src=\"" + src + "\"></script>";
+        if (root) {
+            src = path.join(root, src);
+        }
+        if (relative) {
+            src = path.relative(process.cwd(), src);
+        } else {
+            src = path.resolve(src);
+        }
+        ret += "<script src=\"" + src + "\"></script>";
     });
     return ret;
 }
@@ -84,20 +86,20 @@ var inlineRegexp = /#(inline|event-handler|js-url)/;
  * Does the url (obtained from rewriting-proxy) represent an inline script?
  */
 function isInlineScript(url) {
-	return inlineRegexp.test(url);
+    return inlineRegexp.test(url);
 }
 
 /**
  * generate a filename for a script with the given url
  */
 function createFilenameForScript(url) {
-	// TODO make this much more robust
-	var parsed = urlParser.parse(url);
-	if (inlineRegexp.test(url)) {
-		return parsed.hash.substring(1) + ".js";
-	} else {
-		return parsed.pathname.substring(parsed.pathname.lastIndexOf("/")+1);	
-	}
+    // TODO make this much more robust
+    var parsed = urlParser.parse(url);
+    if (inlineRegexp.test(url)) {
+        return parsed.hash.substring(1) + ".js";
+    } else {
+        return parsed.pathname.substring(parsed.pathname.lastIndexOf("/") + 1);
+    }
 }
 
 exports.getHeaderCode = getHeaderCode;

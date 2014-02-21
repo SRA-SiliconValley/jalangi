@@ -9,6 +9,8 @@ if (typeof J$ === 'undefined') {
     Globals.isInstrumentedCaller;
     Globals.isConstructorCall;
     Globals.isBrowserReplay;
+    Globals.traceFileName;
+    Globals.traceWriter;
     Globals.loadAndBranchLogs = [];
 
     if (typeof module !== 'undefined') {

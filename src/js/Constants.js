@@ -2,13 +2,13 @@ if (typeof J$ === 'undefined') {
     J$ = {};
 }
 
-(function (sandbox){
+(function (sandbox) {
     var Constants = sandbox.Constants = {};
 
     Constants.isBrowser = !(typeof exports !== 'undefined' && this.exports !== exports);
 
-    Constants.load = function(lib) {
-        return (typeof sandbox[lib] === 'undefined'? require('./'+lib+'.js'): sandbox[lib]);
+    Constants.load = function (lib) {
+        return (typeof sandbox[lib] === 'undefined' ? require('./' + lib + '.js') : sandbox[lib]);
     };
 
     Constants.IN_MEMORY_TRACE = Constants.isBrowser && (window.__JALANGI_IN_MEMORY_TRACE__);
@@ -31,14 +31,14 @@ if (typeof J$ === 'undefined') {
     Constants.T_NULL = 0
     Constants.T_NUMBER = 1;
     Constants.T_BOOLEAN = 2;
-    Constants.T_STRING = 3;
+    var T_STRING = Constants.T_STRING = 3;
     Constants.T_OBJECT = 4;
     Constants.T_FUNCTION = 5;
     Constants.T_UNDEFINED = 6;
     Constants.T_ARRAY = 7;
 
-    Constants.F_TYPE = 0;
-    Constants.F_VALUE = 1;
+    var F_TYPE = Constants.F_TYPE = 0;
+    var F_VALUE = Constants.F_VALUE = 1;
     Constants.F_IID = 2;
     Constants.F_SEQ = 3;
     Constants.F_FUNNAME = 4;
@@ -68,7 +68,7 @@ if (typeof J$ === 'undefined') {
 
     //-------------------------------------- Constant functions -----------------------------------------------------------
 
-    Constants.getConcrete = function(val) {
+    Constants.getConcrete = function (val) {
         if (sandbox.analysis && sandbox.analysis.getConcrete) {
             return sandbox.analysis.getConcrete(val);
         } else {
@@ -76,7 +76,7 @@ if (typeof J$ === 'undefined') {
         }
     }
 
-    Constants.getSymbolic = function(val) {
+    Constants.getSymbolic = function (val) {
         if (sandbox.analysis && sandbox.analysis.getSymbolic) {
             return sandbox.analysis.getSymbolic(val);
         } else {
@@ -84,11 +84,11 @@ if (typeof J$ === 'undefined') {
         }
     }
 
-    var HOP = Constants.HOP = function(obj, prop) {
+    var HOP = Constants.HOP = function (obj, prop) {
         return (prop + "" === '__proto__') || Constants.HAS_OWN_PROPERTY_CALL.apply(Constants.HAS_OWN_PROPERTY, [obj, prop]);
     }
 
-    Constants.hasGetterSetter = function(obj, prop, isGetter) {
+    Constants.hasGetterSetter = function (obj, prop, isGetter) {
         if (typeof Object.getOwnPropertyDescriptor !== 'function') {
             return true;
         }
@@ -112,23 +112,54 @@ if (typeof J$ === 'undefined') {
         return false;
     }
 
-    Constants.debugPrint = function(s) {
+    Constants.debugPrint = function (s) {
         if (sandbox.Config.DEBUG) {
             console.log("***" + s);
         }
     }
 
-    Constants.warnPrint = function(iid, s) {
+    Constants.warnPrint = function (iid, s) {
         if (sandbox.Config.WARN && iid !== 0) {
             console.log("        at " + iid + " " + s);
         }
     }
 
-    Constants.seriousWarnPrint = function(iid, s) {
+    Constants.seriousWarnPrint = function (iid, s) {
         if (sandbox.Config.SERIOUS_WARN && iid !== 0) {
             console.log("        at " + iid + " Serious " + s);
         }
     }
+
+    Constants.encodeNaNandInfForJSON = function (key, value) {
+        if (value === Infinity) {
+            return "Infinity";
+        } else if (value !== value) {
+            return "NaN";
+        }
+        return value;
+    }
+
+    Constants.decodeNaNandInfForJSON = function (key, value) {
+        if (value === "Infinity") {
+            return Infinity;
+        } else if (value === 'NaN') {
+            return NaN;
+        } else {
+            return value;
+        }
+    }
+
+    Constants.fixForStringNaN = function (record) {
+        if (record[F_TYPE] == T_STRING) {
+            if (record[F_VALUE] !== record[F_VALUE]) {
+                record[F_VALUE] = 'NaN';
+            } else if (record[F_VALUE] === Infinity) {
+                record[F_VALUE] = 'Infinity';
+            }
+
+        }
+    }
+
 
     if (typeof module !== 'undefined') {
         module.exports = Constants;

@@ -25,12 +25,16 @@ var urlParser = require('url');
 /**
  * which source files are required for Jalangi to run in the browser?
  */
-var headerSources = ["src/js/analysis.js", 
-					"src/js/InputManager.js", 
-					"node_modules/escodegen/escodegen.browser.js",
-					"node_modules/acorn/acorn.js",
-					"src/js/utils/astUtil.js",
-					"src/js/instrument/esnstrument.js"];
+var headerSources = ["src/js/Constants.js",
+    "src/js/Config.js",
+    "src/js/Globals.js",
+    "src/js/RecordReplayEngine.js",
+    "src/js/analysis.js",
+    "src/js/InputManager.js",
+    "node_modules/escodegen/escodegen.browser.js",
+    "node_modules/acorn/acorn.js",
+    "src/js/utils/astUtil.js",
+    "src/js/instrument/esnstrument.js"];
 					
 
 /**

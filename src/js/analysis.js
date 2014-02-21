@@ -33,7 +33,7 @@ if (typeof J$ === 'undefined') {
 }
 
 (function (sandbox) {
-    var Constants = (typeof sandbox.Constants === 'undefined'? require('./Constants.js'): sandbox.Constants);
+    var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
     var Globals = Constants.load('Globals');
     var Config = Constants.load('Config');
     var RecordReplayEngine = Constants.load('RecordReplayEngine');
@@ -65,7 +65,6 @@ if (typeof J$ === 'undefined') {
             N_LOG_OPERATION = Constants.N_LOG_OPERATION;
 
 
-
         var mode = Globals.mode = (function (str) {
             switch (str) {
                 case "record" :
@@ -85,10 +84,6 @@ if (typeof J$ === 'undefined') {
         var isBrowserReplay = Globals.isBrowserReplay = Constants.isBrowser && Globals.mode === MODE_REPLAY;
         Globals.isInstrumentedCaller = false;
         Globals.isConstructorCall = false;
-
-
-
-
 
 
         if (Globals.mode === MODE_DIRECT) {
@@ -1031,7 +1026,6 @@ if (typeof J$ === 'undefined') {
             };
 
 
-
             (function (console) {
 
                 console.save = function (data, filename) {
@@ -1058,9 +1052,6 @@ if (typeof J$ === 'undefined') {
                     a.dispatchEvent(e)
                 }
             })(console);
-
-
-
 
 
             sandbox.U = U; // Unary operation
@@ -1092,9 +1083,12 @@ if (typeof J$ === 'undefined') {
             sandbox.Ex = Ex;
 
             sandbox.replay = rrEngine ? rrEngine.RR_replay : undefined;
-            sandbox.onflush = rrEngine ? rrEngine.onflush : function () {};
-            sandbox.record = rrEngine ? rrEngine.record : function () {};
-            sandbox.command = rrEngine ? rrEngine.command : function () {};
+            sandbox.onflush = rrEngine ? rrEngine.onflush : function () {
+            };
+            sandbox.record = rrEngine ? rrEngine.record : function () {
+            };
+            sandbox.command = rrEngine ? rrEngine.command : function () {
+            };
             sandbox.endExecution = endExecution;
             sandbox.addRecord = rrEngine ? rrEngine.addRecord : undefined;
             sandbox.setTraceFileName = rrEngine ? rrEngine.setTraceFileName : undefined;

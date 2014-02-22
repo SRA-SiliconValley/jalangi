@@ -18,7 +18,7 @@ if (typeof J$ === 'undefined') {
         var HOP = Constants.HOP;
 
 
-        var frame = Object.create();
+        var frame = Object.create(null);
         frame[SPECIAL_PROP] = frameId;
         frameId = frameId + 2;
 
@@ -35,7 +35,7 @@ if (typeof J$ === 'undefined') {
                         writable:true
                     });
                 }
-                val[SPECIAL_PROP] = Object.create();
+                val[SPECIAL_PROP] = Object.create(null);
                 val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
                 objectId = objectId + 2;
             }
@@ -92,7 +92,7 @@ if (typeof J$ === 'undefined') {
         };
 
         this.functionEnter = function (val) {
-            frameStack.push(frame = Object.create());
+            frameStack.push(frame = Object.create(null));
             frame[SPECIAL_PROP] = frameId;
             frameId = frameId + 2;
             frame[SPECIAL_PROP3] = val[SPECIAL_PROP3];
@@ -104,7 +104,7 @@ if (typeof J$ === 'undefined') {
         };
 
         this.scriptEnter = function () {
-            frameStack.push(frame = Object.create());
+            frameStack.push(frame = Object.create(null));
             frame[SPECIAL_PROP] = frameId;
             frameId = frameId + 2;
             frame[SPECIAL_PROP3] = frameStack[0];

@@ -199,34 +199,13 @@ You can run origin of null and undefined tracker on a toy example by issuing the
 
 ***
 
-First start a HTTP server by running the following command.  The command starts a simple Python-based HTTP server, running on port 8181 by default.
-
-	python scripts/jalangi.py server &
-
-Then instrument the JavaScript files that you want to analyze.  You also need to modify index.html so that it loads some library files and the instrumented files.
-
-    node src/js/instrument/esnstrument.js tests/tizen/annex/js/annex.js tests/tizen/annex/lib/jquery-1.6.2.js
-
-Finally launch the jalangi server and the html page by running
-
-    killall node
-    python scripts/jalangi.py rrserver http://127.0.0.1:8181/tests/tizen/annex/index_jalangi_.html
-
-You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  To ensure the trace is completely flushed, press `Alt+Shift+T` in the browser, and then close the browser window.  You can run a dynamic analysis on the trace file by issuing the following commands.
-
-    node src/js/commands/replay.js jalangi_trace1 ./analyses/objectalloc/ObjectAllocationTrackerEngine
-
-### Instrument a local web application.
-
-***
-
 Jalangi provides a script for instrumenting a locally-stored web application, by instrumenting all discovered scripts on disk.  Here is how to instrument the annex app using this script.  First, run the `instrumentDir.js` script to instrument the app:
 
     node src/js/commands/instrumentDir.js tests/tizen/annex /tmp
 
 This creates an instrumented copy of annex in `/tmp/annex`.  To see other options for `instrumentDir.js`, run it with the `-h` option.
 
-Then, lauch the Jalangi server and the HTML page by running
+Then, launch the Jalangi server and the HTML page by running
 
     killall node
     python scripts/jalangi.py rrserver file:///tmp/annex/index.html
@@ -278,49 +257,44 @@ Now, you can run a dynamic analysis on the trace file by issuing the following c
 
 ***
 
-    node src/js/instrument/esnstrument.js tests/tizen/calculator/js/jquery-1.7.2.min.js tests/tizen/calculator/js/peg-0.6.2.min.js tests/tizen/calculator/js/calc.js
+    node src/js/commands/instrumentDir.js tests/tizen/calculator /tmp
 
     killall node
-    python scripts/jalangi.py rrserver http://127.0.0.1:8181/tests/tizen/calculator/index_jalangi_.html
+    python scripts/jalangi.py rrserver file:///tmp/calculator/index.html
 
-    node src/js/commands/replay.js jalangi_trace1 ./analyses/likelytype/LikelyTypeInferEngine
+    cp jalangi_trace1 /tmp/calculator
+    node src/js/commands/replay.js /tmp/calculator/jalangi_trace1 ./analyses/likelytype/LikelyTypeInferEngine
 
 ***
 
-    node src/js/instrument/esnstrument.js tests/tizen/go/js/go.js tests/tizen/go/lib/jquery-1.7.1.min.js
-    killall node
-    python scripts/jalangi.py rrserver http://127.0.0.1:8181/tests/tizen/go/index_jalangi_.html
+    node src/js/commands/instrumentDir.js tests/tizen/go /tmp
 
-    node src/js/commands/replay.js jalangi_trace1 ./analyses/likelytype/LikelyTypeInferEngine
+    killall node
+    python scripts/jalangi.py rrserver file:///tmp/go/index.html
+
+    cp jalangi_trace1 /tmp/go
+    node src/js/commands/replay.js /tmp/go/jalangi_trace1 ./analyses/likelytype/LikelyTypeInferEngine
 
 ### In browser analysis of a web application.
 
 ***
 
-First start a HTTP server by running the following command.  The command starts a simple Python based http server.
+Jalangi allows to run an analysis, which does not use ConcolicValue, in a browser.
+Here is how to instrument the annex app with an inbrowser analysis.  First, run the `instrumentDir.js` script to instrument the app:
 
-	python scripts/jalangi.py server &
+    node src/js/commands/instrumentDir.js --analysis analyses/logundefinedread/logUndefinedRead.js tests/tizen/annex /tmp
 
-Then instrument the JavaScript files that you want to analyze.  You also need to modify index.html so that it loads some library files and the instrumented files.
+This creates an instrumented copy of annex in `/tmp/annex`.  To see other options for `instrumentDir.js`, run it with the `-h` option.
 
-    node src/js/instrument/esnstrument.js tests/tizen/annex/js/annex.js tests/tizen/annex/lib/jquery-1.6.2.min.js
+Then, open the HTML page in a browser (tested on Chrome) by running
 
-Finally open the following webpage in Chrome and open the JavaScript console to see a log of all NaN values read during the execution.
+    open file:///tmp/annex/index.html
 
-    open http://127.0.0.1:8181/tests/tizen/annex/index_direct.html
-
-Jalangi runs the analysis described in src/js/analyses/logundefinedread/logUndefinedRead.js.  Note that we have added the following lines in index_direct.html to perform
-the analysis directly in the browser.  In summary, `window.JALANGI_MODE` must be set to 'inbrowser' and J$.analysis must be set to a suitable analysis object. In the
+You can now play the game for sometime.  Try two moves and see the console output.  In the
 in-browser mode, one must not use ConcolicValue to wrap a program value.  However, one could use shadow execution to collect statistics.
-
-    <script>window.JALANGI_MODE='inbrowser'</script>
-    <script src="../../../src/js/analysis.js" type="text/javascript"></script>
-    <script src="../../../src/js/analyses/logundefinedread/logUndefinedRead.js" type="text/javascript"></script>
-    <script src="../../../src/js/InputManager.js" type="text/javascript"></script>
-    <script src="../../../node_modules/escodegen/escodegen.browser.js" type="text/javascript"></script>
-    <script src="../../../node_modules/esprima/esprima.js" type="text/javascript"></script>
-    <script src="../../../src/js/instrument/esnstrument.js" type="text/javascript"></script>
-
+Shadow memory is supported in the "inbrowser" mode.  Shadow memory library can be accessed in an analysis via J$.Globals.smemory.
+ smemory.getShadowObject(obj) returns the shadow object associated with obj if type of obj is "object" or "function".
+ smemory.getShadowFrame(varName) returns the shadow frame that contains the variable named "varName".
 
 
 

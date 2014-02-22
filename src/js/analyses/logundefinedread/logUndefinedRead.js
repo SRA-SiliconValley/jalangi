@@ -16,7 +16,11 @@
 
 // Author: Koushik Sen
 
-(function (module) {
+if (typeof J$ === 'undefined') {
+    J$ = {};
+}
+
+(function (sandbox) {
 
     function LogUndefinedRead() {
 
@@ -130,5 +134,5 @@
         }
     }
 
-    module.analysis = new LogUndefinedRead();
+    sandbox.analysis = new LogUndefinedRead();
 }(J$));

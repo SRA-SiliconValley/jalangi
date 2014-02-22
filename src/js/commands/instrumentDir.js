@@ -142,7 +142,9 @@ HTMLRewriteStream.prototype._flush = function (cb) {
         if (analysis) {
             headerLibs = "<script>" + analysisCode + "</script>" + headerLibs;
         }
-		var newHTML = this.data.slice(0, headIndex+6) + headerLibs + this.data.slice(headIndex+6);
+        headerLibs += "<script src=\"jalangi_sourcemap.js\"></script>";
+
+        var newHTML = this.data.slice(0, headIndex+6) + headerLibs + this.data.slice(headIndex+6);
 		this.push(newHTML);
 	}
 	cb();

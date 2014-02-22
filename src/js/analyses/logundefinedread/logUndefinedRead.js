@@ -58,7 +58,7 @@ if (typeof J$ === 'undefined') {
 
         this.getField = function (iid, base, offset, val) {
             if (val !== val) {
-                console.log("Reading NaN iid:"+iid+" offset:"+offset);
+                console.log("Reading NaN at "+sandbox.iidToLocation(iid)+" offset:"+offset);
             }
             return val;
         }
@@ -73,7 +73,7 @@ if (typeof J$ === 'undefined') {
 
         this.readPre = function (iid, name, val, isGlobal) {
             if (val !== val) {
-                console.log("Reading NaN iid:"+iid+" name:"+name);
+                console.log("Reading NaN at "+sandbox.iidToLocation(iid)+" name:"+name);
             }
         }
 

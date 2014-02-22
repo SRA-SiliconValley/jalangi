@@ -54,6 +54,8 @@ var inMemoryTrace = false;
 
 var copyRuntime = false;
 
+var first_iid = 0;
+
 // directory in which original app sits
 var appDir;
 
@@ -229,7 +231,7 @@ function instDir(dir, outputDir) {
         copyDir = path.join(outputDir, basename);
 	}
 	mkdirp.sync(copyDir);
-	esnstrument.openIIDMapFile(copyDir);
+	esnstrument.openIIDMapFile(copyDir, first_iid);
 	// write an empty 'inputs.js' file here, to make replay happy
 	// TODO make this filename more robust against name collisions
 	fs.writeFileSync(path.join(copyDir, "inputs.js"), "");
@@ -258,6 +260,7 @@ parser.addArgument(['--selenium'], { help: "Insert code so scripts can detect th
 parser.addArgument(['--in_memory_trace'], { help: "Insert code to tell analysis to keep Jalangi trace in memory instead of writing to WebSocket", action:'storeTrue' } );
 parser.addArgument(['--relative'], { help: "Use paths relative to working directory in injected <script> tags", action:'storeTrue' } );
 parser.addArgument(['-c', '--copy_runtime'], { help: "Copy Jalangi runtime files into instrumented app in jalangi_rt sub-directory", action:'storeTrue'});
+parser.addArgument(['--first_iid'], { help: "initial IID to use during instrumentation"});
 parser.addArgument(['inputDir'], { help: "directory containing files to instrument"});
 parser.addArgument(['outputDir'], { help: "directory in which to create instrumented copy"});
 
@@ -291,6 +294,10 @@ if (args.instrumentInline) {
 
 if (args.copy_runtime) {
     copyRuntime = args.copy_runtime;
+}
+
+if (args.first_iid) {
+    first_iid = parseInt(args.first_iid);
 }
 
 

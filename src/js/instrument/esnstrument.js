@@ -224,14 +224,17 @@
     var iid;
     var opIid;
 
-    function resetIIDCounters() {
-        condCount = 0+inc;
-        iid = 1+inc;
-        opIid = 2+inc;
+    function resetIIDCounters(initialIID) {
+        if (!initialIID) {
+            initialIID = 0;
+        }
+        condCount = initialIID+inc;
+        iid = initialIID+inc+1;
+        opIid = initialIID+inc+2;
     }
 
     // initial reset
-    resetIIDCounters();
+    resetIIDCounters(0);
 
 
     function getIid() {
@@ -268,13 +271,19 @@
     /**
      * if not yet open, open the IID map file and write the header.
      * @param {string} outputDir an optional output directory for the sourcemap file
+     * @param {number?} first_iid if specified, the first IID to use
      */
-    function openIIDMapFile(outputDir) {
+    function openIIDMapFile(outputDir, first_iid) {
         if (traceWfh === undefined) {
             fs = require('fs');
             var smapFile = outputDir ? (require('path').join(outputDir, SMAP_FILE_NAME)) : SMAP_FILE_NAME;
             traceWfh = fs.openSync(smapFile, 'w');
             writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var orig2Inst = sandbox.orig2Inst = {}; var filename;\n");
+            if (first_iid) {
+                // round down to nearest multiple of 4
+                var initialIID = first_iid - (first_iid%4);
+                resetIIDCounters(initialIID);
+            }
         }
     }
 

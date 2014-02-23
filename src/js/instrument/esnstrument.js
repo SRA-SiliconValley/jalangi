@@ -519,8 +519,9 @@
 
     function wrapEvalArg(ast) {
         var ret = replaceInExpr(
-            instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false}).code",
-            ast
+            instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false}," + RP +"2).code",
+            ast,
+            getIid()
         );
         transferLoc(ret, ast);
         return ret;
@@ -1409,7 +1410,7 @@
      * parameter was true
      *
      */
-    function instrumentCode(code, options) {
+    function instrumentCode(code, options, iid) {
         var oldCondCount,
             tryCatchAtTop = options.wrapProgram,
             filename = options.filename,
@@ -1425,28 +1426,35 @@
             instCodeFileName = instFileName ? instFileName : makeInstCodeFileName(filename);
             writeLineToIIDMap("orig2Inst[filename] = \"" + instCodeFileName + "\";\n");
         }
-        if (typeof  code === "string" && code.indexOf(noInstr) < 0) {
-            if (!tryCatchAtTop) {
-                // this means we are inside an eval
-                // set to 3 so condition ids inside eval'd code won't conflict
-                // with containing script          
-                // TODO what about multiple levels of nested evals?
-                oldCondCount = condCount;
-                condCount = 3;
+        if (typeof  code === "string"){
+            if (iid && sandbox.analysis && sandbox.analysis.instrumentCode) {
+                code = sandbox.analysis.instrumentCode(iid, code);
             }
-            wrapProgramNode = tryCatchAtTop;
-            topLevelExprs = [];
-            var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
-            var newCode = escodegen.generate(newAst);
+            if (code.indexOf(noInstr) < 0) {
+                if (!tryCatchAtTop) {
+                    // this means we are inside an eval
+                    // set to 3 so condition ids inside eval'd code won't conflict
+                    // with containing script
+                    // TODO what about multiple levels of nested evals?
+                    oldCondCount = condCount;
+                    condCount = 3;
+                }
+                wrapProgramNode = tryCatchAtTop;
+                topLevelExprs = [];
+                var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
+                var newCode = escodegen.generate(newAst);
 
-            if (!tryCatchAtTop) {
-                condCount = oldCondCount;
-            }
-            var ret = newCode + "\n" + noInstr + "\n";
-            if (metadata) {
-                return { code:ret, iidMetadata: getMetadata(newAst) };
+                if (!tryCatchAtTop) {
+                    condCount = oldCondCount;
+                }
+                var ret = newCode + "\n" + noInstr + "\n";
+                if (metadata) {
+                    return { code:ret, iidMetadata: getMetadata(newAst) };
+                } else {
+                    return {code:ret};
+                }
             } else {
-                return {code:ret};
+                return code;
             }
         } else {
             return code;

@@ -28,7 +28,7 @@ if (typeof J$ === 'undefined') {
 
         function createShadowObject(val) {
             var type = typeof val;
-            if ((type === 'object' || type === 'function') && !HOP(val, SPECIAL_PROP)) {
+            if ((type === 'object' || type === 'function') && val !== null && !HOP(val, SPECIAL_PROP)) {
                 if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
                     Object.defineProperty(val, SPECIAL_PROP, {
                         enumerable:false,
@@ -45,7 +45,8 @@ if (typeof J$ === 'undefined') {
         this.getShadowObject = function (val) {
             var value;
             createShadowObject(val);
-            if (HOP(val, SPECIAL_PROP)) {
+            var type = typeof val;
+            if ((type === 'object' || type === 'function') && val !== null && HOP(val, SPECIAL_PROP)) {
                 value = val[SPECIAL_PROP];
             } else {
                 value = undefined;

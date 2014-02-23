@@ -62,6 +62,8 @@ var appDir;
 // directory to which app is being copied
 var copyDir;
 
+var analysis;
+
 function createOrigScriptFilename(name) {
 	return name.replace(".js", "_orig_.js");
 }
@@ -108,6 +110,9 @@ var inMemoryTraceCode = "window.__JALANGI_IN_MEMORY_TRACE__ = true;";
 
 var jalangiRuntimeDir = "jalangiRuntime";
 
+var analysisCode = "window.JALANGI_MODE = \"inbrowser\"";
+
+
 HTMLRewriteStream.prototype._flush = function (cb) {
     function getContainedRuntimeScriptTags() {
         var result = "";
@@ -128,7 +133,7 @@ HTMLRewriteStream.prototype._flush = function (cb) {
         if (copyRuntime) {
             headerLibs = getContainedRuntimeScriptTags();
         } else {
-            headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot,relative);
+            headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot,relative,analysis);
         }
 		if (selenium) {
             headerLibs = "<script>" + seleniumCode + "</script>" + headerLibs;
@@ -136,7 +141,12 @@ HTMLRewriteStream.prototype._flush = function (cb) {
         if (inMemoryTrace) {
             headerLibs = "<script>" + inMemoryTraceCode + "</script>" + headerLibs;
         }
-		var newHTML = this.data.slice(0, headIndex+6) + headerLibs + this.data.slice(headIndex+6);
+        if (analysis) {
+            headerLibs = "<script>" + analysisCode + "</script>" + headerLibs;
+        }
+        headerLibs += "<script src=\"jalangi_sourcemap.js\"></script>";
+
+        var newHTML = this.data.slice(0, headIndex+6) + headerLibs + this.data.slice(headIndex+6);
 		this.push(newHTML);
 	}
 	cb();
@@ -255,6 +265,7 @@ parser.addArgument(['-x', '--exclude'], { help: "do not instrument any scripts w
 // TODO add back this option once we've fixed the relevant HTML parsing code
 parser.addArgument(['-i', '--instrumentInline'], { help: "instrument inline scripts", action:'storeTrue'});
 parser.addArgument(['--jalangi_root'], { help: "Jalangi root directory, if not working directory" } );
+parser.addArgument(['--analysis'], { help: "Analysis script for 'inbrowser' mode" } );
 parser.addArgument(['-d', '--direct_in_output'], { help: "Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' } );
 parser.addArgument(['--selenium'], { help: "Insert code so scripts can detect they are running under Selenium.  Also keeps Jalangi trace in memory", action:'storeTrue' } );
 parser.addArgument(['--in_memory_trace'], { help: "Insert code to tell analysis to keep Jalangi trace in memory instead of writing to WebSocket", action:'storeTrue' } );
@@ -290,6 +301,10 @@ if (args.relative) {
 }
 if (args.instrumentInline) {
 	instrumentInline = args.instrumentInline;
+}
+
+if (args.analysis) {
+    analysis = args.analysis;
 }
 
 if (args.copy_runtime) {

@@ -19,6 +19,9 @@
 
 /*
  To perform analysis in browser without recording, set window.JALANGI_MODE to 'inbrowser' and J$.analysis to a suitable analysis file.
+ In the inbrowser mode, one has access to the object J$.Globals.smemory, which denotes the shadow memory.
+ smemory.getShadowObject(obj) returns the shadow object associated with obj if type of obj is "object" or "function".
+ smemory.getShadowFrame(varName) returns the shadow frame that contains the variable named "varName".
  To redefine all instrumentation functions, set JALANGI_MODE to 'symbolic' and J$.analysis to a suitable library containing redefinitions of W, R, etc.
 
  */
@@ -36,6 +39,7 @@ if (typeof J$ === 'undefined') {
     var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
     var Globals = Constants.load('Globals');
     var Config = Constants.load('Config');
+    var SMemory = Constants.load('SMemory');
     var RecordReplayEngine = Constants.load('RecordReplayEngine');
 
 //    var Globals = (typeof sandbox.Globals === 'undefined'? require('./Globals.js'): sandbox.Globals);
@@ -134,6 +138,7 @@ if (typeof J$ === 'undefined') {
             var executionIndex;
             var branchCoverageInfo;
             var analysis;
+            var smemory;
 
 
             executionIndex = new ExecutionIndex();
@@ -144,6 +149,8 @@ if (typeof J$ === 'undefined') {
             }
             if (mode === MODE_RECORD || mode === MODE_REPLAY) {
                 rrEngine = new RecordReplayEngine();
+            } else if (mode === MODE_NO_RR) {
+                Globals.smemory = smemory = new SMemory();
             }
 
 
@@ -367,12 +374,16 @@ if (typeof J$ === 'undefined') {
             function invokeEval(base, f, args) {
                 if (rrEngine) {
                     rrEngine.RR_evalBegin();
+                } else if (smemory) {
+                    smemory.evalBegin();
                 }
                 try {
                     return f(sandbox.instrumentCode(getConcrete(args[0]), {wrapProgram:false}).code);
                 } finally {
                     if (rrEngine) {
                         rrEngine.RR_evalEnd();
+                    } else if (smemory) {
+                        smemory.evalEnd();
                     }
                 }
             }
@@ -543,6 +554,8 @@ if (typeof J$ === 'undefined') {
                 executionIndex.executionIndexCall();
                 if (rrEngine) {
                     rrEngine.RR_Fe(iid, val, dis);
+                } else if (smemory) {
+                    smemory.functionEnter(val);
                 }
                 returnVal.push(undefined);
                 exceptionVal = undefined;
@@ -560,6 +573,8 @@ if (typeof J$ === 'undefined') {
                 executionIndex.executionIndexReturn();
                 if (rrEngine) {
                     rrEngine.RR_Fr(iid);
+                } else if (smemory) {
+                    smemory.functionReturn();
                 }
                 if (sandbox.analysis && sandbox.analysis.functionExit) {
                     ret = sandbox.analysis.functionExit(iid);
@@ -604,6 +619,8 @@ if (typeof J$ === 'undefined') {
                 scriptCount++;
                 if (rrEngine) {
                     rrEngine.RR_Se(iid, val);
+                } else if (smemory) {
+                    smemory.scriptEnter();
                 }
                 if (sandbox.analysis && sandbox.analysis.scriptEnter) {
                     sandbox.analysis.scriptEnter(iid, val);
@@ -616,6 +633,8 @@ if (typeof J$ === 'undefined') {
                 scriptCount--;
                 if (rrEngine) {
                     rrEngine.RR_Sr(iid);
+                } else if (smemory) {
+                    smemory.scriptReturn();
                 }
                 if (sandbox.analysis && sandbox.analysis.scriptExit) {
                     sandbox.analysis.scriptExit(iid);
@@ -647,6 +666,8 @@ if (typeof J$ === 'undefined') {
                 }
                 if (rrEngine) {
                     rrEngine.RR_T(iid, val, type);
+                } else if (smemory) {
+                    smemory.defineFunction(val, type);
                 }
                 if (type === N_LOG_FUNCTION_LIT) {
                     if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
@@ -715,6 +736,8 @@ if (typeof J$ === 'undefined') {
             function N(iid, name, val, isArgumentSync) {
                 if (rrEngine) {
                     rrEngine.RR_N(iid, name, val, isArgumentSync);
+                } else if (smemory) {
+                    smemory.initialize(name);
                 }
                 if (sandbox.analysis && sandbox.analysis.declare) {
                     sandbox.analysis.declare(iid, name, val, isArgumentSync);

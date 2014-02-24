@@ -35,6 +35,7 @@ op_assign
 prototype_property
 scope_rr
 shadow-arguments-real
+str_proto
 switch
 switch2
 string

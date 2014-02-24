@@ -166,6 +166,27 @@ if (typeof J$ === 'undefined') {
                 }
             }
 
+            function concretize(obj) {
+                for(var key in obj) {
+                    if (HOP(obj, key)) {
+                        obj[key] = getConcrete(obj[key]);
+                    }
+                }
+            }
+
+            function modelDefineProperty(f) {
+                return function () {
+                    var len = arguments.length;
+                    for (var i = 0; i < len; i++) {
+                        arguments[i] = getConcrete(arguments[i]);
+                    }
+                    if (len===3) {
+                        concretize(arguments[2]);
+                    }
+                    return f.apply(getConcrete(this), arguments);
+                }
+            }
+
             function getSymbolicFunctionToInvokeAndLog(f, isConstructor) {
                 if (f === Array ||
                     f === Error ||
@@ -178,7 +199,6 @@ if (typeof J$ === 'undefined') {
                     return [f, true];
                 } else if (//f === Function.prototype.apply ||
                 //f === Function.prototype.call ||
-                    f === Object.defineProperty ||
                         f === console.log ||
                         (typeof getConcrete(arguments[0]) === 'string' && f === RegExp.prototype.test) || // fixes bug in minPathDev.js
                         f === String.prototype.indexOf ||
@@ -208,6 +228,8 @@ if (typeof J$ === 'undefined') {
                         f === Math.tan ||
                         f === parseInt) {
                     return  [create_fun(f), false];
+                } else if (f === Object.defineProperty) {
+                    return [modelDefineProperty(f), false];
                 }
                 return [null, true];
             }

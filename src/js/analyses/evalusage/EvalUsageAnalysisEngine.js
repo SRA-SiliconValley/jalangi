@@ -63,6 +63,11 @@
             return code;
         };
 
+        function isUnnecessaryEval(objectInfo) {
+            return (objectInfo.variants < THRESHOLD && (objectInfo.count / objectInfo.variants) > 1.0)
+
+        }
+
         this.endExecution = function () {
             var stats = [];
             var jsons = []
@@ -77,15 +82,7 @@
                 }
             }
             stats.sort(function (a, b) {
-                if (a.variants < THRESHOLD && b.variants < THRESHOLD) {
                     return b.count - a.count;
-                } else if (a.variants < THRESHOLD) {
-                    return -1;
-                } else if (b.variants < THRESHOLD) {
-                    return 1;
-                } else {
-                    return b.count - a.count;
-                }
             });
 
             jsons.sort(function (a, b) {
@@ -104,12 +101,23 @@
             len = stats.length;
             for (i = 0; i < len; i++) {
                 objectInfo = stats[i];
-                location = objectInfo.location;
-                str = "eval at "+location+" is called "+objectInfo.count+" times with "+
-                    objectInfo.variants+" code string variants:\n    "+JSON.stringify(objectInfo.codes);
-                console.log(str);
+                if (isUnnecessaryEval(objectInfo)) {
+                    location = objectInfo.location;
+                    str = "can eliminate eval at "+location+" is called "+objectInfo.count+" times with "+
+                        objectInfo.variants+" code string variants:\n    "+JSON.stringify(objectInfo.codes);
+                    console.log(str);
+                }
             }
 
+            for (i = 0; i < len; i++) {
+                objectInfo = stats[i];
+                if (!isUnnecessaryEval(objectInfo)) {
+                    location = objectInfo.location;
+                    str = "eval at "+location+" is called "+objectInfo.count+" times with "+
+                        objectInfo.variants+" code string variants:\n    "+JSON.stringify(objectInfo.codes);
+                    console.log(str);
+                }
+            }
         };
 
     }

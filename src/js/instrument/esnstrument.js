@@ -518,6 +518,7 @@
     }
 
     function wrapEvalArg(ast) {
+        printIidToLoc(ast);
         var ret = replaceInExpr(
             instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false}," + RP +"2).code",
             ast,

@@ -100,7 +100,7 @@ def get_regression_msgs_and_trace(capture_errors,exercise_fn=None):
 def record(script,jalangi=util.DEFAULT_INSTALL):
     dummy_filename = os.path.join(tempfile.gettempdir(),"dummy.html")
     runtime = [os.path.join(jalangi.get_home(),s) for s in util.RUNTIME_SCRIPTS]
-    inline_selenium_flag = "window.__JALANGI_SELENIUM__ = true;"
-    util.gen_wrapper_html_file(runtime + [script],dummy_filename,on_error_handler_code + inline_selenium_flag) 
+    in_memory_trace_code = "window.__JALANGI_IN_MEMORY_TRACE__ = true;"
+    util.gen_wrapper_html_file(runtime + [script],dummy_filename,on_error_handler_code + in_memory_trace_code)
     return run_html_in_selenium(dummy_filename,get_regression_msgs_and_trace(True))
 

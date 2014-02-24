@@ -34,7 +34,11 @@
             if (val_s){
                 return val;
             } else {
-                return new ConcolicValue(val, (str?str:"")+" initialized at "+getIIDInfo(iid));
+                if (typeof val !== 'function') {
+                    return new ConcolicValue(val, (str?str:"")+" initialized at "+getIIDInfo(iid));
+                } else {
+                    return val;
+                }
             }
         }
 
@@ -47,11 +51,7 @@
         };
 
         this.literal = function(iid, val) {
-            if (typeof val !== 'function') {
                 return annotateValue(val, iid);
-            } else {
-                return val;
-            }
         };
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {

@@ -35,9 +35,13 @@ if (typeof J$ === 'undefined') {
                         writable:true
                     });
                 }
-                val[SPECIAL_PROP] = Object.create(null);
-                val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
-                objectId = objectId + 2;
+                try {
+                    val[SPECIAL_PROP] = Object.create(null);
+                    val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
+                    objectId = objectId + 2;
+                } catch(e) {
+                    // cannot attach special field in some DOM Objects.  So ignore them.
+                }
             }
 
         }

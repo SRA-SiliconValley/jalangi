@@ -302,3 +302,8 @@ The following shows how to run the object allocation tracker analysis on the ann
     node src/js/commands/instrumentDir.js --analysis analyses/objectalloc/ObjectAllocationTrackerEngineIB.js tests/tizen/annex /tmp
     open file:///tmp/annex/index.html
 
+The following shows how to run the likely type inference analysis on the annex game:
+
+    node src/js/commands/instrumentDir.js --analysis analyses/likelytype/LikelyTypeInferEngineIB.js tests/tizen/annex /tmp
+    open file:///tmp/annex/index.html
+

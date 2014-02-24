@@ -131,6 +131,10 @@
 
         this.scriptExit = function (iid) {
         }
+
+        this.instrumentCode = function(iid, code) {
+            return code;
+        }
     }
 
     module.exports = NOPEngine;

@@ -27,6 +27,6 @@ describe('instrument tests', function () {
         var testFile = "tests/unit/instrument-test.js";
         var instResult = jalangi.instrument(testFile, {iidMap: true, relative: true});
         var iidMap = String(fs.readFileSync(instResult.iidMapFile));
-        assert.equal("filename = \"tests/unit/instrument-test.js\";", iidMap.split('\n')[1]);
+        assert.equal("iids[4] = [\"tests/unit/instrument-test.js\",23,9];", iidMap.split('\n')[1]);
     });
 });

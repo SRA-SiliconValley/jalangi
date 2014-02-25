@@ -264,7 +264,7 @@
     // TODO reset this state in openIIDMapFile or its equivalent?
     var curFileName = null;
     var orig2Inst = {};
-    var iidSourceInfo = [];
+    var iidSourceInfo = {};
 
     function writeLineToIIDMap(str) {
         if (traceWfh) {
@@ -272,6 +272,8 @@
         }
     }
 
+    /** @type {string} */
+    var smapFile = null;
     /**
      * if not yet open, open the IID map file and write the header.
      * @param {string} outputDir an optional output directory for the sourcemap file
@@ -280,7 +282,7 @@
     function openIIDMapFile(outputDir, first_iid) {
         if (traceWfh === undefined) {
             fs = require('fs');
-            var smapFile = outputDir ? (require('path').join(outputDir, SMAP_FILE_NAME)) : SMAP_FILE_NAME;
+            smapFile = outputDir ? (require('path').join(outputDir, SMAP_FILE_NAME)) : SMAP_FILE_NAME;
             traceWfh = fs.openSync(smapFile, 'w');
             writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var orig2Inst = sandbox.orig2Inst = {}; var filename;\n");
             if (first_iid) {
@@ -297,7 +299,8 @@
     function closeIIDMapFile() {
         if (traceWfh) {
             // write all the data
-            iidSourceInfo.forEach(function (sourceInfo, iid) {
+            Object.keys(iidSourceInfo).forEach(function (iid) {
+                var sourceInfo = iidSourceInfo[iid];
                 writeLineToIIDMap("iids[" + iid + "] = [\"" + sourceInfo[0] + "\"," + sourceInfo[1] + "," + sourceInfo[2] + "];\n");
             });
             Object.keys(orig2Inst).forEach(function (filename) {
@@ -305,7 +308,12 @@
             });
             writeLineToIIDMap("}(typeof " + astUtil.JALANGI_VAR + " === 'undefined'? " + astUtil.JALANGI_VAR + " = {}:" + astUtil.JALANGI_VAR + "));\n");
             fs.closeSync(traceWfh);
+            // also write output as JSON, to make consumption easier
+            var jsonFile = smapFile.replace('.js','.json');
+            var outputObj = [iidSourceInfo,orig2Inst];
+            fs.writeFileSync(jsonFile, JSON.stringify(outputObj));
             traceWfh = undefined;
+            smapFile = null;
         }
     }
 

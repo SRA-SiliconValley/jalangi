@@ -56,11 +56,13 @@ def run_tests(tests,script_args,fail_pred=fail_pred_default,pat="*" + sys.argv[1
     total = len(tests)
     print "Running {} tests".format(total)
     for case in tests:
+        crashed = False
         try:
             out = check_output(["python", SCRIPT] + script_args + [case], stderr=subprocess.STDOUT)
         except CalledProcessError as e:
+            crashed = True
             out = e.output
-        if fail_pred(case,out):
+        if crashed or fail_pred(case,out):
             print "{} failed".format(case)
             failed = failed + 1;
             print out
@@ -83,11 +85,13 @@ def run_tests_with_expected(tests_and_expected,script_args_fn,fail_pred=fail_pre
     total = len(tests_and_expected)
     print "Running {} tests".format(total)
     for (case, expected) in tests_and_expected:
+        crashed = False
         try:
             out = check_output(["python", SCRIPT] +  script_args_fn(expected) + [case], stderr=subprocess.STDOUT)
         except CalledProcessError as e:
+            crashed = True
             out = e.output
-        if fail_pred(case,out):
+        if crashed or fail_pred(case,out):
             print "{} failed".format(case)
             failed = failed + 1;
             print out

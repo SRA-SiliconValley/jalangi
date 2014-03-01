@@ -261,6 +261,10 @@
 
     var traceWfh;
     var fs;
+    // TODO reset this state in openIIDMapFile or its equivalent?
+    var curFileName = null;
+    var orig2Inst = {};
+    var iidSourceInfo = {};
 
     function writeLineToIIDMap(str) {
         if (traceWfh) {
@@ -268,6 +272,8 @@
         }
     }
 
+    /** @type {string} */
+    var smapFile = null;
     /**
      * if not yet open, open the IID map file and write the header.
      * @param {string} outputDir an optional output directory for the sourcemap file
@@ -276,7 +282,7 @@
     function openIIDMapFile(outputDir, first_iid) {
         if (traceWfh === undefined) {
             fs = require('fs');
-            var smapFile = outputDir ? (require('path').join(outputDir, SMAP_FILE_NAME)) : SMAP_FILE_NAME;
+            smapFile = outputDir ? (require('path').join(outputDir, SMAP_FILE_NAME)) : SMAP_FILE_NAME;
             traceWfh = fs.openSync(smapFile, 'w');
             writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var orig2Inst = sandbox.orig2Inst = {}; var filename;\n");
             if (first_iid) {
@@ -292,16 +298,30 @@
      */
     function closeIIDMapFile() {
         if (traceWfh) {
+            // write all the data
+            Object.keys(iidSourceInfo).forEach(function (iid) {
+                var sourceInfo = iidSourceInfo[iid];
+                writeLineToIIDMap("iids[" + iid + "] = [\"" + sourceInfo[0] + "\"," + sourceInfo[1] + "," + sourceInfo[2] + "];\n");
+            });
+            Object.keys(orig2Inst).forEach(function (filename) {
+                writeLineToIIDMap("orig2Inst[\"" + filename + "\"] = \"" + orig2Inst[filename] + "\";\n");
+            });
             writeLineToIIDMap("}(typeof " + astUtil.JALANGI_VAR + " === 'undefined'? " + astUtil.JALANGI_VAR + " = {}:" + astUtil.JALANGI_VAR + "));\n");
             fs.closeSync(traceWfh);
+            // also write output as JSON, to make consumption easier
+            var jsonFile = smapFile.replace('.js','.json');
+            var outputObj = [iidSourceInfo,orig2Inst];
+            fs.writeFileSync(jsonFile, JSON.stringify(outputObj));
             traceWfh = undefined;
+            smapFile = null;
         }
     }
 
 
     function printLineInfoAux(i, ast) {
         if (ast && ast.loc) {
-            writeLineToIIDMap('iids[' + i + '] = [filename,' + (ast.loc.start.line) + "," + (ast.loc.start.column + 1) + "];\n");
+            iidSourceInfo[i] = [curFileName, ast.loc.start.line, ast.loc.start.column+1];
+            //writeLineToIIDMap('iids[' + i + '] = [filename,' + (ast.loc.start.line) + "," + (ast.loc.start.column + 1) + "];\n");
         }
 //        else {
 //            console.log(i+":undefined:undefined");
@@ -1423,9 +1443,11 @@
             // the directory in which the sourcemap file is written, and
             // the current working directory are all the same during replay
             // TODO add parameters to allow these paths to be distinct
-            writeLineToIIDMap("filename = \"" + filename + "\";\n");
+            //writeLineToIIDMap("filename = \"" + filename + "\";\n");
+            curFileName = filename;
             instCodeFileName = instFileName ? instFileName : makeInstCodeFileName(filename);
-            writeLineToIIDMap("orig2Inst[filename] = \"" + instCodeFileName + "\";\n");
+            orig2Inst[curFileName] = instCodeFileName;
+            //writeLineToIIDMap("orig2Inst[filename] = \"" + instCodeFileName + "\";\n");
         }
         if (typeof  code === "string"){
             if (iid && sandbox.analysis && sandbox.analysis.instrumentCode) {
@@ -1493,14 +1515,16 @@
         }
         for ( ; i < args.length; i++) {
             var filename = args[i];
-            writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
+            curFileName = sanitizePath(require('path').resolve(process.cwd(), filename));
+            //writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
             console.log("Instrumenting " + filename + " ...");
 //            console.time("load")
             var code = getCode(filename);
 //            console.timeEnd("load")
             wrapProgramNode = true;
             instCodeFileName = makeInstCodeFileName(filename);
-            writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(), instCodeFileName)) + "\";\n");
+            orig2Inst[curFileName] = sanitizePath(require('path').resolve(process.cwd(), instCodeFileName));
+            //writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(), instCodeFileName)) + "\";\n");
             topLevelExprs = [];
             var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
             //console.log(JSON.stringify(newAst, null, '\t'));

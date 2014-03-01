@@ -22,6 +22,15 @@
 
 var Q = require("q");
 
+function convertToString(buffer_parts, bufferLength) {
+    var buf = new Buffer(bufferLength);
+    var pos = 0;
+    for (var i = 0; i < buffer_parts.length; i++) {
+        buffer_parts[i].copy(buf, pos, 0, buffer_parts[i].length);
+        pos += buffer_parts[i].length;
+    }
+    return buf.toString();
+}
 /**
  * Runs a process created via the node child_process API and captures its output.
  *
@@ -39,12 +48,15 @@ var Q = require("q");
  *
  */
 function runChildAndCaptureOutput(forkedProcess, extraOutput) {
-    var child_stdout = "", child_stderr = "", result, deferred = Q.defer();
+    var stdout_parts = [], stdoutLength = 0, stderr_parts = [], stderrLength = 0,
+        result, deferred = Q.defer();
     forkedProcess.stdout.on('data', function (data) {
-        child_stdout += data;
+        stdout_parts.push(data);
+        stdoutLength += data.length;
     });
     forkedProcess.stderr.on('data', function (data) {
-        child_stderr += data;
+        stderr_parts.push(data);
+        stderrLength += data.length;
     });
     // handle message with a result field, holding the analysis result
     forkedProcess.on('message', function (m) {
@@ -53,6 +65,8 @@ function runChildAndCaptureOutput(forkedProcess, extraOutput) {
         }
     });
     forkedProcess.on('close', function (code) {
+        var child_stdout = convertToString(stdout_parts, stdoutLength),
+            child_stderr = convertToString(stderr_parts, stderrLength);
         var resultVal = {
             exitCode: code,
             stdout: child_stdout,

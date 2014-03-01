@@ -511,6 +511,12 @@ if (typeof J$ === 'undefined') {
                         rrEngine.RR_updateRecordedObject(val);
                     }
                 }
+
+                if (rrEngine){
+                    rrEngine.RR_replay();
+                    rrEngine.RR_Load(iid);
+                }
+
                 printValueForTesting("J$.G", iid, val);
                 return val;
             }
@@ -545,9 +551,11 @@ if (typeof J$ === 'undefined') {
                     val = sandbox.analysis.putField(iid, base, offset, val);
                 }
 
-                // the following patch is not elegant
-                if (rrEngine && ((offset + "") === "hash")) {
+                // the following patch was not elegant
+                // but now it is better (got rid of offset+"" === "hash" check)
+                if (rrEngine){//} && ((offset + "") === "hash")) {
                     rrEngine.RR_replay();
+                    rrEngine.RR_Load(iid); // add a dummy (no record) in the trace so that RR_Replay does not replay non-setter method
                 }
 
                 // the following patch is not elegant

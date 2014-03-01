@@ -143,14 +143,14 @@ if (typeof J$ === 'undefined') {
 
             executionIndex = new ExecutionIndex();
 
-            if (analysis_script && mode !== MODE_RECORD) {
-                var AnalysisEngine = require(analysis_script);
-                analysis = sandbox.analysis = new AnalysisEngine(executionIndex);
-            }
             if (mode === MODE_RECORD || mode === MODE_REPLAY) {
                 rrEngine = new RecordReplayEngine();
             } else if (mode === MODE_NO_RR) {
                 Globals.smemory = smemory = new SMemory();
+            }
+            if (analysis_script && mode !== MODE_RECORD) {
+                var AnalysisEngine = require(analysis_script);
+                analysis = sandbox.analysis = new AnalysisEngine(executionIndex);
             }
 
 

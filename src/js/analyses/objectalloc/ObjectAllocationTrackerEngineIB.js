@@ -18,8 +18,9 @@
 
 (function (sandbox) {
     function ObjectAllocationTrackerEngine() {
+        var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
         var smemory = sandbox.Globals.smemory;
-        var iidToLocation = sandbox.iidToLocation;
+        var iidToLocation = Constants.load("iidToLocation");
 
         // iid or type could be object(iid) | array(iid) | function(iid)
         var iidToObjectInfo = {}; // type -> (field -> type -> iid -> true)
@@ -212,13 +213,18 @@
     }
 
 
-    sandbox.analysis = new ObjectAllocationTrackerEngine();
+    if (sandbox.Constants.isBrowser) {
 
-    window.addEventListener('keydown', function (e) {
-        // keyboard shortcut is Alt-Shift-T for now
-        if (e.altKey && e.shiftKey && e.keyCode === 84) {
-            sandbox.analysis.endExecution();
-        }
-    });
+        sandbox.analysis = new ObjectAllocationTrackerEngine();
+
+        window.addEventListener('keydown', function (e) {
+            // keyboard shortcut is Alt-Shift-T for now
+            if (e.altKey && e.shiftKey && e.keyCode === 84) {
+                sandbox.analysis.endExecution();
+            }
+        });
+    } else {
+        module.exports = ObjectAllocationTrackerEngine;
+    }
 
 }(typeof J$ === 'undefined'? (J$={}):J$));

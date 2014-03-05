@@ -47,6 +47,20 @@
     }
 
 
+    function printLogAtReturns(isBackTrack, returnVal) {
+        if (!isBackTrack) {
+            console.log(pad+"Returning current function");
+        } else {
+            console.log(pad+"Backtracking current function");
+        }
+        console.log(pad+"  Path constraint in BDD form "+pc.getPC().toString());
+        console.log(pad+"                  in predicate form "+pc.getFormulaFromBDD(pc.getPC()).toString());
+        console.log(pad+"  Aggregate path constraint in BDD form "+pc.getAggregatePC().toString());
+        console.log(pad+"                          in predicate form "+pc.getFormulaFromBDD(pc.getAggregatePC()).toString());
+        console.log(pad+"  Aggregate return value "+returnVal);
+    }
+
+
     function addValue(ret, pred, value) {
         var i, len, tPred;
 
@@ -372,14 +386,19 @@
         scriptCount--;
         var ret2;
         if (scriptCount === 0) {
-            ret2 = pc.generateInputs(TRACE_TESTS?pad:false, true);
+            ret2 = pc.generateInputs(true);
+            if (TRACE_TESTS)
+                console.log(pad+"Generated the input "+JSON.stringify(ret2));
         } else {
-            ret2 = pc.generateInputs(TRACE_TESTS?pad:false);
-//            ret2 = pc.generateInputs(true);
+            ret2 = pc.generateInputs(false);
+            if (TRACE_TESTS && ret2)
+                console.log(pad+"Generated the input "+JSON.stringify(ret2));
         }
 
-        pc.resetFrame(undefined, TRACE_RETURNS?pad:false);
-        return ret2;
+        var isBackTrack = pc.resetFrame(undefined);
+        if (TRACE_RETURNS)
+            printLogAtReturns(isBackTrack, undefined);
+        return !!ret2;
     }
 
     function I(val) {
@@ -587,11 +606,15 @@
 
     function Fr(iid) {
         var ret2, aggrRet = pc.getReturnVal();
-        ret2 = pc.generateInputs(TRACE_TESTS?pad:false);
+        ret2 = pc.generateInputs(false);
+        if (TRACE_TESTS && ret2)
+            console.log(pad+"Generated the input "+JSON.stringify(ret2));
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
-        pc.resetFrame(returnVal, TRACE_RETURNS?pad:false);
-        return ret2;
+        var isBackTrack = pc.resetFrame(returnVal);
+        if (TRACE_RETURNS)
+            printLogAtReturns(isBackTrack, returnVal);
+        return !!ret2;
     }
 
     function Rt(iid, val) {
@@ -685,12 +708,13 @@
             pred1 = pred1.or(left.values[i].pred.and(ret));
             pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
+        var ret2 = pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), switchLeft);
         if (TRACE_BRANCH) {
-            console.log(pad+"Branching at "+getIIDInfo(iid));
+            console.log(pad+"Branching at "+getIIDInfo(iid)+" with result "+ret2.branch);
             console.log(pad+"true branch condition in BDD form "+ret.toString());
             console.log(pad+"                          in predicate form "+pc.getFormulaFromBDD(ret).toString());
         }
-        return pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), switchLeft, TRACE_BRANCH?pad:false);
+        return ret2;
     }
 
     function C(iid, left) {
@@ -709,12 +733,13 @@
             pred1 = pred1.or(left.values[i].pred.and(ret));
             pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
+        var ret2 = pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), lastVal, TRACE_BRANCH?pad:false);
         if (TRACE_BRANCH) {
-            console.log(pad+"Branching at "+getIIDInfo(iid));
+            console.log(pad+"Branching at "+getIIDInfo(iid)+" with result "+ret2.branch);
             console.log(pad+"  true branch condition in BDD form "+ret.toString());
             console.log(pad+"                          in predicate form "+pc.getFormulaFromBDD(ret).toString());
         }
-        return pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), lastVal, TRACE_BRANCH?pad:false);
+        return ret2;
     }
 
     function addAxiom(left) {

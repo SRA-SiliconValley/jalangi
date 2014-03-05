@@ -248,7 +248,7 @@
     };
 
 
-    Frame.prototype.generateInputs = function(pad, forceWrite) {
+    Frame.prototype.generateInputs = function(forceWrite) {
         var elem;
 
         while(this.pathIndex.length > 0) {
@@ -265,15 +265,17 @@
         this.updateSolution();
         var ret = (this.pathIndex.length > 0);
         if (ret || forceWrite) {
-            if (pad) console.log(pad+"Generated the input "+JSON.stringify(this.solution));
             solver.writeInputs(this.solution, []);
         }
 
         if (this.pathCount > MAX_PATH_COUNT) {
             this.pathIndex = [];
         }
-        ret = (this.pathIndex.length > 0);
-        return ret;
+        if (this.pathIndex.length > 0) {
+            return this.solution;
+        } else {
+            return undefined;
+        }
     };
 
     Frame.prototype.makeConcrete = function(pred, branch) {
@@ -331,26 +333,14 @@
         return frame;
     }
 
-    function resetFrame(returnVal, pad) {
+    function resetFrame(returnVal) {
         var tmpFrame = new Frame();
         tmpFrame.pathIndex = frame.pathIndex;
         tmpFrame.prepareForNextPath(frame);
-        if (pad) {
-            if (frame.pathIndex.length<=0) {
-                console.log(pad+"Returning current function");
-            } else {
-                console.log(pad+"Backtracking current function");
-            }
-            console.log(pad+"  Path constraint in BDD form "+frame.pathConstraint.toString());
-            console.log(pad+"                  in predicate form "+getFormulaFromBDD(frame.pathConstraint).toString());
-        }
-        if (pad) {
-            console.log(pad+"  Aggregate path constraint in BDD form "+tmpFrame.pathConstraint.toString());
-            console.log(pad+"                          in predicate form "+getFormulaFromBDD(tmpFrame.pathConstraint).toString());
-            console.log(pad+"  Aggregate return value "+returnVal);
-        }
+        var ret = (frame.pathIndex.length>0);
         tmpFrame.returnValue = returnVal;
         frame = tmpFrame;
+        return ret;
     }
 
 
@@ -360,6 +350,10 @@
 
     function getReturnVal() {
         return frame.returnValue;
+    }
+
+    function getAggregatePC() {
+        return frame.aggregatePC;
     }
 
     function getPC() {
@@ -416,7 +410,7 @@
     }
 
 
-    function branchBoth(iid, falseBranch, trueBranch, lastVal, pad) {
+    function branchBoth(iid, falseBranch, trueBranch, lastVal) {
         var v, ret, tmp;
         if ((v = frame.getNextPathIndexElement()) !== undefined) {
             ret = v;
@@ -430,9 +424,6 @@
                 }
                 ret = false;
                 frame.addAxiom(falseBranch, true);
-                if (pad) {
-                    console.log(pad+"  taking false branch");
-                }
             } else if (frame.updateSolutionIfSatisfiable(trueBranch)) {
                 if (tmp = getSolution(falseBranch, true)) {
                     frame.setNextPathIndexElement({done:false, branch:true, solution: tmp, pc: falseBranch, lastVal: lastVal, iid:iid});
@@ -441,9 +432,6 @@
                 }
                 ret = true;
                 frame.addAxiom(trueBranch, true);
-                if (pad) {
-                    console.log(pad+"  taking true branch");
-                }
             } else {
                 throw new Error("Both branches are not feasible.  This is not possible.")
             }
@@ -470,8 +458,8 @@
     }
 
 
-    function generateInputs(pad, forceWrite) {
-        return frame.generateInputs(pad, forceWrite);
+    function generateInputs(forceWrite) {
+        return frame.generateInputs(forceWrite);
     }
 
     sandbox.addAxiom = addAxiom;
@@ -489,6 +477,7 @@
     sandbox.getFormulaFromBDD = getFormulaFromBDD;
     sandbox.getReturnVal = getReturnVal;
     sandbox.isRetracing = isRetracing;
+    sandbox.getAggregatePC = getAggregatePC;
 
 }(module.exports));
 

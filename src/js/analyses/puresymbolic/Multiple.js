@@ -115,7 +115,7 @@
                     pred = pred.and(args[i].values[indices[i]].pred);
                 }
                 if (!pred.isZero()) {
-                    pc.pushPC(pred);
+                    pc.pushFrame(pred);
                     for (i = 0; i < len; ++i) {
                         if (noConcretizeArgs) {
                             cArgs[i] = single.initUndefinedNumber(args[i].values[indices[i]].value);
@@ -130,7 +130,7 @@
                     }
                     ret = addValue(ret, pc.getPC(), value);
                     newPC = newPC.or(pc.getPC());
-                    pc.popPC();
+                    pc.popFrame();
                 }
             } while (nextIndices(indices, maxIndices));
 
@@ -364,13 +364,13 @@
     var scriptCount = 0;
 
     function Se(iid, val) {
-        //pc.pushPC(pc.getPC());
+        //pc.pushFrame(pc.getPC());
         scriptCount++;
     }
 
     function Sr(iid) {
         scriptCount--;
-        var ret2, pathCount = pc.getPathCount();
+        var ret2;
         if (scriptCount === 0) {
             ret2 = pc.generateInputs(TRACE_TESTS?pad:false, true);
         } else {
@@ -378,7 +378,7 @@
 //            ret2 = pc.generateInputs(true);
         }
 
-        pc.resetPC(undefined, TRACE_RETURNS?pad:false);
+        pc.resetFrame(undefined, TRACE_RETURNS?pad:false);
         return ret2;
     }
 
@@ -467,7 +467,7 @@
                 pred = pc.getPC().and(pred);
 
                 if (!pred.isZero()) {
-                    pc.pushPC(pred);
+                    pc.pushFrame(pred);
                     if (op !== undefined) {
                         value = single.B(iid, op, left.values[i].value, right.values[j].value);
                     } else {
@@ -475,7 +475,7 @@
                     }
                     ret = addValue(ret, pc.getPC(), value);
                     newPC = newPC.or(pc.getPC());
-                    pc.popPC();
+                    pc.popFrame();
                 }
             }
         }
@@ -494,11 +494,11 @@
             pred = pc.getPC().and(left.values[i].pred);
 
             if (!pred.isZero()) {
-                pc.pushPC(pred);
+                pc.pushFrame(pred);
                 value = single.U(iid, op, left.values[i].value);
                 ret = addValue(ret, pc.getPC(), value);
                 newPC = newPC.or(pc.getPC());
-                pc.popPC();
+                pc.popFrame();
             }
         }
         pc.setPC(pc.getPC().and(newPC));
@@ -526,14 +526,14 @@
                 if (!pred.isZero()) {
                     var base = left.values[i].value;
                     var offset = right.values[j].value;
-                    pc.pushPC(pred);
+                    pc.pushFrame(pred);
                     var oldValue = single.G(iid, base, offset);
                     single.P(iid, base, offset, ret = update(oldValue, val));
                     if (TRACE_WRITE) {
                         console.log(pad+"Writing field "+offset+" with " + ret +" at "+getIIDInfo(iid));
                     }
                     newPC = newPC.or(pc.getPC());
-                    pc.popPC();
+                    pc.popFrame();
                 }
             }
         }
@@ -563,11 +563,11 @@
                             ret = addValue(ret, pred, value);
                             newPC = newPC.or(pc.getPC());
                         } else {
-                            pc.pushPC(pred);
+                            pc.pushFrame(pred);
                             value = singleInvokeFun(iid, base.values[i].value, f2, args, isConstructor);
                             ret = addValue(ret, pc.getPC(), value);
                             newPC = newPC.or(pc.getPC());
-                            pc.popPC();
+                            pc.popFrame();
                         }
                     }
                 }
@@ -590,7 +590,7 @@
         ret2 = pc.generateInputs(TRACE_TESTS?pad:false);
 
         returnVal = addValue(aggrRet, pc.getPC(), returnVal);
-        pc.resetPC(returnVal, TRACE_RETURNS?pad:false);
+        pc.resetFrame(returnVal, TRACE_RETURNS?pad:false);
         return ret2;
     }
 

@@ -584,7 +584,7 @@
 
 
     function R(iid, name, val, isGlobal) {
-        return single.wrapUndefined(val, !isGlobal);
+        return wrapUndefined(val, !isGlobal);
     }
 
     function W(iid, name, val, lhs) {
@@ -593,7 +593,7 @@
 
     function N(iid, name, val, isArgumentSync) {
         if (isArgumentSync)
-            return single.wrapUndefined(val, false);
+            return wrapUndefined(val, false);
         return val;
     }
 
@@ -1081,7 +1081,7 @@
     }
 
     function endExecution() {
-        pc.generateInputs("  ");
+        pc.generateInputs("  ", true);
     }
 
     sandbox.U = U; // Unary operation

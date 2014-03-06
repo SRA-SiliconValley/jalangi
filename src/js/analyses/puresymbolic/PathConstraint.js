@@ -204,6 +204,9 @@
         if (this.formulaCount===0 && this.formulaStack.length > 0 ) {
             var tmp = this.formulaStack.pop();
             this.pathConstraint = this.pathConstraint.and(tmp);
+            if (this.pathConstraint.isZero()) {
+                throw new Error("Infeasible path.")
+            }
         }
     };
 
@@ -220,7 +223,7 @@
                 if (tmp) {
                     this.solution = combine(this.solution, tmp);
                 } else {
-                    throw new Error("Not reachable");
+                    this.solution = undefined;
                 }
             }
         }
@@ -268,7 +271,7 @@
 
         this.updateSolution();
         var ret = (this.pathIndex.length > 0);
-        if (ret || forceWrite) {
+        if (this.solution && (ret || forceWrite)) {
             solver.writeInputs(this.solution, []);
         }
 
@@ -430,7 +433,8 @@
                 }
                 frame.addAxiom(val, ret = true);
             } else {
-                throw new Error("Both branches are not feasible.  This is not possible.")
+                frame.pathConstraint = BDD.zero;
+                throw new Error("Both branches are not feasible.")
             }
         }
         return ret;
@@ -460,7 +464,8 @@
                 ret = true;
                 frame.addAxiom(trueBranch, true);
             } else {
-                throw new Error("Both branches are not feasible.  This is not possible.")
+                frame.pathConstraint = BDD.zero;
+                throw new Error("Both branches are not feasible.")
             }
         }
         return ret;

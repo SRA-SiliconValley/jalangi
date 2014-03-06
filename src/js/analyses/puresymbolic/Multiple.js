@@ -377,41 +377,6 @@
         };
     }
 
-    var scriptCount = 0;
-
-    function Se(iid, val) {
-        //pc.pushFrame(pc.getPC());
-        scriptCount++;
-    }
-
-    function Sr(iid) {
-        scriptCount--;
-        var ret2;
-        if (scriptCount === 0) {
-            ret2 = pc.generateInputs(true, false);
-            if (TRACE_TESTS)
-                console.log(pad+"Generated the input "+JSON.stringify(ret2));
-        } else {
-            ret2 = pc.generateInputs(false, false);
-            if (TRACE_TESTS && ret2)
-                console.log(pad+"Generated the input "+JSON.stringify(ret2));
-        }
-
-        var isException = (exceptionVal !== undefined);
-        var isBackTrack = pc.resetFrame(undefined, isException);
-        if (TRACE_RETURNS)
-            printLogAtReturns(isBackTrack, undefined);
-        if (isException) {
-            var tmp = exceptionVal;
-            exceptionVal = undefined;
-            if (scriptCount == 0) {
-                console.error(tmp.stack);
-            }
-        }
-
-        return isBackTrack;
-    }
-
     function I(val) {
         return val;
     }
@@ -609,6 +574,34 @@
         return ret;
     }
 
+    var scriptCount = 0;
+
+    function Se(iid, val) {
+        //pc.pushFrame(pc.getPC());
+        scriptCount++;
+    }
+
+    function Sr(iid) {
+        scriptCount--;
+        var ret2 = pc.generateInputs(scriptCount==0, false);
+        if (TRACE_TESTS && ret2)
+            console.log(pad+"Generated the input "+JSON.stringify(ret2));
+        var isException = (exceptionVal !== undefined) || !ret2;
+
+        var isBackTrack = pc.resetFrame(undefined, isException);
+        if (TRACE_RETURNS)
+            printLogAtReturns(isBackTrack, undefined);
+        if (isException  && exceptionVal) {
+            if (scriptCount == 0) {
+                console.error("FYI: exception.  No need to worry.")
+                console.error(exceptionVal.stack);
+            }
+            exceptionVal = undefined;
+        }
+
+        return isBackTrack;
+    }
+
     function Fe(iid, val, dis) {
         returnVal.push(undefined);
         exceptionVal = undefined;
@@ -619,25 +612,24 @@
         ret2 = pc.generateInputs(false, false);
         if (TRACE_TESTS && ret2)
             console.log(pad+"Generated the input "+JSON.stringify(ret2));
-
-        var isException = (exceptionVal !== undefined);
+        var isException = (exceptionVal !== undefined) || !ret2;
         if (!isException) {
             var retVal = returnVal.pop();
             retVal = addValue(aggrRet, pc.getPC(), retVal);
+            returnVal.push(retVal);
         }
         var isBackTrack = pc.resetFrame(retVal,isException);
-        if (!isException) {
-            if (!isBackTrack) {
-                returnVal.push(retVal);
-            }
+        if (isBackTrack) {
+            returnVal.pop();
         }
         if (TRACE_RETURNS)
             printLogAtReturns(isBackTrack, retVal);
         // if there was an uncaught exception, do not throw it
         // here, chew it up
         // @todo need to revisit
-        if (isException) {
-            console.err(exceptionVal.stack);
+        if (isException && exceptionVal) {
+            console.error("FYI: exception.  No need to worry.")
+            console.error(exceptionVal.stack);
             exceptionVal = undefined;
         }
 

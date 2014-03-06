@@ -205,7 +205,7 @@
             var tmp = this.formulaStack.pop();
             this.pathConstraint = this.pathConstraint.and(tmp);
             if (this.pathConstraint.isZero()) {
-                throw new Error("Infeasible path.")
+                throw new Error("Throwing exception to prune infeasible path.");
             }
         }
     };
@@ -246,7 +246,7 @@
                 return false;
             }
         } else {
-            throw new Error("Should not be reachable "+concrete);
+            throw new Error("This is bad.  Should not be reachable "+concrete);
         }
     };
 
@@ -295,7 +295,7 @@
             return false;
         }
         if (isSymbolic(concrete)) {
-            throw new Error("Not reachable");
+            throw new Error("Throwing exception to prune infeasible path.");
         } else {
             return concrete;
         }
@@ -434,7 +434,7 @@
                 frame.addAxiom(val, ret = true);
             } else {
                 frame.pathConstraint = BDD.zero;
-                throw new Error("Both branches are not feasible.")
+                throw new Error("Throwing exception to prune infeasible path.");
             }
         }
         return ret;
@@ -465,7 +465,7 @@
                 frame.addAxiom(trueBranch, true);
             } else {
                 frame.pathConstraint = BDD.zero;
-                throw new Error("Both branches are not feasible.")
+                throw new Error("Throwing exception to prune infeasible path.");
             }
         }
         return ret;

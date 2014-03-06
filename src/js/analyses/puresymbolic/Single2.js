@@ -42,6 +42,9 @@
     var solver = new SolverEngine();
     var pc = require('./PathConstraint');
 
+    var exceptionVal;
+    var returnVal = [];
+
 
     //---------------------------- Utility functions -------------------------------
 
@@ -534,11 +537,25 @@
         };
     }
 
+    // Uncaught exception
+    function Ex(iid, e) {
+        exceptionVal = e;
+    }
+
     function Fe(iid, val, dis) {
-        returnVal = undefined;
+        returnVal.push(undefined);
+        exceptionVal = undefined;
     }
 
     function Fr(iid) {
+        // if there was an uncaught exception, throw it
+        // here, to preserve exceptional control flow
+        if (exceptionVal !== undefined) {
+            var tmp = exceptionVal;
+            exceptionVal = undefined;
+            throw tmp;
+        }
+        return false;
     }
 
     var scriptCount = 0;
@@ -552,21 +569,30 @@
         if (scriptCount === 0) {
             endExecution();
         }
+        if (exceptionVal !== undefined) {
+            var tmp = exceptionVal;
+            exceptionVal = undefined;
+            if (scriptCount > 0) {
+                throw tmp;
+            } else {
+                console.error(tmp.stack);
+            }
+        }
+
     }
 
     function I(val) {
         return val;
     }
 
-    var returnVal;
-
     function Rt(iid, val) {
-        return returnVal = val;
+        returnVal.pop();
+        returnVal.push(val);
     }
 
     function Ra() {
-        var ret = returnVal;
-        returnVal = undefined;
+        var ret = returnVal.pop();
+        exceptionVal = undefined;
         return ret;
     }
 
@@ -1108,6 +1134,7 @@
     sandbox.Sr = Sr; // Script return
     sandbox.Rt = Rt; // Value return
     sandbox.Ra = Ra;
+    sandbox.Ex = Ex;
 
     sandbox.invokeFun = invokeFun;
     sandbox.makeSymbolic = makeSymbolic;

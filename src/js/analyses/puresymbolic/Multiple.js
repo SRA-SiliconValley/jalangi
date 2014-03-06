@@ -29,9 +29,11 @@
 
     var TRACE_CALL = true;
     var TRACE_BRANCH = true;
-    var TRACE_WRITE = true;
+    var TRACE_WRITE = false;
     var TRACE_RETURNS = true;
     var TRACE_TESTS = true;
+    var exceptionVal;
+    var returnVal = [];
 
     var pc = single.getPC();
 
@@ -395,10 +397,19 @@
                 console.log(pad+"Generated the input "+JSON.stringify(ret2));
         }
 
-        var isBackTrack = pc.resetFrame(undefined);
+        var isException = (exceptionVal !== undefined);
+        var isBackTrack = pc.resetFrame(undefined, isException);
         if (TRACE_RETURNS)
             printLogAtReturns(isBackTrack, undefined);
-        return !!ret2;
+        if (isException) {
+            var tmp = exceptionVal;
+            exceptionVal = undefined;
+            if (scriptCount == 0) {
+                console.error(tmp.stack);
+            }
+        }
+
+        return isBackTrack;
     }
 
     function I(val) {
@@ -598,10 +609,9 @@
         return ret;
     }
 
-    var returnVal;
-
     function Fe(iid, val, dis) {
-        returnVal = undefined;
+        returnVal.push(undefined);
+        exceptionVal = undefined;
     }
 
     function Fr(iid) {
@@ -610,21 +620,44 @@
         if (TRACE_TESTS && ret2)
             console.log(pad+"Generated the input "+JSON.stringify(ret2));
 
-        returnVal = addValue(aggrRet, pc.getPC(), returnVal);
-        var isBackTrack = pc.resetFrame(returnVal);
+        var isException = (exceptionVal !== undefined);
+        if (!isException) {
+            var retVal = returnVal.pop();
+            retVal = addValue(aggrRet, pc.getPC(), retVal);
+        }
+        var isBackTrack = pc.resetFrame(retVal,isException);
+        if (!isException) {
+            if (!isBackTrack) {
+                returnVal.push(retVal);
+            }
+        }
         if (TRACE_RETURNS)
-            printLogAtReturns(isBackTrack, returnVal);
-        return !!ret2;
+            printLogAtReturns(isBackTrack, retVal);
+        // if there was an uncaught exception, do not throw it
+        // here, chew it up
+        // @todo need to revisit
+        if (isException) {
+            console.err(exceptionVal.stack);
+            exceptionVal = undefined;
+        }
+
+        return isBackTrack;
+    }
+
+    // Uncaught exception
+    function Ex(iid, e) {
+        exceptionVal = e;
     }
 
     function Rt(iid, val) {
-        returnVal = val;
+        returnVal.pop();
+        returnVal.push(val);
         return val;
     }
 
     function Ra() {
-        var ret = returnVal;
-        returnVal = undefined;
+        var ret = returnVal.pop();
+        exceptionVal = undefined;
 
         // special case to handle return of undefined from a constructor
         // if undefined is returned from a constructor, do not wrap the return value
@@ -787,6 +820,8 @@
     sandbox.Sr = Sr; // Script return
     sandbox.Rt = Rt;
     sandbox.Ra = Ra;
+    sandbox.Ex = Ex;
+
 
     sandbox.makeSymbolic = makeSymbolic;
     sandbox.addAxiom = addAxiom;

@@ -271,11 +271,7 @@
         if (this.pathCount > MAX_PATH_COUNT) {
             this.pathIndex = [];
         }
-        if (this.pathIndex.length > 0) {
-            return this.solution;
-        } else {
-            return undefined;
-        }
+        return this.solution;
     };
 
     Frame.prototype.makeConcrete = function(pred, branch) {
@@ -333,12 +329,20 @@
         return frame;
     }
 
-    function resetFrame(returnVal) {
+    function resetFrame(returnVal, ignore) {
         var tmpFrame = new Frame();
         tmpFrame.pathIndex = frame.pathIndex;
         tmpFrame.prepareForNextPath(frame);
+
+        if (ignore) {
+            tmpFrame.aggregatePC = frame.aggregatePC;
+            tmpFrame.pathCount = frame.pathCount;
+            tmpFrame.returnValue = frame.returnValue;
+        } else {
+            tmpFrame.returnValue = returnVal;
+        }
+
         var ret = (frame.pathIndex.length>0);
-        tmpFrame.returnValue = returnVal;
         frame = tmpFrame;
         return ret;
     }

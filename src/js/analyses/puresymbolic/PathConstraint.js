@@ -248,19 +248,23 @@
     };
 
 
-    Frame.prototype.generateInputs = function(forceWrite) {
+    Frame.prototype.generateInputs = function(forceWrite, forSingle) {
         var elem;
 
         while(this.pathIndex.length > 0) {
             elem = this.pathIndex.pop();
-            if (!elem.done) {
-                this.pathIndex.push({done: true, branch: !elem.branch, solution: elem.solution, pc: elem.pc, lastVal: elem.lastVal, iid: elem.iid});
+            if (!elem.done && (!forSingle || (this.pathIndex[elem.counterIndex].count <= MAX_PATH_COUNT))) {
+                this.pathIndex.push({done: true, branch: !elem.branch, solution: elem.solution,
+                    pc: elem.pc, lastVal: elem.lastVal, iid: elem.iid,
+                    counterIndex: elem.counterIndex, count: elem.count});
+                if (forSingle) {
+                    this.pathIndex[elem.counterIndex].count++;
+                }
                 break;
             }
         }
         this.index = 0;
 
-        fs.writeFileSync(PATH_FILE_NAME,JSON.stringify(this.pathIndex),"utf8");
 
         this.updateSolution();
         var ret = (this.pathIndex.length > 0);
@@ -271,6 +275,7 @@
         if (this.pathCount > MAX_PATH_COUNT) {
             this.pathIndex = [];
         }
+        fs.writeFileSync(PATH_FILE_NAME,JSON.stringify(this.pathIndex),"utf8");
         return this.solution;
     };
 
@@ -383,6 +388,24 @@
         return solver.generateInputs(c);
     }
 
+    var pathPerFunctionCounter = [];
+
+    function functionEnter() {
+        var v;
+        if ((v=frame.getNextPathIndexElement()) === undefined) {
+            frame.setNextPathIndexElement(v = {count: 0, done:true})
+        }
+        pathPerFunctionCounter.push(frame.index-1);
+    }
+
+    function getCounterIndex() {
+        return pathPerFunctionCounter[pathPerFunctionCounter.length-1];
+    }
+
+    function functionExit() {
+        pathPerFunctionCounter.pop();
+    }
+
     function branch(val) {
         var v, ret, tmp;
         if (!(val instanceof BDD.Node)) {
@@ -393,17 +416,17 @@
         } else {
             if (frame.makeConcrete(val, false)) {
                 if (tmp = getSolution(val, true)) {
-                    frame.setNextPathIndexElement({done:false, branch:false, solution: tmp});
+                    frame.setNextPathIndexElement({done:false, branch:false, solution: tmp, counterIndex: getCounterIndex()});
                 } else {
-                    frame.setNextPathIndexElement({done:true, branch:false, solution: tmp});
+                    frame.setNextPathIndexElement({done:true, branch:false, solution: tmp, counterIndex: getCounterIndex()});
                 }
                 frame.addAxiom(val, ret = false);
             } else if (frame.makeConcrete(val, true)) {
                 if (tmp = getSolution(val, false)) {
-                    frame.setNextPathIndexElement({done:false, branch:true, solution: tmp});
+                    frame.setNextPathIndexElement({done:false, branch:true, solution: tmp, counterIndex: getCounterIndex()});
                     //console.log("Solution (else) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(val));
                 } else {
-                    frame.setNextPathIndexElement({done:true, branch:true, solution: tmp});
+                    frame.setNextPathIndexElement({done:true, branch:true, solution: tmp, counterIndex: getCounterIndex()});
                 }
                 frame.addAxiom(val, ret = true);
             } else {
@@ -462,8 +485,8 @@
     }
 
 
-    function generateInputs(forceWrite) {
-        return frame.generateInputs(forceWrite);
+    function generateInputs(forceWrite, forSingle) {
+        return frame.generateInputs(forceWrite, forSingle);
     }
 
     sandbox.addAxiom = addAxiom;
@@ -471,6 +494,8 @@
     sandbox.concretize = concretize;
     sandbox.getBDDFromFormula = getBDDFromFormula;
     sandbox.generateInputs = generateInputs;
+    sandbox.functionEnter = functionEnter;
+    sandbox.functionExit = functionExit;
 
     sandbox.popFrame = popFrame;
     sandbox.pushFrame = pushFrame;

@@ -41,6 +41,7 @@
     var SolverEngine = require('./SolverEngine');
     var solver = new SolverEngine();
     var pc = require('./PathConstraint');
+    var getIIDInfo = require('./../../utils/IIDInfo');
 
     var exceptionVal;
     var returnVal = [];
@@ -543,6 +544,7 @@
     }
 
     function Fe(iid, val, dis) {
+        pc.functionEnter();
         returnVal.push(undefined);
         exceptionVal = undefined;
     }
@@ -550,6 +552,7 @@
     function Fr(iid) {
         // if there was an uncaught exception, throw it
         // here, to preserve exceptional control flow
+        pc.functionExit();
         if (exceptionVal !== undefined) {
             var tmp = exceptionVal;
             exceptionVal = undefined;
@@ -562,10 +565,12 @@
 
     function Se(iid,val) {
         scriptCount++;
+        pc.functionEnter();
     }
 
     function Sr(iid) {
         scriptCount--;
+        pc.functionExit();
         if (scriptCount === 0) {
             endExecution();
         }
@@ -1107,7 +1112,7 @@
     }
 
     function endExecution() {
-        pc.generateInputs(true);
+        pc.generateInputs(true, true);
     }
 
     sandbox.U = U; // Unary operation

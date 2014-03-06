@@ -388,11 +388,11 @@
         scriptCount--;
         var ret2;
         if (scriptCount === 0) {
-            ret2 = pc.generateInputs(true);
+            ret2 = pc.generateInputs(true, false);
             if (TRACE_TESTS)
                 console.log(pad+"Generated the input "+JSON.stringify(ret2));
         } else {
-            ret2 = pc.generateInputs(false);
+            ret2 = pc.generateInputs(false, false);
             if (TRACE_TESTS && ret2)
                 console.log(pad+"Generated the input "+JSON.stringify(ret2));
         }
@@ -616,7 +616,7 @@
 
     function Fr(iid) {
         var ret2, aggrRet = pc.getReturnVal();
-        ret2 = pc.generateInputs(false);
+        ret2 = pc.generateInputs(false, false);
         if (TRACE_TESTS && ret2)
             console.log(pad+"Generated the input "+JSON.stringify(ret2));
 

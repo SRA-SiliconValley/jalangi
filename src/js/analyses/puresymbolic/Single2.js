@@ -903,7 +903,8 @@
 
         var result_c, left_c, right_c;
 
-        iCount++;
+        if (pc.startCountingOps())
+            iCount++;
         left = initUndefinedForBinary(op, left, right);
         right = initUndefinedForBinary(op, right, left);
 
@@ -1039,7 +1040,8 @@
     function U(iid, op, left) {
         var left_c, result_c;
 
-        iCount++;
+        if (pc.startCountingOps())
+            iCount++;
         left = initUndefinedForUnary(op, left);
 
         if ((result_c = unarys(iid, op, left))) {

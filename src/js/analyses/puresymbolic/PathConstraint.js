@@ -50,6 +50,7 @@
 
     var literalToFormulas = [];
     var formulaCache = {};
+    var startCountingOps = false;
 
     function getBDDFromFormula(formula) {
         if (formula === SymbolicBool.true) {
@@ -135,6 +136,7 @@
             }
         } catch (e) {
             this.pathIndex = [];
+            startCountingOps = true;
         }
         this.solution = this.pathIndex.length>0? this.pathIndex[this.pathIndex.length-1].solution: null;
 
@@ -417,6 +419,7 @@
         if ((v = frame.getNextPathIndexElement()) !== undefined) {
             frame.addAxiom(val, ret = v.branch);
         } else {
+            startCountingOps = true;
             if (frame.makeConcrete(val, false)) {
                 if (tmp = getSolution(val, true)) {
                     frame.setNextPathIndexElement({done:false, branch:false, solution: tmp, counterIndex: getCounterIndex()});
@@ -494,6 +497,10 @@
         return frame.generateInputs(forceWrite, forSingle);
     }
 
+    function isStartCountingOps() {
+        return startCountingOps;
+    }
+
     sandbox.addAxiom = addAxiom;
     sandbox.branch = branch;
     sandbox.concretize = concretize;
@@ -512,6 +519,7 @@
     sandbox.getReturnVal = getReturnVal;
     sandbox.isRetracing = isRetracing;
     sandbox.getAggregatePC = getAggregatePC;
+    sandbox.startCountingOps = isStartCountingOps;
 
 }(module.exports));
 

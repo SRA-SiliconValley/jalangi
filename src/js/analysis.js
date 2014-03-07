@@ -93,7 +93,7 @@ if (typeof J$ === 'undefined') {
         if (Globals.mode === MODE_DIRECT) {
             /* JALANGI_ANALYSIS file must define all instrumentation functions such as U, B, C, C1, C2, W, R, G, P */
             if (analysis_script) {
-                sandbox.analysis = require('./' + analysis_script);
+                sandbox.analysis = require(analysis_script);
             }
 
             sandbox.U = sandbox.analysis.U; // Unary operation
@@ -128,7 +128,7 @@ if (typeof J$ === 'undefined') {
 
             // TODO get rid of this --MS
             // do not get rid of this --KS
-            if (analysis_script === "analyses/puresymbolic/Multiple") {
+            if (analysis_script  && analysis_script.indexOf("analyses/puresymbolic/Multiple")>=0) {
                 sandbox.analysis.postLoad();
             }
 

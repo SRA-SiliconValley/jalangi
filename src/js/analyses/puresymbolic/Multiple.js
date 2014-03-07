@@ -32,8 +32,11 @@
     var TRACE_WRITE = false;
     var TRACE_RETURNS = true;
     var TRACE_TESTS = true;
+    var MAX_CALL_DEPTH = 10;
+
     var exceptionVal;
     var returnVal = [];
+    var funCallDepth = 0;
 
     var pc = single.getPC();
 
@@ -49,7 +52,7 @@
     }
 
 
-    function printLogAtReturns(isBackTrack, returnVal) {
+    function printLogAtReturns(isBackTrack) {
         if (!isBackTrack) {
             console.log(pad+"Returning current function");
         } else {
@@ -59,7 +62,7 @@
         console.log(pad+"                  in predicate form "+pc.getFormulaFromBDD(pc.getPC()).toString());
         console.log(pad+"  Aggregate path constraint in BDD form "+pc.getAggregatePC().toString());
         console.log(pad+"                          in predicate form "+pc.getFormulaFromBDD(pc.getAggregatePC()).toString());
-        console.log(pad+"  Aggregate return value "+returnVal);
+        console.log(pad+"  Aggregate return value "+pc.getReturnVal());
     }
 
 
@@ -366,6 +369,9 @@
     function F(iid, f, isConstructor) {
         return function () {
             var base = this;
+            if (funCallDepth > MAX_CALL_DEPTH) {
+                throw new Error("Pruning function call");
+            }
             return invokeFun(iid, base, f, arguments, isConstructor);
         }
     }
@@ -373,6 +379,9 @@
     function M(iid, base, offset, isConstructor) {
         return function () {
             var f = G(iid, base, offset);
+            if (funCallDepth > MAX_CALL_DEPTH) {
+                throw new Error("Pruning function call");
+            }
             return invokeFun(iid, base, f, arguments, isConstructor);
         };
     }
@@ -590,11 +599,12 @@
 
         var isBackTrack = pc.resetFrame(undefined, isException);
         if (TRACE_RETURNS)
-            printLogAtReturns(isBackTrack, undefined);
+            printLogAtReturns(isBackTrack);
         if (isException  && exceptionVal) {
             if (scriptCount == 0) {
-                console.error("FYI: exception.  No need to worry.")
-                console.error(exceptionVal.stack);
+                console.log("Pruning path.  No need to worry.")
+                //console.log("FYI: exception.  No need to worry.")
+                //console.log(exceptionVal.stack);
             }
             exceptionVal = undefined;
         }
@@ -602,12 +612,15 @@
         return isBackTrack;
     }
 
+
     function Fe(iid, val, dis) {
         returnVal.push(undefined);
         exceptionVal = undefined;
+        funCallDepth++;
     }
 
     function Fr(iid) {
+        funCallDepth--;
         var ret2, aggrRet = pc.getReturnVal();
         ret2 = pc.generateInputs(false, false);
         if (TRACE_TESTS && ret2)
@@ -617,19 +630,22 @@
             var retVal = returnVal.pop();
             retVal = addValue(aggrRet, pc.getPC(), retVal);
             returnVal.push(retVal);
+        } else {
+            returnVal.pop();
+            returnVal.push(aggrRet);
         }
         var isBackTrack = pc.resetFrame(retVal,isException);
         if (isBackTrack) {
             returnVal.pop();
         }
         if (TRACE_RETURNS)
-            printLogAtReturns(isBackTrack, retVal);
+            printLogAtReturns(isBackTrack);
         // if there was an uncaught exception, do not throw it
         // here, chew it up
         // @todo need to revisit
         if (isException && exceptionVal) {
-            console.error("FYI: exception.  No need to worry.")
-            console.error(exceptionVal.stack);
+            console.log("Pruning path.  No need to worry.")
+            //console.log(exceptionVal.stack);
             exceptionVal = undefined;
         }
 
@@ -735,7 +751,7 @@
         }
         var ret2 = pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), switchLeft);
         if (TRACE_BRANCH) {
-            console.log(pad+"Branching at "+getIIDInfo(iid)+" with result "+ret2.branch);
+            console.log(pad+"Branching at "+getIIDInfo(iid)+" with result "+ret2);
             console.log(pad+"true branch condition in BDD form "+ret.toString());
             console.log(pad+"                          in predicate form "+pc.getFormulaFromBDD(ret).toString());
         }
@@ -758,9 +774,9 @@
             pred1 = pred1.or(left.values[i].pred.and(ret));
             pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
-        var ret2 = pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), lastVal, TRACE_BRANCH?pad:false);
+        var ret2 = pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), lastVal);
         if (TRACE_BRANCH) {
-            console.log(pad+"Branching at "+getIIDInfo(iid)+" with result "+ret2.branch);
+            console.log(pad+"Branching at "+getIIDInfo(iid)+" with result "+ret2);
             console.log(pad+"  true branch condition in BDD form "+ret.toString());
             console.log(pad+"                          in predicate form "+pc.getFormulaFromBDD(ret).toString());
         }

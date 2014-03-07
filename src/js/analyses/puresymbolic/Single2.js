@@ -24,6 +24,7 @@
     var PREFIX1 = "J$";
     var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
     var  N_LOG_FUNCTION_LIT = 12;
+    var MAX_CALL_DEPTH = 10;
 
     //-------------------------------- End constants ---------------------------------
 
@@ -45,7 +46,7 @@
 
     var exceptionVal;
     var returnVal = [];
-
+    var funCallDepth = 0;
 
     //---------------------------- Utility functions -------------------------------
 
@@ -527,6 +528,9 @@
     function F(iid, f, isConstructor) {
         return function() {
             var base = this;
+            if (funCallDepth > MAX_CALL_DEPTH) {
+                throw new Error("Pruning function call");
+            }
             return invokeFun(iid, base, f, arguments, isConstructor);
         }
     }
@@ -534,6 +538,9 @@
     function M(iid, base, offset, isConstructor) {
         return function() {
             var f = G(iid, base, offset);
+            if (funCallDepth > MAX_CALL_DEPTH) {
+                throw new Error("Pruning function call");
+            }
             return invokeFun(iid, base, f, arguments, isConstructor);
         };
     }
@@ -547,9 +554,11 @@
         pc.functionEnter();
         returnVal.push(undefined);
         exceptionVal = undefined;
+        funCallDepth++;
     }
 
     function Fr(iid) {
+        funCallDepth--;
         // if there was an uncaught exception, throw it
         // here, to preserve exceptional control flow
         pc.functionExit();

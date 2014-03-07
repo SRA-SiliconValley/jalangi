@@ -18,9 +18,11 @@ import testrunner
 
 tests = [
     ("tests/compos/arbitrary1",2),
-    ("tests/compos/arbitrary2",80),
+    ("tests/compos/arbitrary2",75),
     ("tests/compos/arbitrary3",2),
     ("tests/compos/arbitrary4",13),
+    ("tests/compos/fac",12),
+    ("tests/compos/fac2",12),
     ("tests/unit/bool_symbolic", 3),
     ("tests/unit/qsort", 28),
     ("tests/unit/compos1", 4),

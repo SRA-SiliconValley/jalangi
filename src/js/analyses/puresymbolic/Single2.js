@@ -25,6 +25,7 @@
     var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
     var  N_LOG_FUNCTION_LIT = 12;
     var MAX_CALL_DEPTH = 10;
+    var STATS_FILE_NAME = "jalangi_multiex_stats";
 
     //-------------------------------- End constants ---------------------------------
 
@@ -40,15 +41,25 @@
     var FromCharCodePredicate = require('./FromCharCodePredicate');
     var SymbolicAnyVar = require('./SymbolicAnyVar');
     var SolverEngine = require('./SolverEngine');
-    var solver = new SolverEngine();
     var pc = require('./PathConstraint');
-    var getIIDInfo = require('./../../utils/IIDInfo');
+
+    var iCount;
+    try {
+        iCount = JSON.parse(require('fs').readFileSync(STATS_FILE_NAME,"utf8"));
+    } catch(e) {
+        iCount = 0;
+    }
+
 
     var exceptionVal;
     var returnVal = [];
     var funCallDepth = 0;
 
     //---------------------------- Utility functions -------------------------------
+
+    function writeICount() {
+        require('fs').writeFileSync(STATS_FILE_NAME,JSON.stringify(iCount),"utf8");
+    }
 
     function getPC() {
         return pc;
@@ -892,6 +903,7 @@
 
         var result_c, left_c, right_c;
 
+        iCount++;
         left = initUndefinedForBinary(op, left, right);
         right = initUndefinedForBinary(op, right, left);
 
@@ -1027,6 +1039,7 @@
     function U(iid, op, left) {
         var left_c, result_c;
 
+        iCount++;
         left = initUndefinedForUnary(op, left);
 
         if ((result_c = unarys(iid, op, left))) {
@@ -1121,6 +1134,7 @@
     }
 
     function endExecution() {
+        writeICount();
         pc.generateInputs(true, true);
     }
 
@@ -1161,6 +1175,7 @@
     sandbox.initUndefinedFunction = initUndefinedFunction;
     sandbox.initUndefinedNumber = initUndefinedNumber;
     sandbox.initUndefinedString = initUndefinedString;
+    sandbox.writeICount = writeICount;
 
 }(module.exports));
 

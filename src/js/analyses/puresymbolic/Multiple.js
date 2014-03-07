@@ -593,6 +593,9 @@
     function Sr(iid) {
         scriptCount--;
         var ret2 = pc.generateInputs(scriptCount==0, false);
+        if (scriptCount==0) {
+            single.writeICount();
+        }
         if (TRACE_TESTS && ret2)
             console.log(pad+"Generated the input "+JSON.stringify(ret2));
         var isException = (exceptionVal !== undefined) || !ret2;

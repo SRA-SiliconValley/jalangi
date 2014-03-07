@@ -23,6 +23,8 @@ tests = [
     ("tests/compos/arbitrary4",13),
     ("tests/compos/fac",12),
     ("tests/compos/fac2",12),
+    ("tests/compos/parser",323),
+    ("tests/compos/parser2",165),
     ("tests/unit/bool_symbolic", 3),
     ("tests/unit/qsort", 28),
     ("tests/unit/compos1", 4),

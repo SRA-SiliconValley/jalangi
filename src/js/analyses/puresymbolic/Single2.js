@@ -24,7 +24,6 @@
     var PREFIX1 = "J$";
     var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
     var  N_LOG_FUNCTION_LIT = 12;
-    var MAX_CALL_DEPTH = 10;
     var STATS_FILE_NAME = "jalangi_multiex_stats";
 
     //-------------------------------- End constants ---------------------------------
@@ -54,6 +53,7 @@
     var exceptionVal;
     var returnVal = [];
     var funCallDepth = 0;
+    var MAX_CALL_DEPTH = pc.getMAX_CALL_DEPTH();
 
     //---------------------------- Utility functions -------------------------------
 

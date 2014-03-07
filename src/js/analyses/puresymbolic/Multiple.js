@@ -32,13 +32,13 @@
     var TRACE_WRITE = false;
     var TRACE_RETURNS = true;
     var TRACE_TESTS = true;
-    var MAX_CALL_DEPTH = 10;
 
     var exceptionVal;
     var returnVal = [];
     var funCallDepth = 0;
 
     var pc = single.getPC();
+    var MAX_CALL_DEPTH = pc.getMAX_CALL_DEPTH();
 
     function makePredValues(pred, value) {
         if (!(value instanceof PredValues)) {

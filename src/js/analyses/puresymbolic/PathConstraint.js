@@ -29,6 +29,7 @@
     var PATH_FILE_NAME = 'jalangi_path';
     var fs = require('fs');
     var MAX_PATH_COUNT = 10;
+    var MAX_CALL_DEPTH = 10;
 
 //    var pathConstraint = BDD.one;
 //    var pathIndex;
@@ -501,6 +502,10 @@
         return startCountingOps;
     }
 
+    function getMAX_CALL_DEPTH() {
+        return MAX_CALL_DEPTH;
+    }
+
     sandbox.addAxiom = addAxiom;
     sandbox.branch = branch;
     sandbox.concretize = concretize;
@@ -508,6 +513,8 @@
     sandbox.generateInputs = generateInputs;
     sandbox.functionEnter = functionEnter;
     sandbox.functionExit = functionExit;
+    sandbox.getMAX_CALL_DEPTH = getMAX_CALL_DEPTH;
+
 
     sandbox.popFrame = popFrame;
     sandbox.pushFrame = pushFrame;

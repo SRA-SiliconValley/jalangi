@@ -1032,7 +1032,7 @@ if (typeof J$ === 'undefined') {
                 ret = !!left_c;
 
                 if (sandbox.analysis && sandbox.analysis.conditional) {
-                    lastVal = sandbox.analysis.conditional(iid, left, ret);
+                    lastVal = sandbox.analysis.conditional(iid, left, left_c);
                     if (rrEngine) {
                         rrEngine.RR_updateRecordedObject(lastVal);
                     }

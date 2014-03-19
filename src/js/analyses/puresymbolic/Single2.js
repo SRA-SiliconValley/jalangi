@@ -525,7 +525,7 @@
                     val = g.apply(base, args);
                 }
             }  else {
-                val = undefined;
+                val = wrapUndefined(undefined, false);
             }
         } finally {
             popSwitchKey();

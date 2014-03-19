@@ -29,11 +29,16 @@
 
     var TRACE_CALL = true;
     var TRACE_BRANCH = true;
-    var TRACE_WRITE = true;
+    var TRACE_WRITE = false;
     var TRACE_RETURNS = true;
     var TRACE_TESTS = true;
 
+    var exceptionVal;
+    var returnVal = [];
+    var funCallDepth = 0;
+
     var pc = single.getPC();
+    var MAX_CALL_DEPTH = pc.getMAX_CALL_DEPTH();
 
     function makePredValues(pred, value) {
         if (!(value instanceof PredValues)) {
@@ -44,6 +49,20 @@
 
     function HOP(obj, prop) {
         return Object.prototype.hasOwnProperty.call(obj, prop);
+    }
+
+
+    function printLogAtReturns(isBackTrack) {
+        if (!isBackTrack) {
+            console.log(pad+"Returning current function");
+        } else {
+            console.log(pad+"Backtracking current function");
+        }
+        console.log(pad+"  Path constraint in BDD form "+pc.getPC().toString());
+        console.log(pad+"                  in predicate form "+pc.getFormulaFromBDD(pc.getPC()).toString());
+        console.log(pad+"  Aggregate path constraint in BDD form "+pc.getAggregatePC().toString());
+        console.log(pad+"                          in predicate form "+pc.getFormulaFromBDD(pc.getAggregatePC()).toString());
+        console.log(pad+"  Aggregate return value "+pc.getReturnVal());
     }
 
 
@@ -115,7 +134,7 @@
                     pred = pred.and(args[i].values[indices[i]].pred);
                 }
                 if (!pred.isZero()) {
-                    pc.pushPC(pred);
+                    pc.pushFrame(pred);
                     for (i = 0; i < len; ++i) {
                         if (noConcretizeArgs) {
                             cArgs[i] = single.initUndefinedNumber(args[i].values[indices[i]].value);
@@ -130,7 +149,7 @@
                     }
                     ret = addValue(ret, pc.getPC(), value);
                     newPC = newPC.or(pc.getPC());
-                    pc.popPC();
+                    pc.popFrame();
                 }
             } while (nextIndices(indices, maxIndices));
 
@@ -350,6 +369,9 @@
     function F(iid, f, isConstructor) {
         return function () {
             var base = this;
+            if (funCallDepth > MAX_CALL_DEPTH) {
+                throw new Error("Pruning function call");
+            }
             return invokeFun(iid, base, f, arguments, isConstructor);
         }
     }
@@ -357,29 +379,11 @@
     function M(iid, base, offset, isConstructor) {
         return function () {
             var f = G(iid, base, offset);
+            if (funCallDepth > MAX_CALL_DEPTH) {
+                throw new Error("Pruning function call");
+            }
             return invokeFun(iid, base, f, arguments, isConstructor);
         };
-    }
-
-    var scriptCount = 0;
-
-    function Se(iid, val) {
-        //pc.pushPC(pc.getPC());
-        scriptCount++;
-    }
-
-    function Sr(iid) {
-        scriptCount--;
-        var ret2, pathCount = pc.getPathCount();
-        if (scriptCount === 0) {
-            ret2 = pc.generateInputs(TRACE_TESTS?pad:false, true);
-        } else {
-            ret2 = pc.generateInputs(TRACE_TESTS?pad:false);
-//            ret2 = pc.generateInputs(true);
-        }
-
-        pc.resetPC(undefined, TRACE_RETURNS?pad:false);
-        return ret2;
     }
 
     function I(val) {
@@ -467,7 +471,7 @@
                 pred = pc.getPC().and(pred);
 
                 if (!pred.isZero()) {
-                    pc.pushPC(pred);
+                    pc.pushFrame(pred);
                     if (op !== undefined) {
                         value = single.B(iid, op, left.values[i].value, right.values[j].value);
                     } else {
@@ -475,7 +479,7 @@
                     }
                     ret = addValue(ret, pc.getPC(), value);
                     newPC = newPC.or(pc.getPC());
-                    pc.popPC();
+                    pc.popFrame();
                 }
             }
         }
@@ -494,11 +498,11 @@
             pred = pc.getPC().and(left.values[i].pred);
 
             if (!pred.isZero()) {
-                pc.pushPC(pred);
+                pc.pushFrame(pred);
                 value = single.U(iid, op, left.values[i].value);
                 ret = addValue(ret, pc.getPC(), value);
                 newPC = newPC.or(pc.getPC());
-                pc.popPC();
+                pc.popFrame();
             }
         }
         pc.setPC(pc.getPC().and(newPC));
@@ -526,14 +530,14 @@
                 if (!pred.isZero()) {
                     var base = left.values[i].value;
                     var offset = right.values[j].value;
-                    pc.pushPC(pred);
+                    pc.pushFrame(pred);
                     var oldValue = single.G(iid, base, offset);
                     single.P(iid, base, offset, ret = update(oldValue, val));
                     if (TRACE_WRITE) {
                         console.log(pad+"Writing field "+offset+" with " + ret +" at "+getIIDInfo(iid));
                     }
                     newPC = newPC.or(pc.getPC());
-                    pc.popPC();
+                    pc.popFrame();
                 }
             }
         }
@@ -563,11 +567,11 @@
                             ret = addValue(ret, pred, value);
                             newPC = newPC.or(pc.getPC());
                         } else {
-                            pc.pushPC(pred);
+                            pc.pushFrame(pred);
                             value = singleInvokeFun(iid, base.values[i].value, f2, args, isConstructor);
                             ret = addValue(ret, pc.getPC(), value);
                             newPC = newPC.or(pc.getPC());
-                            pc.popPC();
+                            pc.popFrame();
                         }
                     }
                 }
@@ -579,29 +583,92 @@
         return ret;
     }
 
-    var returnVal;
+    var scriptCount = 0;
+
+    function Se(iid, val) {
+        //pc.pushFrame(pc.getPC());
+        scriptCount++;
+    }
+
+    function Sr(iid) {
+        scriptCount--;
+        var ret2 = pc.generateInputs(scriptCount==0, false);
+        if (scriptCount==0) {
+            single.writeICount();
+        }
+        if (TRACE_TESTS && ret2)
+            console.log(pad+"Generated the input "+JSON.stringify(ret2));
+        var isException = (exceptionVal !== undefined) || !ret2;
+
+        var isBackTrack = pc.resetFrame(undefined, isException);
+        if (TRACE_RETURNS)
+            printLogAtReturns(isBackTrack);
+        if (isException  && exceptionVal) {
+            if (scriptCount == 0) {
+                console.log("Pruning path.  No need to worry.")
+                //console.log("FYI: exception.  No need to worry.")
+                //console.log(exceptionVal.stack);
+            }
+            exceptionVal = undefined;
+        }
+
+        return isBackTrack;
+    }
+
 
     function Fe(iid, val, dis) {
-        returnVal = undefined;
+        returnVal.push(undefined);
+        exceptionVal = undefined;
+        funCallDepth++;
     }
 
     function Fr(iid) {
+        funCallDepth--;
         var ret2, aggrRet = pc.getReturnVal();
-        ret2 = pc.generateInputs(TRACE_TESTS?pad:false);
+        ret2 = pc.generateInputs(false, false);
+        if (TRACE_TESTS && ret2)
+            console.log(pad+"Generated the input "+JSON.stringify(ret2));
+        var isException = (exceptionVal !== undefined) || !ret2;
+        if (!isException) {
+            var retVal = returnVal.pop();
+            retVal = addValue(aggrRet, pc.getPC(), retVal);
+            returnVal.push(retVal);
+        } else {
+            returnVal.pop();
+            returnVal.push(aggrRet);
+        }
+        var isBackTrack = pc.resetFrame(retVal,isException);
+        if (isBackTrack) {
+            returnVal.pop();
+        }
+        if (TRACE_RETURNS)
+            printLogAtReturns(isBackTrack);
+        // if there was an uncaught exception, do not throw it
+        // here, chew it up
+        // @todo need to revisit
+        if (isException && exceptionVal) {
+            console.log("Pruning path.  No need to worry.")
+            //console.log(exceptionVal.stack);
+            exceptionVal = undefined;
+        }
 
-        returnVal = addValue(aggrRet, pc.getPC(), returnVal);
-        pc.resetPC(returnVal, TRACE_RETURNS?pad:false);
-        return ret2;
+        return isBackTrack;
+    }
+
+    // Uncaught exception
+    function Ex(iid, e) {
+        exceptionVal = e;
     }
 
     function Rt(iid, val) {
-        returnVal = val;
+        returnVal.pop();
+        returnVal.push(val);
         return val;
     }
 
     function Ra() {
-        var ret = returnVal;
-        returnVal = undefined;
+        var ret = returnVal.pop();
+        exceptionVal = undefined;
 
         // special case to handle return of undefined from a constructor
         // if undefined is returned from a constructor, do not wrap the return value
@@ -685,12 +752,13 @@
             pred1 = pred1.or(left.values[i].pred.and(ret));
             pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
+        var ret2 = pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), switchLeft);
         if (TRACE_BRANCH) {
-            console.log(pad+"Branching at "+getIIDInfo(iid));
+            console.log(pad+"Branching at "+getIIDInfo(iid)+" with result "+ret2);
             console.log(pad+"true branch condition in BDD form "+ret.toString());
             console.log(pad+"                          in predicate form "+pc.getFormulaFromBDD(ret).toString());
         }
-        return pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), switchLeft, TRACE_BRANCH?pad:false);
+        return ret2;
     }
 
     function C(iid, left) {
@@ -709,12 +777,13 @@
             pred1 = pred1.or(left.values[i].pred.and(ret));
             pred2 = pred2.or(left.values[i].pred.and(ret.not()));
         }
+        var ret2 = pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), lastVal);
         if (TRACE_BRANCH) {
-            console.log(pad+"Branching at "+getIIDInfo(iid));
+            console.log(pad+"Branching at "+getIIDInfo(iid)+" with result "+ret2);
             console.log(pad+"  true branch condition in BDD form "+ret.toString());
             console.log(pad+"                          in predicate form "+pc.getFormulaFromBDD(ret).toString());
         }
-        return pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), lastVal, TRACE_BRANCH?pad:false);
+        return ret2;
     }
 
     function addAxiom(left) {
@@ -762,15 +831,19 @@
     sandbox.Sr = Sr; // Script return
     sandbox.Rt = Rt;
     sandbox.Ra = Ra;
+    sandbox.Ex = Ex;
+
 
     sandbox.makeSymbolic = makeSymbolic;
     sandbox.addAxiom = addAxiom;
 
     sandbox.postLoad = function () {
         if (!sfuns) {
+            pc.pushFrame(pc.getPC());
             scriptCount++; // avoid generating an input
             sfuns = require('./SymbolicFunctions3_jalangi_')
             scriptCount--;
+            pc.popFrame();
         }
     }
 

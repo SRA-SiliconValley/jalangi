@@ -226,7 +226,15 @@ def run_html_in_phantom(html_filename,phantom_script,jalangi=DEFAULT_INSTALL):
     #     print err
     return out
 
-RUNTIME_SCRIPTS = ["src/js/analysis.js",
+RUNTIME_SCRIPTS = ["src/js/Constants.js",
+                   "src/js/Config.js",
+                   "src/js/Globals.js",
+                   "src/js/TraceWriter.js",
+                   "src/js/TraceReader.js",
+                   "src/js/SMemory.js",
+                   "src/js/iidToLocation.js",
+                   "src/js/RecordReplayEngine.js",
+                   "src/js/analysis.js",
                    "src/js/InputManager.js",
                    "node_modules/escodegen/escodegen.browser.js",
                    "node_modules/acorn/acorn.js",

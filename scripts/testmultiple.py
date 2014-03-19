@@ -18,10 +18,25 @@ import testrunner
 
 tests = [
     ("tests/compos/arbitrary1",2),
-    ("tests/compos/arbitrary2",80),
+    ("tests/compos/arbitrary2",75),
     ("tests/compos/arbitrary3",2),
     ("tests/compos/arbitrary4",13),
+    ("tests/compos/fac",12),
+    ("tests/compos/fac2",12),
+    ("tests/compos/parser",323),
+    ("tests/compos/parser2",165),
     ("tests/unit/bool_symbolic", 3),
+    ("tests/unit/qsort", 28),
+    ("tests/unit/compos1", 4),
+    ("tests/unit/compos2", 4),
+    ("tests/unit/compos3", 8),
+    ("tests/unit/compos4", 3),
+    ("tests/unit/compos5", 5),
+    ("tests/unit/compos6", 1),
+    ("tests/unit/testme", 7),
+    ("tests/unit/testme2", 2),
+    ("tests/unit/testme3", 4),
+    ("tests/unit/testme4", 5),
     ("tests/unit/or", 3),
     ("tests/unit/and", 3),
     ("tests/unit/path_inputs", 4),
@@ -56,22 +71,11 @@ tests = [
     ("tests/unit/regex7", 5),
     ("tests/unit/regex9", 2),
     ("tests/unit/switchs1", 5),
-    ("tests/unit/switch-complex", 3),
-    ("tests/unit/qsort", 28),
-    ("tests/unit/compos1", 4),
-    ("tests/unit/compos2", 4),
-    ("tests/unit/compos3", 8),
-    ("tests/unit/compos4", 3),
-    ("tests/unit/compos5", 5),
-    ("tests/unit/compos6", 1),
-    ("tests/unit/testme", 7),
-    ("tests/unit/testme2", 2),
-    ("tests/unit/testme3", 4),
-    ("tests/unit/testme4", 5)
+    ("tests/unit/switch-complex", 3)
     ]
 
 def gen_args(expected):
-    return ["symbolic", "-a", "analyses/puresymbolic/Multiple", "-i", str(expected)]
+    return ["symbolic", "-a", "./analyses/puresymbolic/Multiple", "-i", str(expected)]
     
 success = testrunner.run_tests_with_expected(tests, gen_args)
 if not success:

@@ -9,13 +9,15 @@ if (typeof J$ === 'undefined') {
 
     //----------------------------------- Record Replay Engine ---------------------------------
 
-    sandbox.RecordReplayEngine = function() {
+    sandbox.RecordReplayEngine = function () {
 
         // get the constants in local variables for faster access
 
-        var Globals = sandbox.Globals;
-        var Config = sandbox.Config;
-        var Constants = sandbox.Constants;
+        var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
+        var Globals = Constants.load('Globals');
+        var Config = Constants.load('Config');
+        var TraceWriter = Constants.load('TraceWriter');
+        var TraceReader = Constants.load('TraceReader');
 
         var SPECIAL_PROP = Constants.SPECIAL_PROP;
         var SPECIAL_PROP2 = Constants.SPECIAL_PROP2;
@@ -53,15 +55,16 @@ if (typeof J$ === 'undefined') {
             N_LOG_HASH = Constants.N_LOG_HASH,
             N_LOG_SPECIAL = Constants.N_LOG_SPECIAL,
             N_LOG_GETFIELD_OWN = Constants.N_LOG_GETFIELD_OWN;
-        
+
         var HOP = Constants.HOP;
         var hasGetterSetter = Constants.hasGetterSetter;
         var getConcrete = Constants.getConcrete;
         var debugPrint = Constants.debugPrint;
         var warnPrint = Constants.warnPrint;
         var seriousWarnPrint = Constants.seriousWarnPrint;
+        var encodeNaNandInfForJSON = Constants.encodeNaNandInfForJSON;
 
-        var traceInfo, traceWriter, traceFileName;
+        var traceReader, traceWriter;
         var seqNo = 0;
 
         var frame = {};
@@ -86,36 +89,6 @@ if (typeof J$ === 'undefined') {
          array is 7
          */
 
-
-        function encodeNaNandInfForJSON(key, value) {
-            if (value === Infinity) {
-                return "Infinity";
-            } else if (value !== value) {
-                return "NaN";
-            }
-            return value;
-        }
-
-        function decodeNaNandInfForJSON(key, value) {
-            if (value === "Infinity") {
-                return Infinity;
-            } else if (value === 'NaN') {
-                return NaN;
-            } else {
-                return value;
-            }
-        }
-
-        function fixForStringNaN(record) {
-            if (record[F_TYPE] == T_STRING) {
-                if (record[F_VALUE] !== record[F_VALUE]) {
-                    record[F_VALUE] = 'NaN';
-                } else if (record[F_VALUE] === Infinity) {
-                    record[F_VALUE] = 'Infinity';
-                }
-
-            }
-        }
 
         function load(path) {
             var head, script;
@@ -313,8 +286,8 @@ if (typeof J$ === 'undefined') {
                         console.log()
                         require('fs').writeFileSync("readAndBranchLogs.replay", JSON.stringify(Globals.loadAndBranchLogs, undefined, 4), "utf8");
                     }
-                    seriousWarnPrint(iid, "Path deviation at record = [" + ret + "] iid = " + iid + " index = " + traceInfo.getPreviousIndex());
-                    throw new Error("Path deviation at record = [" + ret + "] iid = " + iid + " index = " + traceInfo.getPreviousIndex());
+                    seriousWarnPrint(iid, "Path deviation at record = [" + ret + "] iid = " + iid + " index = " + traceReader.getPreviousIndex());
+                    throw new Error("Path deviation at record = [" + ret + "] iid = " + iid + " index = " + traceReader.getPreviousIndex());
                 }
             }
         }
@@ -381,7 +354,7 @@ if (typeof J$ === 'undefined') {
 
             obj = getConcrete(obj);
             proto = obj.__proto__;
-            var oid = this.RR_Load(iid, (proto && HOP(proto,SPECIAL_PROP))?proto[SPECIAL_PROP][SPECIAL_PROP]:undefined, undefined);
+            var oid = this.RR_Load(iid, (proto && HOP(proto, SPECIAL_PROP)) ? proto[SPECIAL_PROP][SPECIAL_PROP] : undefined, undefined);
             if (oid) {
                 if (Globals.mode === MODE_RECORD) {
                     obj[SPECIAL_PROP].__proto__ = proto[SPECIAL_PROP];
@@ -450,8 +423,8 @@ if (typeof J$ === 'undefined') {
                 }
             } else if (Globals.mode === MODE_REPLAY) {
                 var rec;
-                if ((rec = traceInfo.getCurrent()) === undefined) {
-                    traceInfo.next();
+                if ((rec = traceReader.getCurrent()) === undefined) {
+                    traceReader.next();
                     return val;
                 } else {
                     val = this.RR_L(iid, val, N_LOG_GETFIELD);
@@ -510,8 +483,8 @@ if (typeof J$ === 'undefined') {
                     ret = this.RR_L(iid, val, N_LOG_READ);
                 }
             } else if (Globals.mode === MODE_REPLAY) {
-                if (traceInfo.getCurrent() === undefined) {
-                    traceInfo.next();
+                if (traceReader.getCurrent() === undefined) {
+                    traceReader.next();
                     if (name === "this" && Globals.isInstrumentedCaller && !Globals.isConstructorCall) {
                         ret = val;
                     } else {
@@ -539,8 +512,8 @@ if (typeof J$ === 'undefined') {
                     ret = this.RR_L(iid, val, N_LOG_LOAD);
                 }
             } else if (Globals.mode === MODE_REPLAY) {
-                if (traceInfo.getCurrent() === undefined) {
-                    traceInfo.next();
+                if (traceReader.getCurrent() === undefined) {
+                    traceReader.next();
                     ret = val;
                 } else {
                     ret = this.RR_L(iid, val, N_LOG_LOAD);
@@ -563,11 +536,11 @@ if (typeof J$ === 'undefined') {
                         tmp = printableValue(dis);
                         logValue(iid, tmp, N_LOG_FUNCTION_ENTER);
                     } else if (Globals.mode === MODE_REPLAY) {
-                        ret = traceInfo.getAndNext();
+                        ret = traceReader.getAndNext();
                         checkPath(ret, iid);
-                        ret = traceInfo.getAndNext();
+                        ret = traceReader.getAndNext();
                         checkPath(ret, iid);
-                        debugPrint("Index:" + traceInfo.getPreviousIndex());
+                        debugPrint("Index:" + traceReader.getPreviousIndex());
                     }
                 }
             }
@@ -592,9 +565,9 @@ if (typeof J$ === 'undefined') {
                     var tmp = printableValue(val);
                     logValue(iid, tmp, N_LOG_SCRIPT_ENTER);
                 } else if (Globals.mode === MODE_REPLAY) {
-                    ret = traceInfo.getAndNext();
+                    ret = traceReader.getAndNext();
                     checkPath(ret, iid);
-                    debugPrint("Index:" + traceInfo.getPreviousIndex());
+                    debugPrint("Index:" + traceReader.getPreviousIndex());
                 }
             }
         };
@@ -627,9 +600,9 @@ if (typeof J$ === 'undefined') {
                 logValue(iid, tmp, N_LOG_HASH);
                 val = ret;
             } else if (Globals.mode === MODE_REPLAY) {
-                ret = traceInfo.getAndNext();
+                ret = traceReader.getAndNext();
                 checkPath(ret, iid);
-                debugPrint("Index:" + traceInfo.getPreviousIndex());
+                debugPrint("Index:" + traceReader.getPreviousIndex());
                 val = ret[F_VALUE];
                 ret = Object.create(null);
                 for (i in val) {
@@ -653,10 +626,10 @@ if (typeof J$ === 'undefined') {
                 if (createdMockObject) this.syncPrototypeChain(iid, val);
                 createdMockObject = old;
             } else if (Globals.mode === MODE_REPLAY) {
-                ret = traceInfo.getCurrent();
+                ret = traceReader.getCurrent();
                 checkPath(ret, iid, fun);
-                traceInfo.next();
-                debugPrint("Index:" + traceInfo.getPreviousIndex());
+                traceReader.next();
+                debugPrint("Index:" + traceReader.getPreviousIndex());
                 old = createdMockObject;
                 createdMockObject = false;
                 val = syncValue(ret, val, iid);
@@ -686,7 +659,7 @@ if (typeof J$ === 'undefined') {
         this.RR_replay = function () {
             if (Globals.mode === MODE_REPLAY) {
                 while (true) {
-                    var ret = traceInfo.getCurrent();
+                    var ret = traceReader.getCurrent();
                     if (typeof ret !== 'object') {
                         if (Constants.isBrowserReplay) {
                             sandbox.endExecution();
@@ -696,15 +669,15 @@ if (typeof J$ === 'undefined') {
                     var f, prefix;
                     if (ret[F_FUNNAME] === N_LOG_SPECIAL) {
                         prefix = ret[F_VALUE];
-                        traceInfo.next();
-                        ret = traceInfo.getCurrent();
+                        traceReader.next();
+                        ret = traceReader.getCurrent();
                         if (sandbox.analysis && sandbox.analysis.beginExecution) {
                             sandbox.analysis.beginExecution(prefix);
                         }
                     }
                     if (ret[F_FUNNAME] === N_LOG_FUNCTION_ENTER) {
                         f = getConcrete(syncValue(ret, undefined, 0));
-                        ret = traceInfo.getNext();
+                        ret = traceReader.getNext();
                         var dis = syncValue(ret, undefined, 0);
                         f.call(dis);
                     } else if (ret[F_FUNNAME] === N_LOG_SCRIPT_ENTER) {
@@ -729,271 +702,16 @@ if (typeof J$ === 'undefined') {
         };
 
 
-        function TraceWriter() {
-            var bufferSize = 0;
-            var buffer = [];
-            var traceWfh;
-            var fs = (!Constants.isBrowser) ? require('fs') : undefined;
-            var trying = false;
-            var cb;
-            var remoteBuffer = [];
-            var socket, isOpen = false;
-            // if true, in the process of doing final trace dump,
-            // so don't record any more events
-            var tracingDone = false;
-
-            if (Constants.IN_MEMORY_TRACE) {
-                // attach the buffer to the sandbox
-                sandbox.trace_output = buffer;
-            }
-
-            function getFileHanlde() {
-                if (traceWfh === undefined) {
-                    traceWfh = fs.openSync(traceFileName, 'w');
-                }
-                return traceWfh;
-            }
-
-            /**
-             * @param {string} line
-             */
-            this.logToFile = function (line) {
-                if (tracingDone) {
-                    // do nothing
-                    return;
-                }
-                var len = line.length;
-                // we need this loop because it's possible that len >= Config.MAX_BUF_SIZE
-                // TODO fast path for case where len < Config.MAX_BUF_SIZE?
-                var start = 0, end = len < Config.MAX_BUF_SIZE ? len : Config.MAX_BUF_SIZE;
-                while (start < len) {
-                    var chunk = line.substring(start, end);
-                    var curLen = end - start;
-                    if (bufferSize + curLen > Config.MAX_BUF_SIZE) {
-                        this.flush();
-                    }
-                    buffer.push(chunk);
-                    bufferSize += curLen;
-                    start = end;
-                    end = (end + Config.MAX_BUF_SIZE < len) ? end + Config.MAX_BUF_SIZE : len;
-                }
-            };
-
-            this.flush = function () {
-                if (Constants.IN_MEMORY_TRACE) {
-                    // no need to flush anything
-                    return;
-                }
-                var msg;
-                if (!Constants.isBrowser) {
-                    var length = buffer.length;
-                    for (var i = 0; i < length; i++) {
-                        fs.writeSync(getFileHanlde(), buffer[i]);
-                    }
-                } else {
-                    msg = buffer.join('');
-                    if (msg.length > 1) {
-                        this.remoteLog(msg);
-                    }
-                }
-                bufferSize = 0;
-                buffer = [];
-            };
-
-
-            function openSocketIfNotOpen() {
-                if (!socket) {
-                    console.log("Opening connection");
-                    socket = new WebSocket('ws://127.0.0.1:8080', 'log-protocol');
-                    socket.onopen = tryRemoteLog;
-                    socket.onmessage = tryRemoteLog2;
-                }
-            }
-
-            /**
-             * invoked when we receive a message over the websocket,
-             * indicating that the last trace chunk in the remoteBuffer
-             * has been received
-             */
-            function tryRemoteLog2() {
-                trying = false;
-                remoteBuffer.shift();
-                if (remoteBuffer.length === 0) {
-                    if (cb) {
-                        cb();
-                        cb = undefined;
-                    }
-                }
-                tryRemoteLog();
-            }
-
-            this.onflush = function (callback) {
-                if (remoteBuffer.length === 0) {
-                    if (callback) {
-                        callback();
-                    }
-                } else {
-                    cb = callback;
-                    tryRemoteLog();
-                }
-            };
-
-            function tryRemoteLog() {
-                isOpen = true;
-                if (!trying && remoteBuffer.length > 0) {
-                    trying = true;
-                    socket.send(remoteBuffer[0]);
-                }
-            }
-
-            this.remoteLog = function (message) {
-                if (message.length > Config.MAX_BUF_SIZE) {
-                    throw new Error("message too big!!!");
-                }
-                remoteBuffer.push(message);
-                openSocketIfNotOpen();
-                if (isOpen) {
-                    tryRemoteLog();
-                }
-            };
-
-            /**
-             * stop recording the trace and flush everything
-             */
-            this.stopTracing = function () {
-                tracingDone = true;
-                if (!Constants.IN_MEMORY_TRACE) {
-                    this.flush();
-                }
-            };
-        }
-
-
-        function TraceReader() {
-
-            var traceArray = [];
-            var traceIndex = 0;
-            var currentIndex = 0;
-            var frontierIndex = 0;
-            var MAX_SIZE = 1024;
-            var traceFh;
-            var done = false;
-            var curRecord = null;
-
-
-            function cacheRecords() {
-                var i = 0, flag, record;
-
-                if (Constants.isBrowserReplay) {
-                    return;
-                }
-                if (currentIndex >= frontierIndex) {
-                    if (!traceFh) {
-                        var FileLineReader = require('./utils/FileLineReader');
-                        traceFh = new FileLineReader(traceFileName);
-                        // change working directory to wherever trace file resides
-                        var pth = require('path');
-                        var traceFileDir = pth.dirname(pth.resolve(process.cwd(), traceFileName));
-                        process.chdir(traceFileDir);
-                    }
-                    traceArray = [];
-                    while (!done && (flag = traceFh.hasNextLine()) && i < MAX_SIZE) {
-                        record = JSON.parse(traceFh.nextLine(), decodeNaNandInfForJSON);
-                        fixForStringNaN(record);
-                        traceArray.push(record);
-                        debugPrint(i + ":" + JSON.stringify(record /*, encodeNaNandInfForJSON*/));
-                        frontierIndex++;
-                        i++;
-                    }
-                    if (!flag && !done) {
-                        traceFh.close();
-                        done = true;
-                    }
-                }
-            }
-
-            this.addRecord = function (line) {
-                var record = JSON.parse(line, decodeNaNandInfForJSON);
-                fixForStringNaN(record);
-                traceArray.push(record);
-                debugPrint(JSON.stringify(record /*, encodeNaNandInfForJSON*/));
-                frontierIndex++;
-            };
-
-            this.getAndNext = function () {
-                if (curRecord !== null) {
-                    var ret = curRecord;
-                    curRecord = null;
-                    return ret;
-                }
-                cacheRecords();
-                var j = Constants.isBrowserReplay ? currentIndex : currentIndex % MAX_SIZE;
-                var record = traceArray[j];
-                if (record && record[F_SEQ] === traceIndex) {
-                    currentIndex++;
-                } else {
-                    record = undefined;
-                }
-                traceIndex++;
-                return record;
-            };
-
-            this.getNext = function () {
-                if (curRecord !== null) {
-                    throw new Error("Cannot do two getNext() in succession");
-                }
-                var tmp = this.getAndNext();
-                var ret = this.getCurrent();
-                curRecord = tmp;
-                return ret;
-            };
-
-            this.getCurrent = function () {
-                if (curRecord !== null) {
-                    return curRecord;
-                }
-                cacheRecords();
-                var j = Constants.isBrowserReplay ? currentIndex : currentIndex % MAX_SIZE;
-                var record = traceArray[j];
-                if (!(record && record[F_SEQ] === traceIndex)) {
-                    record = undefined;
-                }
-                return record;
-            };
-
-            this.next = function () {
-                if (curRecord !== null) {
-                    curRecord = null;
-                    return;
-                }
-                cacheRecords();
-                var j = Constants.isBrowserReplay ? currentIndex : currentIndex % MAX_SIZE;
-                var record = traceArray[j];
-                if (record && record[F_SEQ] === traceIndex) {
-                    currentIndex++;
-                }
-                traceIndex++;
-            };
-
-            this.getPreviousIndex = function () {
-                if (curRecord !== null) {
-                    return traceIndex - 2;
-                }
-                return traceIndex - 1;
-            };
-
-        }
-
         this.setTraceFileName = function (tFN) {
-            traceFileName = tFN;
+            Globals.traceFileName = tFN;
         }
 
 
         if (Globals.mode === MODE_REPLAY) {
-            traceInfo = new TraceReader();
-            this.addRecord = traceInfo.addRecord;
+            traceReader = new TraceReader();
+            this.addRecord = traceReader.addRecord;
         } else if (Globals.mode === MODE_RECORD) {
-            traceWriter = new TraceWriter();
+            Globals.traceWriter = traceWriter = new TraceWriter();
             this.onflush = traceWriter.onflush;
             if (Constants.isBrowser) {
                 if (!Constants.IN_MEMORY_TRACE) {

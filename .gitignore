@@ -12,3 +12,4 @@ jalangi_tmp/
 jalangi_trace*
 .DS_Store
 .idea
+jout/production/jalangijava/*.class

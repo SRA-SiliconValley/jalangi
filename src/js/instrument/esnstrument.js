@@ -224,14 +224,17 @@
     var iid;
     var opIid;
 
-    function resetIIDCounters() {
-        condCount = 0+inc;
-        iid = 1+inc;
-        opIid = 2+inc;
+    function resetIIDCounters(initialIID) {
+        if (!initialIID) {
+            initialIID = 0;
+        }
+        condCount = initialIID+inc;
+        iid = initialIID+inc+1;
+        opIid = initialIID+inc+2;
     }
 
     // initial reset
-    resetIIDCounters();
+    resetIIDCounters(0);
 
 
     function getIid() {
@@ -258,6 +261,10 @@
 
     var traceWfh;
     var fs;
+    // TODO reset this state in openIIDMapFile or its equivalent?
+    var curFileName = null;
+    var orig2Inst = {};
+    var iidSourceInfo = {};
 
     function writeLineToIIDMap(str) {
         if (traceWfh) {
@@ -265,16 +272,24 @@
         }
     }
 
+    /** @type {string} */
+    var smapFile = null;
     /**
      * if not yet open, open the IID map file and write the header.
      * @param {string} outputDir an optional output directory for the sourcemap file
+     * @param {number?} first_iid if specified, the first IID to use
      */
-    function openIIDMapFile(outputDir) {
+    function openIIDMapFile(outputDir, first_iid) {
         if (traceWfh === undefined) {
             fs = require('fs');
-            var smapFile = outputDir ? (require('path').join(outputDir, SMAP_FILE_NAME)) : SMAP_FILE_NAME;
+            smapFile = outputDir ? (require('path').join(outputDir, SMAP_FILE_NAME)) : SMAP_FILE_NAME;
             traceWfh = fs.openSync(smapFile, 'w');
             writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var orig2Inst = sandbox.orig2Inst = {}; var filename;\n");
+            if (first_iid) {
+                // round down to nearest multiple of 4
+                var initialIID = first_iid - (first_iid%4);
+                resetIIDCounters(initialIID);
+            }
         }
     }
 
@@ -283,16 +298,30 @@
      */
     function closeIIDMapFile() {
         if (traceWfh) {
+            // write all the data
+            Object.keys(iidSourceInfo).forEach(function (iid) {
+                var sourceInfo = iidSourceInfo[iid];
+                writeLineToIIDMap("iids[" + iid + "] = [\"" + sourceInfo[0] + "\"," + sourceInfo[1] + "," + sourceInfo[2] + "];\n");
+            });
+            Object.keys(orig2Inst).forEach(function (filename) {
+                writeLineToIIDMap("orig2Inst[\"" + filename + "\"] = \"" + orig2Inst[filename] + "\";\n");
+            });
             writeLineToIIDMap("}(typeof " + astUtil.JALANGI_VAR + " === 'undefined'? " + astUtil.JALANGI_VAR + " = {}:" + astUtil.JALANGI_VAR + "));\n");
             fs.closeSync(traceWfh);
+            // also write output as JSON, to make consumption easier
+            var jsonFile = smapFile.replace('.js','.json');
+            var outputObj = [iidSourceInfo,orig2Inst];
+            fs.writeFileSync(jsonFile, JSON.stringify(outputObj));
             traceWfh = undefined;
+            smapFile = null;
         }
     }
 
 
     function printLineInfoAux(i, ast) {
         if (ast && ast.loc) {
-            writeLineToIIDMap('iids[' + i + '] = [filename,' + (ast.loc.start.line) + "," + (ast.loc.start.column + 1) + "];\n");
+            iidSourceInfo[i] = [curFileName, ast.loc.start.line, ast.loc.start.column+1];
+            //writeLineToIIDMap('iids[' + i + '] = [filename,' + (ast.loc.start.line) + "," + (ast.loc.start.column + 1) + "];\n");
         }
 //        else {
 //            console.log(i+":undefined:undefined");
@@ -509,9 +538,11 @@
     }
 
     function wrapEvalArg(ast) {
+        printIidToLoc(ast);
         var ret = replaceInExpr(
-            instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false}).code",
-            ast
+            instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false}," + RP +"2).code",
+            ast,
+            getIid()
         );
         transferLoc(ret, ast);
         return ret;
@@ -1400,7 +1431,7 @@
      * parameter was true
      *
      */
-    function instrumentCode(code, options) {
+    function instrumentCode(code, options, iid) {
         var oldCondCount,
             tryCatchAtTop = options.wrapProgram,
             filename = options.filename,
@@ -1412,32 +1443,41 @@
             // the directory in which the sourcemap file is written, and
             // the current working directory are all the same during replay
             // TODO add parameters to allow these paths to be distinct
-            writeLineToIIDMap("filename = \"" + filename + "\";\n");
+            //writeLineToIIDMap("filename = \"" + filename + "\";\n");
+            curFileName = filename;
             instCodeFileName = instFileName ? instFileName : makeInstCodeFileName(filename);
-            writeLineToIIDMap("orig2Inst[filename] = \"" + instCodeFileName + "\";\n");
+            orig2Inst[curFileName] = instCodeFileName;
+            //writeLineToIIDMap("orig2Inst[filename] = \"" + instCodeFileName + "\";\n");
         }
-        if (typeof  code === "string" && code.indexOf(noInstr) < 0) {
-            if (!tryCatchAtTop) {
-                // this means we are inside an eval
-                // set to 3 so condition ids inside eval'd code won't conflict
-                // with containing script          
-                // TODO what about multiple levels of nested evals?
-                oldCondCount = condCount;
-                condCount = 3;
+        if (typeof  code === "string"){
+            if (iid && sandbox.analysis && sandbox.analysis.instrumentCode) {
+                code = sandbox.analysis.instrumentCode(iid, code);
             }
-            wrapProgramNode = tryCatchAtTop;
-            topLevelExprs = [];
-            var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
-            var newCode = escodegen.generate(newAst);
+            if (code.indexOf(noInstr) < 0) {
+                if (!tryCatchAtTop) {
+                    // this means we are inside an eval
+                    // set to 3 so condition ids inside eval'd code won't conflict
+                    // with containing script
+                    // TODO what about multiple levels of nested evals?
+                    oldCondCount = condCount;
+                    condCount = 3;
+                }
+                wrapProgramNode = tryCatchAtTop;
+                topLevelExprs = [];
+                var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
+                var newCode = escodegen.generate(newAst);
 
-            if (!tryCatchAtTop) {
-                condCount = oldCondCount;
-            }
-            var ret = newCode + "\n" + noInstr + "\n";
-            if (metadata) {
-                return { code:ret, iidMetadata: getMetadata(newAst) };
+                if (!tryCatchAtTop) {
+                    condCount = oldCondCount;
+                }
+                var ret = newCode + "\n" + noInstr + "\n";
+                if (metadata) {
+                    return { code:ret, iidMetadata: getMetadata(newAst) };
+                } else {
+                    return {code:ret};
+                }
             } else {
-                return {code:ret};
+                return code;
             }
         } else {
             return code;
@@ -1475,14 +1515,16 @@
         }
         for ( ; i < args.length; i++) {
             var filename = args[i];
-            writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
+            curFileName = sanitizePath(require('path').resolve(process.cwd(), filename));
+            //writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
             console.log("Instrumenting " + filename + " ...");
 //            console.time("load")
             var code = getCode(filename);
 //            console.timeEnd("load")
             wrapProgramNode = true;
             instCodeFileName = makeInstCodeFileName(filename);
-            writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(), instCodeFileName)) + "\";\n");
+            orig2Inst[curFileName] = sanitizePath(require('path').resolve(process.cwd(), instCodeFileName));
+            //writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(), instCodeFileName)) + "\";\n");
             topLevelExprs = [];
             var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
             //console.log(JSON.stringify(newAst, null, '\t'));

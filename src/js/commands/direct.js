@@ -15,18 +15,24 @@
  */
 
 // Author: Manu Sridharan
+// Author: Koushik Sen
 
-/*global describe */
-/*global it */
-var jalangi = require('./../src/js/jalangi');
-var fs = require('fs');
-var assert = require('assert');
+/*jslint node: true */
+/*global process */
+/*global J$ */
 
-describe('instrument tests', function () {
-    it('should handle relative paths', function () {
-        var testFile = "tests/unit/instrument-test.js";
-        var instResult = jalangi.instrument(testFile, {iidMap: true, relative: true});
-        var iidMap = String(fs.readFileSync(instResult.iidMapFile));
-        assert.equal("iids[4] = [\"tests/unit/instrument-test.js\",23,9];", iidMap.split('\n')[1]);
-    });
-});
+var clientAnalysis;
+if (process.argv[3]) {
+    clientAnalysis = process.argv[3];
+}
+
+var analysis = require('./../analysis');
+analysis.init("inbrowser", clientAnalysis);
+require('./../InputManager');
+require('./../instrument/esnstrument');
+require(process.cwd() + '/inputs.js');
+var script = process.argv[2];
+var path = require('path');
+require(path.resolve(script));
+J$.endExecution();
+

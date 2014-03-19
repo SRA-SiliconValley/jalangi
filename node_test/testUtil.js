@@ -51,7 +51,7 @@ function runTest(script, instScriptFile) {
     }).then(function (result) {
             checkResult(result);
             traceFile = result.traceFile;
-            var result = execSync.run("wc -l " + traceFile);
+            execSync.run("wc -l " + traceFile);
             //console.log(result.stdout);
             return jalangi.replay(traceFile);
         }).then(function (result) {

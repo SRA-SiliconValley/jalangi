@@ -24,6 +24,7 @@
     var PREFIX1 = "J$";
     var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
     var  N_LOG_FUNCTION_LIT = 12;
+    var STATS_FILE_NAME = "jalangi_multiex_stats";
 
     //-------------------------------- End constants ---------------------------------
 
@@ -39,11 +40,26 @@
     var FromCharCodePredicate = require('./FromCharCodePredicate');
     var SymbolicAnyVar = require('./SymbolicAnyVar');
     var SolverEngine = require('./SolverEngine');
-    var solver = new SolverEngine();
     var pc = require('./PathConstraint');
 
+    var iCount;
+    try {
+        iCount = JSON.parse(require('fs').readFileSync(STATS_FILE_NAME,"utf8"));
+    } catch(e) {
+        iCount = 0;
+    }
+
+
+    var exceptionVal;
+    var returnVal = [];
+    var funCallDepth = 0;
+    var MAX_CALL_DEPTH = pc.getMAX_CALL_DEPTH();
 
     //---------------------------- Utility functions -------------------------------
+
+    function writeICount() {
+        require('fs').writeFileSync(STATS_FILE_NAME,JSON.stringify(iCount),"utf8");
+    }
 
     function getPC() {
         return pc;
@@ -509,7 +525,7 @@
                     val = g.apply(base, args);
                 }
             }  else {
-                val = undefined;
+                val = wrapUndefined(undefined, false);
             }
         } finally {
             popSwitchKey();
@@ -523,6 +539,9 @@
     function F(iid, f, isConstructor) {
         return function() {
             var base = this;
+            if (funCallDepth > MAX_CALL_DEPTH) {
+                throw new Error("Pruning function call");
+            }
             return invokeFun(iid, base, f, arguments, isConstructor);
         }
     }
@@ -530,43 +549,75 @@
     function M(iid, base, offset, isConstructor) {
         return function() {
             var f = G(iid, base, offset);
+            if (funCallDepth > MAX_CALL_DEPTH) {
+                throw new Error("Pruning function call");
+            }
             return invokeFun(iid, base, f, arguments, isConstructor);
         };
     }
 
+    // Uncaught exception
+    function Ex(iid, e) {
+        exceptionVal = e;
+    }
+
     function Fe(iid, val, dis) {
-        returnVal = undefined;
+        pc.functionEnter();
+        returnVal.push(undefined);
+        exceptionVal = undefined;
+        funCallDepth++;
     }
 
     function Fr(iid) {
+        funCallDepth--;
+        // if there was an uncaught exception, throw it
+        // here, to preserve exceptional control flow
+        pc.functionExit();
+        if (exceptionVal !== undefined) {
+            var tmp = exceptionVal;
+            exceptionVal = undefined;
+            throw tmp;
+        }
+        return false;
     }
 
     var scriptCount = 0;
 
     function Se(iid,val) {
         scriptCount++;
+        pc.functionEnter();
     }
 
     function Sr(iid) {
         scriptCount--;
+        pc.functionExit();
         if (scriptCount === 0) {
             endExecution();
         }
+        if (exceptionVal !== undefined) {
+            var tmp = exceptionVal;
+            exceptionVal = undefined;
+            if (scriptCount > 0) {
+                throw tmp;
+            } else {
+                console.error(tmp.stack);
+            }
+        }
+
     }
 
     function I(val) {
         return val;
     }
 
-    var returnVal;
-
     function Rt(iid, val) {
-        return returnVal = val;
+        returnVal.pop();
+        returnVal.push(val);
     }
 
     function Ra() {
-        var ret = returnVal;
-        returnVal = undefined;
+        var ret = returnVal.pop();
+        exceptionVal = undefined;
         return ret;
     }
 
@@ -584,7 +635,7 @@
 
 
     function R(iid, name, val, isGlobal) {
-        return single.wrapUndefined(val, !isGlobal);
+        return wrapUndefined(val, !isGlobal);
     }
 
     function W(iid, name, val, lhs) {
@@ -593,7 +644,7 @@
 
     function N(iid, name, val, isArgumentSync) {
         if (isArgumentSync)
-            return single.wrapUndefined(val, false);
+            return wrapUndefined(val, false);
         return val;
     }
 
@@ -852,6 +903,8 @@
 
         var result_c, left_c, right_c;
 
+        if (pc.startCountingOps())
+            iCount++;
         left = initUndefinedForBinary(op, left, right);
         right = initUndefinedForBinary(op, right, left);
 
@@ -987,6 +1040,8 @@
     function U(iid, op, left) {
         var left_c, result_c;
 
+        if (pc.startCountingOps())
+            iCount++;
         left = initUndefinedForUnary(op, left);
 
         if ((result_c = unarys(iid, op, left))) {
@@ -1081,7 +1136,8 @@
     }
 
     function endExecution() {
-        pc.generateInputs("  ");
+        writeICount();
+        pc.generateInputs(true, true);
     }
 
     sandbox.U = U; // Unary operation
@@ -1108,6 +1164,7 @@
     sandbox.Sr = Sr; // Script return
     sandbox.Rt = Rt; // Value return
     sandbox.Ra = Ra;
+    sandbox.Ex = Ex;
 
     sandbox.invokeFun = invokeFun;
     sandbox.makeSymbolic = makeSymbolic;
@@ -1120,6 +1177,7 @@
     sandbox.initUndefinedFunction = initUndefinedFunction;
     sandbox.initUndefinedNumber = initUndefinedNumber;
     sandbox.initUndefinedString = initUndefinedString;
+    sandbox.writeICount = writeICount;
 
 }(module.exports));
 

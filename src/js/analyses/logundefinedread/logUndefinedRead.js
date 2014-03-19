@@ -16,7 +16,11 @@
 
 // Author: Koushik Sen
 
-(function (module) {
+if (typeof J$ === 'undefined') {
+    J$ = {};
+}
+
+(function (sandbox) {
 
     function LogUndefinedRead() {
 
@@ -54,7 +58,7 @@
 
         this.getField = function (iid, base, offset, val) {
             if (val !== val) {
-                console.log("Reading NaN iid:"+iid+" offset:"+offset);
+                console.log("Reading NaN at "+sandbox.iidToLocation(iid)+" offset:"+offset);
             }
             return val;
         }
@@ -69,7 +73,7 @@
 
         this.readPre = function (iid, name, val, isGlobal) {
             if (val !== val) {
-                console.log("Reading NaN iid:"+iid+" name:"+name);
+                console.log("Reading NaN at "+sandbox.iidToLocation(iid)+" name:"+name);
             }
         }
 
@@ -130,5 +134,5 @@
         }
     }
 
-    module.analysis = new LogUndefinedRead();
+    sandbox.analysis = new LogUndefinedRead();
 }(J$));

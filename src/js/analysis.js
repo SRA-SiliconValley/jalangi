@@ -19,6 +19,9 @@
 
 /*
  To perform analysis in browser without recording, set window.JALANGI_MODE to 'inbrowser' and J$.analysis to a suitable analysis file.
+ In the inbrowser mode, one has access to the object J$.Globals.smemory, which denotes the shadow memory.
+ smemory.getShadowObject(obj) returns the shadow object associated with obj if type of obj is "object" or "function".
+ smemory.getShadowFrame(varName) returns the shadow frame that contains the variable named "varName".
  To redefine all instrumentation functions, set JALANGI_MODE to 'symbolic' and J$.analysis to a suitable library containing redefinitions of W, R, etc.
 
  */
@@ -33,9 +36,10 @@ if (typeof J$ === 'undefined') {
 }
 
 (function (sandbox) {
-    var Constants = (typeof sandbox.Constants === 'undefined'? require('./Constants.js'): sandbox.Constants);
+    var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
     var Globals = Constants.load('Globals');
     var Config = Constants.load('Config');
+    var SMemory = Constants.load('SMemory');
     var RecordReplayEngine = Constants.load('RecordReplayEngine');
 
 //    var Globals = (typeof sandbox.Globals === 'undefined'? require('./Globals.js'): sandbox.Globals);
@@ -65,7 +69,6 @@ if (typeof J$ === 'undefined') {
             N_LOG_OPERATION = Constants.N_LOG_OPERATION;
 
 
-
         var mode = Globals.mode = (function (str) {
             switch (str) {
                 case "record" :
@@ -87,14 +90,10 @@ if (typeof J$ === 'undefined') {
         Globals.isConstructorCall = false;
 
 
-
-
-
-
         if (Globals.mode === MODE_DIRECT) {
             /* JALANGI_ANALYSIS file must define all instrumentation functions such as U, B, C, C1, C2, W, R, G, P */
             if (analysis_script) {
-                sandbox.analysis = require('./' + analysis_script);
+                sandbox.analysis = require(analysis_script);
             }
 
             sandbox.U = sandbox.analysis.U; // Unary operation
@@ -129,7 +128,7 @@ if (typeof J$ === 'undefined') {
 
             // TODO get rid of this --MS
             // do not get rid of this --KS
-            if (analysis_script === "analyses/puresymbolic/Multiple") {
+            if (analysis_script  && analysis_script.indexOf("analyses/puresymbolic/Multiple")>=0) {
                 sandbox.analysis.postLoad();
             }
 
@@ -139,16 +138,19 @@ if (typeof J$ === 'undefined') {
             var executionIndex;
             var branchCoverageInfo;
             var analysis;
+            var smemory;
 
 
             executionIndex = new ExecutionIndex();
 
+            if (mode === MODE_RECORD || mode === MODE_REPLAY) {
+                rrEngine = new RecordReplayEngine();
+            } else if (mode === MODE_NO_RR) {
+                Globals.smemory = smemory = new SMemory();
+            }
             if (analysis_script && mode !== MODE_RECORD) {
                 var AnalysisEngine = require(analysis_script);
                 analysis = sandbox.analysis = new AnalysisEngine(executionIndex);
-            }
-            if (mode === MODE_RECORD || mode === MODE_REPLAY) {
-                rrEngine = new RecordReplayEngine();
             }
 
 
@@ -159,6 +161,27 @@ if (typeof J$ === 'undefined') {
                     var len = arguments.length;
                     for (var i = 0; i < len; i++) {
                         arguments[i] = getConcrete(arguments[i]);
+                    }
+                    return f.apply(getConcrete(this), arguments);
+                }
+            }
+
+            function concretize(obj) {
+                for(var key in obj) {
+                    if (HOP(obj, key)) {
+                        obj[key] = getConcrete(obj[key]);
+                    }
+                }
+            }
+
+            function modelDefineProperty(f) {
+                return function () {
+                    var len = arguments.length;
+                    for (var i = 0; i < len; i++) {
+                        arguments[i] = getConcrete(arguments[i]);
+                    }
+                    if (len===3) {
+                        concretize(arguments[2]);
                     }
                     return f.apply(getConcrete(this), arguments);
                 }
@@ -176,7 +199,6 @@ if (typeof J$ === 'undefined') {
                     return [f, true];
                 } else if (//f === Function.prototype.apply ||
                 //f === Function.prototype.call ||
-                    f === Object.defineProperty ||
                         f === console.log ||
                         (typeof getConcrete(arguments[0]) === 'string' && f === RegExp.prototype.test) || // fixes bug in minPathDev.js
                         f === String.prototype.indexOf ||
@@ -206,6 +228,8 @@ if (typeof J$ === 'undefined') {
                         f === Math.tan ||
                         f === parseInt) {
                     return  [create_fun(f), false];
+                } else if (f === Object.defineProperty) {
+                    return [modelDefineProperty(f), false];
                 }
                 return [null, true];
             }
@@ -372,12 +396,16 @@ if (typeof J$ === 'undefined') {
             function invokeEval(base, f, args) {
                 if (rrEngine) {
                     rrEngine.RR_evalBegin();
+                } else if (smemory) {
+                    smemory.evalBegin();
                 }
                 try {
                     return f(sandbox.instrumentCode(getConcrete(args[0]), {wrapProgram:false}).code);
                 } finally {
                     if (rrEngine) {
                         rrEngine.RR_evalEnd();
+                    } else if (smemory) {
+                        smemory.evalEnd();
                     }
                 }
             }
@@ -483,6 +511,12 @@ if (typeof J$ === 'undefined') {
                         rrEngine.RR_updateRecordedObject(val);
                     }
                 }
+
+                if (rrEngine){
+                    rrEngine.RR_replay();
+                    rrEngine.RR_Load(iid);
+                }
+
                 printValueForTesting("J$.G", iid, val);
                 return val;
             }
@@ -517,9 +551,11 @@ if (typeof J$ === 'undefined') {
                     val = sandbox.analysis.putField(iid, base, offset, val);
                 }
 
-                // the following patch is not elegant
-                if (rrEngine && ((offset + "") === "hash")) {
+                // the following patch was not elegant
+                // but now it is better (got rid of offset+"" === "hash" check)
+                if (rrEngine){//} && ((offset + "") === "hash")) {
                     rrEngine.RR_replay();
+                    rrEngine.RR_Load(iid); // add a dummy (no record) in the trace so that RR_Replay does not replay non-setter method
                 }
 
                 // the following patch is not elegant
@@ -548,6 +584,8 @@ if (typeof J$ === 'undefined') {
                 executionIndex.executionIndexCall();
                 if (rrEngine) {
                     rrEngine.RR_Fe(iid, val, dis);
+                } else if (smemory) {
+                    smemory.functionEnter(val);
                 }
                 returnVal.push(undefined);
                 exceptionVal = undefined;
@@ -565,6 +603,8 @@ if (typeof J$ === 'undefined') {
                 executionIndex.executionIndexReturn();
                 if (rrEngine) {
                     rrEngine.RR_Fr(iid);
+                } else if (smemory) {
+                    smemory.functionReturn();
                 }
                 if (sandbox.analysis && sandbox.analysis.functionExit) {
                     ret = sandbox.analysis.functionExit(iid);
@@ -609,6 +649,8 @@ if (typeof J$ === 'undefined') {
                 scriptCount++;
                 if (rrEngine) {
                     rrEngine.RR_Se(iid, val);
+                } else if (smemory) {
+                    smemory.scriptEnter();
                 }
                 if (sandbox.analysis && sandbox.analysis.scriptEnter) {
                     sandbox.analysis.scriptEnter(iid, val);
@@ -621,6 +663,8 @@ if (typeof J$ === 'undefined') {
                 scriptCount--;
                 if (rrEngine) {
                     rrEngine.RR_Sr(iid);
+                } else if (smemory) {
+                    smemory.scriptReturn();
                 }
                 if (sandbox.analysis && sandbox.analysis.scriptExit) {
                     sandbox.analysis.scriptExit(iid);
@@ -652,6 +696,8 @@ if (typeof J$ === 'undefined') {
                 }
                 if (rrEngine) {
                     rrEngine.RR_T(iid, val, type);
+                } else if (smemory) {
+                    smemory.defineFunction(val, type);
                 }
                 if (type === N_LOG_FUNCTION_LIT) {
                     if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
@@ -720,6 +766,8 @@ if (typeof J$ === 'undefined') {
             function N(iid, name, val, isArgumentSync) {
                 if (rrEngine) {
                     rrEngine.RR_N(iid, name, val, isArgumentSync);
+                } else if (smemory) {
+                    smemory.initialize(name);
                 }
                 if (sandbox.analysis && sandbox.analysis.declare) {
                     sandbox.analysis.declare(iid, name, val, isArgumentSync);
@@ -984,7 +1032,7 @@ if (typeof J$ === 'undefined') {
                 ret = !!left_c;
 
                 if (sandbox.analysis && sandbox.analysis.conditional) {
-                    lastVal = sandbox.analysis.conditional(iid, left, ret);
+                    lastVal = sandbox.analysis.conditional(iid, left, left_c);
                     if (rrEngine) {
                         rrEngine.RR_updateRecordedObject(lastVal);
                     }
@@ -1031,7 +1079,6 @@ if (typeof J$ === 'undefined') {
             };
 
 
-
             (function (console) {
 
                 console.save = function (data, filename) {
@@ -1058,9 +1105,6 @@ if (typeof J$ === 'undefined') {
                     a.dispatchEvent(e)
                 }
             })(console);
-
-
-
 
 
             sandbox.U = U; // Unary operation
@@ -1092,9 +1136,12 @@ if (typeof J$ === 'undefined') {
             sandbox.Ex = Ex;
 
             sandbox.replay = rrEngine ? rrEngine.RR_replay : undefined;
-            sandbox.onflush = rrEngine ? rrEngine.onflush : function () {};
-            sandbox.record = rrEngine ? rrEngine.record : function () {};
-            sandbox.command = rrEngine ? rrEngine.command : function () {};
+            sandbox.onflush = rrEngine ? rrEngine.onflush : function () {
+            };
+            sandbox.record = rrEngine ? rrEngine.record : function () {
+            };
+            sandbox.command = rrEngine ? rrEngine.command : function () {
+            };
             sandbox.endExecution = endExecution;
             sandbox.addRecord = rrEngine ? rrEngine.addRecord : undefined;
             sandbox.setTraceFileName = rrEngine ? rrEngine.setTraceFileName : undefined;

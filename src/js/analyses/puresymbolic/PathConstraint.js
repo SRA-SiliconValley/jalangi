@@ -29,193 +29,29 @@
     var PATH_FILE_NAME = 'jalangi_path';
     var fs = require('fs');
     var MAX_PATH_COUNT = 10;
+    var MAX_CALL_DEPTH = 10;
 
-    var pathConstraint = BDD.one;
-    var pathIndex;
-    try {
-        pathIndex = JSON.parse(fs.readFileSync(PATH_FILE_NAME,"utf8"));
-        if (pathIndex.length === 0) {
-            process.exit(0);
-        }
-    } catch (e) {
-        pathIndex = [];
-    }
-    var index = 0;
-    var formulaStack = [];
-    formulaStack.count = 0;
-    var solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
-    var pathCount = 0;
-    var returnValue;
-    var aggregatePC;
-
-    var pcStack = [];
-
-
-    function isSymbolicString(s) {
-        return s instanceof SymbolicStringExpression;
-    }
-
-    function isSymbolicNumber(s) {
-        return s instanceof SymbolicLinear;
-    }
-
-
-    function isSymbolic(val) {
-        if (val === undefined || val === null) {
-            return false;
-        }
-        return val.type === Symbolic;
-    }
-
-    function pushPC(pc) {
-        pcStack.push({pc:pathConstraint, path:pathIndex, index:index, formulaStack:formulaStack, solution: solution, pathCount:pathCount, returnVal: returnValue, aggrPC: aggregatePC });
-
-        index = 0;
-        formulaStack = [];
-        formulaStack.count = 0;
-        pathIndex = [];
-        pathConstraint = pc;
-        pathCount = 0;
-        returnValue = undefined;
-        aggregatePC = undefined;
-    }
-
-    function popPC() {
-        pathConstraint = pcStack[pcStack.length-1].pc;
-        pathIndex = pcStack[pcStack.length-1].path;
-        index = pcStack[pcStack.length-1].index;
-        formulaStack = pcStack[pcStack.length-1].formulaStack;
-//        solution = pcStack[pcStack.length-1].solution;
-        pathCount = pcStack[pcStack.length-1].pathCount;
-        returnValue = pcStack[pcStack.length-1].returnVal;
-        aggregatePC = pcStack[pcStack.length-1].aggrPC;
-
-        return pcStack.pop();
-    }
-
-    function resetPC(returnVal, pad) {
-        index = 0;
-        formulaStack = [];
-        formulaStack.count = 0;
-        if (pathCount==0) {
-            aggregatePC = pathConstraint;
-        } else {
-            aggregatePC = aggregatePC.or(pathConstraint);
-        }
-        if (pad) {
-            if (pathIndex.length<=0) {
-                console.log(pad+"Returning current function");
-            } else {
-                console.log(pad+"Backtracking current function");
-            }
-            console.log(pad+"  Path constraint in BDD form "+pathConstraint.toString());
-            console.log(pad+"                  in predicate form "+getFormulaFromBDD(pathConstraint).toString());
-        }
-        if (pathIndex.length<=0) {
-            pathConstraint = aggregatePC;
-        } else {
-            solution = pathIndex[pathIndex.length-1].solution;
-            pathConstraint = pathIndex[pathIndex.length-1].pc;
-        }
-        if (pad) {
-            console.log(pad+"  Aggregate path constraint in BDD form "+pathConstraint.toString());
-            console.log(pad+"                          in predicate form "+getFormulaFromBDD(pathConstraint).toString());
-            console.log(pad+"  Aggregate return value "+returnVal);
-        }
-
-
-        pathCount++;
-        returnValue = returnVal;
-    }
-
-
-    function getPathCount() {
-        return pathCount;
-    }
-
-    function getReturnVal() {
-        return returnValue;
-    }
-
-    function getPC() {
-        return pathConstraint;
-    }
-
-    function setPC(c) {
-        pathConstraint = c;
-    }
-
-    function getNext() {
-        var ret = pathIndex[index++];
-        if (ret === undefined) {
-            index--;
-        }
-        return ret;
-    }
-
-    function isRetracing() {
-        return !!pathIndex[index];
-    }
-
-    function setNext(elem) {
-        pathIndex[index++] = elem;
-    }
-
-    function addAxiom(val, branch) {
-        if (val === "begin") {
-            formulaStack.push("begin");
-            formulaStack.count ++;
-        } else if (val === "and" || val === "or") {
-            val = (val  === "and")?"&&":"||";
-            var i, start = -1, len;
-            formulaStack.count--;
-            len = formulaStack.length;
-            for(i = len-1; i>=0; i--) {
-                if (formulaStack[i] === "begin") {
-                    start = i+1;
-                    break;
-                }
-            }
-            if (start === -1) {
-                throw new Error("J$.addAxiom('begin') not found");
-            }
-            if (start === len) {
-                return;
-            }
-
-            i = start;
-            var c1 = getFormulaFromBDD(formulaStack[i]);
-            var c2;
-            while(i < len-1) {
-                i++;
-                c2 = getFormulaFromBDD(formulaStack[i]);
-                c1 = new SymbolicBool(val, c1, c2);
-            }
-            formulaStack.splice(start-1,len - start+1);
-            formulaStack.push(getBDDFromFormula(c1));
-
-        } else if (val === 'ignore') {
-            formulaStack.pop();
-        } else {
-            if (!(val instanceof BDD.Node)) {
-                throw new Error(val+" must of type Node");
-            }
-            if (branch !== undefined) {
-                if (!branch){
-                    val = val.not();
-                }
-            }
-            formulaStack.push(val);
-        }
-
-        if (formulaStack.count===0 && formulaStack.length > 0 ) {
-            var tmp = formulaStack.pop();
-            pathConstraint = pathConstraint.and(tmp);
-        }
-    }
+//    var pathConstraint = BDD.one;
+//    var pathIndex;
+//    try {
+//        pathIndex = JSON.parse(fs.readFileSync(PATH_FILE_NAME,"utf8"));
+//        if (pathIndex.length === 0) {
+//            process.exit(0);
+//        }
+//    } catch (e) {
+//        pathIndex = [];
+//    }
+//    var index = 0;
+//    var formulaStack = [];
+//    formulaStack.count = 0;
+//    var solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
+//    var pathCount = 0;
+//    var returnValue;
+//    var aggregatePC;
 
     var literalToFormulas = [];
     var formulaCache = {};
+    var startCountingOps = false;
 
     function getBDDFromFormula(formula) {
         if (formula === SymbolicBool.true) {
@@ -243,26 +79,26 @@
         return BDD.getFormula(bdd, literalToFormulas);
     }
 
-    function updateSolution() {
-        solution = combine(J$.inputs, solution);
-        var f = getFormulaFromBDD(pathConstraint);
-        var concrete = f.substitute(solution);
-        if (concrete === SymbolicBool.false) {
-            concrete = f;
-        }
-        if (concrete === SymbolicBool.true) {
-            //console.log("Current solution loc 1 "+JSON.stringify(solution));
-            return;
-        } else if (isSymbolic(concrete)) {
-            var tmp = solver.generateInputs(concrete);
-            if (tmp) {
-                solution = combine(solution, tmp);
-                //console.log("Current solution loc 2 "+JSON.stringify(solution));
-            } else {
-                throw new Error("Not reachable");
-            }
-        }
 
+
+    function isSymbolicString(s) {
+        return s instanceof SymbolicStringExpression;
+    }
+
+    function isSymbolicNumber(s) {
+        return s instanceof SymbolicLinear;
+    }
+
+
+    function isSymbolic(val) {
+        if (val === undefined || val === null) {
+            return false;
+        }
+        return val.type === Symbolic;
+    }
+
+    function HOP(obj, prop) {
+        return Object.prototype.hasOwnProperty.call(obj, prop);
     }
 
     function combine(oldInputs, newInputs) {
@@ -280,71 +116,126 @@
         return tmp;
     }
 
-    function HOP(obj, prop) {
-        return Object.prototype.hasOwnProperty.call(obj, prop);
+    function Frame (pc, solution) {
+        this.pathConstraint = pc;
+        this.pathIndex = [];
+        this.pathCount = 0;
+        this.formulaStack = [];
+        this.formulaCount = 0;
+        this.returnValue = undefined;
+        this.index = 0;
+        this.aggregatePC = BDD.zero;
+        this.solution = solution;
     }
 
-    function makeConcrete(pred, branch) {
-        updateSolution();
-        var c = branch?pred:pred.not();
-        if ((c instanceof BDD.Node)) {
-            c = getFormulaFromBDD(c);
+    Frame.prototype.init = function() {
+        this.pathConstraint = BDD.one;
+        try {
+            this.pathIndex = JSON.parse(fs.readFileSync(PATH_FILE_NAME,"utf8"));
+            if (this.pathIndex.length === 0) {
+                process.exit(0);
+            }
+        } catch (e) {
+            this.pathIndex = [];
+            startCountingOps = true;
         }
-//        solution = combine(J$.inputs, solution);
-        var concrete = c.substitute(solution);
-        if (concrete === SymbolicBool.true) {
-            return true;
-        } else if (concrete === SymbolicBool.false) {
-            return false;
-        }
-        if (isSymbolic(concrete)) {
-            throw new Error("Not reachable");
+        this.solution = this.pathIndex.length>0? this.pathIndex[this.pathIndex.length-1].solution: null;
+
+    };
+
+    Frame.prototype.prepareForNextPath = function(other) {
+        this.aggregatePC = other.aggregatePC.or(other.pathConstraint);
+        var pathIndex = other.pathIndex;
+        if (pathIndex.length<=0) {
+            this.solution = other.solution;
+            this.pathConstraint = this.aggregatePC;
         } else {
-            return concrete;
+            this.solution = pathIndex[pathIndex.length-1].solution;
+            this.pathConstraint = pathIndex[pathIndex.length-1].pc;
         }
-    }
+        this.pathCount = other.pathCount + 1;
+    };
 
-    function getSolution(pred, branch) {
-        var c = pathConstraint.and(branch?pred:pred.not());
-        c = getFormulaFromBDD(c);
-        return solver.generateInputs(c);
-    }
 
-    function branch(val) {
-        var v, ret, tmp;
-        if (!(val instanceof BDD.Node)) {
-            throw new Error(val+" must of type Node");
-        }
-        if ((v = getNext()) !== undefined) {
-            addAxiom(val, ret = v.branch);
+    Frame.prototype.addAxiom =  function (val, branch) {
+        if (val === "begin") {
+            this.formulaStack.push("begin");
+            this.formulaCount ++;
+        } else if (val === "and" || val === "or") {
+            val = (val  === "and")?"&&":"||";
+            var i, start = -1, len;
+            this.formulaCount--;
+            len = this.formulaStack.length;
+            for(i = len-1; i>=0; i--) {
+                if (this.formulaStack[i] === "begin") {
+                    start = i+1;
+                    break;
+                }
+            }
+            if (start === -1) {
+                throw new Error("J$.addAxiom('begin') not found");
+            }
+            if (start === len) {
+                return;
+            }
+
+            i = start;
+            var c1 = getFormulaFromBDD(this.formulaStack[i]);
+            var c2;
+            while(i < len-1) {
+                i++;
+                c2 = getFormulaFromBDD(this.formulaStack[i]);
+                c1 = new SymbolicBool(val, c1, c2);
+            }
+            this.formulaStack.splice(start-1,len - start+1);
+            this.formulaStack.push(getBDDFromFormula(c1));
+
+        } else if (val === 'ignore') {
+            this.formulaStack.pop();
         } else {
-            if (makeConcrete(val, false)) {
-                if (tmp = getSolution(val, true)) {
-                    setNext({done:false, branch:false, solution: tmp});
-                } else {
-                    setNext({done:true, branch:false, solution: tmp});
+            if (!(val instanceof BDD.Node)) {
+                throw new Error(val+" must of type Node");
+            }
+            if (branch !== undefined) {
+                if (!branch){
+                    val = val.not();
                 }
-                addAxiom(val, ret = false);
-            } else if (makeConcrete(val, true)) {
-                if (tmp = getSolution(val, false)) {
-                    setNext({done:false, branch:true, solution: tmp});
-                    //console.log("Solution (else) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(val));
-                } else {
-                    setNext({done:true, branch:true, solution: tmp});
-                }
-                addAxiom(val, ret = true);
-            } else {
-                throw new Error("Both branches are not feasible.  This is not possible.")
+            }
+            this.formulaStack.push(val);
+        }
+
+        if (this.formulaCount===0 && this.formulaStack.length > 0 ) {
+            var tmp = this.formulaStack.pop();
+            this.pathConstraint = this.pathConstraint.and(tmp);
+            if (this.pathConstraint.isZero()) {
+                throw new Error("Throwing exception to prune infeasible path.");
             }
         }
-        return ret;
-    }
+    };
 
+    Frame.prototype.updateSolution = function() {
+        this.solution = combine(J$.inputs, this.solution);
+        var f = getFormulaFromBDD(this.pathConstraint);
+        var concrete = f.substitute(this.solution);
+        if (concrete === SymbolicBool.false) {
+            concrete = f;
+        }
+        if (concrete !== SymbolicBool.true) {
+            if (isSymbolic(concrete)) {
+                var tmp = solver.generateInputs(concrete);
+                if (tmp) {
+                    this.solution = combine(this.solution, tmp);
+                } else {
+                    this.solution = undefined;
+                }
+            }
+        }
+    };
 
-    function isSatisfiable(pred) {
-        updateSolution();
+    Frame.prototype.updateSolutionIfSatisfiable = function(pred) {
+        this.updateSolution();
         var f = getFormulaFromBDD(pred);
-        var concrete = f.substitute(solution);
+        var concrete = f.substitute(this.solution);
         if (concrete === SymbolicBool.false) {
             return false;
         } else if (concrete === SymbolicBool.true) {
@@ -352,51 +243,233 @@
         } else if (isSymbolic(concrete)) {
             var tmp = solver.generateInputs(concrete);
             if (tmp) {
-                solution = combine(solution, tmp);
+                this.solution = combine(this.solution, tmp);
                 return true;
             } else {
                 return false;
             }
         } else {
-            throw new Error("Should not be reachable "+concrete);
+            throw new Error("This is bad.  Should not be reachable "+concrete);
         }
+    };
+
+
+    Frame.prototype.generateInputs = function(forceWrite, forSingle) {
+        var elem;
+
+        while(this.pathIndex.length > 0) {
+            elem = this.pathIndex.pop();
+            if (!elem.done && (!forSingle || (this.pathIndex[elem.counterIndex].count <= MAX_PATH_COUNT))) {
+                this.pathIndex.push({done: true, branch: !elem.branch, solution: elem.solution,
+                    pc: elem.pc, lastVal: elem.lastVal, iid: elem.iid,
+                    counterIndex: elem.counterIndex, count: elem.count});
+                if (forSingle) {
+                    this.pathIndex[elem.counterIndex].count++;
+                }
+                break;
+            }
+        }
+        this.index = 0;
+
+
+        this.updateSolution();
+        var ret = (this.pathIndex.length > 0);
+        if (this.solution && (ret || forceWrite)) {
+            solver.writeInputs(this.solution, []);
+        }
+
+        if (this.pathCount > MAX_PATH_COUNT) {
+            this.pathIndex = [];
+        }
+        fs.writeFileSync(PATH_FILE_NAME,JSON.stringify(this.pathIndex),"utf8");
+        return this.solution;
+    };
+
+    Frame.prototype.makeConcrete = function(pred, branch) {
+        this.updateSolution();
+        var c = branch?pred:pred.not();
+        if ((c instanceof BDD.Node)) {
+            c = getFormulaFromBDD(c);
+        }
+        var concrete = c.substitute(this.solution);
+        if (concrete === SymbolicBool.true) {
+            return true;
+        } else if (concrete === SymbolicBool.false) {
+            return false;
+        }
+        if (isSymbolic(concrete)) {
+            throw new Error("Throwing exception to prune infeasible path.");
+        } else {
+            return concrete;
+        }
+    };
+
+    Frame.prototype.setNextPathIndexElement = function (elem) {
+        this.pathIndex[this.index++] = elem;
+    };
+
+
+    Frame.prototype.getNextPathIndexElement = function() {
+        var ret = this.pathIndex[this.index++];
+        if (ret === undefined) {
+            this.index--;
+        }
+        return ret;
+    };
+
+
+
+
+
+
+    var frame = new Frame();
+    frame.init();
+    var frameStack = [];
+
+    function pushFrame(pc) {
+        var solution = frame.solution;
+        frameStack.push(frame);
+
+        frame = new Frame(pc, solution);
     }
 
-    function branchBoth(iid, falseBranch, trueBranch, lastVal, pad) {
-        var v, ret, tmp;
-        if ((v = getNext()) !== undefined) {
-            ret = v;
-            //addAxiom(ret?trueBranch:falseBranch, true);
+    function popFrame() {
+        var solution = frame.solution;
+        frame = frameStack.pop();
+        frame.solution = solution;
+        return frame;
+    }
+
+    function resetFrame(returnVal, ignore) {
+        var tmpFrame = new Frame();
+        tmpFrame.pathIndex = frame.pathIndex;
+        tmpFrame.prepareForNextPath(frame);
+
+        if (ignore) {
+            tmpFrame.aggregatePC = frame.aggregatePC;
+            tmpFrame.pathCount = frame.pathCount;
+            tmpFrame.returnValue = frame.returnValue;
         } else {
-            if (isSatisfiable(falseBranch)) {
-                if (tmp = getSolution(trueBranch, true)) {
-                    setNext({done:false, branch:false, solution: tmp, pc: trueBranch, lastVal: lastVal, iid: iid});
-                    //console.log("At "+getIIDInfo(iid)+" solution (then) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(trueBranch));
+            tmpFrame.returnValue = returnVal;
+        }
+
+        var ret = (frame.pathIndex.length>0);
+        frame = tmpFrame;
+        return ret;
+    }
+
+
+    function getPathCount() {
+        return frame.pathCount;
+    }
+
+    function getReturnVal() {
+        return frame.returnValue;
+    }
+
+    function getAggregatePC() {
+        return frame.aggregatePC;
+    }
+
+    function getPC() {
+        return frame.pathConstraint;
+    }
+
+    function setPC(c) {
+        frame.pathConstraint = c;
+    }
+
+    function isRetracing() {
+        return !!frame.pathIndex[frame.index];
+    }
+
+    function addAxiom(val, branch) {
+        frame.addAxiom(val, branch);
+    }
+
+
+    function getSolution(pred, branch) {
+        var c = frame.pathConstraint.and(branch?pred:pred.not());
+        c = getFormulaFromBDD(c);
+        return solver.generateInputs(c);
+    }
+
+    var pathPerFunctionCounter = [];
+
+    function functionEnter() {
+        var v;
+        if ((v=frame.getNextPathIndexElement()) === undefined) {
+            frame.setNextPathIndexElement(v = {count: 0, done:true})
+        }
+        pathPerFunctionCounter.push(frame.index-1);
+    }
+
+    function getCounterIndex() {
+        return pathPerFunctionCounter[pathPerFunctionCounter.length-1];
+    }
+
+    function functionExit() {
+        pathPerFunctionCounter.pop();
+    }
+
+    function branch(val) {
+        var v, ret, tmp;
+        if (!(val instanceof BDD.Node)) {
+            throw new Error(val+" must of type Node");
+        }
+        if ((v = frame.getNextPathIndexElement()) !== undefined) {
+            frame.addAxiom(val, ret = v.branch);
+        } else {
+            startCountingOps = true;
+            if (frame.makeConcrete(val, false)) {
+                if (tmp = getSolution(val, true)) {
+                    frame.setNextPathIndexElement({done:false, branch:false, solution: tmp, counterIndex: getCounterIndex()});
                 } else {
-                    setNext({done:true, branch:false, solution: null, pc: null, lastVal: lastVal, iid: iid});
-                    //console.log("At "+getIIDInfo(iid)+" no solution (then) for pc = "+getFormulaFromBDD(trueBranch));
+                    frame.setNextPathIndexElement({done:true, branch:false, solution: tmp, counterIndex: getCounterIndex()});
+                }
+                frame.addAxiom(val, ret = false);
+            } else if (frame.makeConcrete(val, true)) {
+                if (tmp = getSolution(val, false)) {
+                    frame.setNextPathIndexElement({done:false, branch:true, solution: tmp, counterIndex: getCounterIndex()});
+                    //console.log("Solution (else) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(val));
+                } else {
+                    frame.setNextPathIndexElement({done:true, branch:true, solution: tmp, counterIndex: getCounterIndex()});
+                }
+                frame.addAxiom(val, ret = true);
+            } else {
+                frame.pathConstraint = BDD.zero;
+                throw new Error("Throwing exception to prune infeasible path.");
+            }
+        }
+        return ret;
+    }
+
+
+    function branchBoth(iid, falseBranch, trueBranch, lastVal) {
+        var v, ret, tmp;
+        if ((v = frame.getNextPathIndexElement()) !== undefined) {
+            ret = v;
+        } else {
+            if (frame.updateSolutionIfSatisfiable(falseBranch)) {
+                if (tmp = getSolution(trueBranch, true)) {
+                    frame.setNextPathIndexElement({done:false, branch:false, solution: tmp, pc: trueBranch, lastVal: lastVal, iid: iid});
+                } else {
+                    frame.setNextPathIndexElement({done:true, branch:false, solution: null, pc: null, lastVal: lastVal, iid: iid});
 
                 }
                 ret = false;
-                addAxiom(falseBranch, true);
-                if (pad) {
-                    console.log(pad+"  taking false branch");
-                }
-            } else if (isSatisfiable(trueBranch)) {
+                frame.addAxiom(falseBranch, true);
+            } else if (frame.updateSolutionIfSatisfiable(trueBranch)) {
                 if (tmp = getSolution(falseBranch, true)) {
-                    setNext({done:false, branch:true, solution: tmp, pc: falseBranch, lastVal: lastVal, iid:iid});
-                    //console.log("At "+getIIDInfo(iid)+" solution (else) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(falseBranch));
+                    frame.setNextPathIndexElement({done:false, branch:true, solution: tmp, pc: falseBranch, lastVal: lastVal, iid:iid});
                 } else {
-                    setNext({done:true, branch:true, solution: null, pc: null, lastVal: lastVal, iid:iid});
-                    //console.log("At "+getIIDInfo(iid)+" no solution (else) for pc = "+getFormulaFromBDD(falseBranch));
+                    frame.setNextPathIndexElement({done:true, branch:true, solution: null, pc: null, lastVal: lastVal, iid:iid});
                 }
                 ret = true;
-                addAxiom(trueBranch, true);
-                if (pad) {
-                    console.log(pad+"  taking true branch");
-                }
+                frame.addAxiom(trueBranch, true);
             } else {
-                throw new Error("Both branches are not feasible.  This is not possible.")
+                frame.pathConstraint = BDD.zero;
+                throw new Error("Throwing exception to prune infeasible path.");
             }
         }
         return ret;
@@ -407,10 +480,7 @@
             return val;
         }
 
-        //console.log("/");
-        //console.log("Warning: concretizing a symbolic value "+val);
-
-        var concrete = makeConcrete(val, true);
+        var concrete = frame.makeConcrete(val, true);
         if (typeof concrete === 'boolean') {
             J$.addAxiom(val);
         } else if (isSymbolicNumber(val)) {
@@ -424,54 +494,39 @@
     }
 
 
-    function generateInputs(pad, forceWrite) {
-        var elem;
+    function generateInputs(forceWrite, forSingle) {
+        return frame.generateInputs(forceWrite, forSingle);
+    }
 
-        while(pathIndex.length > 0) {
-            elem = pathIndex.pop();
-            if (!elem.done) {
-                pathIndex.push({done: true, branch: !elem.branch, solution: elem.solution, pc: elem.pc, lastVal: elem.lastVal, iid: elem.iid});
-                break;
-            }
-        }
-        index = 0;
+    function isStartCountingOps() {
+        return startCountingOps;
+    }
 
-
-        fs.writeFileSync(PATH_FILE_NAME,JSON.stringify(pathIndex),"utf8");
-
-        updateSolution();
-        var ret = (pathIndex.length > 0);
-        if (ret || forceWrite) {
-            if (pad) console.log(pad+"Generated the input "+JSON.stringify(solution));
-            solver.writeInputs(solution, []);
-            //console.log("-------------");
-            //console.log("nLiterals "+literalToFormulas.length+" "+JSON.stringify(literalToFormulas));
-        } else {
-            //console.log("Not writing the input "+JSON.stringify(solution));
-        }
-
-        if (pathCount > MAX_PATH_COUNT) {
-            pathIndex = [];
-        }
-        ret = (pathIndex.length > 0);
-        return ret;
+    function getMAX_CALL_DEPTH() {
+        return MAX_CALL_DEPTH;
     }
 
     sandbox.addAxiom = addAxiom;
-    sandbox.popPC = popPC;
-    sandbox.pushPC = pushPC;
-    sandbox.resetPC = resetPC;
+    sandbox.branch = branch;
+    sandbox.concretize = concretize;
+    sandbox.getBDDFromFormula = getBDDFromFormula;
+    sandbox.generateInputs = generateInputs;
+    sandbox.functionEnter = functionEnter;
+    sandbox.functionExit = functionExit;
+    sandbox.getMAX_CALL_DEPTH = getMAX_CALL_DEPTH;
+
+
+    sandbox.popFrame = popFrame;
+    sandbox.pushFrame = pushFrame;
+    sandbox.resetFrame = resetFrame;
     sandbox.getPC = getPC;
     sandbox.setPC = setPC;
-    sandbox.getPathCount = getPathCount;
-    sandbox.concretize = concretize;
-    sandbox.branch = branch;
     sandbox.branchBoth = branchBoth;
-    sandbox.generateInputs = generateInputs;
     sandbox.getFormulaFromBDD = getFormulaFromBDD;
-    sandbox.getBDDFromFormula = getBDDFromFormula;
     sandbox.getReturnVal = getReturnVal;
     sandbox.isRetracing = isRetracing;
+    sandbox.getAggregatePC = getAggregatePC;
+    sandbox.startCountingOps = isStartCountingOps;
 
 }(module.exports));
 

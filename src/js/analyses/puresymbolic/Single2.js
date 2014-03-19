@@ -241,7 +241,7 @@
                     op === '<=' ||
                     op === '>='
                     ){
-                    left.initialize(0);
+                    left.initialize(1);
                 } else if (op === '&&' ||
                     op === '||' ) {
                     left.initialize(false);
@@ -249,7 +249,7 @@
                     if (typeof right === 'string' || isSymbolicString(right)) {
                         left.initialize("");
                     } else {
-                        left.initialize(0);
+                        left.initialize(1);
                     }
                 } else if (op === '==' ||
                     op === '!=' ||
@@ -258,7 +258,7 @@
                     if (typeof right === 'string' || isSymbolicString(right)) {
                         left.initialize("");
                     } else if (typeof right === 'number' || isSymbolicNumber(right)) {
-                        left.initialize(0);
+                        left.initialize(1);
                     } else if (typeof right === 'boolean' || isSymbolicBool(right)) {
                         left.initialize(false);
                     } else if (typeof right === SymbolicAnyVar) {
@@ -286,7 +286,7 @@
                     op === '+' ||
                     op === '~'
                     ){
-                    left.initialize(0);
+                    left.initialize(1);
                 } else if (op === '!') {
                     left.initialize(false);
                 } else {
@@ -311,7 +311,7 @@
     function initUndefinedNumber(left) {
         if (sandbox.treatUndefinedAsInput && left instanceof SymbolicAnyVar) {
             if (!left.isInitialized) {
-                left.initialize(0);
+                left.initialize(1);
             }
             left = left.value;
         }

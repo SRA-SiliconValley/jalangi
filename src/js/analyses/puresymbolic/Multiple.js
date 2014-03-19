@@ -839,9 +839,11 @@
 
     sandbox.postLoad = function () {
         if (!sfuns) {
+            pc.pushFrame(pc.getPC());
             scriptCount++; // avoid generating an input
             sfuns = require('./SymbolicFunctions3_jalangi_')
             scriptCount--;
+            pc.popFrame();
         }
     }
 

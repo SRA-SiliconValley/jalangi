@@ -16,8 +16,9 @@
 
 // Author: Koushik Sen
 
-(function (sandbox) {
-    var single = require('./Single2');
+module.exports = function (sandbox) {
+    var single = {};
+    require('./Single2')(single);
     var PredValues = require('./PredValues');
     var BDD = require('./BDD');
     var SymbolicBool = require('./../concolic/SymbolicBool');
@@ -54,15 +55,15 @@
 
     function printLogAtReturns(isBackTrack) {
         if (!isBackTrack) {
-            console.log(pad+"Returning current function");
+            console.log(pad + "Returning current function");
         } else {
-            console.log(pad+"Backtracking current function");
+            console.log(pad + "Backtracking current function");
         }
-        console.log(pad+"  Path constraint in BDD form "+pc.getPC().toString());
-        console.log(pad+"                  in predicate form "+pc.getFormulaFromBDD(pc.getPC()).toString());
-        console.log(pad+"  Aggregate path constraint in BDD form "+pc.getAggregatePC().toString());
-        console.log(pad+"                          in predicate form "+pc.getFormulaFromBDD(pc.getAggregatePC()).toString());
-        console.log(pad+"  Aggregate return value "+pc.getReturnVal());
+        console.log(pad + "  Path constraint in BDD form " + pc.getPC().toString());
+        console.log(pad + "                  in predicate form " + pc.getFormulaFromBDD(pc.getPC()).toString());
+        console.log(pad + "  Aggregate path constraint in BDD form " + pc.getAggregatePC().toString());
+        console.log(pad + "                          in predicate form " + pc.getFormulaFromBDD(pc.getAggregatePC()).toString());
+        console.log(pad + "  Aggregate return value " + pc.getReturnVal());
     }
 
 
@@ -322,7 +323,7 @@
 
 
     function invokeEval(base, f, args) {
-        return f.call(base, J$.instrumentCode(args[0], {wrapProgram: false}).code);
+        return f.call(base, J$.instrumentCode(args[0], {wrapProgram:false}).code);
     }
 
 
@@ -410,7 +411,7 @@
         }
         ret = update(lhs, val);
         if (TRACE_WRITE) {
-            console.log(pad+"Writing "+name+" with " + ret +" at "+getIIDInfo(iid));
+            console.log(pad + "Writing " + name + " with " + ret + " at " + getIIDInfo(iid));
         }
         return ret;
     }
@@ -534,7 +535,7 @@
                     var oldValue = single.G(iid, base, offset);
                     single.P(iid, base, offset, ret = update(oldValue, val));
                     if (TRACE_WRITE) {
-                        console.log(pad+"Writing field "+offset+" with " + ret +" at "+getIIDInfo(iid));
+                        console.log(pad + "Writing field " + offset + " with " + ret + " at " + getIIDInfo(iid));
                     }
                     newPC = newPC.or(pc.getPC());
                     pc.popFrame();
@@ -592,18 +593,18 @@
 
     function Sr(iid) {
         scriptCount--;
-        var ret2 = pc.generateInputs(scriptCount==0, false);
-        if (scriptCount==0) {
+        var ret2 = pc.generateInputs(scriptCount == 0, false);
+        if (scriptCount == 0) {
             single.writeICount();
         }
         if (TRACE_TESTS && ret2)
-            console.log(pad+"Generated the input "+JSON.stringify(ret2));
+            console.log(pad + "Generated the input " + JSON.stringify(ret2));
         var isException = (exceptionVal !== undefined) || !ret2;
 
         var isBackTrack = pc.resetFrame(undefined, isException);
         if (TRACE_RETURNS)
             printLogAtReturns(isBackTrack);
-        if (isException  && exceptionVal) {
+        if (isException && exceptionVal) {
             if (scriptCount == 0) {
                 console.log("Pruning path.  No need to worry.")
                 //console.log("FYI: exception.  No need to worry.")
@@ -627,7 +628,7 @@
         var ret2, aggrRet = pc.getReturnVal();
         ret2 = pc.generateInputs(false, false);
         if (TRACE_TESTS && ret2)
-            console.log(pad+"Generated the input "+JSON.stringify(ret2));
+            console.log(pad + "Generated the input " + JSON.stringify(ret2));
         var isException = (exceptionVal !== undefined) || !ret2;
         if (!isException) {
             var retVal = returnVal.pop();
@@ -637,7 +638,7 @@
             returnVal.pop();
             returnVal.push(aggrRet);
         }
-        var isBackTrack = pc.resetFrame(retVal,isException);
+        var isBackTrack = pc.resetFrame(retVal, isException);
         if (isBackTrack) {
             returnVal.pop();
         }
@@ -754,9 +755,9 @@
         }
         var ret2 = pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), switchLeft);
         if (TRACE_BRANCH) {
-            console.log(pad+"Branching at "+getIIDInfo(iid)+" with result "+ret2);
-            console.log(pad+"true branch condition in BDD form "+ret.toString());
-            console.log(pad+"                          in predicate form "+pc.getFormulaFromBDD(ret).toString());
+            console.log(pad + "Branching at " + getIIDInfo(iid) + " with result " + ret2);
+            console.log(pad + "true branch condition in BDD form " + ret.toString());
+            console.log(pad + "                          in predicate form " + pc.getFormulaFromBDD(ret).toString());
         }
         return ret2;
     }
@@ -779,9 +780,9 @@
         }
         var ret2 = pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), lastVal);
         if (TRACE_BRANCH) {
-            console.log(pad+"Branching at "+getIIDInfo(iid)+" with result "+ret2);
-            console.log(pad+"  true branch condition in BDD form "+ret.toString());
-            console.log(pad+"                          in predicate form "+pc.getFormulaFromBDD(ret).toString());
+            console.log(pad + "Branching at " + getIIDInfo(iid) + " with result " + ret2);
+            console.log(pad + "  true branch condition in BDD form " + ret.toString());
+            console.log(pad + "                          in predicate form " + pc.getFormulaFromBDD(ret).toString());
         }
         return ret2;
     }
@@ -847,5 +848,5 @@
         }
     }
 
-}(module.exports));
+};
 

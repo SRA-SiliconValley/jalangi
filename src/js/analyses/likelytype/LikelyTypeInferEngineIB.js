@@ -19,7 +19,7 @@
 (function (sandbox) {
 
     function LikelyTypeInferEngineIB() {
-        var smemory = sandbox.Globals.smemory;
+        var smemory = sandbox.smemory;
         var iidToLocation = sandbox.iidToLocation;
 
         var P_VALUE = 5.0;
@@ -38,7 +38,7 @@
             return Object.prototype.toString.call(val) === '[object Array]';
         }
 
-        var getSymbolic = this.getSymbolic = function(obj) {
+        var getSymbolic = this.getSymbolic = function (obj) {
             var sobj = smemory.getShadowObject(obj);
             if (sobj) {
                 return sobj.shadow;
@@ -572,4 +572,4 @@
         }
     });
 
-}(typeof J$ === 'undefined'? (J$={}):J$));
+}(typeof J$ === 'undefined' ? (J$ = {}) : J$));

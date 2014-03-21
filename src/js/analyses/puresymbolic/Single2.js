@@ -16,14 +16,14 @@
 
 // Author: Koushik Sen
 
-(function(sandbox) {
+module.exports = function (sandbox) {
 
     var PredValues = require('./PredValues');
     var EVAL_ORG = eval;
 
     var PREFIX1 = "J$";
-    var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
-    var  N_LOG_FUNCTION_LIT = 12;
+    var SPECIAL_PROP2 = "*" + PREFIX1 + "I*";
+    var N_LOG_FUNCTION_LIT = 12;
     var STATS_FILE_NAME = "jalangi_multiex_stats";
 
     //-------------------------------- End constants ---------------------------------
@@ -44,8 +44,8 @@
 
     var iCount;
     try {
-        iCount = JSON.parse(require('fs').readFileSync(STATS_FILE_NAME,"utf8"));
-    } catch(e) {
+        iCount = JSON.parse(require('fs').readFileSync(STATS_FILE_NAME, "utf8"));
+    } catch (e) {
         iCount = 0;
     }
 
@@ -58,7 +58,7 @@
     //---------------------------- Utility functions -------------------------------
 
     function writeICount() {
-        require('fs').writeFileSync(STATS_FILE_NAME,JSON.stringify(iCount),"utf8");
+        require('fs').writeFileSync(STATS_FILE_NAME, JSON.stringify(iCount), "utf8");
     }
 
     function getPC() {
@@ -93,10 +93,10 @@
 
         if (type === 'string') {
             ret = makeSymbolicString(idx);
-        } else if (type === 'number' || type === 'boolean'){
+        } else if (type === 'number' || type === 'boolean') {
             ret = makeSymbolicNumber(idx);
         } else {
-            throw new Error("Cannot make "+val+" of type "+(typeof val) + " symbolic");
+            throw new Error("Cannot make " + val + " of type " + (typeof val) + " symbolic");
         }
         return ret;
     }
@@ -125,10 +125,10 @@
         return;
         var type = typeof val;
         if (type !== 'object' && type !== 'function') {
-            console.log(loc+":"+iid+":"+type+":"+val);
+            console.log(loc + ":" + iid + ":" + type + ":" + val);
         }
-        if (val===null) {
-            console.log(loc+":"+iid+":"+type+":"+val);
+        if (val === null) {
+            console.log(loc + ":" + iid + ":" + type + ":" + val);
         }
     }
 
@@ -147,7 +147,8 @@
     function initUndefinedFunction(f) {
         if (sandbox.treatUndefinedAsInput && f instanceof SymbolicAnyVar) {
             if (!f.isInitialized) {
-                f.initialize(function(){});
+                f.initialize(function () {
+                });
             }
             f = f.value;
         }
@@ -240,12 +241,12 @@
                     op === '>' ||
                     op === '<=' ||
                     op === '>='
-                    ){
+                    ) {
                     left.initialize(1);
                 } else if (op === '&&' ||
-                    op === '||' ) {
+                    op === '||') {
                     left.initialize(false);
-                } else if (op === '+' ) {
+                } else if (op === '+') {
                     if (typeof right === 'string' || isSymbolicString(right)) {
                         left.initialize("");
                     } else {
@@ -265,13 +266,16 @@
                         if (right.isInitialized) {
                             left.initialize(right.value);
                         } else {
-                            left.initialize(function(){});
+                            left.initialize(function () {
+                            });
                         }
                     } else {
-                        left.initialize(function(){});
+                        left.initialize(function () {
+                        });
                     }
                 } else {
-                    left.initialize(function(){});
+                    left.initialize(function () {
+                    });
                 }
             }
             left = left.value;
@@ -285,12 +289,13 @@
                 if (op === '-' ||
                     op === '+' ||
                     op === '~'
-                    ){
+                    ) {
                     left.initialize(1);
                 } else if (op === '!') {
                     left.initialize(false);
                 } else {
-                    left.initialize(function(){});
+                    left.initialize(function () {
+                    });
                 }
             }
             left = left.value;
@@ -334,29 +339,30 @@
     //----------------------------------- Begin concolic execution ---------------------------------
 
     function create_concrete_invoke(f) {
-        return function() {
+        return function () {
             var len = arguments.length;
-            for (var i = 0; i<len; i++) {
+            for (var i = 0; i < len; i++) {
                 arguments[i] = pc.concretize(initUndefinedNumber(getSingle(arguments[i])));
             }
-            return f.apply(pc.concretize(initUndefinedString(getSingle(this))),arguments);
+            return f.apply(pc.concretize(initUndefinedString(getSingle(this))), arguments);
         }
     }
 
     function create_concrete_invoke_cons(f) {
-        return function() {
+        return function () {
             var len = arguments.length;
-            for (var i = 0; i<len; i++) {
+            for (var i = 0; i < len; i++) {
                 arguments[i] = pc.concretize(initUndefinedNumber(getSingle(arguments[i])));
             }
             return f.apply(this, arguments);
         }
     }
 
-    function string_fromCharCode () {
+    function string_fromCharCode() {
         var ints = [];
-        var i, len=arguments.length, flag = false;;
-        for (i=0; i < len; i++) {
+        var i, len = arguments.length, flag = false;
+        ;
+        for (i = 0; i < len; i++) {
             if (arguments[i] instanceof SymbolicLinear) {
                 flag = true;
             }
@@ -371,13 +377,13 @@
         return newSym;
     }
 
-    function regexp_test (str) {
+    function regexp_test(str) {
         // this is a regexp object
         var newSym;
 
 //        if (isSymbolic(str) && str.isCompound && str.isCompound()) {
-        newSym = J$.readInput("",true);
-        J$.addAxiom(J$.B(0,"==",newSym,str));
+        newSym = J$.readInput("", true);
+        J$.addAxiom(J$.B(0, "==", newSym, str));
 //        } else {
 //            newSym = str;
 //        }
@@ -394,7 +400,7 @@
 
     var sfuns;
 
-    function getSymbolicFunctionToInvoke (f, isConstructor) {
+    function getSymbolicFunctionToInvoke(f, isConstructor) {
         if (f === Array ||
             f === Error ||
             f === String ||
@@ -425,7 +431,7 @@
             f === Math.round ||
             f === Math.sin ||
             f === Math.sqrt ||
-            f === Math.tan ) {
+            f === Math.tan) {
             return create_concrete_invoke(f);
         } else {
             if (!sfuns) {
@@ -439,7 +445,7 @@
                 return getSingle(sfuns.string_charAt);
             } else if (f === String.prototype.lastIndexOf) {
                 return getSingle(sfuns.string_lastIndexOf);
-            }  else if (f === String.prototype.substring) {
+            } else if (f === String.prototype.substring) {
                 return getSingle(sfuns.string_substring);
             } else if (f === String.prototype.substr) {
                 return getSingle(sfuns.string_substr);
@@ -465,7 +471,7 @@
         return eval('new Constructor(' + a.join() + ')');
     }
 
-    function callAsNativeConstructor (Constructor, args) {
+    function callAsNativeConstructor(Constructor, args) {
         if (args.length === 0) {
             return new Constructor();
         }
@@ -489,9 +495,10 @@
 
     function callAsConstructor(Constructor, args) {
         if (isNative(Constructor)) {
-            return callAsNativeConstructor(Constructor,args);
+            return callAsNativeConstructor(Constructor, args);
         } else {
-            var Temp = function(){}, inst, ret;
+            var Temp = function () {
+            }, inst, ret;
             Temp.prototype = Constructor.prototype;
             inst = new Temp;
             ret = Constructor.apply(inst, args);
@@ -501,7 +508,7 @@
 
 
     function invokeEval(base, f, args) {
-        return f.call(base,J$.instrumentCode(args[0],{wrapProgram: false}).code);
+        return f.call(base, J$.instrumentCode(args[0], {wrapProgram:false}).code);
     }
 
 
@@ -512,11 +519,11 @@
         //console.log("    Calling "+ f.name);
         var f_m = getSymbolicFunctionToInvoke(f, isConstructor);
 
-        invoke = f_m || f === undefined || HOP(f,SPECIAL_PROP2) || typeof f !== "function";
-        g = f_m || f ;
+        invoke = f_m || f === undefined || HOP(f, SPECIAL_PROP2) || typeof f !== "function";
+        g = f_m || f;
         pushSwitchKey();
         try {
-            if (g === EVAL_ORG){
+            if (g === EVAL_ORG) {
                 val = invokeEval(base, g, args);
             } else if (invoke) {
                 if (isConstructor) {
@@ -524,7 +531,7 @@
                 } else {
                     val = g.apply(base, args);
                 }
-            }  else {
+            } else {
                 val = wrapUndefined(undefined, false);
             }
         } finally {
@@ -537,7 +544,7 @@
 
 
     function F(iid, f, isConstructor) {
-        return function() {
+        return function () {
             var base = this;
             if (funCallDepth > MAX_CALL_DEPTH) {
                 throw new Error("Pruning function call");
@@ -547,7 +554,7 @@
     }
 
     function M(iid, base, offset, isConstructor) {
-        return function() {
+        return function () {
             var f = G(iid, base, offset);
             if (funCallDepth > MAX_CALL_DEPTH) {
                 throw new Error("Pruning function call");
@@ -583,7 +590,7 @@
 
     var scriptCount = 0;
 
-    function Se(iid,val) {
+    function Se(iid, val) {
         scriptCount++;
         pc.functionEnter();
     }
@@ -649,9 +656,9 @@
     }
 
 
-    function A(iid,base,offset,op) {
-        var oprnd1 = G(iid,base, offset);
-        return function(oprnd2) {
+    function A(iid, base, offset, op) {
+        var oprnd1 = G(iid, base, offset);
+        return function (oprnd2) {
             var val = B(iid, op, oprnd1, oprnd2);
             return P(iid, base, offset, val);
         };
@@ -681,7 +688,7 @@
                 return String.prototype.substr;
             } else if (offset === "charCodeAt") {
                 return String.prototype.charCodeAt;
-            }  else if (offset === "charAt") {
+            } else if (offset === "charAt") {
                 return String.prototype.charAt;
             } else if (offset === "replace") {
                 return String.prototype.replace;
@@ -740,7 +747,7 @@
             } else if (isSymbolicNumber(left) || isSymbolicNumber(right) || typeof left === 'number' || typeof right === 'number') {
                 type = 'number';
             }
-            if (type==='string') {
+            if (type === 'string') {
                 if (isSymbolicNumber(left)) {
                     left = symbolicIntToString(left);
                 }
@@ -791,7 +798,7 @@
                 if (left == left)
                     ret = right.subtractFrom(left);
             }
-        } else if (op === "<" || op === ">" || op === "<=" || op === ">="  || op === "==" || op === "!="  || op === "==="  || op === "!==") {
+        } else if (op === "<" || op === ">" || op === "<=" || op === ">=" || op === "==" || op === "!=" || op === "===" || op === "!==") {
             if (isSymbolicNumber(left) && isSymbolicNumber(right)) {
                 if (left.op !== SymbolicLinear.UN) {
                     if (right)
@@ -806,7 +813,7 @@
                 } else {
                     ret = left.subtract(right);
                     if (!isSymbolicNumber(ret)) {
-                        switch(op) {
+                        switch (op) {
                             case "<":
                                 ret = ret < 0;
                                 break;
@@ -828,7 +835,7 @@
                                 ret = ret !== 0;
                                 break;
                             default:
-                                throw new Error("Operator "+op+" unknown");
+                                throw new Error("Operator " + op + " unknown");
                         }
                     }
                 }
@@ -850,26 +857,26 @@
                 else {
                     ret = right.subtractFrom(left);
                 }
-            } else  if (op === "===" || op === "!==" || op === "==" || op === "!=") {
+            } else if (op === "===" || op === "!==" || op === "==" || op === "!=") {
                 if (op === "===" || op === '!==') {
-                    op = op.substring(0,2);
+                    op = op.substring(0, 2);
                 }
                 if (isSymbolicString(left) && isSymbolicString(right)) {
-                    ret = new SymbolicStringPredicate(op,left,right);
+                    ret = new SymbolicStringPredicate(op, left, right);
                 } else if (isSymbolicString(left) && typeof right === 'string') {
-                    ret = new SymbolicStringPredicate(op,left,right);
+                    ret = new SymbolicStringPredicate(op, left, right);
                 } else if (isSymbolicString(right) && typeof left === 'string') {
-                    ret = new SymbolicStringPredicate(op,left,right);
+                    ret = new SymbolicStringPredicate(op, left, right);
                 }
             }
             if (isSymbolicNumber(ret)) {
                 if (op === "===" || op === '!==') {
-                    op = op.substring(0,2);
+                    op = op.substring(0, 2);
                 }
                 ret = ret.setop(op);
             }
 
-        } else if(op === "*") {
+        } else if (op === "*") {
             if (isSymbolicString(left)) {
                 left = symbolicStringToInt(left);
             }
@@ -886,12 +893,12 @@
             }
         } else if (op === "regexin") {
             if (isSymbolicString(left)) {
-                ret = new SymbolicStringPredicate("regexin",left, pc.concretize(right));
+                ret = new SymbolicStringPredicate("regexin", left, pc.concretize(right));
             }
         } else if (op === '|') {
             if (isSymbolicString(left) && typeof right === 'number' && right === 0) {
                 ret = symbolicStringToInt(left);
-            } else  if (isSymbolicString(right) && typeof left === 'number' && left === 0) {
+            } else if (isSymbolicString(right) && typeof left === 'number' && left === 0) {
                 ret = symbolicStringToInt(right);
             }
         }
@@ -915,7 +922,7 @@
         left_c = pc.concretize(left);
         right_c = pc.concretize(right);
 
-        switch(op) {
+        switch (op) {
             case "+":
                 result_c = left_c + right_c;
                 break;
@@ -989,7 +996,7 @@
                 result_c = right_c.test(left_c);
                 break;
             default:
-                throw new Error(op +" at "+iid+" not found");
+                throw new Error(op + " at " + iid + " not found");
                 break;
         }
         return result_c;
@@ -1003,15 +1010,15 @@
             }
             return ret;
         } else if (left_s instanceof SymbolicStringExpression) {
-            ret = new SymbolicStringPredicate("!=",left_s,"");
+            ret = new SymbolicStringPredicate("!=", left_s, "");
             return ret;
-        } else if (left_s instanceof SymbolicStringPredicate  ||
+        } else if (left_s instanceof SymbolicStringPredicate ||
             left_s instanceof ToStringPredicate ||
             left_s instanceof FromCharCodePredicate ||
             left_s instanceof SymbolicBool) {
             return ret;
         }
-        throw new Error("Unknown symbolic value "+left_s);
+        throw new Error("Unknown symbolic value " + left_s);
     }
 
 
@@ -1050,24 +1057,24 @@
 
         left_c = pc.concretize(left);
 
-        switch(op) {
+        switch (op) {
             case "+":
-                result_c = + left_c;
+                result_c = +left_c;
                 break;
             case "-":
-                result_c = - left_c;
+                result_c = -left_c;
                 break;
             case "~":
-                result_c = ~ left_c;
+                result_c = ~left_c;
                 break;
             case "!":
-                result_c = ! left_c;
+                result_c = !left_c;
                 break;
             case "typeof":
                 result_c = typeof left_c;
                 break;
             default:
-                throw new Error(op +" at "+iid+" not found");
+                throw new Error(op + " at " + iid + " not found");
                 break;
         }
 
@@ -1179,5 +1186,5 @@
     sandbox.initUndefinedString = initUndefinedString;
     sandbox.writeICount = writeICount;
 
-}(module.exports));
+};
 

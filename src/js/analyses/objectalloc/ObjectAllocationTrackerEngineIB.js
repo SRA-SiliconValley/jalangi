@@ -18,8 +18,8 @@
 
 (function (sandbox) {
     function ObjectAllocationTrackerEngine() {
-        var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
-        var smemory = sandbox.Globals.smemory;
+        var Constants = (typeof sandbox.Constants === 'undefined' ? require('../../Constants.js') : sandbox.Constants);
+        var smemory = sandbox.smemory;
         var iidToLocation = Constants.load("iidToLocation");
 
         // iid or type could be object(iid) | array(iid) | function(iid)
@@ -33,7 +33,7 @@
             return Object.prototype.toString.call(val) === '[object Array]';
         }
 
-        var getSymbolic = this.getSymbolic = function(obj) {
+        var getSymbolic = this.getSymbolic = function (obj) {
             var sobj = smemory.getShadowObject(obj);
             if (sobj) {
                 return sobj.shadow;
@@ -227,4 +227,4 @@
         module.exports = ObjectAllocationTrackerEngine;
     }
 
-}(typeof J$ === 'undefined'? (J$={}):J$));
+}(typeof J$ === 'undefined' ? (J$ = {}) : J$));

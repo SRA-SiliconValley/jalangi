@@ -11,7 +11,6 @@ if (typeof J$ === 'undefined') {
     Globals.isBrowserReplay;
     Globals.traceFileName;
     Globals.traceWriter;
-    Globals.smemory;
     Globals.loadAndBranchLogs = [];
 
     if (typeof module !== 'undefined') {

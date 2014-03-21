@@ -19,7 +19,7 @@
 
 /*
  To perform analysis in browser without recording, set window.JALANGI_MODE to 'inbrowser' and J$.analysis to a suitable analysis file.
- In the inbrowser mode, one has access to the object J$.Globals.smemory, which denotes the shadow memory.
+ In the inbrowser mode, one has access to the object J$.smemory, which denotes the shadow memory.
  smemory.getShadowObject(obj) returns the shadow object associated with obj if type of obj is "object" or "function".
  smemory.getShadowFrame(varName) returns the shadow frame that contains the variable named "varName".
  To redefine all instrumentation functions, set JALANGI_MODE to 'symbolic' and J$.analysis to a suitable library containing redefinitions of W, R, etc.
@@ -93,51 +93,16 @@ if (typeof J$ === 'undefined') {
         if (Globals.mode === MODE_DIRECT) {
             /* JALANGI_ANALYSIS file must define all instrumentation functions such as U, B, C, C1, C2, W, R, G, P */
             if (analysis_script) {
-                sandbox.analysis = require(analysis_script);
+                require(analysis_script)(sandbox);
+                if (sandbox.postLoad) {
+                    sandbox.postLoad();
+                }
             }
-
-            sandbox.U = sandbox.analysis.U; // Unary operation
-            sandbox.B = sandbox.analysis.B; // Binary operation
-            sandbox.C = sandbox.analysis.C; // Condition
-            sandbox.C1 = sandbox.analysis.C1; // Switch key
-            sandbox.C2 = sandbox.analysis.C2; // case label C1 === C2
-            sandbox._ = sandbox.analysis._;  // Last value passed to C
-
-            sandbox.H = sandbox.analysis.H; // hash in for-in
-            sandbox.I = sandbox.analysis.I; // Ignore argument
-            sandbox.G = sandbox.analysis.G; // getField
-            sandbox.P = sandbox.analysis.P; // putField
-            sandbox.R = sandbox.analysis.R; // Read
-            sandbox.W = sandbox.analysis.W; // Write
-            sandbox.N = sandbox.analysis.N; // Init
-            sandbox.T = sandbox.analysis.T; // object/function/regexp/array Literal
-            sandbox.F = sandbox.analysis.F; // Function call
-            sandbox.M = sandbox.analysis.M; // Method call
-            sandbox.A = sandbox.analysis.A; // Modify and assign +=, -= ...
-            sandbox.Fe = sandbox.analysis.Fe; // Function enter
-            sandbox.Fr = sandbox.analysis.Fr; // Function return
-            sandbox.Se = sandbox.analysis.Se; // Script enter
-            sandbox.Sr = sandbox.analysis.Sr; // Script return
-            sandbox.Rt = sandbox.analysis.Rt; // Value return
-            sandbox.Ra = sandbox.analysis.Ra;
-            sandbox.Ex = sandbox.analysis.Ex;
-
-            sandbox.makeSymbolic = sandbox.analysis.makeSymbolic;
-            sandbox.addAxiom = sandbox.analysis.addAxiom;
-            sandbox.endExecution = sandbox.analysis.endExecution;
-
-            // TODO get rid of this --MS
-            // do not get rid of this --KS
-            if (analysis_script  && analysis_script.indexOf("analyses/puresymbolic/Multiple")>=0) {
-                sandbox.analysis.postLoad();
-            }
-
         } else {
 
             var rrEngine;
             var executionIndex;
             var branchCoverageInfo;
-            var analysis;
             var smemory;
 
 
@@ -146,11 +111,11 @@ if (typeof J$ === 'undefined') {
             if (mode === MODE_RECORD || mode === MODE_REPLAY) {
                 rrEngine = new RecordReplayEngine();
             } else if (mode === MODE_NO_RR) {
-                Globals.smemory = smemory = new SMemory();
+                sandbox.smemory = smemory = new SMemory();
             }
-            if (analysis_script && mode !== MODE_RECORD) {
+            if (analysis_script) {
                 var AnalysisEngine = require(analysis_script);
-                analysis = sandbox.analysis = new AnalysisEngine(executionIndex);
+                sandbox.analysis = new AnalysisEngine(executionIndex);
             }
 
 
@@ -167,7 +132,7 @@ if (typeof J$ === 'undefined') {
             }
 
             function concretize(obj) {
-                for(var key in obj) {
+                for (var key in obj) {
                     if (HOP(obj, key)) {
                         obj[key] = getConcrete(obj[key]);
                     }
@@ -180,7 +145,7 @@ if (typeof J$ === 'undefined') {
                     for (var i = 0; i < len; i++) {
                         arguments[i] = getConcrete(arguments[i]);
                     }
-                    if (len===3) {
+                    if (len === 3) {
                         concretize(arguments[2]);
                     }
                     return f.apply(getConcrete(this), arguments);
@@ -199,7 +164,7 @@ if (typeof J$ === 'undefined') {
                     return [f, true];
                 } else if (//f === Function.prototype.apply ||
                 //f === Function.prototype.call ||
-                        f === console.log ||
+                    f === console.log ||
                         (typeof getConcrete(arguments[0]) === 'string' && f === RegExp.prototype.test) || // fixes bug in minPathDev.js
                         f === String.prototype.indexOf ||
                         f === String.prototype.lastIndexOf ||
@@ -512,7 +477,7 @@ if (typeof J$ === 'undefined') {
                     }
                 }
 
-                if (rrEngine){
+                if (rrEngine) {
                     rrEngine.RR_replay();
                     rrEngine.RR_Load(iid);
                 }
@@ -553,7 +518,7 @@ if (typeof J$ === 'undefined') {
 
                 // the following patch was not elegant
                 // but now it is better (got rid of offset+"" === "hash" check)
-                if (rrEngine){//} && ((offset + "") === "hash")) {
+                if (rrEngine) {//} && ((offset + "") === "hash")) {
                     rrEngine.RR_replay();
                     rrEngine.RR_Load(iid); // add a dummy (no record) in the trace so that RR_Replay does not replay non-setter method
                 }

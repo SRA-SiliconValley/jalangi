@@ -41,6 +41,7 @@ if (typeof J$ === 'undefined') {
     var Config = Constants.load('Config');
     var SMemory = Constants.load('SMemory');
     var RecordReplayEngine = Constants.load('RecordReplayEngine');
+    Constants.load("iidToLocation");
 
 //    var Globals = (typeof sandbox.Globals === 'undefined'? require('./Globals.js'): sandbox.Globals);
 //    var Config = (typeof sandbox.Config === 'undefined'? require('./Config.js'): sandbox.Config);

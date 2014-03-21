@@ -17,7 +17,7 @@
 (function (module) {
 
     function isPrimitive(val) {
-        t = typeof val;
+        var t = typeof val;
         return t == "number" ||
             t == "boolean" ||
             t == "string"

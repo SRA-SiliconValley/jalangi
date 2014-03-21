@@ -49,6 +49,20 @@ class AnalysisCommand:
             sys.exit(1)
         print commands.analysis(options.analysis, options.browser, os.path.abspath(args[0]))
 
+class DirectAnalysisCommand:
+    name = "DirectAnalysis"
+    description = "Run a Jalangi Analysis Directly"
+    def execute(self, params):
+        parser = OptionParser()
+        parser.add_option("-a", "--analysis", dest="analysis",
+                          help="Use analysis implemented in ANALYSIS", default="%NOT_SET")
+        (options, args) = parser.parse_args(args=params)
+        if len(args) < 1 or options.analysis == "%NOT_SET":
+            print "Invalid command line"
+            parser.print_help()
+            sys.exit(1)
+        print commands.direct_analysis(options.analysis, os.path.abspath(args[0]))
+
 class TestRecordReplayCommand:
     name = "Analysis"
     description = "Run a Jalangi Analysis"
@@ -178,6 +192,7 @@ class RRServerCommand:
         
 COMMANDS = {"instrument" : InstrumentCommand,
             "analyze" : AnalysisCommand,
+            "direct" : DirectAnalysisCommand,
             "testrr" : TestRecordReplayCommand,
             "concolic" : ConcolicCommand,
             "symbolic" : SymbolicCommand,

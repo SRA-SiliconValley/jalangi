@@ -52,6 +52,9 @@ class JalangiInstall:
     def record_script(self):
         return self.get_home() + "/src/js/commands/record.js"
 
+    def direct_script(self):
+        return self.get_home() + "/src/js/commands/direct.js"
+
     def symbolic_script(self):
         return self.get_home() + "/src/js/commands/symbolic.js"
 

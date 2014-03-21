@@ -45,6 +45,24 @@ def analysis(analysis, browser_rec, filee, jalangi=util.DEFAULT_INSTALL):
     print replay(analysis=analysis)
     util.move_coverage(jalangi)
 
+def direct_analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
+    try:
+        shutil.rmtree("jalangi_tmp")
+    except: pass
+    os.mkdir("jalangi_tmp")
+    os.chdir("jalangi_tmp")
+    #Instrument file first
+    (instrumented_f,out) = instrument(filee, jalangi=jalangi)
+    util.mkempty("inputs.js")
+    print "---- Analyzing {} directly ----".format(filee)
+    print direct(filee, instrumented_f, jalangi, analysis=analysis)
+    util.move_coverage(jalangi)
+
+def direct(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL, analysis=None):
+    print instrumented_f
+    return util.run_node_script(jalangi.direct_script(), os.path.join(os.path.dirname(filee + ".js"),instrumented_f), analysis, jalangi=jalangi, savestderr=True)
+
+
 def record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
     print instrumented_f
     return util.run_node_script(jalangi.record_script(), os.path.join(os.path.dirname(filee + ".js"),instrumented_f), jalangi=jalangi, savestderr=True)

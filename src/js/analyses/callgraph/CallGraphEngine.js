@@ -16,21 +16,18 @@
 
 // Author: Koushik Sen
 
-(function (module) {
+(function (sandbox) {
 
     function CallGraphEngine(executionIndex) {
-        var ConcolicValue = require('./../../ConcolicValue');
-        var getIIDInfo = require('./../../utils/IIDInfo');
+        var getIIDInfo = sandbox.iidToLocation;
 
         if (!(this instanceof CallGraphEngine)) {
             return new CallGraphEngine(executionIndex);
         }
 
-        var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
-        var getSymbolic = this.getSymbolic = ConcolicValue.getSymbolic;
-
         var HAS_OWN_PROPERTY = Object.prototype.hasOwnProperty;
         var HAS_OWN_PROPERTY_CALL = Object.prototype.hasOwnProperty.call;
+
         function HOP(obj, prop) {
             return HAS_OWN_PROPERTY_CALL.apply(HAS_OWN_PROPERTY, [obj, prop]);
         }
@@ -39,26 +36,26 @@
             var sortingArr = [];
 
             for (var iid in iidToInvocationCount) {
-                if (HOP(iidToInvocationCount,iid)) {
+                if (HOP(iidToInvocationCount, iid)) {
                     sortingArr.push([iid, iidToInvocationCount[iid]]);
                 }
             }
-            sortingArr.sort(function(a,b) {
-               return b[1] - a[1];
+            sortingArr.sort(function (a, b) {
+                return b[1] - a[1];
             });
 
             var i, len = sortingArr.length;
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 var callerIId = sortingArr[i][0];
-                console.log("Function "+iidToFunName[callerIId]+" defined at "+getIIDInfo(callerIId)+" was invoked "+iidToInvocationCount[callerIId]+" time(s) and it called:");
-                if (HOP(callerIidToCalleeIidsMap,callerIId)) {
+                console.log("Function " + iidToFunName[callerIId] + " defined at " + getIIDInfo(callerIId) + " was invoked " + iidToInvocationCount[callerIId] + " time(s) and it called:");
+                if (HOP(callerIidToCalleeIidsMap, callerIId)) {
                     var callees = callerIidToCalleeIidsMap[callerIId];
                     for (var calleeIid in callees) {
-                        if (HOP(callees,calleeIid)) {
+                        if (HOP(callees, calleeIid)) {
                             var callSites = callees[calleeIid];
                             for (var callSite in callSites) {
-                                if (HOP(callSites, callSite)){
-                                    console.log("    function "+ iidToFunName[calleeIid]+" defined at "+getIIDInfo(calleeIid)+" "+callSites[callSite]+" time(s) at call site "+getIIDInfo(callSite));
+                                if (HOP(callSites, callSite)) {
+                                    console.log("    function " + iidToFunName[calleeIid] + " defined at " + getIIDInfo(calleeIid) + " " + callSites[callSite] + " time(s) at call site " + getIIDInfo(callSite));
                                 }
                             }
                         }
@@ -69,7 +66,7 @@
             }
             console.log("Generating CallGraph.json ...");
             // store the call graph by serializing  callerIidToCalleeIidsMap and iidToFunName
-            require('fs').writeFileSync("CallGraph.json", JSON.stringify([iidToFunName,iidToInvocationCount, callerIidToCalleeIidsMap], undefined, 4), "utf8");
+            require('fs').writeFileSync("CallGraph.json", JSON.stringify([iidToFunName, iidToInvocationCount, callerIidToCalleeIidsMap], undefined, 4), "utf8");
         }
 
         var callerIidToCalleeIidsMap = {}; // caller iid => callee iid => iid of call site => count
@@ -84,21 +81,21 @@
         }
 
         this.functionEnter = function (iid, fun, dis /* this */) {
-            var callerIid = callStack[callStack.length-1];
-            if (!HOP(callerIidToCalleeIidsMap,callerIid)) {
+            var callerIid = callStack[callStack.length - 1];
+            if (!HOP(callerIidToCalleeIidsMap, callerIid)) {
                 callerIidToCalleeIidsMap[callerIid] = {};
             }
             var callees = callerIidToCalleeIidsMap[callerIid];
-            if (!HOP(callees,iid)) {
+            if (!HOP(callees, iid)) {
                 callees[iid] = {};
             }
             var callee = callees[iid]
-            if (!HOP(callee,invokedAtIid)) {
+            if (!HOP(callee, invokedAtIid)) {
                 callee[invokedAtIid] = 0;
             }
             callee[invokedAtIid] = callee[invokedAtIid] + 1;
             iidToFunName[iid] = fun.name;
-            if (!HOP(iidToInvocationCount,iid)) {
+            if (!HOP(iidToInvocationCount, iid)) {
                 iidToInvocationCount[iid] = 1;
             } else {
                 iidToInvocationCount[iid] = iidToInvocationCount[iid] + 1;
@@ -115,5 +112,16 @@
 
     }
 
-    module.exports = CallGraphEngine;
+    if (sandbox.Constants.isBrowser) {
+        sandbox.analysis = new CallGraphEngine();
+
+        window.addEventListener('keydown', function (e) {
+            // keyboard shortcut is Alt-Shift-T for now
+            if (e.altKey && e.shiftKey && e.keyCode === 84) {
+                sandbox.analysis.endExecution();
+            }
+        });
+    } else {
+        module.exports = CallGraphEngine;
+    }
 }(module));

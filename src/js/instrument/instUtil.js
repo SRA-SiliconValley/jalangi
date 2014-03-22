@@ -69,10 +69,14 @@ function getHeaderCode(root) {
 function getHeaderCodeAsScriptTags(root, relative, analysis) {
     var ret = "";
     if (analysis) {
-        headerSources.push("src/js/"+analysis);
+        if (analysis.indexOf(path.sep) === 0) {
+            headerSources.push(analysis);
+        } else {
+            headerSources.push("src/js/" + analysis);
+        }
     }
     headerSources.forEach(function (src) {
-        if (root) {
+        if (root && analysis.indexOf(path.sep) !== 0) {
             src = path.join(root, src);
         }
         if (relative) {

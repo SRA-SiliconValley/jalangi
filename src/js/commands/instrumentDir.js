@@ -308,6 +308,7 @@ function instDir(options, cb) {
             extraAppScripts.forEach(function (script) {
                 fs.unlinkSync(path.join(extraScriptDir, path.basename(script)));
             });
+            fs.rmdirSync(extraScriptDir);
         }
         cb(err);
     };

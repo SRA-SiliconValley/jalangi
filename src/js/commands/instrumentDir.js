@@ -30,13 +30,18 @@ var util = require("util");
 var assert = require('assert');
 var ArgumentParser = require('argparse').ArgumentParser;
 
+var EXTRA_SCRIPTS_DIR = "__jalangi_extra";
+
 /**
  * Instruments all .js files found under dir, and re-writes index.html
  * so that inline scripts are instrumented.  Output is written as a full
  * copy of dir, within outputDir
  */
-function instDir(options) {
+function instDir(options, cb) {
 
+    if (!cb) {
+        throw new Error("must pass in a callback");
+    }
     //
     // parse out options
     //
@@ -72,8 +77,18 @@ function instDir(options) {
     // directory to which app is being copied
     var copyDir;
 
-    // analysis
+    // analysis to run in browser (?)
     var analysis = options.analysis;
+
+    /**
+     * extra scripts to inject into the application and instrument
+     * @type {Array.<String>}
+     */
+    var extraAppScripts = [];
+    if (options.extra_app_scripts) {
+        extraAppScripts = options.extra_app_scripts.split(path.delimiter);
+    }
+
 
 
     function createOrigScriptFilename(name) {
@@ -160,6 +175,14 @@ function instDir(options) {
             }
             headerLibs += "<script src=\"jalangi_sourcemap.js\"></script>";
 
+            if (extraAppScripts.length > 0) {
+                // we need to inject script tags for the extra app scripts,
+                // which have been copied into the app directory
+                extraAppScripts.forEach(function (script) {
+                    var scriptSrc = path.join(EXTRA_SCRIPTS_DIR, path.basename(script));
+                    headerLibs += "<script src=\"" + scriptSrc + "\"></script>";
+                });
+            }
             var newHTML = this.data.slice(0, headIndex + 6) + headerLibs + this.data.slice(headIndex + 6);
             this.push(newHTML);
         }
@@ -228,6 +251,10 @@ function instDir(options) {
         }
     }
 
+    /**
+     * copy the Jalangi runtime files into the directory with
+     * instrumented code, so they can be loaded with relative paths
+     */
     var copyJalangiRuntime = function () {
         var outputDir = path.join(copyDir, jalangiRuntimeDir);
         mkdirp.sync(outputDir);
@@ -258,34 +285,66 @@ function instDir(options) {
     if (copyRuntime) {
         copyJalangiRuntime();
     }
+    if (extraAppScripts.length > 0) {
+        // first check that all extra app scripts exist
+        extraAppScripts.forEach(function (script) {
+            if (!fs.existsSync(script)) {
+                throw new Error("extra script " + script + " does not exist");
+            }
+        });
+        // temporarily copy the scripts to the appDir, so
+        // they get instrumented like everything else
+        var extraScriptDir = path.join(appDir,EXTRA_SCRIPTS_DIR);
+        mkdirp.sync(extraScriptDir);
+        extraAppScripts.forEach(function (script) {
+            fs.writeFileSync(path.join(extraScriptDir, path.basename(script)), fs.readFileSync(script));
+        });
+    }
+
     var callback = function (err) {
-        if (err) {
-            return console.error(err);
-        }
         esnstrument.closeIIDMapFile();
-        console.log('done!');
+        if (extraAppScripts.length > 0) {
+            var extraScriptDir = path.join(appDir,EXTRA_SCRIPTS_DIR);
+            extraAppScripts.forEach(function (script) {
+                fs.unlinkSync(path.join(extraScriptDir, path.basename(script)));
+            });
+        }
+        cb(err);
     };
     ncp(inputDir, copyDir, {transform:transform}, callback);
 }
 
 
-var parser = new ArgumentParser({ addHelp:true, description:"Utility to apply Jalangi instrumentation to all files in a directory"});
-parser.addArgument(['-s', '--serialize'], { help:"dump serialized ASTs along with code", action:'storeTrue' });
-parser.addArgument(['-x', '--exclude'], { help:"do not instrument any scripts whose filename contains this substring" });
-// TODO add back this option once we've fixed the relevant HTML parsing code
-parser.addArgument(['-i', '--instrumentInline'], { help:"instrument inline scripts", action:'storeTrue'});
-parser.addArgument(['--jalangi_root'], { help:"Jalangi root directory, if not working directory" });
-parser.addArgument(['--analysis'], { help:"Analysis script for 'inbrowser' mode" });
-parser.addArgument(['-d', '--direct_in_output'], { help:"Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' });
-parser.addArgument(['--selenium'], { help:"Insert code so scripts can detect they are running under Selenium.  Also keeps Jalangi trace in memory", action:'storeTrue' });
-parser.addArgument(['--in_memory_trace'], { help:"Insert code to tell analysis to keep Jalangi trace in memory instead of writing to WebSocket", action:'storeTrue' });
-parser.addArgument(['--inbrowser'], { help:"Insert code to tell analysis to keep Jalangi trace in memory instead of writing to WebSocket", action:'storeTrue' });
-parser.addArgument(['--relative'], { help:"Use paths relative to working directory in injected <script> tags", action:'storeTrue' });
-parser.addArgument(['-c', '--copy_runtime'], { help:"Copy Jalangi runtime files into instrumented app in jalangi_rt sub-directory", action:'storeTrue'});
-parser.addArgument(['--first_iid'], { help:"initial IID to use during instrumentation"});
-parser.addArgument(['inputDir'], { help:"directory containing files to instrument"});
-parser.addArgument(['outputDir'], { help:"directory in which to create instrumented copy"});
+if (require.main === module) { // main script
+    var parser = new ArgumentParser({ addHelp:true, description:"Utility to apply Jalangi instrumentation to all files in a directory"});
+    parser.addArgument(['-s', '--serialize'], { help:"dump serialized ASTs along with code", action:'storeTrue' });
+    parser.addArgument(['-x', '--exclude'], { help:"do not instrument any scripts whose filename contains this substring" });
+    // TODO add back this option once we've fixed the relevant HTML parsing code
+    parser.addArgument(['-i', '--instrumentInline'], { help:"instrument inline scripts", action:'storeTrue'});
+    parser.addArgument(['--jalangi_root'], { help:"Jalangi root directory, if not working directory" });
+    parser.addArgument(['--analysis'], { help:"Analysis script for 'inbrowser' mode" });
+    parser.addArgument(['-d', '--direct_in_output'], { help:"Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' });
+    parser.addArgument(['--selenium'], { help:"Insert code so scripts can detect they are running under Selenium.  Also keeps Jalangi trace in memory", action:'storeTrue' });
+    parser.addArgument(['--in_memory_trace'], { help:"Insert code to tell analysis to keep Jalangi trace in memory instead of writing to WebSocket", action:'storeTrue' });
+    parser.addArgument(['--inbrowser'], { help:"Insert code to tell Jalangi to run in 'inbrowser' analysis mode", action:'storeTrue' });
+    parser.addArgument(['--relative'], { help:"Use paths relative to working directory in injected <script> tags", action:'storeTrue' });
+    parser.addArgument(['-c', '--copy_runtime'], { help:"Copy Jalangi runtime files into instrumented app in jalangi_rt sub-directory", action:'storeTrue'});
+    parser.addArgument(['--first_iid'], { help:"initial IID to use during instrumentation"});
+    parser.addArgument(['--extra_app_scripts'], { help: "list of extra application scripts to be injected and instrumented, separated by path.delimiter"});
+    parser.addArgument(['inputDir'], { help:"directory containing files to instrument"});
+    parser.addArgument(['outputDir'], { help:"directory in which to create instrumented copy"});
 
-var args = parser.parseArgs();
+    var args = parser.parseArgs();
 
-instDir(args);
+    instDir(args, function (err) {
+        if (err) {
+            console.error(err);
+        }
+        console.log('done!');
+    });
+
+} else {
+    exports.instDir = instDir;
+    exports.EXTRA_SCRIPTS_DIR = EXTRA_SCRIPTS_DIR;
+}
+

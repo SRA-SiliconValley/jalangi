@@ -18,7 +18,7 @@ import testrunner
 
 tests = [
     ("tests/compos/arbitrary1",2),
-    ("tests/compos/arbitrary2",75),
+    ("tests/compos/arbitrary2",16),
     ("tests/compos/arbitrary3",2),
     ("tests/compos/arbitrary4",13),
     ("tests/compos/fac",12),

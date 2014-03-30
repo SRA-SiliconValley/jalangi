@@ -1,3 +1,4 @@
+instDirTests.js
 apiTests.js
 astSerializationTests.js
 topLevelExprTests.js

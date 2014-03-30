@@ -158,6 +158,7 @@ if (typeof J$ === 'undefined') {
                     f === Error ||
                     f === String ||
                     f === Number ||
+                    f === Date ||
                     f === Boolean ||
                     f === RegExp ||
                     f === sandbox.addAxiom ||

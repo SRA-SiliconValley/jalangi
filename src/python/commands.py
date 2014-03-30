@@ -40,7 +40,7 @@ def analysis(analysis, browser_rec, filee, jalangi=util.DEFAULT_INSTALL):
     if browser_rec:
         selenium_browser_record(filee, instrumented_f,jalangi)
     else:
-        record(filee, instrumented_f, jalangi)
+        print record(filee, instrumented_f, jalangi)
     print "---- Replaying {} ----".format(filee)
     print replay(analysis=analysis)
     util.move_coverage(jalangi)

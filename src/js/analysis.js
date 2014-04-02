@@ -310,6 +310,23 @@ if (typeof J$ === 'undefined') {
             var switchKeyStack = [];
 
 
+            /**
+             * invoked when the client analysis throws an exception
+             * @param e
+             */
+            function clientAnalysisException(e) {
+                console.error("analysis exception!!!");
+                console.error(e.stack);
+                if (isBrowser) {
+                    // we don't really know what will happen to the exception,
+                    // but we don't have a way to just terminate, so throw it
+                    throw e;
+                } else {
+                    // under node.js, just die
+                    process.exit(1);
+                }
+            }
+
             function isNative(f) {
                 return f.toString().indexOf('[native code]') > -1 || f.toString().indexOf('[object ') === 0;
             }
@@ -389,7 +406,11 @@ if (typeof J$ === 'undefined') {
                 if (sandbox.analysis && sandbox.analysis.invokeFunPre) {
                     tmp_rrEngine = rrEngine;
                     rrEngine = null;
-                    sandbox.analysis.invokeFunPre(iid, f, base, args, isConstructor);
+                    try {
+                        sandbox.analysis.invokeFunPre(iid, f, base, args, isConstructor);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                     rrEngine = tmp_rrEngine;
                 }
 
@@ -437,7 +458,11 @@ if (typeof J$ === 'undefined') {
                 if (sandbox.analysis && sandbox.analysis.invokeFun) {
                     tmp_rrEngine = rrEngine;
                     rrEngine = null;
-                    val = sandbox.analysis.invokeFun(iid, f, base, args, val, isConstructor);
+                    try {
+                        val = sandbox.analysis.invokeFun(iid, f, base, args, val, isConstructor);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                     rrEngine = tmp_rrEngine;
                     if (rrEngine) {
                         rrEngine.RR_updateRecordedObject(val);
@@ -461,7 +486,11 @@ if (typeof J$ === 'undefined') {
 //                }
 
                 if (sandbox.analysis && sandbox.analysis.getFieldPre && getConcrete(offset) !== '__proto__') {
-                    sandbox.analysis.getFieldPre(iid, base, offset);
+                    try {
+                        sandbox.analysis.getFieldPre(iid, base, offset);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
                 var val = base_c[getConcrete(offset)];
 
@@ -472,7 +501,11 @@ if (typeof J$ === 'undefined') {
                 if (sandbox.analysis && sandbox.analysis.getField && getConcrete(offset) !== '__proto__') {
                     var tmp_rrEngine = rrEngine;
                     rrEngine = null;
-                    val = sandbox.analysis.getField(iid, base, offset, val);
+                    try {
+                        val = sandbox.analysis.getField(iid, base, offset, val);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                     rrEngine = tmp_rrEngine;
                     if (rrEngine) {
                         rrEngine.RR_updateRecordedObject(val);
@@ -502,7 +535,11 @@ if (typeof J$ === 'undefined') {
 
                 var base_c = getConcrete(base);
                 if (sandbox.analysis && sandbox.analysis.putFieldPre) {
-                    val = sandbox.analysis.putFieldPre(iid, base, offset, val);
+                    try {
+                        val = sandbox.analysis.putFieldPre(iid, base, offset, val);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
 
                 if (typeof base_c === 'function' && getConcrete(offset) === 'prototype') {
@@ -515,7 +552,11 @@ if (typeof J$ === 'undefined') {
                     rrEngine.RR_P(iid, base, offset, val);
                 }
                 if (sandbox.analysis && sandbox.analysis.putField) {
-                    val = sandbox.analysis.putField(iid, base, offset, val);
+                    try {
+                        val = sandbox.analysis.putField(iid, base, offset, val);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
 
                 // the following patch was not elegant
@@ -560,7 +601,11 @@ if (typeof J$ === 'undefined') {
                     if (rrEngine) {
                         val = rrEngine.RR_getConcolicValue(val);
                     }
-                    sandbox.analysis.functionEnter(iid, val, dis);
+                    try {
+                        sandbox.analysis.functionEnter(iid, val, dis);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
             }
 
@@ -574,7 +619,11 @@ if (typeof J$ === 'undefined') {
                     smemory.functionReturn();
                 }
                 if (sandbox.analysis && sandbox.analysis.functionExit) {
-                    ret = sandbox.analysis.functionExit(iid);
+                    try {
+                        ret = sandbox.analysis.functionExit(iid);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
                 // if there was an uncaught exception, throw it
                 // here, to preserve exceptional control flow
@@ -596,7 +645,11 @@ if (typeof J$ === 'undefined') {
                 returnVal.pop();
                 returnVal.push(val);
                 if (sandbox.analysis && sandbox.analysis.return_) {
-                    val = sandbox.analysis.return_(val);
+                    try {
+                        val = sandbox.analysis.return_(val);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
                 return val;
             }
@@ -620,7 +673,11 @@ if (typeof J$ === 'undefined') {
                     smemory.scriptEnter();
                 }
                 if (sandbox.analysis && sandbox.analysis.scriptEnter) {
-                    sandbox.analysis.scriptEnter(iid, val);
+                    try {
+                        sandbox.analysis.scriptEnter(iid, val);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
             }
 
@@ -634,7 +691,11 @@ if (typeof J$ === 'undefined') {
                     smemory.scriptReturn();
                 }
                 if (sandbox.analysis && sandbox.analysis.scriptExit) {
-                    sandbox.analysis.scriptExit(iid);
+                    try {
+                        sandbox.analysis.scriptExit(iid);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
                 if (mode === MODE_NO_RR_IGNORE_UNINSTRUMENTED && scriptCount === 0) {
                     endExecution();
@@ -659,7 +720,11 @@ if (typeof J$ === 'undefined') {
             // object/function/regexp/array Literal
             function T(iid, val, type) {
                 if (sandbox.analysis && sandbox.analysis.literalPre) {
-                    sandbox.analysis.literalPre(iid, val);
+                    try {
+                        sandbox.analysis.literalPre(iid, val);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
                 if (rrEngine) {
                     rrEngine.RR_T(iid, val, type);
@@ -678,7 +743,11 @@ if (typeof J$ === 'undefined') {
 
                 // inform analysis, which may modify the literal
                 if (sandbox.analysis && sandbox.analysis.literal) {
-                    val = sandbox.analysis.literal(iid, val);
+                    try {
+                        val = sandbox.analysis.literal(iid, val);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                     if (rrEngine) {
                         rrEngine.RR_updateRecordedObject(val);
                     }
@@ -700,13 +769,21 @@ if (typeof J$ === 'undefined') {
             // variable read
             function R(iid, name, val, isGlobal) {
                 if (sandbox.analysis && sandbox.analysis.readPre) {
-                    sandbox.analysis.readPre(iid, name, val, isGlobal);
+                    try {
+                        sandbox.analysis.readPre(iid, name, val, isGlobal);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
                 if (rrEngine) {
                     val = rrEngine.RR_R(iid, name, val);
                 }
                 if (sandbox.analysis && sandbox.analysis.read) {
-                    val = sandbox.analysis.read(iid, name, val, isGlobal);
+                    try {
+                        val = sandbox.analysis.read(iid, name, val, isGlobal);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                     if (rrEngine) {
                         rrEngine.RR_updateRecordedObject(val);
                     }
@@ -718,13 +795,21 @@ if (typeof J$ === 'undefined') {
             // variable write
             function W(iid, name, val, lhs) {
                 if (sandbox.analysis && sandbox.analysis.writePre) {
-                    sandbox.analysis.writePre(iid, name, val, lhs);
+                    try {
+                        sandbox.analysis.writePre(iid, name, val, lhs);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
                 if (rrEngine) {
                     rrEngine.RR_W(iid, name, val);
                 }
                 if (sandbox.analysis && sandbox.analysis.write) {
-                    val = sandbox.analysis.write(iid, name, val, lhs);
+                    try {
+                        val = sandbox.analysis.write(iid, name, val, lhs);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
                 return val;
             }
@@ -737,7 +822,11 @@ if (typeof J$ === 'undefined') {
                     smemory.initialize(name);
                 }
                 if (sandbox.analysis && sandbox.analysis.declare) {
-                    sandbox.analysis.declare(iid, name, val, isArgumentSync);
+                    try {
+                        sandbox.analysis.declare(iid, name, val, isArgumentSync);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
                 return val;
             }
@@ -758,7 +847,11 @@ if (typeof J$ === 'undefined') {
                 var left_c, right_c, result_c, isArith = false;
 
                 if (sandbox.analysis && sandbox.analysis.binaryPre) {
-                    sandbox.analysis.binaryPre(iid, op, left, right);
+                    try {
+                        sandbox.analysis.binaryPre(iid, op, left, right);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
 
                 left_c = getConcrete(left);
@@ -877,7 +970,11 @@ if (typeof J$ === 'undefined') {
                     }
                 }
                 if (sandbox.analysis && sandbox.analysis.binary) {
-                    result_c = sandbox.analysis.binary(iid, op, left, right, result_c);
+                    try {
+                        result_c = sandbox.analysis.binary(iid, op, left, right, result_c);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                     if (rrEngine) {
                         rrEngine.RR_updateRecordedObject(result_c);
                     }
@@ -891,7 +988,11 @@ if (typeof J$ === 'undefined') {
                 var left_c, result_c, isArith = false;
 
                 if (sandbox.analysis && sandbox.analysis.unaryPre) {
-                    sandbox.analysis.unaryPre(iid, op, left);
+                    try {
+                        sandbox.analysis.unaryPre(iid, op, left);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
 
                 left_c = getConcrete(left);
@@ -931,7 +1032,11 @@ if (typeof J$ === 'undefined') {
                     }
                 }
                 if (sandbox.analysis && sandbox.analysis.unary) {
-                    result_c = sandbox.analysis.unary(iid, op, left, result_c);
+                    try {
+                        result_c = sandbox.analysis.unary(iid, op, left, result_c);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                     if (rrEngine) {
                         rrEngine.RR_updateRecordedObject(result_c);
                     }
@@ -971,13 +1076,21 @@ if (typeof J$ === 'undefined') {
                 left = B(iid, "===", switchLeft, left);
 
                 if (sandbox.analysis && sandbox.analysis.conditionalPre) {
-                    sandbox.analysis.conditionalPre(iid, left);
+                    try {
+                        sandbox.analysis.conditionalPre(iid, left);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
 
                 ret = !!getConcrete(left);
 
                 if (sandbox.analysis && sandbox.analysis.conditional) {
-                    sandbox.analysis.conditional(iid, left, ret);
+                    try {
+                        sandbox.analysis.conditional(iid, left, ret);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
 
                 if (branchCoverageInfo) {
@@ -992,14 +1105,22 @@ if (typeof J$ === 'undefined') {
                 var left_c, ret;
                 executionIndex.executionIndexInc(iid);
                 if (sandbox.analysis && sandbox.analysis.conditionalPre) {
-                    sandbox.analysis.conditionalPre(iid, left);
+                    try {
+                        sandbox.analysis.conditionalPre(iid, left);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
 
                 left_c = getConcrete(left);
                 ret = !!left_c;
 
                 if (sandbox.analysis && sandbox.analysis.conditional) {
-                    lastVal = sandbox.analysis.conditional(iid, left, left_c);
+                    try {
+                        lastVal = sandbox.analysis.conditional(iid, left, left_c);
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                     if (rrEngine) {
                         rrEngine.RR_updateRecordedObject(lastVal);
                     }
@@ -1019,7 +1140,11 @@ if (typeof J$ === 'undefined') {
                 if (branchCoverageInfo)
                     branchCoverageInfo.storeBranchInfo();
                 if (sandbox.analysis && sandbox.analysis.endExecution) {
-                    return sandbox.analysis.endExecution();
+                    try {
+                        return sandbox.analysis.endExecution();
+                    } catch (e) {
+                        clientAnalysisException(e);
+                    }
                 }
             }
 

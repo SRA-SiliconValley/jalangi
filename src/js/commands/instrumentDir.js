@@ -31,6 +31,7 @@ var assert = require('assert');
 var ArgumentParser = require('argparse').ArgumentParser;
 
 var EXTRA_SCRIPTS_DIR = "__jalangi_extra";
+var JALANGI_RUNTIME_DIR = "jalangiRuntime";
 
 /**
  * Instruments all .js files found under dir, and re-writes index.html
@@ -137,7 +138,7 @@ function instDir(options, cb) {
 
     var inMemoryTraceCode = "window.__JALANGI_IN_MEMORY_TRACE__ = true;";
 
-    var jalangiRuntimeDir = "jalangiRuntime";
+    var jalangiRuntimeDir = JALANGI_RUNTIME_DIR;
 
     var analysisCode = "window.JALANGI_MODE = \"inbrowser\"";
 
@@ -145,10 +146,14 @@ function instDir(options, cb) {
     HTMLRewriteStream.prototype._flush = function (cb) {
         function getContainedRuntimeScriptTags() {
             var result = "";
-            instUtil.headerSources.forEach(function (file) {
+            var addScript = function (file) {
                 var fileName = path.join(jalangiRuntimeDir, path.basename(file));
                 result += "<script src=\"" + fileName + "\"></script>";
-            });
+            };
+            instUtil.headerSources.forEach(addScript);
+            if (analysis) {
+                addScript(analysis);
+            }
             return result;
         }
 
@@ -258,13 +263,18 @@ function instDir(options, cb) {
     var copyJalangiRuntime = function () {
         var outputDir = path.join(copyDir, jalangiRuntimeDir);
         mkdirp.sync(outputDir);
-        instUtil.headerSources.forEach(function (srcFile) {
+        var copyFile = function (srcFile) {
             if (jalangiRoot) {
                 srcFile = path.join(jalangiRoot, srcFile);
             }
             var outputFile = path.join(outputDir, path.basename(srcFile));
             fs.writeFileSync(outputFile, String(fs.readFileSync(srcFile)));
-        });
+        };
+        instUtil.headerSources.forEach(copyFile);
+        if (analysis) {
+            var outputFile = path.join(outputDir, path.basename(analysis));
+            fs.writeFileSync(outputFile, String(fs.readFileSync(analysis)));
+        }
     };
 
     // first, copy everything
@@ -347,5 +357,6 @@ if (require.main === module) { // main script
 } else {
     exports.instDir = instDir;
     exports.EXTRA_SCRIPTS_DIR = EXTRA_SCRIPTS_DIR;
+    exports.JALANGI_RUNTIME_DIR = JALANGI_RUNTIME_DIR;
 }
 

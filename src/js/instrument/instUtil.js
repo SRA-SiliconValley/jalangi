@@ -69,6 +69,7 @@ function getHeaderCode(root) {
 function getHeaderCodeAsScriptTags(root, relative, analysis) {
     var ret = "";
     if (analysis) {
+        // TODO do we still need this?  probably best to do this elsewhere
         if (analysis.indexOf(path.sep) === 0) {
             headerSources.push(analysis);
         } else {

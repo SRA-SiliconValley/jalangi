@@ -66,5 +66,21 @@ describe('instrument dir tests', function () {
         });
 
     });
+    it('should handle copy_runtime and analysis options together', function (done) {
+        var options = {
+            inputDir: "tests/html/unitApps/app1",
+            outputDir: temp.dir,
+            // the exact script doesn't matter
+            analysis: "tests/unit/date-conversion.js",
+            copy_runtime: true
+        };
+        instDir.instDir(options, function (err) {
+            assert(!err, err);
+            assert(fs.existsSync(path.join(options.outputDir, "app1", instDir.JALANGI_RUNTIME_DIR, "date-conversion.js")));
+            var html = String(fs.readFileSync(path.join(options.outputDir, "app1", "index.html")));
+            assert(html.indexOf("<script src=\"" + instDir.JALANGI_RUNTIME_DIR + "/date-conversion.js\">") !== -1);
+            done();
+        });
+    });
 
 });

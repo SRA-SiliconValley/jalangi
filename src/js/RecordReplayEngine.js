@@ -538,8 +538,10 @@ if (typeof J$ === 'undefined') {
                     } else if (Globals.mode === MODE_REPLAY) {
                         ret = traceReader.getAndNext();
                         checkPath(ret, iid);
+                        syncValue(ret, val, iid);
                         ret = traceReader.getAndNext();
                         checkPath(ret, iid);
+                        syncValue(ret, dis, iid);
                         debugPrint("Index:" + traceReader.getPreviousIndex());
                     }
                 }

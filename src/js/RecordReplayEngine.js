@@ -126,7 +126,11 @@ if (typeof J$ === 'undefined') {
                                 }
                             }
                         }
-                        val[SPECIAL_PROP] = {};//Object.create(null);
+                        if (typen === T_ARRAY) {
+                            val[SPECIAL_PROP] = [];//Object.create(null);
+                        } else {
+                            val[SPECIAL_PROP] = {};//Object.create(null);
+                        }
                         val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
                         createdMockObject = true;
 //                            console.log("oid:"+objectId);
@@ -188,7 +192,10 @@ if (typeof J$ === 'undefined') {
                         writable:true
                     });
                 }
-                val[SPECIAL_PROP] = {};
+                if (Array.isArray(val))
+                    val[SPECIAL_PROP] = [];
+                else
+                    val[SPECIAL_PROP] = {};
                 val[SPECIAL_PROP][SPECIAL_PROP] = id = literalId;
                 literalId = literalId + 2;
                 // changes due to getter or setter method

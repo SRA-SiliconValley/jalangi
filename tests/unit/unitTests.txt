@@ -46,3 +46,4 @@ vars
 while
 c
 date_to_number
+array_push_pop

@@ -9,9 +9,9 @@ if (typeof J$ === 'undefined') {
     sandbox.SMemory = function () {
         var Constants = (typeof sandbox.Constants === 'undefined' ? require('Constants.js') : sandbox.Constants);
 
-        var SPECIAL_PROP = Constants.SPECIAL_PROP;
-        var SPECIAL_PROP2 = Constants.SPECIAL_PROP2;
-        var SPECIAL_PROP3 = Constants.SPECIAL_PROP3;
+        var SPECIAL_PROP = Constants.SPECIAL_PROP + "M";
+        var SPECIAL_PROP2 = Constants.SPECIAL_PROP2 + "M";
+        var SPECIAL_PROP3 = Constants.SPECIAL_PROP3 + "M";
         var N_LOG_FUNCTION_LIT = Constants.N_LOG_FUNCTION_LIT;
         var objectId = 1;
         var frameId = 2;

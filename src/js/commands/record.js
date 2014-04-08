@@ -21,13 +21,23 @@
 /*global J$ */
 
 var analysis = require('./../analysis');
-analysis.init("record");
+var initSMemory = false;
+var idx = 2;
+if (process.argv[2]) {
+    if (process.argv[2] === '--smemory') {
+        initSMemory = true;
+        idx = 3;
+    }
+} else {
+    console.log("Usage: node src/js/commands/record.js [--smemory] scriptName [traceFileName [analysisFileName]]");
+}
+analysis.init("record", process.argv[idx + 2], initSMemory);
 require('./../InputManager');
 require('./../instrument/esnstrument');
 require(process.cwd() + '/inputs.js');
 var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
-var script = process.argv[2];
-var traceFileName = process.argv[3] ? process.argv[3] : DEFAULT_TRACE_FILE_NAME;
+var script = process.argv[idx];
+var traceFileName = process.argv[idx + 1] ? process.argv[idx + 1] : DEFAULT_TRACE_FILE_NAME;
 J$.setTraceFileName(traceFileName);
 var path = require('path');
 require(path.resolve(script));

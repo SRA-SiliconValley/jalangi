@@ -48,7 +48,7 @@ if (typeof J$ === 'undefined') {
 //    var RecordReplayEngine = (typeof sandbox.RecordReplayEngine === 'undefined'? require('./RecordReplayEngine.js'): sandbox.RecordReplayEngine);
 
 
-    function init(mode_name, analysis_script) {
+    function init(mode_name, analysis_script, initSMemory) {
 
         var MODE_RECORD = Constants.MODE_RECORD,
             MODE_REPLAY = Constants.MODE_REPLAY,
@@ -112,6 +112,9 @@ if (typeof J$ === 'undefined') {
             if (mode === MODE_RECORD || mode === MODE_REPLAY) {
                 rrEngine = new RecordReplayEngine();
             } else if (mode === MODE_NO_RR) {
+                sandbox.smemory = smemory = new SMemory();
+            }
+            if (!smemory && initSMemory) {
                 sandbox.smemory = smemory = new SMemory();
             }
             if (analysis_script) {
@@ -1242,7 +1245,7 @@ if (typeof J$ === 'undefined') {
 
 
     if (Constants.isBrowser) {
-        init(window.JALANGI_MODE);
+        init(window.JALANGI_MODE, undefined, window.USE_SMEMORY);
     } else { // node.js
         exports.init = init;
     }

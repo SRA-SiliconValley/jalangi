@@ -20,15 +20,23 @@
 /*global J$ */
 var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
 var traceFileName = DEFAULT_TRACE_FILE_NAME, clientAnalysis;
+var initSMemory = false;
+var idx = 2;
 if (process.argv[2]) {
-    traceFileName = process.argv[2];
-    if (process.argv[3]) {
-        clientAnalysis = process.argv[3];
+    if (process.argv[2] === '--smemory') {
+        initSMemory = true;
+        idx = 3;
     }
+    traceFileName = process.argv[idx];
+    if (process.argv[idx + 1]) {
+        clientAnalysis = process.argv[idx + 1];
+    }
+} else {
+    console.log("Usage: node src/js/commands/replay.js [--smemory] traceFileName pathToAnalysisFile");
 }
 function runAnalysis(initParam) {
     var analysis = require('./../analysis');
-    analysis.init("replay", clientAnalysis);
+    analysis.init("replay", clientAnalysis, initSMemory);
     if (initParam) {
         J$.analysis.init(initParam);
     }
@@ -43,7 +51,7 @@ function runAnalysis(initParam) {
         var result = J$.endExecution();
         if (process.send && clientAnalysis) {
             // we assume send is synchronous
-            process.send({result: result});
+            process.send({result:result});
         }
     }
     process.exit();

@@ -141,7 +141,7 @@ While performing analysis in a browser, one needs to press Alt-Shift-T to end th
 
 ### Analysis during Replay ###
 
-These kind of analyses supports shadow values (denoted by objects of type ConcolicValue).  Analyses must be performed during the replay phase in node.js.  Recording can be performed in node.js or in a browser.  A replay analysis can be written using the following template.  
+These kind of analyses supports shadow values (denoted by objects of type ConcolicValue) and **shadow memory**.  Analyses must be performed during the replay phase in node.js.  Recording can be performed in node.js or in a browser.  A replay analysis can be written using the following template.  
 
 ```
 (function (sandbox) {
@@ -251,6 +251,11 @@ A replay analysis can be peformed on a JavaScript file in node.js by issuing the
     node src/js/instrument/esnstrument.js tests/octane/deltablue.js
 	node src/js/commands/record.js tests/octane/deltablue_jalangi_.js
     node src/js/commands/replay.js jalangi_trace `pwd`/src/js/analyses/objectalloc/ObjectAllocationTrackerEngine.js
+
+One can run a shadow-memory based analysis during replay by issuing:
+
+    node src/js/commands/replay.js --smemory jalangi_trace `pwd`/src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB.js
+
  
 A replay analysis can be performed in the Chrome browser by issuing the following commands:
 

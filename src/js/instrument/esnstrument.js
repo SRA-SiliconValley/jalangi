@@ -236,6 +236,34 @@
     // initial reset
     resetIIDCounters(0);
 
+    /**
+     * Sets the idd counters to values loaded from the given file.
+     * (Only call this when running as node application.)
+     * @param {string} fileName
+     */
+    function loadMaxIIDs(fileName) {
+        var fs = require('fs');
+        try {
+            var json = fs.readFileSync(fileName, "utf8");
+        } catch (e) {
+            // file doesn't exit -- start with normal iid counters
+            return;
+        }
+        var counters = JSON.parse(json);
+        condCount = counters.condCount;
+        iid = counters.iid;
+        opIid = counters.opIid;
+    }
+
+    /**
+     * Store the current iid counters to the given file.
+     * @param {String} fileName
+     */
+    function storeMaxIIDs(fileName) {
+        var fs = require('fs');
+        var counters = {condCount:condCount, iid:iid, opIid:opIid};
+        fs.writeFileSync(fileName, JSON.stringify(counters), "utf8");
+    }
 
     function getIid() {
         var tmpIid = iid;
@@ -1465,6 +1493,9 @@
                 wrapProgramNode = tryCatchAtTop;
                 topLevelExprs = [];
                 var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
+                // post-process AST to hoist function declarations (required for Firefox)
+                var hoistedFcts = [];
+                newAst = hoistFunctionDeclaration(newAst, hoistedFcts);
                 var newCode = escodegen.generate(newAst);
 
                 if (!tryCatchAtTop) {
@@ -1496,7 +1527,7 @@
 
         var saveCode = function (code, filename, fileOnly, metadata) {
             var n_code = code + "\n" + noInstr + "\n";
-            n_code += '\n//@ sourceMappingURL=' + fileOnly + '.map';
+            n_code += '\n//# sourceMappingURL=' + fileOnly + '.map';
             fs.writeFileSync(filename, n_code, "utf8");
             if (metadata) {
                 fs.writeFileSync(filename + ".ast.json", JSON.stringify(metadata, undefined, 2), "utf8");
@@ -1508,9 +1539,16 @@
         openIIDMapFile();
 
         var collectMetadata = false;
+        var iidsFile = undefined;
         i = 2;
         if (args[i] === "--metadata") {
             collectMetadata = true;
+            i++;
+        }
+        if (args[i] === "--maxIIDsFile") {
+            i++;
+            iidsFile = args[i];
+            loadMaxIIDs(iidsFile);
             i++;
         }
         for ( ; i < args.length; i++) {
@@ -1527,6 +1565,9 @@
             //writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(), instCodeFileName)) + "\";\n");
             topLevelExprs = [];
             var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
+            // post-process AST to hoist function declarations (required for Firefox)
+            var hoistedFcts = [];
+            newAst = hoistFunctionDeclaration(newAst, hoistedFcts);
             //console.log(JSON.stringify(newAst, null, '\t'));
 
             var newFileOnly = path.basename(instCodeFileName);
@@ -1547,8 +1588,68 @@
 //            console.timeEnd("save")
         }
         closeIIDMapFile();
+        if (iidsFile)
+            storeMaxIIDs(iidsFile);
     }
 
+    // START of Liang's AST post-processor
+    function hoistFunctionDeclaration(ast, hoisteredFunctions) {
+        var key, child, startIndex = 0;
+        if (ast.body) {
+            var newBody = [];
+            if (ast.body.length > 0) { // do not hoister function declaration before J$.Fe or J$.Se
+                if (ast.body[0].type === 'ExpressionStatement') {
+                    if (ast.body[0].expression.type === 'CallExpression') {
+                        if (ast.body[0].expression.callee.object &&
+                            ast.body[0].expression.callee.object.name === 'J$'
+                            && ast.body[0].expression.callee.property
+                            &&
+                            (ast.body[0].expression.callee.property.name === 'Se' || ast.body[0].
+                                expression.callee.property.name === 'Fe')) {
+
+                            newBody.push(ast.body[0]);
+                            startIndex = 1;
+                        }
+                    }
+                }
+            }
+            for (var i = startIndex; i < ast.body.length; i++) {
+
+                if (ast.body[i].type === 'FunctionDeclaration') {
+                    newBody.push(ast.body[i]);
+                    if (newBody.length !== i + 1) {
+                        hoisteredFunctions.push(ast.body[i].id.name);
+                    }
+                }
+            }
+            for (var i = startIndex; i < ast.body.length; i++) {
+                if (ast.body[i].type !== 'FunctionDeclaration') {
+                    newBody.push(ast.body[i]);
+                }
+            }
+            while (ast.body.length > 0) {
+                ast.body.pop();
+            }
+            for (var i = 0; i < newBody.length; i++) {
+                ast.body.push(newBody[i]);
+            }
+        } else {
+            //console.log(typeof ast.body);
+        }
+        for (key in ast) {
+            if (ast.hasOwnProperty(key)) {
+                child = ast[key];
+                if (typeof child === 'object' && child !== null && key !==
+                    "scope") {
+                    hoistFunctionDeclaration(child, hoisteredFunctions);
+                }
+
+            }
+        }
+
+        return ast;
+    }
+    // END of Liang's AST post-processor
 
     if (typeof window === 'undefined' && (typeof require !== "undefined") && require.main === module) {
         instrumentFile();

@@ -16,11 +16,11 @@
 
 // Author: Koushik Sen
 
-(function(module){
+(function (sandbox) {
 
     function TrackValuesEngine(executionIndex) {
         var ConcolicValue = require('./../../ConcolicValue');
-        var getIIDInfo = require('./../../utils/IIDInfo');
+        var iidToLocation = sandbox.iidToLocation;
 
         if (!(this instanceof TrackValuesEngine)) {
             return new TrackValuesEngine(executionIndex);
@@ -31,10 +31,10 @@
 
         function annotateValue(val, iid, str) {
             var val_s = getSymbolic(val);
-            if (val_s){
+            if (val_s) {
                 return val;
             } else {
-                return new ConcolicValue(val, (str?str:"")+" initialized at "+getIIDInfo(iid));
+                return new ConcolicValue(val, (str ? str : "") + " initialized at " + iidToLocation(iid));
             }
         }
 
@@ -42,11 +42,11 @@
         // just used for testing purposes
         var resultToReturn;
 
-        this.init = function(val) {
+        this.init = function (val) {
             resultToReturn = val;
         };
 
-        this.literal = function(iid, val) {
+        this.literal = function (iid, val) {
             if (typeof val !== 'function') {
                 return annotateValue(val, iid);
             } else {
@@ -54,22 +54,22 @@
             }
         };
 
-        this.invokeFun = function(iid, f, base, args, val, isConstructor) {
+        this.invokeFun = function (iid, f, base, args, val, isConstructor) {
             return annotateValue(val, iid);
         };
 
-        this.getField = function(iid, base, offset, val) {
+        this.getField = function (iid, base, offset, val) {
             return annotateValue(val, iid);
         };
 
-        this.read = function(iid, name, val, isGlobal) {
+        this.read = function (iid, name, val, isGlobal) {
             if (isGlobal && val !== undefined) {
                 return val;
             }
             return annotateValue(val, iid);
         };
 
-        this.write = function(iid, name, val) {
+        this.write = function (iid, name, val) {
             if (name === "eval") {
                 return getConcrete(val);
             } else {
@@ -81,5 +81,6 @@
             return resultToReturn ? resultToReturn : "done";
         };
     }
+
     module.exports = TrackValuesEngine;
-}(module));
+}(J$));

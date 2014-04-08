@@ -14,7 +14,7 @@
 
 // Author: Simon Jensen
 
-(function (module) {
+(function (sandbox) {
 
     function isPrimitive(val) {
         var t = typeof val;
@@ -124,4 +124,4 @@
     }
 
     module.exports = WrapperEngine;
-}(module));
+}(J$));

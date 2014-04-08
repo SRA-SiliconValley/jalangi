@@ -16,11 +16,11 @@
 
 // Author: Koushik Sen
 
-(function (module) {
+(function (sandbox) {
 
     function ObjectAllocationTrackerEngine(executionIndex) {
         var ConcolicValue = require('./../../ConcolicValue');
-        var getIIDInfo = require('./../../utils/IIDInfo');
+        var iidToLocation = sandbox.iidToLocation;
 
         if (!(this instanceof ObjectAllocationTrackerEngine)) {
             return new ObjectAllocationTrackerEngine(executionIndex);
@@ -164,7 +164,7 @@
                 if (iid === "null") {
                     throw new Error("Not expecting null");
                 } else {
-                    return "Location " + getIIDInfo(iid) + " has created " + type1;
+                    return "Location " + iidToLocation(iid) + " has created " + type1;
                 }
             } else {
                 throw new Error("Expecting '(' in object location");
@@ -208,4 +208,4 @@
 
     module.exports = ObjectAllocationTrackerEngine;
 
-}(module));
+}(J$));

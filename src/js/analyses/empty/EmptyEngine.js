@@ -16,14 +16,10 @@
 
 // Author: Koushik Sen
 
-(function(module){
+(function (module) {
 
-    function EmptyEngine(executionIndex) {
+    function EmptyEngine() {
         var ConcolicValue = require('./../../ConcolicValue');
-
-        if (!(this instanceof EmptyEngine)) {
-            return new EmptyEngine(executionIndex);
-        }
 
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
         var getSymbolic = this.getSymbolic = ConcolicValue.getSymbolic;
@@ -31,4 +27,4 @@
     }
 
     module.exports = EmptyEngine;
-}(module));
+}(J$));

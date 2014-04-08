@@ -39,7 +39,7 @@ if (typeof J$ === 'undefined') {
                     val[SPECIAL_PROP] = Object.create(null);
                     val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
                     objectId = objectId + 2;
-                } catch(e) {
+                } catch (e) {
                     // cannot attach special field in some DOM Objects.  So ignore them.
                 }
             }
@@ -70,7 +70,27 @@ if (typeof J$ === 'undefined') {
             }
         };
 
-        this.defineFunction = function(val, type) {
+        this.getParentShadowFrame = function (otherFrame) {
+            if (otherFrame) {
+                return otherFrame[SPECIAL_PROP3];
+            } else {
+                return null;
+            }
+        };
+
+        this.getCurrentShadowFrame = function () {
+            return frame;
+        };
+
+        this.getClosureShadowFrame = function (fun) {
+            return fun[SPECIAL_PROP3];
+        };
+
+        this.getShadowObjectOrFrameID = function (objectOrFrame) {
+            return objectOrFrame[SPECIAL_PROP];
+        };
+
+        this.defineFunction = function (val, type) {
             if (type === N_LOG_FUNCTION_LIT) {
                 if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
                     Object.defineProperty(val, SPECIAL_PROP3, {

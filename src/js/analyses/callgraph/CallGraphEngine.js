@@ -18,19 +18,10 @@
 
 (function (sandbox) {
 
-    function CallGraphEngine(executionIndex) {
+    function CallGraphEngine() {
         var getIIDInfo = sandbox.iidToLocation;
-
-        if (!(this instanceof CallGraphEngine)) {
-            return new CallGraphEngine(executionIndex);
-        }
-
-        var HAS_OWN_PROPERTY = Object.prototype.hasOwnProperty;
-        var HAS_OWN_PROPERTY_CALL = Object.prototype.hasOwnProperty.call;
-
-        function HOP(obj, prop) {
-            return HAS_OWN_PROPERTY_CALL.apply(HAS_OWN_PROPERTY, [obj, prop]);
-        }
+        var Constants = sandbox.Constants;
+        var HOP = Constants.HOP;
 
         this.endExecution = function () {
             var sortingArr = [];
@@ -114,7 +105,6 @@
 
     if (sandbox.Constants.isBrowser) {
         sandbox.analysis = new CallGraphEngine();
-
         window.addEventListener('keydown', function (e) {
             // keyboard shortcut is Alt-Shift-T for now
             if (e.altKey && e.shiftKey && e.keyCode === 84) {
@@ -124,4 +114,4 @@
     } else {
         module.exports = CallGraphEngine;
     }
-}(module));
+}(J$));

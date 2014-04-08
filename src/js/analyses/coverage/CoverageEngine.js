@@ -16,9 +16,8 @@
 
 // Author: Koushik Sen
 
-(function(module){
+(function (module) {
     function CoverageEngine(executionIndex) {
-        var PREFIX1 = "J$";
         var TRACE_FILE_NAME = "jalangi_trace";
         var TAINT_SUMMARY = "jalangi_taint";
         var ConcolicValue = require('./../../ConcolicValue');
@@ -35,7 +34,7 @@
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
         var getSymbolic = this.getSymbolic = ConcolicValue.getSymbolic;
 
-        this.beginExecution = function(prefix) {
+        this.beginExecution = function (prefix) {
             this.prefix = prefix;
 
 
@@ -54,11 +53,11 @@
                 return left;
             }
 
-            this.endExecution = function() {
-                var fileName = process.argv[2]?process.argv[2]:TRACE_FILE_NAME;
+            this.endExecution = function () {
+                var fileName = process.argv[2] ? process.argv[2] : TRACE_FILE_NAME;
                 var suffix = fileName.substring(TRACE_FILE_NAME.length);
                 var fs = require('fs');
-                fs.writeFileSync(TAINT_SUMMARY+suffix, JSON.stringify([coverageSet, this.prefix]),"utf8");
+                fs.writeFileSync(TAINT_SUMMARY + suffix, JSON.stringify([coverageSet, this.prefix]), "utf8");
             }
         }
 

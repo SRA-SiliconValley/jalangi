@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-(function (module) {
+(function (sandbox) {
 
     function LikelyTypeInferEngine(executionIndex) {
         var ConcolicValue = require('./../../ConcolicValue');
@@ -558,4 +558,4 @@
 
     module.exports = LikelyTypeInferEngine;
 
-}(module));
+}(J$));

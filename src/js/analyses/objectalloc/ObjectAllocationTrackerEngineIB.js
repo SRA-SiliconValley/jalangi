@@ -17,9 +17,12 @@
 // Author: Koushik Sen
 
 (function (sandbox) {
+
     function ObjectAllocationTrackerEngine() {
         var smemory = sandbox.smemory;
         var iidToLocation = sandbox.iidToLocation;
+        var Constants = sandbox.Constants;
+        var Config = sandbox.Config;
 
         // iid or type could be object(iid) | array(iid) | function(iid)
         var iidToObjectInfo = {}; // type -> (field -> type -> iid -> true)
@@ -213,9 +216,7 @@
 
 
     if (sandbox.Constants.isBrowser) {
-
         sandbox.analysis = new ObjectAllocationTrackerEngine();
-
         window.addEventListener('keydown', function (e) {
             // keyboard shortcut is Alt-Shift-T for now
             if (e.altKey && e.shiftKey && e.keyCode === 84) {
@@ -226,4 +227,4 @@
         module.exports = ObjectAllocationTrackerEngine;
     }
 
-}(typeof J$ === 'undefined' ? (J$ = {}) : J$));
+}(J$));

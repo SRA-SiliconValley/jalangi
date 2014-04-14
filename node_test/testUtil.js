@@ -36,6 +36,9 @@ var testVal = "hello";
  */
 function runTest(script, instScriptFile, script_args) {
     // capture normal output
+    if (!script_args) {
+        script_args = [];
+    }
     var normalProcess = child_process.fork(script, script_args, {silent:true});
     var normOut, traceFile;
 

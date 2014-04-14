@@ -223,16 +223,28 @@ function instDir(options, cb) {
             instFileName:this.instScriptName,
             metadata:dumpSerializedASTs
         };
-        var instResult = esnstrument.instrumentCode(this.data, options);
-        if (dumpSerializedASTs) {
-            var metadata = instResult.iidMetadata;
-            fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(metadata, undefined, 2), "utf8");
+        var instResult;
+        try {
+            instResult = esnstrument.instrumentCode(this.data, options);
+        } catch (e) {
+            if (e instanceof SyntaxError) {
+                // just output the same file
+                this.push(this.data);
+            } else {
+                throw e;
+            }
         }
-        if (typeof instResult === 'string') {
-            // this can occur if it's a script we're not supposed to instrument
-            this.push(instResult);
-        } else {
-            this.push(instResult.code);
+        if (instResult) {
+            if (dumpSerializedASTs) {
+                var metadata = instResult.iidMetadata;
+                fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(metadata, undefined, 2), "utf8");
+            }
+            if (typeof instResult === 'string') {
+                // this can occur if it's a script we're not supposed to instrument
+                this.push(instResult);
+            } else {
+                this.push(instResult.code);
+            }
         }
         cb();
     };

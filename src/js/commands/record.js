@@ -21,23 +21,36 @@
 /*global J$ */
 
 var analysis = require('./../analysis');
-var initSMemory = false;
-var idx = 2;
-if (process.argv[2]) {
-    if (process.argv[2] === '--smemory') {
-        initSMemory = true;
-        idx = 3;
-    }
-} else {
-    console.log("Usage: node src/js/commands/record.js [--smemory] scriptName [traceFileName [analysisFileName]]");
+var argparse = require('argparse');
+var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
+var parser = new argparse.ArgumentParser({
+    addHelp: true,
+    description: "Command-line utility to perform Jalangi's record phase"
+});
+parser.addArgument(['--smemory'], { help: "Use shadow memory", action: 'storeTrue'});
+parser.addArgument(['--tracefile'], { help: "Location to store trace file", defaultValue: DEFAULT_TRACE_FILE_NAME });
+parser.addArgument(['--analysis'], { help: "analysis to run during record"});
+parser.addArgument(['script_and_args'], {
+    help: "script to record and CLI arguments for that script",
+    nargs: argparse.Const.REMAINDER
+});
+var args = parser.parseArgs();
+if (args.script_and_args.length === 0) {
+    console.error("must provide script to record");
+    process.exit(1);
 }
-analysis.init("record", process.argv[idx + 2], initSMemory);
+// we shift here so we can use the rest of the array later when
+// hacking process.argv; see below
+var script = args.script_and_args.shift();
+analysis.init("record", args.analysis, args.smemory);
 require('./../InputManager');
 require('./../instrument/esnstrument');
 require(process.cwd() + '/inputs.js');
-var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
-var script = process.argv[idx];
-var traceFileName = process.argv[idx + 1] ? process.argv[idx + 1] : DEFAULT_TRACE_FILE_NAME;
-J$.setTraceFileName(traceFileName);
+J$.setTraceFileName(args.tracefile);
 var path = require('path');
-require(path.resolve(script));
+// hack process.argv for the child script
+script = path.resolve(script);
+var newArgs = [process.argv[0], script];
+newArgs = newArgs.concat(args.script_and_args);
+process.argv = newArgs;
+require(script);

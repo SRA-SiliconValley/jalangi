@@ -30,12 +30,13 @@ var testVal = "hello";
  * test record and replay for a script
  * @param {string} script the script to test
  * @param {string} [instScriptFile] file in which to store the instrumented script
+ * @param {Array.<string>} [script_args] additional CLI arguments to pass to script
  * @return promise|Q.promise promise that resolves when testing is completed, yielding no value, but will
  * be rejected if any assertion fails.  Caller *must* handle reject or failure will be swallowed.
  */
-function runTest(script, instScriptFile) {
+function runTest(script, instScriptFile, script_args) {
     // capture normal output
-    var normalProcess = child_process.fork(script, [], {silent:true});
+    var normalProcess = child_process.fork(script, script_args, {silent:true});
     var normOut, traceFile;
 
     function checkResult(result) {
@@ -47,7 +48,7 @@ function runTest(script, instScriptFile) {
         normOut = result.stdout;
         checkResult(result);
         var instResult = jalangi.instrument(script, { outputFile:instScriptFile });
-        return jalangi.record(instResult.outputFile);
+        return jalangi.record(instResult.outputFile, undefined, script_args);
     }).then(function (result) {
             checkResult(result);
             traceFile = result.traceFile;

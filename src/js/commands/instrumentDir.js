@@ -261,7 +261,11 @@ function instDir(options, cb) {
     function transform(readStream, writeStream, file) {
         var extension = path.extname(file.name);
         if (extension === '.html') {
-            rewriteHtml(readStream, writeStream);
+            if (options.no_html) {
+                readStream.pipe(writeStream);
+            } else {
+                rewriteHtml(readStream, writeStream);
+            }
         } else if (extension === '.js') {
             if ((!excludePattern || file.name.indexOf(excludePattern) === -1)) {
                 instrumentJS(readStream, writeStream, file.name);
@@ -361,6 +365,7 @@ if (require.main === module) { // main script
     parser.addArgument(['-c', '--copy_runtime'], { help:"Copy Jalangi runtime files into instrumented app in jalangi_rt sub-directory", action:'storeTrue'});
     parser.addArgument(['--first_iid'], { help:"initial IID to use during instrumentation"});
     parser.addArgument(['--extra_app_scripts'], { help:"list of extra application scripts to be injected and instrumented, separated by path.delimiter"});
+    parser.addArgument(['--no_html'], { help: "don't inject Jalangi runtime into HTML files", action: 'storeTrue'});
     parser.addArgument(['inputDir'], { help:"directory containing files to instrument"});
     parser.addArgument(['outputDir'], { help:"directory in which to create instrumented copy"});
 

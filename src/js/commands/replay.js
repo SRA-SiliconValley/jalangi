@@ -37,8 +37,8 @@ if (process.argv[2]) {
 function runAnalysis(initParam) {
     var analysis = require('./../analysis');
     analysis.init("replay", clientAnalysis, initSMemory);
-    if (initParam) {
-        J$.analysis.init(initParam);
+    if (J$.analysis && J$.analysis.init) {
+        J$.analysis.init(initParam ? initParam : {});
     }
     require('./../InputManager');
     require('./../instrument/esnstrument');

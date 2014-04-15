@@ -31,7 +31,7 @@ if (process.argv[3]) {
 }
 
 var analysis = require('./../analysis');
-analysis.init("inbrowser", clientAnalysis);
+analysis.init("inbrowser", clientAnalysis, true);
 require('./../InputManager');
 require('./../instrument/esnstrument');
 require(process.cwd() + '/inputs.js');

@@ -108,10 +108,8 @@ if (typeof J$ === 'undefined') {
 
             if (mode === MODE_RECORD || mode === MODE_REPLAY) {
                 rrEngine = new RecordReplayEngine();
-            } else if (mode === MODE_NO_RR) {
-                sandbox.smemory = smemory = new SMemory();
             }
-            if (!smemory && initSMemory) {
+            if (initSMemory) {
                 sandbox.smemory = smemory = new SMemory();
             }
             if (analysis_script) {

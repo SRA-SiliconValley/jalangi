@@ -134,7 +134,7 @@ An analysis can be performed on a JavaScript file by issuing the following comma
 	    
 An analysis can be performed on an web app using the Chrome browser by issuing the following commands:
 
-    node src/js/commands/instrumentDir.js --inbrowser --analysis analyses/objectalloc/ObjectAllocationTrackerEngineIB.js tests/tizen/annex /tmp
+    node src/js/commands/instrumentDir.js --inbrowser --smemory --analysis analyses/objectalloc/ObjectAllocationTrackerEngineIB.js tests/tizen/annex /tmp
     open file:///tmp/annex/index.html
 
 While performing analysis in a browser, one needs to press Alt-Shift-T to end the analysis and to print the analysis results in the console.

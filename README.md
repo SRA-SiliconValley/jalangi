@@ -282,7 +282,7 @@ Now, you can run a dynamic analysis on the trace file by issuing the following c
 Jalangi allows to run an analysis, which does not use ConcolicValue, in a browser.
 Here is how to instrument the annex app with an inbrowser analysis.  First, run the `instrumentDir.js` script to instrument the app:
 
-    node src/js/commands/instrumentDir.js --inbrowser --analysis analyses/logNaN/LogNaN.js tests/tizen/annex /tmp
+    node src/js/commands/instrumentDir.js --inbrowser --smemory --analysis analyses/logNaN/LogNaN.js tests/tizen/annex /tmp
 
 This creates an instrumented copy of annex in `/tmp/annex`.  To see other options for `instrumentDir.js`, run it with the `-h` option.
 
@@ -299,11 +299,11 @@ Shadow memory is supported in the "inbrowser" mode.  Shadow memory library can b
 
 The following shows how to run the object allocation tracker analysis on the annex game:
 
-    node src/js/commands/instrumentDir.js --inbrowser --analysis analyses/objectalloc/ObjectAllocationTrackerEngineIB.js tests/tizen/annex /tmp
+    node src/js/commands/instrumentDir.js --inbrowser --smemory --analysis analyses/objectalloc/ObjectAllocationTrackerEngineIB.js tests/tizen/annex /tmp
     open file:///tmp/annex/index.html
 
 The following shows how to run the likely type inference analysis on the annex game:
 
-    node src/js/commands/instrumentDir.js --inbrowser --analysis analyses/likelytype/LikelyTypeInferEngineIB.js tests/tizen/annex /tmp
+    node src/js/commands/instrumentDir.js --inbrowser --smemory --analysis analyses/likelytype/LikelyTypeInferEngineIB.js tests/tizen/annex /tmp
     open file:///tmp/annex/index.html
 

@@ -18,11 +18,11 @@
 
 (function (module) {
 
-    function NOPEngine(executionIndex) {
+    function NOPEngine() {
         var ConcolicValue = require('./../../ConcolicValue');
 
         if (!(this instanceof NOPEngine)) {
-            return new NOPEngine(executionIndex);
+            return new NOPEngine();
         }
 
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;

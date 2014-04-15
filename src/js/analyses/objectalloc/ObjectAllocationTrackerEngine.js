@@ -18,12 +18,12 @@
 
 (function (sandbox) {
 
-    function ObjectAllocationTrackerEngine(executionIndex) {
+    function ObjectAllocationTrackerEngine() {
         var ConcolicValue = require('./../../ConcolicValue');
         var iidToLocation = sandbox.iidToLocation;
 
         if (!(this instanceof ObjectAllocationTrackerEngine)) {
-            return new ObjectAllocationTrackerEngine(executionIndex);
+            return new ObjectAllocationTrackerEngine();
         }
 
         // iid or type could be object(iid) | array(iid) | function(iid)

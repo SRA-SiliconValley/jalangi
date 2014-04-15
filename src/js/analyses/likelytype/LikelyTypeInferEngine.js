@@ -18,13 +18,13 @@
 
 (function (sandbox) {
 
-    function LikelyTypeInferEngine(executionIndex) {
+    function LikelyTypeInferEngine() {
         var ConcolicValue = require('./../../ConcolicValue');
         var getIIDInfo = require('./../../utils/IIDInfo');
         var P_VALUE = 5.0;
 
         if (!(this instanceof LikelyTypeInferEngine)) {
-            return new LikelyTypeInferEngine(executionIndex);
+            return new LikelyTypeInferEngine();
         }
 
         // iid or type could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean

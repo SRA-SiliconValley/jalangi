@@ -18,7 +18,7 @@
 
 (function (module) {
 
-    function SimpleTaintEngine(executionIndex) {
+    function SimpleTaintEngine() {
         var TRACE_FILE_NAME = "jalangi_trace";
         var TAINT_SUMMARY = "jalangi_taint";
         var ConcolicValue = require('./../../ConcolicValue');
@@ -26,7 +26,7 @@
         var taintedConditionals = {};
 
         if (!(this instanceof SimpleTaintEngine)) {
-            return new SimpleTaintEngine(executionIndex);
+            return new SimpleTaintEngine();
         }
 
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;

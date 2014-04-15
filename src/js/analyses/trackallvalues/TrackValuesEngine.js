@@ -18,12 +18,12 @@
 
 (function (sandbox) {
 
-    function TrackValuesEngine(executionIndex) {
+    function TrackValuesEngine() {
         var ConcolicValue = require('./../../ConcolicValue');
         var iidToLocation = sandbox.iidToLocation;
 
         if (!(this instanceof TrackValuesEngine)) {
-            return new TrackValuesEngine(executionIndex);
+            return new TrackValuesEngine();
         }
 
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;

@@ -17,7 +17,7 @@
 // Author: Koushik Sen
 
 (function (module) {
-    function TaintEngine(executionIndex) {
+    function TaintEngine() {
         var PREFIX1 = "J$";
         var SPECIAL_PROP = "*" + PREFIX1 + "*";
         var TRACE_FILE_NAME = "jalangi_trace";
@@ -27,7 +27,7 @@
         var readSet = {};
 
         if (!(this instanceof TaintEngine)) {
-            return new TaintEngine(executionIndex);
+            return new TaintEngine();
         }
 
         function HOP(obj, prop) {

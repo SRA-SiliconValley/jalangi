@@ -18,7 +18,7 @@
 
 (function (module) {
 
-    function SymbolicEngine(executionIndex) {
+    function SymbolicEngine() {
 
         if (!(this instanceof SymbolicEngine)) {
             return new SymbolicEngine();
@@ -38,6 +38,9 @@
         var SymbolicUndefined = require('./SymbolicUndefined');
         var SolverEngine = require('./SolverEngine');
         var Symbolic = require('./Symbolic');
+        var ExecutionIndex = require('./ExecutionIndex');
+        var executionIndex = new ExecutionIndex();
+
         var solver = new SolverEngine();
 
 
@@ -155,6 +158,7 @@
         }
 
         this.invokeFunPre = function (iid, f, base, args, isConstructor) {
+            executionIndex.executionIndexInc(iid);
             var f_s = this.getSymbolic(f);
             if (f_s) {
                 addType(f_s, "function");
@@ -738,6 +742,7 @@
 
         this.conditional = function (iid, left, result) {
             // needs to be changed based on analysis
+            executionIndex.executionIndexInc(iid);
             var left_s = this.getSymbolic(left);
             if (left_s) {
                 addType(left_s, "boolean");
@@ -753,7 +758,18 @@
 //        }
 //        //console.log("------------------ constraint: "+left_s+" is "+(!!left_c));
 //        return left;
-        }
+        };
+
+        this.functionEnter = function (iid, fun, dis /* this */) {
+            executionIndex.executionIndexCall();
+        };
+
+        this.functionExit = function (iid) {
+            executionIndex.executionIndexReturn();
+            return false;
+            /* a return of false means that do not backtrack inside the function */
+        };
+
 
         function installAxiom(c) {
             if (c === "begin") {

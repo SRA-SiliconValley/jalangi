@@ -17,14 +17,14 @@
 // Author: Koushik Sen
 
 (function (module) {
-    function CoverageEngine(executionIndex) {
+    function CoverageEngine() {
         var TRACE_FILE_NAME = "jalangi_trace";
         var TAINT_SUMMARY = "jalangi_taint";
         var ConcolicValue = require('./../../ConcolicValue');
         var coverageSet = {};
 
         if (!(this instanceof CoverageEngine)) {
-            return new CoverageEngine(executionIndex);
+            return new CoverageEngine();
         }
 
         function HOP(obj, prop) {

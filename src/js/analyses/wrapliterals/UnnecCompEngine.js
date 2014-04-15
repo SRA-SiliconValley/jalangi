@@ -1,13 +1,13 @@
 // Author: Michael Pradel
 
 (function (sandbox) {
-    function UnnecCompEngine(executionIndex) {
+    function UnnecCompEngine() {
         var ConcolicValue = require('./../../ConcolicValue');
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
         var getSymbolic = this.getSymbolic = ConcolicValue.getSymbolic;
 
         if (!(this instanceof UnnecCompEngine)) {
-            return new UnnecCompEngine(executionIndex);
+            return new UnnecCompEngine();
         }
 
         this.literal = function (iid, val) {

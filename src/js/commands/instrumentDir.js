@@ -79,7 +79,7 @@ function instDir(options, cb) {
     var copyDir;
 
     // analysis to run in browser (?)
-    var analysis = options.analysis;
+    var analysisFiles = options.analysis;
 
     /**
      * extra scripts to inject into the application and instrument
@@ -151,8 +151,10 @@ function instDir(options, cb) {
                 result += "<script src=\"" + fileName + "\"></script>";
             };
             instUtil.headerSources.forEach(addScript);
-            if (analysis) {
-                addScript(analysis);
+            if (analysisFiles) {
+                analysisFiles.split(path.delimiter).forEach(function (analysisFile) {
+                    addScript(analysisFile);
+                });
             }
             return result;
         }
@@ -167,7 +169,7 @@ function instDir(options, cb) {
             if (copyRuntime) {
                 headerLibs = getContainedRuntimeScriptTags();
             } else {
-                headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot, relative, analysis);
+                headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot, relative, analysisFiles);
             }
             if (selenium) {
                 headerLibs = "<script>" + seleniumCode + "</script>" + headerLibs;
@@ -271,9 +273,11 @@ function instDir(options, cb) {
             fs.writeFileSync(outputFile, String(fs.readFileSync(srcFile)));
         };
         instUtil.headerSources.forEach(copyFile);
-        if (analysis) {
-            var outputFile = path.join(outputDir, path.basename(analysis));
-            fs.writeFileSync(outputFile, String(fs.readFileSync(analysis)));
+        if (analysisFiles) {
+            analysisFiles.split(path.delimiter).forEach(function (analysisFile) {
+                var outputFile = path.join(outputDir, path.basename(analysisFile));
+                fs.writeFileSync(outputFile, String(fs.readFileSync(analysisFile)));
+            });
         }
     };
 
@@ -333,7 +337,7 @@ if (require.main === module) { // main script
     // TODO add back this option once we've fixed the relevant HTML parsing code
     parser.addArgument(['-i', '--instrumentInline'], { help:"instrument inline scripts", action:'storeTrue'});
     parser.addArgument(['--jalangi_root'], { help:"Jalangi root directory, if not working directory" });
-    parser.addArgument(['--analysis'], { help:"Analysis script for 'inbrowser' mode" });
+    parser.addArgument(['--analysis'], { help:"Analysis scripts for 'inbrowser' mode, separated by path.delimiter" });
     parser.addArgument(['-d', '--direct_in_output'], { help:"Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' });
     parser.addArgument(['--selenium'], { help:"Insert code so scripts can detect they are running under Selenium.  Also keeps Jalangi trace in memory", action:'storeTrue' });
     parser.addArgument(['--in_memory_trace'], { help:"Insert code to tell analysis to keep Jalangi trace in memory instead of writing to WebSocket", action:'storeTrue' });

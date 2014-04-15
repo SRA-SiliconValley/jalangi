@@ -84,6 +84,7 @@
 
     var instrumentCodeFunName = astUtil.JALANGI_VAR + ".instrumentCode";
 
+    var wrapEval = true;  // whether to wrap eval calls so that the code gets instrumented on the fly
 
     var Syntax = {
         AssignmentExpression:'AssignmentExpression',
@@ -235,7 +236,7 @@
 
     // initial reset
     resetIIDCounters(0);
-
+   
     /**
      * Sets the idd counters to values loaded from the given file.
      * (Only call this when running as node application.)
@@ -344,7 +345,6 @@
             smapFile = null;
         }
     }
-
 
     function printLineInfoAux(i, ast) {
         if (ast && ast.loc) {
@@ -567,8 +567,10 @@
 
     function wrapEvalArg(ast) {
         printIidToLoc(ast);
+        var code = wrapEval ? instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false}," + RP +"2).code" :
+                              astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1)";
         var ret = replaceInExpr(
-            instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false}," + RP +"2).code",
+            code,
             ast,
             getIid()
         );
@@ -1419,7 +1421,7 @@
     var noInstr = "// JALANGI DO NOT INSTRUMENT";
 
     function makeInstCodeFileName(name) {
-        return name.replace(".js", FILESUFFIX1 + ".js")
+        return name.replace(/.js$/, FILESUFFIX1 + ".js")
     }
 
     function getMetadata(newAst) {
@@ -1539,7 +1541,7 @@
         openIIDMapFile();
 
         var collectMetadata = false;
-        var iidsFile = undefined;
+        var maxIIDsFile = undefined;
         i = 2;
         if (args[i] === "--metadata") {
             collectMetadata = true;
@@ -1547,9 +1549,13 @@
         }
         if (args[i] === "--maxIIDsFile") {
             i++;
-            iidsFile = args[i];
-            loadMaxIIDs(iidsFile);
+            maxIIDsFile = args[i];
+            loadMaxIIDs(maxIIDsFile);
             i++;
+        }
+        if (args[i] === "--noEvalWrap") {
+            i++;
+            wrapEval = false;
         }
         for ( ; i < args.length; i++) {
             var filename = args[i];
@@ -1588,8 +1594,8 @@
 //            console.timeEnd("save")
         }
         closeIIDMapFile();
-        if (iidsFile)
-            storeMaxIIDs(iidsFile);
+        if (maxIIDsFile)
+            storeMaxIIDs(maxIIDsFile);
     }
 
     // START of Liang's AST post-processor

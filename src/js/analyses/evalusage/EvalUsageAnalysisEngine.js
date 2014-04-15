@@ -1,4 +1,3 @@
-
 (function (sandbox) {
     function EvalUsageAnalysisEngine() {
         var iidToLocation = sandbox.iidToLocation;
@@ -32,8 +31,8 @@
 
         function stripParen(str) {
             str = str.trim();
-            if (str.indexOf('(') === 0 && str.lastIndexOf(')')===str.length-1) {
-                str = str.substring(0,str.length-1).substring(1);
+            if (str.indexOf('(') === 0 && str.lastIndexOf(')') === str.length - 1) {
+                str = str.substring(0, str.length - 1).substring(1);
                 str = stripParen(str);
             }
             return str;
@@ -53,7 +52,7 @@
             }
             try {
                 JSON.parse(stripParen(code));
-            } catch(e) {
+            } catch (e) {
                 info["isJSON"] = false;
             }
         }
@@ -82,7 +81,7 @@
                 }
             }
             stats.sort(function (a, b) {
-                    return b.count - a.count;
+                return b.count - a.count;
             });
 
             jsons.sort(function (a, b) {
@@ -93,8 +92,8 @@
             for (var i = 0; i < len; i++) {
                 objectInfo = jsons[i];
                 var location = objectInfo.location;
-                var str = "JSON.parse can replace eval at "+location+" called "+objectInfo.count+" times with "+
-                    objectInfo.variants+" code string variants:\n    "+JSON.stringify(objectInfo.codes);
+                var str = "JSON.parse can replace eval at " + location + " called " + objectInfo.count + " times with " +
+                    objectInfo.variants + " code string variants:\n    " + JSON.stringify(objectInfo.codes);
                 console.log(str);
             }
 
@@ -103,8 +102,8 @@
                 objectInfo = stats[i];
                 if (isUnnecessaryEval(objectInfo)) {
                     location = objectInfo.location;
-                    str = "can eliminate eval at "+location+" is called "+objectInfo.count+" times with "+
-                        objectInfo.variants+" code string variants:\n    "+JSON.stringify(objectInfo.codes);
+                    str = "can eliminate eval at " + location + " is called " + objectInfo.count + " times with " +
+                        objectInfo.variants + " code string variants:\n    " + JSON.stringify(objectInfo.codes);
                     console.log(str);
                 }
             }
@@ -113,8 +112,8 @@
                 objectInfo = stats[i];
                 if (!isUnnecessaryEval(objectInfo)) {
                     location = objectInfo.location;
-                    str = "eval at "+location+" is called "+objectInfo.count+" times with "+
-                        objectInfo.variants+" code string variants:\n    "+JSON.stringify(objectInfo.codes);
+                    str = "eval at " + location + " is called " + objectInfo.count + " times with " +
+                        objectInfo.variants + " code string variants:\n    " + JSON.stringify(objectInfo.codes);
                     console.log(str);
                 }
             }
@@ -124,7 +123,6 @@
 
     if (sandbox.Constants.isBrowser) {
         sandbox.analysis = new EvalUsageAnalysisEngine();
-
         window.addEventListener('keydown', function (e) {
             // keyboard shortcut is Alt-Shift-T for now
             if (e.altKey && e.shiftKey && e.keyCode === 84) {
@@ -135,4 +133,4 @@
         module.exports = EvalUsageAnalysisEngine;
     }
 
-}(typeof J$ === 'undefined'? (J$={}):J$));
+}(J$));

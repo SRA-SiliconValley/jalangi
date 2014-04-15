@@ -9,9 +9,9 @@ if (typeof J$ === 'undefined') {
     sandbox.SMemory = function () {
         var Constants = (typeof sandbox.Constants === 'undefined' ? require('Constants.js') : sandbox.Constants);
 
-        var SPECIAL_PROP = Constants.SPECIAL_PROP;
-        var SPECIAL_PROP2 = Constants.SPECIAL_PROP2;
-        var SPECIAL_PROP3 = Constants.SPECIAL_PROP3;
+        var SPECIAL_PROP = Constants.SPECIAL_PROP + "M";
+        var SPECIAL_PROP2 = Constants.SPECIAL_PROP2 + "M";
+        var SPECIAL_PROP3 = Constants.SPECIAL_PROP3 + "M";
         var N_LOG_FUNCTION_LIT = Constants.N_LOG_FUNCTION_LIT;
         var objectId = 1;
         var frameId = 2;
@@ -39,7 +39,7 @@ if (typeof J$ === 'undefined') {
                     val[SPECIAL_PROP] = Object.create(null);
                     val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
                     objectId = objectId + 2;
-                } catch(e) {
+                } catch (e) {
                     // cannot attach special field in some DOM Objects.  So ignore them.
                 }
             }
@@ -70,7 +70,27 @@ if (typeof J$ === 'undefined') {
             }
         };
 
-        this.defineFunction = function(val, type) {
+        this.getParentShadowFrame = function (otherFrame) {
+            if (otherFrame) {
+                return otherFrame[SPECIAL_PROP3];
+            } else {
+                return null;
+            }
+        };
+
+        this.getCurrentShadowFrame = function () {
+            return frame;
+        };
+
+        this.getClosureShadowFrame = function (fun) {
+            return fun[SPECIAL_PROP3];
+        };
+
+        this.getShadowObjectOrFrameID = function (objectOrFrame) {
+            return objectOrFrame[SPECIAL_PROP];
+        };
+
+        this.defineFunction = function (val, type) {
             if (type === N_LOG_FUNCTION_LIT) {
                 if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
                     Object.defineProperty(val, SPECIAL_PROP3, {

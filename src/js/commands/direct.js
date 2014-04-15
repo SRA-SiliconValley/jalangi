@@ -22,12 +22,16 @@
 /*global J$ */
 
 var clientAnalysis;
+if (!process.argv[2]) {
+    console.log("Usage: node src/js/commands/direct.js scriptName [pathToAnalysisFile]");
+}
+
 if (process.argv[3]) {
     clientAnalysis = process.argv[3];
 }
 
 var analysis = require('./../analysis');
-analysis.init("inbrowser", clientAnalysis);
+analysis.init("inbrowser", clientAnalysis, true);
 require('./../InputManager');
 require('./../instrument/esnstrument');
 require(process.cwd() + '/inputs.js');

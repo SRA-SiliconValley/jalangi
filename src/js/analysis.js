@@ -48,7 +48,7 @@ if (typeof J$ === 'undefined') {
 //    var RecordReplayEngine = (typeof sandbox.RecordReplayEngine === 'undefined'? require('./RecordReplayEngine.js'): sandbox.RecordReplayEngine);
 
 
-    function init(mode_name, analysis_script) {
+    function init(mode_name, analysis_script, initSMemory) {
 
         var MODE_RECORD = Constants.MODE_RECORD,
             MODE_REPLAY = Constants.MODE_REPLAY,
@@ -101,73 +101,20 @@ if (typeof J$ === 'undefined') {
             }
         } else {
 
-            //-------------------------------- Execution indexing --------------------------------
-            function ExecutionIndex() {
-                var counters = {};
-                var countersStack = [counters];
-
-                function executionIndexCall() {
-                    counters = {};
-                    countersStack.push(counters);
-                }
-
-                function executionIndexReturn() {
-                    countersStack.pop();
-                    counters = countersStack[countersStack.length - 1];
-                }
-
-                function executionIndexInc(iid) {
-                    var c = counters[iid];
-                    if (c === undefined) {
-                        c = 1;
-                    } else {
-                        c++;
-                    }
-                    counters[iid] = c;
-                    counters.iid = iid;
-                    counters.count = c;
-                }
-
-                function executionIndexGetIndex() {
-                    var i, ret = [];
-                    var iid;
-                    for (i = countersStack.length - 1; i >= 0; i--) {
-                        iid = countersStack[i].iid;
-                        if (iid !== undefined) {
-                            ret.push(iid);
-                            ret.push(countersStack[i].count);
-                        }
-                    }
-                    return (ret + "").replace(/,/g, "_");
-                }
-
-                if (this instanceof ExecutionIndex) {
-                    this.executionIndexCall = executionIndexCall;
-                    this.executionIndexReturn = executionIndexReturn;
-                    this.executionIndexInc = executionIndexInc;
-                    this.executionIndexGetIndex = executionIndexGetIndex;
-                } else {
-                    return new ExecutionIndex();
-                }
-            }
-
-            //-------------------------------- End Execution indexing --------------------------------
-
             var rrEngine;
-            var executionIndex;
             var branchCoverageInfo;
             var smemory;
 
-            executionIndex = new ExecutionIndex();
 
             if (mode === MODE_RECORD || mode === MODE_REPLAY) {
                 rrEngine = new RecordReplayEngine();
-            } else if (mode === MODE_NO_RR) {
+            }
+            if (initSMemory) {
                 sandbox.smemory = smemory = new SMemory();
             }
             if (analysis_script) {
                 var AnalysisEngine = require(analysis_script);
-                sandbox.analysis = new AnalysisEngine(executionIndex);
+                sandbox.analysis = new AnalysisEngine();
             }
 
 
@@ -413,7 +360,6 @@ if (typeof J$ === 'undefined') {
                     rrEngine = tmp_rrEngine;
                 }
 
-                executionIndex.executionIndexInc(iid);
 
                 var arr = getSymbolicFunctionToInvokeAndLog(f_c, isConstructor);
                 tmpIsInstrumentedCaller = Globals.isInstrumentedCaller;
@@ -588,7 +534,6 @@ if (typeof J$ === 'undefined') {
 
             // Function enter
             function Fe(iid, val, dis /* this */) {
-                executionIndex.executionIndexCall();
                 if (rrEngine) {
                     rrEngine.RR_Fe(iid, val, dis);
                 } else if (smemory) {
@@ -611,7 +556,6 @@ if (typeof J$ === 'undefined') {
             // Function exit
             function Fr(iid) {
                 var ret = false, tmp;
-                executionIndex.executionIndexReturn();
                 if (rrEngine) {
                     rrEngine.RR_Fr(iid);
                 } else if (smemory) {
@@ -1069,7 +1013,6 @@ if (typeof J$ === 'undefined') {
             // case label inside switch
             function C2(iid, left) {
                 var left_c, ret;
-                executionIndex.executionIndexInc(iid);
 
                 left_c = getConcrete(left);
                 left = B(iid, "===", switchLeft, left);
@@ -1102,7 +1045,6 @@ if (typeof J$ === 'undefined') {
             // Expression in conditional
             function C(iid, left) {
                 var left_c, ret;
-                executionIndex.executionIndexInc(iid);
                 if (sandbox.analysis && sandbox.analysis.conditionalPre) {
                     try {
                         sandbox.analysis.conditionalPre(iid, left);
@@ -1241,7 +1183,7 @@ if (typeof J$ === 'undefined') {
 
 
     if (Constants.isBrowser) {
-        init(window.JALANGI_MODE);
+        init(window.JALANGI_MODE, undefined, window.USE_SMEMORY);
     } else { // node.js
         exports.init = init;
     }

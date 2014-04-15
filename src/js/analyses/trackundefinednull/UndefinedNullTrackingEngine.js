@@ -16,15 +16,11 @@
 
 // Author: Koushik Sen
 
-(function (module) {
+(function (sandbox) {
 
-    function UndefinedNullTrackingEngine(executionIndex) {
+    function UndefinedNullTrackingEngine() {
+        var iidToLocation = sandbox.iidToLocation;
         var ConcolicValue = require('./../../ConcolicValue');
-        var getIIDInfo = require('./../../utils/IIDInfo');
-
-        if (!(this instanceof UndefinedNullTrackingEngine)) {
-            return new UndefinedNullTrackingEngine(executionIndex);
-        }
 
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
         var getSymbolic = this.getSymbolic = ConcolicValue.getSymbolic;
@@ -32,7 +28,7 @@
         this.literal = function (iid, val) {
             var type;
             if (((type = typeof val) === "object" || type === "function") && val !== null) {
-                return new ConcolicValue(val, type + " initialized at " + getIIDInfo(iid));
+                return new ConcolicValue(val, type + " initialized at " + iidToLocation(iid));
             }
             return annotateNullOrUndef(val, iid);
         }
@@ -46,7 +42,7 @@
 
         function annotateNullOrUndef(val, iid, str) {
             if (val === null || val === undefined) {
-                return new ConcolicValue(val, (str ? str : "") + val + " initialized at " + getIIDInfo(iid));
+                return new ConcolicValue(val, (str ? str : "") + val + " initialized at " + iidToLocation(iid));
             }
             return val;
         }
@@ -82,4 +78,4 @@
     }
 
     module.exports = UndefinedNullTrackingEngine;
-}(module));
+}(J$));

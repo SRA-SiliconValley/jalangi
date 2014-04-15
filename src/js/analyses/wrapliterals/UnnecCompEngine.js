@@ -1,36 +1,31 @@
 // Author: Michael Pradel
 
-(function(module){
-	var getIIDInfo = require('./../../utils/IIDInfo');
-	
-	var ConcolicValue = require('./../../ConcolicValue');
-    var getConcrete = ConcolicValue.getConcrete;
-    var getSymbolic = ConcolicValue.getSymbolic;
-	
-    function UnnecCompEngine(executionIndex) {
-    	this.getConcrete = ConcolicValue.getConcrete;
-        this.getSymbolic = ConcolicValue.getSymbolic;
-    	
+(function (sandbox) {
+    function UnnecCompEngine() {
+        var ConcolicValue = require('./../../ConcolicValue');
+        var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
+        var getSymbolic = this.getSymbolic = ConcolicValue.getSymbolic;
+
         if (!(this instanceof UnnecCompEngine)) {
-            return new UnnecCompEngine(executionIndex);
+            return new UnnecCompEngine();
         }
 
-        this.literal = function(iid, val) {
-        	var val_s = getSymbolic(val);
-        	if (val_s) {
-        		return val;
-        	} else {
-        		var depNode = new DepNode(iid);
-                return new ConcolicValue(val, depNode);	
-        	}
+        this.literal = function (iid, val) {
+            var val_s = getSymbolic(val);
+            if (val_s) {
+                return val;
+            } else {
+                var depNode = new DepNode(iid);
+                return new ConcolicValue(val, depNode);
+            }
         };
     }
 
     function DepNode(iid) {
-        this.toString = function() {
-            return ""+iid;
+        this.toString = function () {
+            return "" + iid;
         }
     }
 
     module.exports = UnnecCompEngine;
-}(module));
+}(J$));

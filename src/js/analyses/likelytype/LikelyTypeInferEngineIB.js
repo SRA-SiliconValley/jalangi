@@ -565,9 +565,7 @@
 
 
     if (sandbox.Constants.isBrowser) {
-
         sandbox.analysis = new LikelyTypeInferEngineIB();
-
         window.addEventListener('keydown', function (e) {
             // keyboard shortcut is Alt-Shift-T for now
             if (e.altKey && e.shiftKey && e.keyCode === 84) {
@@ -578,4 +576,4 @@
         module.exports = LikelyTypeInferEngineIB;
     }
 
-}(typeof J$ === 'undefined' ? (J$ = {}) : J$));
+}(J$));

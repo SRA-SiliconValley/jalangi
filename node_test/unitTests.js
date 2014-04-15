@@ -21,7 +21,7 @@
 
 var testUtil = require('./testUtil');
 var fs = require('fs');
-
+var assert = require('assert');
 // this needs to be inside the tests/unit folder to
 // handle require() calls from test scripts
 var instScriptFile = "tests/unit/instScript_jalangi_.js";
@@ -34,8 +34,17 @@ describe('unit tests', function () {
     this.timeout(600000);
     unit_tests.forEach(function (test) {
         it('should handle unit test ' + test, function (done) {
-            var testFile = "tests/unit/" + test + ".js";
-            testUtil.runTest(testFile,instScriptFile).then(function () { done(); }).done();
+            var testAndArgs = test.split(' ');
+            var script = testAndArgs.shift();
+            var testFile = "tests/unit/" + script + ".js";
+            testUtil.runTest(testFile, instScriptFile, testAndArgs).then(function () {
+                    done();
+                },
+                function (err) {
+                    console.error(err.stderr);
+                    assert(false);
+                    done();
+                }).done();
         });
     });
 });

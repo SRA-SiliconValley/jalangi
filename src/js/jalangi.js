@@ -123,18 +123,21 @@ function instrument(inputFileName, options) {
  * record execution of an instrumented script
  * @param {string} instCodeFile the instrumented code
  * @param {string} [traceFile] path to trace file
+ * @param {Array.<string>} [script_args] additional CLI arguments for the script to be recorded
  * @return promise|Q.promise promise that gets resolved at the end of recording.  The promise
  * is resolved with an object with properties:
  *     'stdout': the stdout of the record process
  *     'stderr': the stderr of the record process
  *     'traceFile': the location of the trace file
  */
-function record(instCodeFile, traceFile) {
-    var cliArgs = [instCodeFile];
+function record(instCodeFile, traceFile, script_args) {
     if (!traceFile) {
         traceFile = temp.path({suffix: '.trace'});
     }
-    cliArgs.push(traceFile);
+    var cliArgs = ['--tracefile', traceFile, instCodeFile];
+    if (script_args) {
+        cliArgs = cliArgs.concat(script_args);
+    }
     return procUtil.runChildAndCaptureOutput(fork(path.resolve(__dirname, "./commands/record.js"),
         cliArgs, { silent: true }), { traceFile: traceFile });
 }

@@ -14,7 +14,7 @@
 
 // Author: Simon Jensen
 
-(function (module) {
+(function (sandbox) {
 
     function isPrimitive(val) {
         var t = typeof val;
@@ -23,12 +23,12 @@
             t == "string"
     }
 
-    function WrapperEngine(executionIndex) {
+    function WrapperEngine() {
         var ConcolicValue = require('./../../ConcolicValue');
         var getIIDInfo = require('./../../utils/IIDInfo');
 
         if (!(this instanceof WrapperEngine)) {
-            return new WrapperEngine(executionIndex);
+            return new WrapperEngine();
         }
 
         var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
@@ -124,4 +124,4 @@
     }
 
     module.exports = WrapperEngine;
-}(module));
+}(J$));

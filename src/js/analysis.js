@@ -326,7 +326,8 @@ if (typeof J$ === 'undefined') {
             function invokeEval(base, f, args) {
                 if (rrEngine) {
                     rrEngine.RR_evalBegin();
-                } else if (smemory) {
+                }
+                if (smemory) {
                     smemory.evalBegin();
                 }
                 try {
@@ -334,7 +335,8 @@ if (typeof J$ === 'undefined') {
                 } finally {
                     if (rrEngine) {
                         rrEngine.RR_evalEnd();
-                    } else if (smemory) {
+                    }
+                    if (smemory) {
                         smemory.evalEnd();
                     }
                 }
@@ -536,7 +538,8 @@ if (typeof J$ === 'undefined') {
             function Fe(iid, val, dis /* this */) {
                 if (rrEngine) {
                     rrEngine.RR_Fe(iid, val, dis);
-                } else if (smemory) {
+                }
+                if (smemory) {
                     smemory.functionEnter(val);
                 }
                 returnVal.push(undefined);
@@ -558,7 +561,8 @@ if (typeof J$ === 'undefined') {
                 var ret = false, tmp;
                 if (rrEngine) {
                     rrEngine.RR_Fr(iid);
-                } else if (smemory) {
+                }
+                if (smemory) {
                     smemory.functionReturn();
                 }
                 if (sandbox.analysis && sandbox.analysis.functionExit) {
@@ -612,7 +616,8 @@ if (typeof J$ === 'undefined') {
                 scriptCount++;
                 if (rrEngine) {
                     rrEngine.RR_Se(iid, val);
-                } else if (smemory) {
+                }
+                if (smemory) {
                     smemory.scriptEnter();
                 }
                 if (sandbox.analysis && sandbox.analysis.scriptEnter) {
@@ -630,7 +635,8 @@ if (typeof J$ === 'undefined') {
                 scriptCount--;
                 if (rrEngine) {
                     rrEngine.RR_Sr(iid);
-                } else if (smemory) {
+                }
+                if (smemory) {
                     smemory.scriptReturn();
                 }
                 if (sandbox.analysis && sandbox.analysis.scriptExit) {
@@ -661,7 +667,7 @@ if (typeof J$ === 'undefined') {
             }
 
             // object/function/regexp/array Literal
-            function T(iid, val, type) {
+            function T(iid, val, type, hasGetterSetter) {
                 if (sandbox.analysis && sandbox.analysis.literalPre) {
                     try {
                         sandbox.analysis.literalPre(iid, val);
@@ -670,8 +676,9 @@ if (typeof J$ === 'undefined') {
                     }
                 }
                 if (rrEngine) {
-                    rrEngine.RR_T(iid, val, type);
-                } else if (smemory) {
+                    rrEngine.RR_T(iid, val, type, hasGetterSetter);
+                }
+                if (smemory) {
                     smemory.defineFunction(val, type);
                 }
                 if (type === N_LOG_FUNCTION_LIT) {
@@ -761,7 +768,8 @@ if (typeof J$ === 'undefined') {
             function N(iid, name, val, isArgumentSync) {
                 if (rrEngine) {
                     rrEngine.RR_N(iid, name, val, isArgumentSync);
-                } else if (smemory) {
+                }
+                if (smemory) {
                     smemory.initialize(name);
                 }
                 if (sandbox.analysis && sandbox.analysis.declare) {

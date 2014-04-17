@@ -181,7 +181,7 @@ if (typeof J$ === 'undefined') {
         }
 
 
-        function setLiteralId(val) {
+        function setLiteralId(val, HasGetterSetter) {
             var id;
             var oldVal = val;
             val = getConcrete(oldVal);
@@ -200,8 +200,8 @@ if (typeof J$ === 'undefined') {
                 literalId = literalId + 2;
                 // changes due to getter or setter method
                 for (var offset in val) {
-                    if (offset !== SPECIAL_PROP && offset !== SPECIAL_PROP2 && HOP(val, offset)) {
-                        if (!hasGetterSetter(val, offset, true))
+                    if (offset !== SPECIAL_PROP && offset !== SPECIAL_PROP2 && HOP(val, offset) ){
+                        if (!HasGetterSetter || !hasGetterSetter(val, offset, true))
                             val[SPECIAL_PROP][offset] = val[offset];
                     }
                 }
@@ -648,11 +648,11 @@ if (typeof J$ === 'undefined') {
             return val;
         };
 
-        this.RR_T = function (iid, val, fun) {
+        this.RR_T = function (iid, val, fun, hasGetterSetter) {
             if ((Globals.mode === MODE_RECORD || Globals.mode === MODE_REPLAY) &&
                 (fun === N_LOG_ARRAY_LIT || fun === N_LOG_FUNCTION_LIT || fun === N_LOG_OBJECT_LIT || fun === N_LOG_REGEXP_LIT)) {
 //                    console.log("iid:"+iid)  // uncomment for divergence
-                setLiteralId(val);
+                setLiteralId(val, hasGetterSetter);
                 if (fun === N_LOG_FUNCTION_LIT) {
                     if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
                         Object.defineProperty(val, SPECIAL_PROP3, {

@@ -527,10 +527,23 @@
         return ret;
     }
 
+    function ifObjectExpressionHasGetterSetter(node) {
+        if (node.type === "ObjectExpression") {
+            var kind, len = node.properties.length;
+            for (var i=0; i<len; i++) {
+                if ((kind = node.properties[i].kind) ==='get' || kind === 'set') {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     function wrapLiteral(node, ast, funId) {
         printIidToLoc(node);
+        var hasGetterSetter = ifObjectExpressionHasGetterSetter(node);
         var ret = replaceInExpr(
-            logLitFunName + "(" + RP + "1, " + RP + "2, " + RP + "3)",
+            logLitFunName + "(" + RP + "1, " + RP + "2, " + RP + "3,"+hasGetterSetter+")",
             getIid(),
             ast,
             createLiteralAst(funId)

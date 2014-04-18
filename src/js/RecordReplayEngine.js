@@ -67,7 +67,7 @@ if (typeof J$ === 'undefined') {
         var traceReader, traceWriter;
         var seqNo = 0;
 
-        var frame = {};
+        var frame = {"this":undefined};
         var frameStack = [frame];
 
         var evalFrames = [];
@@ -466,17 +466,22 @@ if (typeof J$ === 'undefined') {
         this.RR_N = function (iid, name, val, isArgumentSync) {
             if (Globals.mode === MODE_RECORD || Globals.mode === MODE_REPLAY) {
                 if (isArgumentSync === false || (isArgumentSync === true && Globals.isInstrumentedCaller)) {
-                    frame[name] = val;
+                    return frame[name] = val;
                 } else if (isArgumentSync === true && !Globals.isInstrumentedCaller) {
                     frame[name] = undefined;
+                    return this.RR_R(iid, name, val, true);
                 }
             }
         };
 
-        this.RR_R = function (iid, name, val) {
+        this.RR_R = function (iid, name, val, useTopFrame) {
             var ret, trackedVal, trackedFrame, tmp;
 
-            trackedFrame = getFrameContainingVar(name);
+            if (useTopFrame || name === 'this') {
+                trackedFrame = frame;
+            } else {
+                trackedFrame = getFrameContainingVar(name);
+            }
             trackedVal = trackedFrame[name];
 
             if (Globals.mode === MODE_RECORD) {
@@ -534,7 +539,7 @@ if (typeof J$ === 'undefined') {
         this.RR_Fe = function (iid, val, dis) {
             var ret;
             if (Globals.mode === MODE_RECORD || Globals.mode === MODE_REPLAY) {
-                frameStack.push(frame = {});
+                frameStack.push(frame = {"this":undefined});
                 frame[SPECIAL_PROP3] = val[SPECIAL_PROP3];
                 if (!Globals.isInstrumentedCaller) {
                     if (Globals.mode === MODE_RECORD) {
@@ -568,7 +573,7 @@ if (typeof J$ === 'undefined') {
         this.RR_Se = function (iid, val) {
             var ret;
             if (Globals.mode === MODE_RECORD || Globals.mode === MODE_REPLAY) {
-                frameStack.push(frame = {});
+                frameStack.push(frame = {"this":undefined});
                 frame[SPECIAL_PROP3] = frameStack[0];
                 if (Globals.mode === MODE_RECORD) {
                     var tmp = printableValue(val);

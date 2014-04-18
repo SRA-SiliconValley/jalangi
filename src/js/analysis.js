@@ -717,7 +717,7 @@ if (typeof J$ === 'undefined') {
             }
 
             // variable read
-            function R(iid, name, val, isGlobal) {
+            function R(iid, name, val, isGlobal, isPseudoGlobal) {
                 if (sandbox.analysis && sandbox.analysis.readPre) {
                     try {
                         sandbox.analysis.readPre(iid, name, val, isGlobal);
@@ -725,7 +725,7 @@ if (typeof J$ === 'undefined') {
                         clientAnalysisException(e);
                     }
                 }
-                if (rrEngine) {
+                if (rrEngine && (name==='this' || isGlobal)) {
                     val = rrEngine.RR_R(iid, name, val);
                 }
                 if (sandbox.analysis && sandbox.analysis.read) {
@@ -734,7 +734,7 @@ if (typeof J$ === 'undefined') {
                     } catch (e) {
                         clientAnalysisException(e);
                     }
-                    if (rrEngine) {
+                    if (rrEngine) {// && (name==='this' || isGlobal)) {
                         rrEngine.RR_updateRecordedObject(val);
                     }
                 }
@@ -743,7 +743,7 @@ if (typeof J$ === 'undefined') {
             }
 
             // variable write
-            function W(iid, name, val, lhs) {
+            function W(iid, name, val, lhs, isGlobal, isPseudoGlobal) {
                 if (sandbox.analysis && sandbox.analysis.writePre) {
                     try {
                         sandbox.analysis.writePre(iid, name, val, lhs);
@@ -751,7 +751,7 @@ if (typeof J$ === 'undefined') {
                         clientAnalysisException(e);
                     }
                 }
-                if (rrEngine) {
+                if (rrEngine && isGlobal) {
                     rrEngine.RR_W(iid, name, val);
                 }
                 if (sandbox.analysis && sandbox.analysis.write) {
@@ -767,7 +767,7 @@ if (typeof J$ === 'undefined') {
             // variable declaration (Init)
             function N(iid, name, val, isArgumentSync) {
                 if (rrEngine) {
-                    rrEngine.RR_N(iid, name, val, isArgumentSync);
+                    val = rrEngine.RR_N(iid, name, val, isArgumentSync);
                 }
                 if (smemory) {
                     smemory.initialize(name);

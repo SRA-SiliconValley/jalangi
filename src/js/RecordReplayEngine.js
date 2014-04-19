@@ -227,7 +227,7 @@ if (typeof J$ === 'undefined') {
 
         function syncValue(recordedArray, replayValue, iid) {
             var oldReplayValue = replayValue, tmp;
-            ;
+
             replayValue = getConcrete(replayValue);
             var recordedValue = recordedArray[F_VALUE], recordedType = recordedArray[F_TYPE];
 
@@ -276,7 +276,10 @@ if (typeof J$ === 'undefined') {
                     if (traceReader.hasFutureReference(recordedValue))
                         objectMap[recordedValue] = tmp2;
                     obj[SPECIAL_PROP][SPECIAL_PROP4] = tmp2;
+                } else if (traceReader.canDeleteReference(recordedArray)) {
+                    objectMap[recordedValue] = undefined;
                 }
+
                 return (obj === replayValue) ? oldReplayValue : obj;
             }
         }

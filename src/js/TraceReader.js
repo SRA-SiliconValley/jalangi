@@ -57,14 +57,15 @@ if (typeof J$ === 'undefined') {
                 }
             }
             traceFh.close();
-        }
+        };
 
         this.hasFutureReference = function (id) {
             var ret = (this.objectIdLife[id] >= this.traceIndex);
-            count2++;
-            if (ret) {
-                count++;
-            }
+            return ret;
+        };
+
+        this.canDeleteReference = function(recordedArray) {
+            var ret = (this.objectIdLife[recordedArray[F_VALUE]] === recordedArray[F_SEQ]);
             return ret;
         };
 

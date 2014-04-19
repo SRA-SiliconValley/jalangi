@@ -10,18 +10,63 @@ if (typeof J$ === 'undefined') {
         var Config = Constants.load('Config');
 
         var F_SEQ = Constants.F_SEQ;
+        var F_TYPE = Constants.F_TYPE;
+        var F_VALUE = Constants.F_VALUE;
+        var F_IID = Constants.F_IID;
+        var F_FUNNAME = Constants.F_FUNNAME;
+        var N_LOG_LOAD = Constants.N_LOG_LOAD;
+        var N_LOG_HASH = Constants.N_LOG_HASH;
+
+        var T_OBJECT = Constants.T_OBJECT;
+        var T_FUNCTION = Constants.T_FUNCTION;
+        var T_ARRAY = Constants.T_ARRAY;
+
+
         var decodeNaNandInfForJSON = Constants.decodeNaNandInfForJSON;
         var fixForStringNaN = Constants.fixForStringNaN;
         var debugPrint = Constants.debugPrint;
 
         var traceArray = [];
-        var traceIndex = 0;
+        this.traceIndex = 0;
         var currentIndex = 0;
         var frontierIndex = 0;
         var MAX_SIZE = 1024;
         var traceFh;
         var done = false;
         var curRecord = null;
+
+        var count = 0;
+        var count2 = 0;
+
+        this.objectIdLife = [];
+
+        this.populateObjectIdLife = function () {
+            if (Constants.isBrowserReplay) {
+                return;
+            }
+            var type;
+            var FileLineReader = require('./utils/FileLineReader');
+            var traceFh = new FileLineReader(Globals.traceFileName);
+            while (traceFh.hasNextLine()) {
+                var record = JSON.parse(traceFh.nextLine(), decodeNaNandInfForJSON);
+                if (((type = record[F_TYPE]) === T_OBJECT || type === T_ARRAY || type === T_FUNCTION) && record[F_FUNNAME] !== N_LOG_HASH) {
+                    this.objectIdLife[record[F_VALUE]] = record[F_SEQ];
+                }
+                if (record[F_FUNNAME] === N_LOG_LOAD) {
+                    this.objectIdLife[record[F_VALUE]] = record[F_SEQ];
+                }
+            }
+            traceFh.close();
+        }
+
+        this.hasFutureReference = function (id) {
+            var ret = (this.objectIdLife[id] >= this.traceIndex);
+            count2++;
+            if (ret) {
+                count++;
+            }
+            return ret;
+        };
 
         function cacheRecords() {
             var i = 0, flag, record;
@@ -71,12 +116,12 @@ if (typeof J$ === 'undefined') {
             cacheRecords();
             var j = Constants.isBrowserReplay ? currentIndex : currentIndex % MAX_SIZE;
             var record = traceArray[j];
-            if (record && record[F_SEQ] === traceIndex) {
+            if (record && record[F_SEQ] === this.traceIndex) {
                 currentIndex++;
             } else {
                 record = undefined;
             }
-            traceIndex++;
+            this.traceIndex++;
             return record;
         };
 
@@ -97,7 +142,7 @@ if (typeof J$ === 'undefined') {
             cacheRecords();
             var j = Constants.isBrowserReplay ? currentIndex : currentIndex % MAX_SIZE;
             var record = traceArray[j];
-            if (!(record && record[F_SEQ] === traceIndex)) {
+            if (!(record && record[F_SEQ] === this.traceIndex)) {
                 record = undefined;
             }
             return record;
@@ -111,20 +156,21 @@ if (typeof J$ === 'undefined') {
             cacheRecords();
             var j = Constants.isBrowserReplay ? currentIndex : currentIndex % MAX_SIZE;
             var record = traceArray[j];
-            if (record && record[F_SEQ] === traceIndex) {
+            if (record && record[F_SEQ] === this.traceIndex) {
                 currentIndex++;
             }
-            traceIndex++;
+            this.traceIndex++;
         };
 
         this.getPreviousIndex = function () {
             if (curRecord !== null) {
-                return traceIndex - 2;
+                return this.traceIndex - 2;
             }
-            return traceIndex - 1;
+            return this.traceIndex - 1;
         };
 
-    }
+
+    };
 
     if (typeof module !== 'undefined') {
         module.exports = sandbox.TraceReader;

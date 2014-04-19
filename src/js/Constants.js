@@ -21,6 +21,7 @@ if (typeof J$ === 'undefined') {
     Constants.SPECIAL_PROP = "*" + PREFIX1 + "*";
     Constants.SPECIAL_PROP2 = "*" + PREFIX1 + "I*";
     Constants.SPECIAL_PROP3 = "*" + PREFIX1 + "C*";
+    Constants.SPECIAL_PROP4 = "*" + PREFIX1 + "W*";
 
     Constants.MODE_RECORD = 1;
     Constants.MODE_REPLAY = 2

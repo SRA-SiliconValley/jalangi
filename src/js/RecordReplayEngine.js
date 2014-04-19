@@ -22,6 +22,7 @@ if (typeof J$ === 'undefined') {
         var SPECIAL_PROP = Constants.SPECIAL_PROP;
         var SPECIAL_PROP2 = Constants.SPECIAL_PROP2;
         var SPECIAL_PROP3 = Constants.SPECIAL_PROP3;
+        var SPECIAL_PROP4 = Constants.SPECIAL_PROP4;
 
 
         var MODE_RECORD = Constants.MODE_RECORD,
@@ -200,14 +201,16 @@ if (typeof J$ === 'undefined') {
                 literalId = literalId + 2;
                 // changes due to getter or setter method
                 for (var offset in val) {
-                    if (offset !== SPECIAL_PROP && offset !== SPECIAL_PROP2 && HOP(val, offset) ){
+                    if (offset !== SPECIAL_PROP && offset !== SPECIAL_PROP2 && HOP(val, offset)) {
                         if (!HasGetterSetter || !hasGetterSetter(val, offset, true))
                             val[SPECIAL_PROP][offset] = val[offset];
                     }
                 }
             }
             if (Globals.mode === MODE_REPLAY) {
-                objectMap[id] = oldVal;
+                if (traceReader.hasFutureReference(id))
+                    objectMap[id] = oldVal;
+                val[SPECIAL_PROP][SPECIAL_PROP4] = oldVal;
             }
         }
 
@@ -269,7 +272,10 @@ if (typeof J$ === 'undefined') {
                     obj[SPECIAL_PROP] = {};//Object.create(null);
                     obj[SPECIAL_PROP][SPECIAL_PROP] = recordedValue;
                     createdMockObject = true;
-                    objectMap[recordedValue] = ((obj === replayValue) ? oldReplayValue : obj);
+                    var tmp2 = ((obj === replayValue) ? oldReplayValue : obj);
+                    if (traceReader.hasFutureReference(recordedValue))
+                        objectMap[recordedValue] = tmp2;
+                    obj[SPECIAL_PROP][SPECIAL_PROP4] = tmp2;
                 }
                 return (obj === replayValue) ? oldReplayValue : obj;
             }
@@ -326,8 +332,8 @@ if (typeof J$ === 'undefined') {
         this.RR_getConcolicValue = function (obj) {
             var val = getConcrete(obj);
             if (val === obj && val !== undefined && val !== null && HOP(val, SPECIAL_PROP)) {
-                var id = val[SPECIAL_PROP][SPECIAL_PROP];
-                if ((val = objectMap[id]) !== undefined) {
+                var val = val[SPECIAL_PROP][SPECIAL_PROP4];
+                if (val !== undefined) {
                     return val;
                 } else {
                     return obj;
@@ -338,10 +344,14 @@ if (typeof J$ === 'undefined') {
         };
 
         this.RR_updateRecordedObject = function (obj) {
-            var val = getConcrete(obj);
-            if (val !== obj && val !== undefined && val !== null && HOP(val, SPECIAL_PROP)) {
-                var id = val[SPECIAL_PROP][SPECIAL_PROP];
-                objectMap[id] = obj;
+            if (Globals.mode === MODE_REPLAY) {
+                var val = getConcrete(obj);
+                if (val !== obj && val !== undefined && val !== null && HOP(val, SPECIAL_PROP)) {
+                    var id = val[SPECIAL_PROP][SPECIAL_PROP];
+                    if (traceReader.hasFutureReference(id))
+                        objectMap[id] = obj;
+                    val[SPECIAL_PROP][SPECIAL_PROP4] = obj;
+                }
             }
         };
 
@@ -369,31 +379,6 @@ if (typeof J$ === 'undefined') {
                     obj.__proto__ = getConcrete(objectMap[oid]);
                 }
             }
-        };
-
-        this.RR_preG = function (iid, base, offset) {
-            var base_c = getConcrete(base), tmp;
-            offset = getConcrete(offset);
-            if (offset === '__proto__') {
-                return base_c;
-            }
-
-//                    var type = typeof base_c;
-//                    if (type !== 'object' && type !== 'function') {
-//                        return base_c;
-//                    }
-
-            if (this.RR_Load(iid, hasGetterSetter(base_c, offset, true), false)) {
-                return base_c;
-            }
-            while (base_c !== null &&
-                this.RR_Load(iid, !HOP(base_c, offset), !(base_c[SPECIAL_PROP] && HOP(base_c[SPECIAL_PROP], offset)))) {
-                base_c = getConcrete(sandbox.G(iid, base_c, '__proto__'));
-            }
-            if (base_c === null) {
-                base_c = getConcrete(base);
-            }
-            return base_c;
         };
 
         /**
@@ -718,6 +703,9 @@ if (typeof J$ === 'undefined') {
 
         this.setTraceFileName = function (tFN) {
             Globals.traceFileName = tFN;
+            if (traceReader) {
+                traceReader.populateObjectIdLife();
+            }
         }
 
 

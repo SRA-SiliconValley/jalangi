@@ -130,7 +130,7 @@ _iidToLocation(iid)_ returns the **(filename:linenumber:columnnumber)** associat
 An analysis can be performed on a JavaScript file by issuing the following commands:
 
     node src/js/instrument/esnstrument.js tests/octane/deltablue.js
-	node src/js/commands/direct.js tests/octane/deltablue_jalangi_.js `pwd`/src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB.js
+	node src/js/commands/direct.js --smemory --analysis `pwd`/src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB.js tests/octane/deltablue_jalangi_.js
 	    
 An analysis can be performed on an web app using the Chrome browser by issuing the following commands:
 
@@ -249,12 +249,12 @@ See the file _src/js/analyses/objectalloc/ObjectAllocationTracker.js_ for a samp
 A replay analysis can be peformed on a JavaScript file in node.js by issuing the following commands:
 
     node src/js/instrument/esnstrument.js tests/octane/deltablue.js
-	node src/js/commands/record.js tests/octane/deltablue_jalangi_.js
-    node src/js/commands/replay.js jalangi_trace `pwd`/src/js/analyses/objectalloc/ObjectAllocationTrackerEngine.js
+	node src/js/commands/record.js --tracefile jalangi_trace tests/octane/deltablue_jalangi_.js
+    node src/js/commands/replay.js --tracefile jalangi_trace --analysis `pwd`/src/js/analyses/objectalloc/ObjectAllocationTrackerEngine.js
 
 One can run a shadow-memory based analysis during replay by issuing:
 
-    node src/js/commands/replay.js --smemory jalangi_trace `pwd`/src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB.js
+    node src/js/commands/replay.js --smemory --tracefile jalangi_trace --analysis `pwd`/src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB.js
 
  
 A replay analysis can be performed in the Chrome browser by issuing the following commands:
@@ -263,7 +263,7 @@ A replay analysis can be performed in the Chrome browser by issuing the followin
     killall node
     python scripts/jalangi.py rrserver file:///tmp/annex/index.html    
     cp jalangi_trace1 /tmp/annex
-    node src/js/commands/replay.js /tmp/annex/jalangi_trace1 ./analyses/objectalloc/ObjectAllocationTrackerEngine
+    node src/js/commands/replay.js --tracefile /tmp/annex/jalangi_trace1 --analysis `pwd`/src/js/analyses/objectalloc/ObjectAllocationTrackerEngine
     
 ### Universal Analsyis ###
 

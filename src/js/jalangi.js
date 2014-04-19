@@ -157,10 +157,12 @@ function record(instCodeFile, traceFile, script_args) {
 function replay(traceFile, clientAnalysis, initParam) {
     var cliArgs = [];
     if (traceFile) {
+        cliArgs.push('--tracefile');
         cliArgs.push(traceFile);
-        if (clientAnalysis) {
-            cliArgs.push(clientAnalysis);
-        }
+    }
+    if (clientAnalysis) {
+        cliArgs.push('--analysis');
+        cliArgs.push(clientAnalysis);
     }
     var forkedProcess = fork(path.resolve(__dirname, "./commands/replay.js"),
         cliArgs, { silent: true });

@@ -21,22 +21,39 @@
 /*global process */
 /*global J$ */
 
-var clientAnalysis;
-if (!process.argv[2]) {
-    console.log("Usage: node src/js/commands/direct.js scriptName [pathToAnalysisFile]");
+var argparse = require('argparse');
+var parser = new argparse.ArgumentParser({
+    addHelp: true,
+    description: "Command-line utility to perform Jalangi's direct analysis"
+});
+parser.addArgument(['--smemory'], { help: "Use shadow memory", action: 'storeTrue'});
+parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run"});
+parser.addArgument(['script_and_args'], {
+    help: "script to record and CLI arguments for that script",
+    nargs: argparse.Const.REMAINDER
+});
+var args = parser.parseArgs();
+if (args.script_and_args.length === 0) {
+    console.error("must provide script to record");
+    process.exit(1);
 }
-
-if (process.argv[3]) {
-    clientAnalysis = process.argv[3];
-}
+// we shift here so we can use the rest of the array later when
+// hacking process.argv; see below
+var script = args.script_and_args.shift();
 
 var analysis = require('./../analysis');
-analysis.init("inbrowser", clientAnalysis, true);
+analysis.init("inbrowser", args.analysis, args.smemory);
 require('./../InputManager');
 require('./../instrument/esnstrument');
 require(process.cwd() + '/inputs.js');
-var script = process.argv[2];
+
 var path = require('path');
-require(path.resolve(script));
+// hack process.argv for the child script
+script = path.resolve(script);
+var newArgs = [process.argv[0], script];
+newArgs = newArgs.concat(args.script_and_args);
+process.argv = newArgs;
+require(script);
+
 J$.endExecution();
 

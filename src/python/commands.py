@@ -60,7 +60,7 @@ def direct_analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
 
 def direct(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL, analysis=None):
     print instrumented_f
-    return util.run_node_script(jalangi.direct_script(), os.path.join(os.path.dirname(filee + ".js"),instrumented_f), analysis, jalangi=jalangi, savestderr=True)
+    return util.run_node_script(jalangi.direct_script(), os.path.join(os.path.dirname(filee + ".js"),instrumented_f), "--smemory", "--analysis", analysis, jalangi=jalangi, savestderr=True)
 
 
 def record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
@@ -83,9 +83,9 @@ def replay(f=None, jalangi=util.DEFAULT_INSTALL, analysis=None):
     print analysis
     trace = "jalangi_trace" if f == None else f
     if analysis != None:
-        return util.run_node_script(jalangi.replay_script(), trace, analysis, jalangi=jalangi, savestderr=True)
+        return util.run_node_script(jalangi.replay_script(), "--tracefile", trace, "--analysis", analysis, jalangi=jalangi, savestderr=True)
     else:
-        return util.run_node_script(jalangi.replay_script(), trace, jalangi=jalangi, savestderr=True)
+        return util.run_node_script(jalangi.replay_script(), "--tracefile", trace, jalangi=jalangi, savestderr=True)
         
 
 def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):

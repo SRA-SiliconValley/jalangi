@@ -315,7 +315,7 @@
             writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var orig2Inst = sandbox.orig2Inst = {}; var filename;\n");
             if (first_iid) {
                 // round down to nearest multiple of 4
-                var initialIID = first_iid - (first_iid%4);
+                var initialIID = first_iid - (first_iid%inc);
                 resetIIDCounters(initialIID);
             }
         }
@@ -1540,7 +1540,7 @@
     }
 
     function instrumentFile() {
-        var args = process.argv, i;
+        var i;
         var fs = require('fs');
         var path = require('path');
 
@@ -1562,21 +1562,38 @@
 
         openIIDMapFile();
 
-        var collectMetadata = false;
+        var collectMetadata;
         var iidsFile = undefined;
-        i = 2;
-        if (args[i] === "--metadata") {
-            collectMetadata = true;
-            i++;
+
+
+        var argparse = require('argparse');
+        var parser = new argparse.ArgumentParser({
+            addHelp: true,
+            description: "Command-line utility to perform instrumentation"
+        });
+        parser.addArgument(['--metadata'], { help: "Collect metadata", action: 'storeTrue'});
+        parser.addArgument(['--maxIIDsFile'], { help: "File containing max IIDs", defaultValue: undefined });
+        parser.addArgument(['files'], {
+            help: "files to instrument",
+            nargs: argparse.Const.REMAINDER
+        });
+        var args = parser.parseArgs();
+
+        if (args.files.length === 0) {
+            console.error("must provide files to instrument");
+            process.exit(1);
         }
-        if (args[i] === "--maxIIDsFile") {
-            i++;
-            iidsFile = args[i];
+
+
+        collectMetadata = args.metadata;
+        if (args.maxIIDsFile !== undefined) {
+            iidsFile = args.maxIIDsFile;
             loadMaxIIDs(iidsFile);
             i++;
         }
-        for ( ; i < args.length; i++) {
-            var filename = args[i];
+
+        for ( i=0 ; i < args.files.length; i++) {
+            var filename = args.files[i];
             curFileName = sanitizePath(require('path').resolve(process.cwd(), filename));
             //writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
             console.log("Instrumenting " + filename + " ...");
@@ -1616,7 +1633,7 @@
             storeMaxIIDs(iidsFile);
     }
 
-    // START of Liang's AST post-processor
+    // START of Liang Gong's AST post-processor
     function hoistFunctionDeclaration(ast, hoisteredFunctions) {
         var key, child, startIndex = 0;
         if (ast.body) {
@@ -1673,7 +1690,7 @@
 
         return ast;
     }
-    // END of Liang's AST post-processor
+    // END of Liang Gong's AST post-processor
 
     if (typeof window === 'undefined' && (typeof require !== "undefined") && require.main === module) {
         instrumentFile();

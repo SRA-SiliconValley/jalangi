@@ -687,14 +687,14 @@
         return ret;
     }
 
-    function createCallInitAsStatement(node, name, val, isArgumentSync) {
+    function createCallInitAsStatement(node, name, val, isArgumentSync, lhs) {
         printIidToLoc(node);
         var ret;
 
         if (isArgumentSync)
             ret = replaceInStatement(
                 RP + "1 = " + logInitFunName + "(" + RP + "2, " + RP + "3, " + RP + "4, " + isArgumentSync + ")",
-                val,
+                lhs,
                 getIid(),
                 name,
                 val
@@ -785,29 +785,34 @@
     }
 
     function syncDefuns(node, scope, isScript) {
-        var ret = [];
+        var ret = [], ident;
         if (!isScript) {
+            ident = createIdentifierAst("arguments");
             ret = ret.concat(createCallInitAsStatement(node,
                 createLiteralAst("arguments"),
-                createIdentifierAst("arguments"),
-                true));
+                ident,
+                true,
+                ident));
         }
         if (scope) {
             for (var name in scope.vars) {
                 if (HOP(scope.vars, name)) {
                     if (scope.vars[name] === "defun") {
-                        var ident = createIdentifierAst(name);
+                        ident = createIdentifierAst(name);
                         ident.loc = scope.funLocs[name];
                         ret = ret.concat(createCallInitAsStatement(node,
                             createLiteralAst(name),
                             wrapLiteral(ident, ident, N_LOG_FUNCTION_LIT),
-                            false));
+                            true,
+                            ident));
                     }
                     if (scope.vars[name] === "arg") {
+                        ident = createIdentifierAst(name);
                         ret = ret.concat(createCallInitAsStatement(node,
                             createLiteralAst(name),
-                            createIdentifierAst(name),
-                            true));
+                            ident,
+                            true,
+                            ident));
                     }
                     if (scope.vars[name] === "var") {
                         ret = ret.concat(createCallInitAsStatement(node,

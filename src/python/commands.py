@@ -59,12 +59,10 @@ def direct_analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
     util.move_coverage(jalangi)
 
 def direct(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL, analysis=None):
-    print instrumented_f
-    return util.run_node_script(jalangi.direct_script(), os.path.join(os.path.dirname(filee + ".js"),instrumented_f), "--smemory", "--analysis", analysis, jalangi=jalangi, savestderr=True)
+    return util.run_node_script(jalangi.direct_script(), "--smemory", "--analysis", analysis, os.path.join(os.path.dirname(filee + ".js"),instrumented_f), jalangi=jalangi, savestderr=True)
 
 
 def record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
-    print instrumented_f
     return util.run_node_script(jalangi.record_script(), os.path.join(os.path.dirname(filee + ".js"),instrumented_f), jalangi=jalangi, savestderr=True)
     
 def instrument(filee,output_dir=".",jalangi=util.DEFAULT_INSTALL):
@@ -80,7 +78,6 @@ def replay(f=None, jalangi=util.DEFAULT_INSTALL, analysis=None):
     """
     Invokes the replay.js script and returns the output
     """
-    print analysis
     trace = "jalangi_trace" if f == None else f
     if analysis != None:
         return util.run_node_script(jalangi.replay_script(), "--tracefile", trace, "--analysis", analysis, jalangi=jalangi, savestderr=True)

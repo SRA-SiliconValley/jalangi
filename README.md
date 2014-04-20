@@ -165,23 +165,23 @@ created during an execution along with some auxiliary information.
 The analysis can be performed on a file testme.js by invoking the
 following command:
 
-    python scripts/jalangi.py analyze -a ./analyses/objectalloc/ObjectAllocationTrackerEngine testme
+    python scripts/jalangi.py analyze -a src/js/analyses/objectalloc/ObjectAllocationTrackerEngine testme
 
 For example, try running the analysis on a sunspider benchmark by issuing the following command:
 
-    python scripts/jalangi.py analyze -a ./analyses/objectalloc/ObjectAllocationTrackerEngine tests/sunspider1/crypto-aes
+    python scripts/jalangi.py analyze -a src/js/analyses/objectalloc/ObjectAllocationTrackerEngine tests/sunspider1/crypto-aes
 
 Similarly, you can run a likely type inference analysis on another sunspider benchmark by calling the following command and you will notice some warnings.
 
-    python scripts/jalangi.py analyze -a ./analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-sha1
+    python scripts/jalangi.py analyze -a src/js/analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-sha1
 
 Run the following to perform a simple form of taint analysis.
 
-	python scripts/jalangi.py analyze -a ./analyses/simpletaint/SimpleTaintEngine tests/sunspider1/crypto-sha1
+	python scripts/jalangi.py analyze -a src/js/analyses/simpletaint/SimpleTaintEngine tests/sunspider1/crypto-sha1
 
 You can run origin of null and undefined tracker on a toy example by issuing the following command:
 
-    python scripts/jalangi.py analyze -a ./analyses/trackundefinednull/UndefinedNullTrackingEngine tests/unit/track_undef_null
+    python scripts/jalangi.py analyze -a src/js/analyses/trackundefinednull/UndefinedNullTrackingEngine tests/unit/track_undef_null
 
 ### Record and replay a web application.
 
@@ -201,7 +201,7 @@ Then, launch the Jalangi server and the HTML page by running
 You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  To ensure the trace is completely flushed, press `Alt+Shift+T` in the browser, and then close the browser window.  You can run a dynamic analysis on the trace file by issuing the following commands (not that this differs slightly from above, due to the need to copy the trace):
 
     cp jalangi_trace1 /tmp/annex
-    node src/js/commands/replay.js --tracefile /tmp/annex/jalangi_trace1 --analysis ./analyses/objectalloc/ObjectAllocationTrackerEngine
+    node src/js/commands/replay.js --tracefile /tmp/annex/jalangi_trace1 --analysis `pwd`/src/js/analyses/objectalloc/ObjectAllocationTrackerEngine
 
 
 ### Record and replay using the proxy server.
@@ -238,7 +238,7 @@ metadata.
 
 Now, you can run a dynamic analysis on the trace file by issuing the following commands.
 
-    node src/js/commands/replay.js /tmp/instScripts/site0/jalangi_trace1 ./analyses/objectalloc/ObjectAllocationTrackerEngine
+    node src/js/commands/replay.js --tracefile /tmp/instScripts/site0/jalangi_trace1 --analysis `pwd`/src/js/analyses/objectalloc/ObjectAllocationTrackerEngine
 
 
 ## Further examples of record and replay
@@ -251,7 +251,7 @@ Now, you can run a dynamic analysis on the trace file by issuing the following c
     python scripts/jalangi.py rrserver file:///tmp/calculator/index.html
 
     cp jalangi_trace1 /tmp/calculator
-    node src/js/commands/replay.js --tracefile /tmp/calculator/jalangi_trace1 --analysis ./analyses/likelytype/LikelyTypeInferEngine
+    node src/js/commands/replay.js --tracefile /tmp/calculator/jalangi_trace1 --analysis `pwd`/src/js/analyses/likelytype/LikelyTypeInferEngine
 
 ***
 
@@ -261,7 +261,7 @@ Now, you can run a dynamic analysis on the trace file by issuing the following c
     python scripts/jalangi.py rrserver file:///tmp/go/index.html
 
     cp jalangi_trace1 /tmp/go
-    node src/js/commands/replay.js --tracefile /tmp/go/jalangi_trace1 --analysis ./analyses/likelytype/LikelyTypeInferEngine
+    node src/js/commands/replay.js --tracefile /tmp/go/jalangi_trace1 --analysis `pwd`/src/js/analyses/likelytype/LikelyTypeInferEngine
 
 ### In browser analysis of a web application.
 

@@ -43,7 +43,7 @@ total = len(tests)
 print "Running {} tests".format(total)
 for (case, expected) in tests:
     try:
-        call(["python", SCRIPT, "analyze", "-a", "./analyses/objectalloc/ObjectAllocationTrackerEngine", case])
+        call(["python", SCRIPT, "analyze", "-a", "src/js/analyses/objectalloc/ObjectAllocationTrackerEngine", case])
     except CalledProcessError as e:
         pass
 

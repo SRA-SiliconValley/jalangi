@@ -108,7 +108,7 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         print "---- Recording execution of {} ----".format(filee)
         print record(os.path.join(os.pardir,filee),instrumented_f,jalangi=jalangi)
         print "---- Replaying {} ----".format(filee)
-        print replay(jalangi=jalangi,analysis="./analyses/concolic/SymbolicEngine")
+        print replay(jalangi=jalangi,analysis=jalangi.concolic_analysis())
         
         try:
             iters = int(util.head("jalangi_tail",1)[0])

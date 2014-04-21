@@ -94,7 +94,7 @@ if (typeof J$ === 'undefined') {
         if (Globals.mode === MODE_DIRECT) {
             /* JALANGI_ANALYSIS file must define all instrumentation functions such as U, B, C, C1, C2, W, R, G, P */
             if (analysis_script) {
-                require(analysis_script)(sandbox);
+                require(require('path').resolve(analysis_script))(sandbox);
                 if (sandbox.postLoad) {
                     sandbox.postLoad();
                 }
@@ -113,7 +113,7 @@ if (typeof J$ === 'undefined') {
                 sandbox.smemory = smemory = new SMemory();
             }
             if (analysis_script) {
-                var AnalysisEngine = require(analysis_script);
+                var AnalysisEngine = require(require('path').resolve(analysis_script));
                 sandbox.analysis = new AnalysisEngine();
             }
 

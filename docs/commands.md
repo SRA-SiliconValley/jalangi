@@ -86,7 +86,7 @@ Optional arguments:
   
 	-h, --help           Show this help message and exit.
     --smemory            Use shadow memory
-    --analysis ANALYSIS  absolute path to analysis file to run
+    --analysis ANALYSIS  path to analysis file to run
 
 ## record.js
 
@@ -138,7 +138,7 @@ Command-line utility to perform Jalangi's pure symbolic execution
 
 Positional arguments:
   
-	analysis         absolute path to symbolic execution code
+	analysis         path to symbolic execution code
 	script_and_args  script to run symbolically and its arguments
 
 Optional arguments:

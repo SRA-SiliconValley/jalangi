@@ -58,6 +58,9 @@ class JalangiInstall:
     def symbolic_script(self):
         return self.get_home() + "/src/js/commands/symbolic.js"
 
+    def concolic_analysis(self):
+        return self.get_home() + "/src/js/analyses/concolic/SymbolicEngine.js"
+
     def analyses(self):
         return os.listdir(self.get_home() + "/src/js/analyses")
 

@@ -20,7 +20,7 @@
 /*global describe */
 /*global it */
 
-var instDir = require('./../src/js/commands/instrumentDir');
+var inst = require('./../src/js/commands/instrument');
 var assert = require('assert');
 var fs = require('fs');
 var path = require('path');
@@ -35,10 +35,10 @@ describe('instrument dir tests', function () {
             // the exact script doesn't matter for this test
             extra_app_scripts: "tests/unit/date-conversion.js"
         };
-        instDir.instrument(options, function (err) {
+        inst.instrument(options, function (err) {
             assert(!err, err);
-            assert(fs.existsSync(path.join(options.outputDir, "app1", instDir.EXTRA_SCRIPTS_DIR, "date-conversion.js")));
-            assert(!fs.existsSync(path.join(options.inputFiles[0], instDir.EXTRA_SCRIPTS_DIR)));
+            assert(fs.existsSync(path.join(options.outputDir, "app1", inst.EXTRA_SCRIPTS_DIR, "date-conversion.js")));
+            assert(!fs.existsSync(path.join(options.inputFiles[0], inst.EXTRA_SCRIPTS_DIR)));
             var html = String(fs.readFileSync(path.join(options.outputDir, "app1", "index.html")));
             assert(html.indexOf("<script src=\"__jalangi_extra/date-conversion.js\">") !== -1);
             done();
@@ -54,11 +54,11 @@ describe('instrument dir tests', function () {
                 "tests/unit/date-conversion.js" + path.delimiter +
                 "tests/unit/gettersetter.js"
         };
-        instDir.instrument(options, function (err) {
+        inst.instrument(options, function (err) {
             assert(!err, err);
-            assert(fs.existsSync(path.join(options.outputDir, "app1", instDir.EXTRA_SCRIPTS_DIR, "date-conversion.js")));
-            assert(fs.existsSync(path.join(options.outputDir, "app1", instDir.EXTRA_SCRIPTS_DIR, "gettersetter.js")));
-            assert(!fs.existsSync(path.join(options.inputFiles[0], instDir.EXTRA_SCRIPTS_DIR)));
+            assert(fs.existsSync(path.join(options.outputDir, "app1", inst.EXTRA_SCRIPTS_DIR, "date-conversion.js")));
+            assert(fs.existsSync(path.join(options.outputDir, "app1", inst.EXTRA_SCRIPTS_DIR, "gettersetter.js")));
+            assert(!fs.existsSync(path.join(options.inputFiles[0], inst.EXTRA_SCRIPTS_DIR)));
             var html = String(fs.readFileSync(path.join(options.outputDir, "app1", "index.html")));
             assert(html.indexOf("<script src=\"__jalangi_extra/date-conversion.js\">") !== -1);
             assert(html.indexOf("<script src=\"__jalangi_extra/gettersetter.js\">") !== -1);
@@ -74,11 +74,11 @@ describe('instrument dir tests', function () {
             analysis: "tests/unit/date-conversion.js",
             copy_runtime: true
         };
-        instDir.instrument(options, function (err) {
+        inst.instrument(options, function (err) {
             assert(!err, err);
-            assert(fs.existsSync(path.join(options.outputDir, "app1", instDir.JALANGI_RUNTIME_DIR, "date-conversion.js")));
+            assert(fs.existsSync(path.join(options.outputDir, "app1", inst.JALANGI_RUNTIME_DIR, "date-conversion.js")));
             var html = String(fs.readFileSync(path.join(options.outputDir, "app1", "index.html")));
-            assert(html.indexOf("<script src=\"" + instDir.JALANGI_RUNTIME_DIR + "/date-conversion.js\">") !== -1);
+            assert(html.indexOf("<script src=\"" + inst.JALANGI_RUNTIME_DIR + "/date-conversion.js\">") !== -1);
             done();
         });
     });
@@ -87,7 +87,7 @@ describe('instrument dir tests', function () {
             inputFiles: ["tests/unit/date-conversion.js", "tests/unit/gettersetter.js"],
             outputDir: temp.mkdirSync()
         };
-        instDir.instrument(options, function (err) {
+        inst.instrument(options, function (err) {
             assert(!err, err);
             assert(fs.existsSync(path.join(options.outputDir, "date-conversion.js")));
             assert(fs.existsSync(path.join(options.outputDir, "date-conversion_orig_.js")));

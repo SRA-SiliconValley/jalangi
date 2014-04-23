@@ -77,8 +77,6 @@ function writeMetadataToFile(metadata, filename) {
  *          based on the options
  */
 function instrument(inputFileName, options) {
-    // make all paths absolute, for simplicity
-    // TODO make absolute paths optional?
     if (!options) {
         options = {};
     }

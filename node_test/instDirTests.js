@@ -30,7 +30,7 @@ var temp = require('temp');
 describe('instrument dir tests', function () {
     it('should handle extra app scripts', function (done) {
         var options = {
-            inputDir: "tests/html/unitApps/app1",
+            inputFiles: ["tests/html/unitApps/app1"],
             outputDir: temp.dir,
             // the exact script doesn't matter for this test
             extra_app_scripts: "tests/unit/date-conversion.js"
@@ -38,7 +38,7 @@ describe('instrument dir tests', function () {
         instDir.instDir(options, function (err) {
             assert(!err, err);
             assert(fs.existsSync(path.join(options.outputDir, "app1", instDir.EXTRA_SCRIPTS_DIR, "date-conversion.js")));
-            assert(!fs.existsSync(path.join(options.inputDir, instDir.EXTRA_SCRIPTS_DIR)));
+            assert(!fs.existsSync(path.join(options.inputFiles[0], instDir.EXTRA_SCRIPTS_DIR)));
             var html = String(fs.readFileSync(path.join(options.outputDir, "app1", "index.html")));
             assert(html.indexOf("<script src=\"__jalangi_extra/date-conversion.js\">") !== -1);
             done();
@@ -47,7 +47,7 @@ describe('instrument dir tests', function () {
     });
     it('should handle multiple extra app scripts', function (done) {
         var options = {
-            inputDir: "tests/html/unitApps/app1",
+            inputFiles: ["tests/html/unitApps/app1"],
             outputDir: temp.dir,
             // the exact script doesn't matter for this test
             extra_app_scripts:
@@ -58,7 +58,7 @@ describe('instrument dir tests', function () {
             assert(!err, err);
             assert(fs.existsSync(path.join(options.outputDir, "app1", instDir.EXTRA_SCRIPTS_DIR, "date-conversion.js")));
             assert(fs.existsSync(path.join(options.outputDir, "app1", instDir.EXTRA_SCRIPTS_DIR, "gettersetter.js")));
-            assert(!fs.existsSync(path.join(options.inputDir, instDir.EXTRA_SCRIPTS_DIR)));
+            assert(!fs.existsSync(path.join(options.inputFiles[0], instDir.EXTRA_SCRIPTS_DIR)));
             var html = String(fs.readFileSync(path.join(options.outputDir, "app1", "index.html")));
             assert(html.indexOf("<script src=\"__jalangi_extra/date-conversion.js\">") !== -1);
             assert(html.indexOf("<script src=\"__jalangi_extra/gettersetter.js\">") !== -1);
@@ -68,7 +68,7 @@ describe('instrument dir tests', function () {
     });
     it('should handle copy_runtime and analysis options together', function (done) {
         var options = {
-            inputDir: "tests/html/unitApps/app1",
+            inputFiles: ["tests/html/unitApps/app1"],
             outputDir: temp.dir,
             // the exact script doesn't matter
             analysis: "tests/unit/date-conversion.js",

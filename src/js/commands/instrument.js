@@ -369,7 +369,7 @@ function instrument(options, cb) {
 }
 
 if (require.main === module) { // main script
-    var parser = new ArgumentParser({ addHelp:true, description:"Utility to apply Jalangi instrumentation to files and folders."});
+    var parser = new ArgumentParser({ addHelp:true, description:"Utility to apply Jalangi instrumentation to files or a folder."});
     parser.addArgument(['-s', '--serialize'], { help:"dump serialized ASTs along with code", action:'storeTrue' });
     parser.addArgument(['-x', '--exclude'], { help:"do not instrument any scripts whose filename contains this substring" });
     // TODO add back this option once we've fixed the relevant HTML parsing code

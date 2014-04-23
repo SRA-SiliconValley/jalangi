@@ -47,7 +47,7 @@ class AnalysisCommand:
             print "Invalid command line"
             parser.print_help()
             sys.exit(1)
-        print commands.analysis(options.analysis, options.browser, os.path.abspath(args[0]))
+        print commands.analysis(os.path.abspath(options.analysis), options.browser, os.path.abspath(args[0]))
 
 class DirectAnalysisCommand:
     name = "DirectAnalysis"
@@ -61,7 +61,7 @@ class DirectAnalysisCommand:
             print "Invalid command line"
             parser.print_help()
             sys.exit(1)
-        print commands.direct_analysis(options.analysis, os.path.abspath(args[0]))
+        print commands.direct_analysis(os.path.abspath(options.analysis), os.path.abspath(args[0]))
 
 class TestRecordReplayCommand:
     name = "Analysis"
@@ -143,7 +143,7 @@ class SymbolicCommand:
             print "You must specify a filename"
             parser.print_help()
             sys.exit(1)
-        commands.symbolic(args[0], int(options.inputs), options.analysis)
+        commands.symbolic(args[0], int(options.inputs), os.path.abspath(options.analysis))
 
 
 

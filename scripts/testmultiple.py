@@ -75,7 +75,7 @@ tests = [
     ]
 
 def gen_args(expected):
-    return ["symbolic", "-a", "./analyses/puresymbolic/Multiple", "-i", str(expected)]
+    return ["symbolic", "-a", "src/js/analyses/puresymbolic/Multiple", "-i", str(expected)]
     
 success = testrunner.run_tests_with_expected(tests, gen_args)
 if not success:

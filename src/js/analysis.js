@@ -94,7 +94,7 @@ if (typeof J$ === 'undefined') {
         if (Globals.mode === MODE_DIRECT) {
             /* JALANGI_ANALYSIS file must define all instrumentation functions such as U, B, C, C1, C2, W, R, G, P */
             if (analysis_script) {
-                require(analysis_script)(sandbox);
+                require(require('path').resolve(analysis_script))(sandbox);
                 if (sandbox.postLoad) {
                     sandbox.postLoad();
                 }
@@ -113,7 +113,7 @@ if (typeof J$ === 'undefined') {
                 sandbox.smemory = smemory = new SMemory();
             }
             if (analysis_script) {
-                var AnalysisEngine = require(analysis_script);
+                var AnalysisEngine = require(require('path').resolve(analysis_script));
                 sandbox.analysis = new AnalysisEngine();
             }
 
@@ -326,7 +326,8 @@ if (typeof J$ === 'undefined') {
             function invokeEval(base, f, args) {
                 if (rrEngine) {
                     rrEngine.RR_evalBegin();
-                } else if (smemory) {
+                }
+                if (smemory) {
                     smemory.evalBegin();
                 }
                 try {
@@ -334,7 +335,8 @@ if (typeof J$ === 'undefined') {
                 } finally {
                     if (rrEngine) {
                         rrEngine.RR_evalEnd();
-                    } else if (smemory) {
+                    }
+                    if (smemory) {
                         smemory.evalEnd();
                     }
                 }
@@ -536,7 +538,8 @@ if (typeof J$ === 'undefined') {
             function Fe(iid, val, dis /* this */) {
                 if (rrEngine) {
                     rrEngine.RR_Fe(iid, val, dis);
-                } else if (smemory) {
+                }
+                if (smemory) {
                     smemory.functionEnter(val);
                 }
                 returnVal.push(undefined);
@@ -558,7 +561,8 @@ if (typeof J$ === 'undefined') {
                 var ret = false, tmp;
                 if (rrEngine) {
                     rrEngine.RR_Fr(iid);
-                } else if (smemory) {
+                }
+                if (smemory) {
                     smemory.functionReturn();
                 }
                 if (sandbox.analysis && sandbox.analysis.functionExit) {
@@ -612,7 +616,8 @@ if (typeof J$ === 'undefined') {
                 scriptCount++;
                 if (rrEngine) {
                     rrEngine.RR_Se(iid, val);
-                } else if (smemory) {
+                }
+                if (smemory) {
                     smemory.scriptEnter();
                 }
                 if (sandbox.analysis && sandbox.analysis.scriptEnter) {
@@ -630,7 +635,8 @@ if (typeof J$ === 'undefined') {
                 scriptCount--;
                 if (rrEngine) {
                     rrEngine.RR_Sr(iid);
-                } else if (smemory) {
+                }
+                if (smemory) {
                     smemory.scriptReturn();
                 }
                 if (sandbox.analysis && sandbox.analysis.scriptExit) {
@@ -661,7 +667,7 @@ if (typeof J$ === 'undefined') {
             }
 
             // object/function/regexp/array Literal
-            function T(iid, val, type) {
+            function T(iid, val, type, hasGetterSetter) {
                 if (sandbox.analysis && sandbox.analysis.literalPre) {
                     try {
                         sandbox.analysis.literalPre(iid, val);
@@ -670,8 +676,9 @@ if (typeof J$ === 'undefined') {
                     }
                 }
                 if (rrEngine) {
-                    rrEngine.RR_T(iid, val, type);
-                } else if (smemory) {
+                    rrEngine.RR_T(iid, val, type, hasGetterSetter);
+                }
+                if (smemory) {
                     smemory.defineFunction(val, type);
                 }
                 if (type === N_LOG_FUNCTION_LIT) {
@@ -710,7 +717,7 @@ if (typeof J$ === 'undefined') {
             }
 
             // variable read
-            function R(iid, name, val, isGlobal) {
+            function R(iid, name, val, isGlobal, isPseudoGlobal) {
                 if (sandbox.analysis && sandbox.analysis.readPre) {
                     try {
                         sandbox.analysis.readPre(iid, name, val, isGlobal);
@@ -718,7 +725,7 @@ if (typeof J$ === 'undefined') {
                         clientAnalysisException(e);
                     }
                 }
-                if (rrEngine) {
+                if (rrEngine && (name==='this' || isGlobal)) {
                     val = rrEngine.RR_R(iid, name, val);
                 }
                 if (sandbox.analysis && sandbox.analysis.read) {
@@ -727,7 +734,7 @@ if (typeof J$ === 'undefined') {
                     } catch (e) {
                         clientAnalysisException(e);
                     }
-                    if (rrEngine) {
+                    if (rrEngine) {// && (name==='this' || isGlobal)) {
                         rrEngine.RR_updateRecordedObject(val);
                     }
                 }
@@ -736,7 +743,7 @@ if (typeof J$ === 'undefined') {
             }
 
             // variable write
-            function W(iid, name, val, lhs) {
+            function W(iid, name, val, lhs, isGlobal, isPseudoGlobal) {
                 if (sandbox.analysis && sandbox.analysis.writePre) {
                     try {
                         sandbox.analysis.writePre(iid, name, val, lhs);
@@ -744,7 +751,7 @@ if (typeof J$ === 'undefined') {
                         clientAnalysisException(e);
                     }
                 }
-                if (rrEngine) {
+                if (rrEngine && isGlobal) {
                     rrEngine.RR_W(iid, name, val);
                 }
                 if (sandbox.analysis && sandbox.analysis.write) {
@@ -760,8 +767,9 @@ if (typeof J$ === 'undefined') {
             // variable declaration (Init)
             function N(iid, name, val, isArgumentSync) {
                 if (rrEngine) {
-                    rrEngine.RR_N(iid, name, val, isArgumentSync);
-                } else if (smemory) {
+                    val = rrEngine.RR_N(iid, name, val, isArgumentSync);
+                }
+                if (smemory) {
                     smemory.initialize(name);
                 }
                 if (sandbox.analysis && sandbox.analysis.declare) {

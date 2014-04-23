@@ -59,12 +59,10 @@ def direct_analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
     util.move_coverage(jalangi)
 
 def direct(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL, analysis=None):
-    print instrumented_f
-    return util.run_node_script(jalangi.direct_script(), os.path.join(os.path.dirname(filee + ".js"),instrumented_f), analysis, jalangi=jalangi, savestderr=True)
+    return util.run_node_script(jalangi.direct_script(), "--smemory", "--analysis", analysis, os.path.join(os.path.dirname(filee + ".js"),instrumented_f), jalangi=jalangi, savestderr=True)
 
 
 def record(filee, instrumented_f, jalangi=util.DEFAULT_INSTALL):
-    print instrumented_f
     return util.run_node_script(jalangi.record_script(), os.path.join(os.path.dirname(filee + ".js"),instrumented_f), jalangi=jalangi, savestderr=True)
     
 def instrument(filee,output_dir=".",jalangi=util.DEFAULT_INSTALL):
@@ -80,12 +78,11 @@ def replay(f=None, jalangi=util.DEFAULT_INSTALL, analysis=None):
     """
     Invokes the replay.js script and returns the output
     """
-    print analysis
     trace = "jalangi_trace" if f == None else f
     if analysis != None:
-        return util.run_node_script(jalangi.replay_script(), trace, analysis, jalangi=jalangi, savestderr=True)
+        return util.run_node_script(jalangi.replay_script(), "--tracefile", trace, "--analysis", analysis, jalangi=jalangi, savestderr=True)
     else:
-        return util.run_node_script(jalangi.replay_script(), trace, jalangi=jalangi, savestderr=True)
+        return util.run_node_script(jalangi.replay_script(), "--tracefile", trace, jalangi=jalangi, savestderr=True)
         
 
 def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
@@ -111,7 +108,7 @@ def concolic (filee, inputs, jalangi=util.DEFAULT_INSTALL):
         print "---- Recording execution of {} ----".format(filee)
         print record(os.path.join(os.pardir,filee),instrumented_f,jalangi=jalangi)
         print "---- Replaying {} ----".format(filee)
-        print replay(jalangi=jalangi,analysis="./analyses/concolic/SymbolicEngine")
+        print replay(jalangi=jalangi,analysis=jalangi.concolic_analysis())
         
         try:
             iters = int(util.head("jalangi_tail",1)[0])

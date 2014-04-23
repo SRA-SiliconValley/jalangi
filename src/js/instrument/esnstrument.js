@@ -316,7 +316,7 @@
             writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var orig2Inst = sandbox.orig2Inst = {}; var filename;\n");
             if (first_iid) {
                 // round down to nearest multiple of 4
-                var initialIID = first_iid - (first_iid%4);
+                var initialIID = first_iid - (first_iid%inc);
                 resetIIDCounters(initialIID);
             }
         }
@@ -431,10 +431,10 @@
         return ret;
     }
 
-    function wrapRead(node, name, val, isReUseIid, isGlobal) {
+    function wrapRead(node, name, val, isReUseIid, isGlobal, isPseudoGlobal) {
         printIidToLoc(node);
         var ret = replaceInExpr(
-            logReadFunName + "(" + RP + "1, " + RP + "2, " + RP + "3," + (isGlobal ? "true" : "false") + ")",
+            logReadFunName + "(" + RP + "1, " + RP + "2, " + RP + "3," + (isGlobal ? "true" : "false") + "," + (isPseudoGlobal ? "true" : "false") +")",
             isReUseIid ? getPrevIidNoInc() : getIid(),
             name,
             val
@@ -461,25 +461,25 @@
             ret = replaceInExpr(
                 "(" + logIFunName + "(typeof (" + name + ") === 'undefined'? (" + name + "=" + RP + "2) : (" + name + "=" + RP + "3)))",
                 createIdentifierAst(name),
-                wrapRead(node, createLiteralAst(name), createIdentifierAst("undefined"), false, true),
-                wrapRead(node, createLiteralAst(name), createIdentifierAst(name), true, true)
+                wrapRead(node, createLiteralAst(name), createIdentifierAst("undefined"), false, true, true),
+                wrapRead(node, createLiteralAst(name), createIdentifierAst(name), true, true, true)
             );
         } else {
             ret = replaceInExpr(
                 "(" + logIFunName + "(typeof (" + name + ") === 'undefined'? (" + RP + "2) : (" + RP + "3)))",
                 createIdentifierAst(name),
-                wrapRead(node, createLiteralAst(name), createIdentifierAst("undefined"), false, true),
-                wrapRead(node, createLiteralAst(name), createIdentifierAst(name), true, true)
+                wrapRead(node, createLiteralAst(name), createIdentifierAst("undefined"), false, true, true),
+                wrapRead(node, createLiteralAst(name), createIdentifierAst(name), true, true, true)
             );
         }
         transferLoc(ret, node);
         return ret;
     }
 
-    function wrapWrite(node, name, val, lhs) {
+    function wrapWrite(node, name, val, lhs, isGlobal, isPseudoGlobal) {
         printIidToLoc(node);
         var ret = replaceInExpr(
-            logWriteFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + RP + "4)",
+            logWriteFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + RP + "4,"+(isGlobal?"true":"false")+","+(isPseudoGlobal?"true":"false")+")",
             getIid(),
             name,
             val,
@@ -498,7 +498,7 @@
 //            wrapRead(node, createLiteralAst(name),createIdentifierAst(name), true)
 //        );
         var ret = replaceInExpr(
-            logWriteFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + logIFunName + "(typeof(" + lhs.name + ")==='undefined'?undefined:" + lhs.name + "))",
+            logWriteFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + logIFunName + "(typeof(" + lhs.name + ")==='undefined'?undefined:" + lhs.name + "), true, true)",
             getIid(),
             name,
             val
@@ -527,10 +527,23 @@
         return ret;
     }
 
+    function ifObjectExpressionHasGetterSetter(node) {
+        if (node.type === "ObjectExpression") {
+            var kind, len = node.properties.length;
+            for (var i=0; i<len; i++) {
+                if ((kind = node.properties[i].kind) ==='get' || kind === 'set') {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     function wrapLiteral(node, ast, funId) {
         printIidToLoc(node);
+        var hasGetterSetter = ifObjectExpressionHasGetterSetter(node);
         var ret = replaceInExpr(
-            logLitFunName + "(" + RP + "1, " + RP + "2, " + RP + "3)",
+            logLitFunName + "(" + RP + "1, " + RP + "2, " + RP + "3,"+hasGetterSetter+")",
             getIid(),
             ast,
             createLiteralAst(funId)
@@ -676,14 +689,14 @@
         return ret;
     }
 
-    function createCallInitAsStatement(node, name, val, isArgumentSync) {
+    function createCallInitAsStatement(node, name, val, isArgumentSync, lhs) {
         printIidToLoc(node);
         var ret;
 
         if (isArgumentSync)
             ret = replaceInStatement(
                 RP + "1 = " + logInitFunName + "(" + RP + "2, " + RP + "3, " + RP + "4, " + isArgumentSync + ")",
-                val,
+                lhs,
                 getIid(),
                 name,
                 val
@@ -774,29 +787,34 @@
     }
 
     function syncDefuns(node, scope, isScript) {
-        var ret = [];
+        var ret = [], ident;
         if (!isScript) {
+            ident = createIdentifierAst("arguments");
             ret = ret.concat(createCallInitAsStatement(node,
                 createLiteralAst("arguments"),
-                createIdentifierAst("arguments"),
-                true));
+                ident,
+                true,
+                ident));
         }
         if (scope) {
             for (var name in scope.vars) {
                 if (HOP(scope.vars, name)) {
                     if (scope.vars[name] === "defun") {
-                        var ident = createIdentifierAst(name);
+                        ident = createIdentifierAst(name);
                         ident.loc = scope.funLocs[name];
                         ret = ret.concat(createCallInitAsStatement(node,
                             createLiteralAst(name),
                             wrapLiteral(ident, ident, N_LOG_FUNCTION_LIT),
-                            false));
+                            true,
+                            ident));
                     }
                     if (scope.vars[name] === "arg") {
+                        ident = createIdentifierAst(name);
                         ret = ret.concat(createCallInitAsStatement(node,
                             createLiteralAst(name),
-                            createIdentifierAst(name),
-                            true));
+                            ident,
+                            true,
+                            ident));
                     }
                     if (scope.vars[name] === "var") {
                         ret = ret.concat(createCallInitAsStatement(node,
@@ -863,7 +881,7 @@
         var ret;
         if (node.left.type === 'Identifier') {
             if (scope.hasVar(node.left.name)) {
-                ret = wrapWrite(node.right, createLiteralAst(node.left.name), node.right, node.left);
+                ret = wrapWrite(node.right, createLiteralAst(node.left.name), node.right, node.left,false,scope.isGlobal(node.left.name));
             } else {
                 ret = wrapWriteWithUndefinedCheck(node.right, createLiteralAst(node.left.name), node.right, node.left);
 
@@ -890,7 +908,7 @@
                 ast.name === "eval") {
                 return ast;
             } else if (scope.hasVar(ast.name)) {
-                ret = wrapRead(ast, createLiteralAst(ast.name), ast);
+                ret = wrapRead(ast, createLiteralAst(ast.name), ast, false, false, scope.isGlobal(ast.name));
                 return ret;
             } else {
                 ret = wrapReadWithUndefinedCheck(ast, ast.name);
@@ -913,7 +931,7 @@
 
             var tmp2;
             if (scope.hasVar(node.left.name)) {
-                tmp2 = wrapWrite(node.right, createLiteralAst(node.left.name), tmp1, node.left);
+                tmp2 = wrapWrite(node.right, createLiteralAst(node.left.name), tmp1, node.left, false, scope.isGlobal(node.left.name));
             } else {
                 tmp2 = wrapWriteWithUndefinedCheck(node.right, createLiteralAst(node.left.name), tmp1, node.left);
 
@@ -1005,7 +1023,7 @@
         "VariableDeclaration":function (node) {
             var declarations = MAP(node.declarations, function (def) {
                 if (def.init !== null) {
-                    var init = wrapWrite(def.init, createLiteralAst(def.id.name), def.init, def.id);
+                    var init = wrapWrite(def.init, createLiteralAst(def.id.name), def.init, def.id, false, scope.isGlobal(def.id.name));
                     def.init = init;
                 }
                 return def;
@@ -1295,6 +1313,17 @@
             return null;
         };
 
+        Scope.prototype.isGlobal = function (name) {
+            var s = this;
+            while (s !== null) {
+                if (HOP(s.vars, name) && s.parent !== null) {
+                    return false;
+                }
+                s = s.parent;
+            }
+            return true;
+        };
+
         Scope.prototype.addEval = function () {
             var s = this;
             while (s !== null) {
@@ -1518,7 +1547,7 @@
     }
 
     function instrumentFile() {
-        var args = process.argv, i;
+        var i;
         var fs = require('fs');
         var path = require('path');
 
@@ -1540,25 +1569,39 @@
 
         openIIDMapFile();
 
-        var collectMetadata = false;
-        var maxIIDsFile = undefined;
-        i = 2;
-        if (args[i] === "--metadata") {
-            collectMetadata = true;
-            i++;
+        var collectMetadata;
+        var iidsFile = undefined;
+
+
+        var argparse = require('argparse');
+        var parser = new argparse.ArgumentParser({
+            addHelp: true,
+            description: "Command-line utility to perform instrumentation"
+        });
+        parser.addArgument(['--metadata'], { help: "Collect metadata", action: 'storeTrue'});
+        parser.addArgument(['--maxIIDsFile'], { help: "File containing max IIDs", defaultValue: undefined });
+        parser.addArgument(['files'], {
+            help: "files to instrument",
+            nargs: argparse.Const.REMAINDER
+        });
+        var args = parser.parseArgs();
+
+        if (args.files.length === 0) {
+            console.error("must provide files to instrument");
+            process.exit(1);
         }
-        if (args[i] === "--maxIIDsFile") {
-            i++;
-            maxIIDsFile = args[i];
-            loadMaxIIDs(maxIIDsFile);
-            i++;
-        }
-        if (args[i] === "--noEvalWrap") {
+
+
+        collectMetadata = args.metadata;
+        if (args.maxIIDsFile !== undefined) {
+            iidsFile = args.maxIIDsFile;
+            loadMaxIIDs(iidsFile);
             i++;
             wrapEval = false;
         }
-        for ( ; i < args.length; i++) {
-            var filename = args[i];
+
+        for ( i=0 ; i < args.files.length; i++) {
+            var filename = args.files[i];
             curFileName = sanitizePath(require('path').resolve(process.cwd(), filename));
             //writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
             console.log("Instrumenting " + filename + " ...");
@@ -1598,7 +1641,7 @@
             storeMaxIIDs(maxIIDsFile);
     }
 
-    // START of Liang's AST post-processor
+    // START of Liang Gong's AST post-processor
     function hoistFunctionDeclaration(ast, hoisteredFunctions) {
         var key, child, startIndex = 0;
         if (ast.body) {
@@ -1655,7 +1698,7 @@
 
         return ast;
     }
-    // END of Liang's AST post-processor
+    // END of Liang Gong's AST post-processor
 
     if (typeof window === 'undefined' && (typeof require !== "undefined") && require.main === module) {
         instrumentFile();

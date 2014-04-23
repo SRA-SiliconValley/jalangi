@@ -18,10 +18,10 @@ import testrunner
 
 with open ("tests/unit/unitTests.txt", "r") as unitsFile:
     tests = ["tests/unit/" + x for x in unitsFile.read().split('\n')]
-    success = testrunner.run_tests(tests,["analyze", "-a", "./analyses/trackallvalues/TrackValuesEngine"])
+    success = testrunner.run_tests(tests,["analyze", "-a", "src/js/analyses/trackallvalues/TrackValuesEngine"])
     if not success:
         exit(1)
 
-success = testrunner.run_tests(tests,["analyze", "-a", "./analyses/trackallvalues/TrackValuesEngine"])
+success = testrunner.run_tests(tests,["analyze", "-a", "src/js/analyses/trackallvalues/TrackValuesEngine"])
 if not success:
     exit(1)

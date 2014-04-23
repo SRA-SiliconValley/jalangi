@@ -19,24 +19,22 @@
 /*jslint node: true */
 /*global J$ */
 var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
-var traceFileName = DEFAULT_TRACE_FILE_NAME, clientAnalysis;
-var initSMemory = false;
-var idx = 2;
-if (process.argv[2]) {
-    if (process.argv[2] === '--smemory') {
-        initSMemory = true;
-        idx = 3;
-    }
-    traceFileName = process.argv[idx];
-    if (process.argv[idx + 1]) {
-        clientAnalysis = process.argv[idx + 1];
-    }
-} else {
-    console.log("Usage: node src/js/commands/replay.js [--smemory] traceFileName pathToAnalysisFile");
-}
+
+var argparse = require('argparse');
+var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
+var parser = new argparse.ArgumentParser({
+    addHelp: true,
+    description: "Command-line utility to perform Jalangi's replay phase"
+});
+parser.addArgument(['--smemory'], { help: "Use shadow memory", action: 'storeTrue'});
+parser.addArgument(['--tracefile'], { help: "Location to store trace file", defaultValue: DEFAULT_TRACE_FILE_NAME });
+parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run during replay"});
+var args = parser.parseArgs();
+
+
 function runAnalysis(initParam) {
     var analysis = require('./../analysis');
-    analysis.init("replay", clientAnalysis, initSMemory);
+    analysis.init("replay", args.analysis, args.smemory);
     if (J$.analysis && J$.analysis.init) {
         J$.analysis.init(initParam ? initParam : {});
     }
@@ -45,11 +43,11 @@ function runAnalysis(initParam) {
     require(process.cwd() + '/inputs.js');
     try {
 //    console.log("Starting replay ...")
-        J$.setTraceFileName(traceFileName);
+        J$.setTraceFileName(args.tracefile);
         J$.replay();
     } finally {
         var result = J$.endExecution();
-        if (process.send && clientAnalysis) {
+        if (process.send && args.analysis) {
             // we assume send is synchronous
             process.send({result:result});
         }

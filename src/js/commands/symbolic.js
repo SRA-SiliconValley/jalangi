@@ -18,19 +18,42 @@
 
 /*jslint node: true */
 /*global J$ */
-var clientAnalysis, script;
-if (process.argv.length < 4) {
-    throw "not enough arguments";
+
+var argparse = require('argparse');
+var parser = new argparse.ArgumentParser({
+    addHelp: true,
+    description: "Command-line utility to perform Jalangi's pure symbolic execution"
+});
+parser.addArgument(['analysis'], {
+    help: "absolute path to symbolic execution code"
+});
+parser.addArgument(['script_and_args'], {
+    help: "script to run symbolically and its arguments",
+    nargs: argparse.Const.REMAINDER
+});
+var args = parser.parseArgs();
+if (args.script_and_args.length === 0) {
+    console.error("must provide script to record");
+    process.exit(1);
 }
-clientAnalysis = process.argv[2];
-script = process.argv[3];
+// we shift here so we can use the rest of the array later when
+// hacking process.argv; see below
+var script = args.script_and_args.shift();
+
+
 // load InputManager2 *before* analysis,
 // as symbolic analysis may load instrumented
 // files that rely on InputManager2 symbols
 require('./../InputManager2');
 var analysis = require('./../analysis');
-analysis.init("symbolic", clientAnalysis);
+analysis.init("symbolic", args.analysis);
 require('./../instrument/esnstrument');
 require(process.cwd() + '/inputs.js');
+
 var path = require('path');
-require(path.resolve(script));
+// hack process.argv for the child script
+script = path.resolve(script);
+var newArgs = [process.argv[0], script];
+newArgs = newArgs.concat(args.script_and_args);
+process.argv = newArgs;
+require(script);

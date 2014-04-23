@@ -30,6 +30,6 @@ tests = [
     "tests/octane/box2d"
     ]
 
-success = testrunner.run_tests(tests,["analyze", "-a", "./analyses/trackallvalues/TrackValuesEngine"])
+success = testrunner.run_tests(tests,["analyze", "-a", "src/js/analyses/trackallvalues/TrackValuesEngine"])
 if not success:
     exit(1)

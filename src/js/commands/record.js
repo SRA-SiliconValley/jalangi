@@ -29,7 +29,7 @@ var parser = new argparse.ArgumentParser({
 });
 parser.addArgument(['--smemory'], { help: "Use shadow memory", action: 'storeTrue'});
 parser.addArgument(['--tracefile'], { help: "Location to store trace file", defaultValue: DEFAULT_TRACE_FILE_NAME });
-parser.addArgument(['--analysis'], { help: "analysis to run during record"});
+parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run during record"});
 parser.addArgument(['script_and_args'], {
     help: "script to record and CLI arguments for that script",
     nargs: argparse.Const.REMAINDER

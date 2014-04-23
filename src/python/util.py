@@ -58,6 +58,9 @@ class JalangiInstall:
     def symbolic_script(self):
         return self.get_home() + "/src/js/commands/symbolic.js"
 
+    def concolic_analysis(self):
+        return self.get_home() + "/src/js/analyses/concolic/SymbolicEngine.js"
+
     def analyses(self):
         return os.listdir(self.get_home() + "/src/js/analyses")
 
@@ -106,10 +109,11 @@ def run_node_script(script, *args, **kwargs):
         cmd = []
     if jal.coverage():
         cmd = cmd + ["cover", "-i", os.path.join(jal.get_home(),".coverignore"), "run"]
-    cmd = cmd + ([find_node()] if not jal.coverage() else [])
+    cmd = cmd + ([find_node()] if not jal.coverage() else []) + [script] + [x for x in args]
     with NamedTemporaryFile() as f:
          try:
-             subprocess.check_call(cmd + [script] + [x for x in args],stdout=f, 
+             print ' '.join(cmd)
+             subprocess.check_call(cmd,stdout=f,
                                    stderr=f if saveStdErr else open(os.devnull, 'wb'),bufsize=1000)
              f.seek(0)
              return f.read()
@@ -126,8 +130,9 @@ def run_node_script_std(script, *args, **kwargs):
         cmd = []
     if jal.coverage():
         cmd = cmd + ["cover", "run"]
-    cmd = cmd + ([find_node()] if not jal.coverage() else [])
-    subprocess.call(cmd + [script] + [x for x in args])
+    cmd = cmd + ([find_node()] if not jal.coverage() else []) + [script] + [x for x in args]
+    print ' '.join(cmd)
+    subprocess.call(cmd)
 
 def is_node_exe(path):
     try:

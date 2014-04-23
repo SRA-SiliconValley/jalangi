@@ -364,7 +364,7 @@ if (require.main === module) { // main script
     parser.addArgument(['--selenium'], { help:"Insert code so scripts can detect they are running under Selenium.  Also keeps Jalangi trace in memory", action:'storeTrue' });
     parser.addArgument(['--in_memory_trace'], { help:"Insert code to tell analysis to keep Jalangi trace in memory instead of writing to WebSocket", action:'storeTrue' });
     parser.addArgument(['--inbrowser'], { help:"Insert code to tell Jalangi to run in 'inbrowser' analysis mode", action:'storeTrue' });
-    parser.addArgument(['--smemory'], { help:"Add support for shadow memory if the analysis mode is not 'inbrowser'", action:'storeTrue' });
+    parser.addArgument(['--smemory'], { help:"Add support for shadow memory", action:'storeTrue' });
     parser.addArgument(['--relative'], { help:"Use paths relative to working directory in injected <script> tags", action:'storeTrue' });
     parser.addArgument(['-c', '--copy_runtime'], { help:"Copy Jalangi runtime files into instrumented app in jalangi_rt sub-directory", action:'storeTrue'});
     parser.addArgument(['--first_iid'], { help:"initial IID to use during instrumentation"});

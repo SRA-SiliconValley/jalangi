@@ -21,7 +21,7 @@
  To perform analysis in browser without recording, set window.JALANGI_MODE to 'inbrowser' and J$.analysis to a suitable analysis file.
  In the inbrowser mode, one has access to the object J$.smemory, which denotes the shadow memory.
  smemory.getShadowObject(obj) returns the shadow object associated with obj if type of obj is "object" or "function".
- smemory.getShadowFrame(varName) returns the shadow frame that contains the variable named "varName".
+ smemory.getFrame(varName) returns the activation frame that contains the variable named "varName".
  To redefine all instrumentation functions, set JALANGI_MODE to 'symbolic' and J$.analysis to a suitable library containing redefinitions of W, R, etc.
 
  */

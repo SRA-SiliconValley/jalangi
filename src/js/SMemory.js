@@ -19,8 +19,8 @@ if (typeof J$ === 'undefined') {
 
 
         var frame = Object.create(null);
-        frame[SPECIAL_PROP] = frameId;
-        frameId = frameId + 2;
+        //frame[SPECIAL_PROP] = frameId;
+        //frameId = frameId + 2;
 
         var frameStack = [frame];
         var evalFrames = [];
@@ -58,7 +58,7 @@ if (typeof J$ === 'undefined') {
             return value;
         };
 
-        this.getShadowFrame = function (name) {
+        this.getFrame = function (name) {
             var tmp = frame;
             while (tmp && !HOP(tmp, name)) {
                 tmp = tmp[SPECIAL_PROP3];
@@ -70,7 +70,7 @@ if (typeof J$ === 'undefined') {
             }
         };
 
-        this.getParentShadowFrame = function (otherFrame) {
+        this.getParentFrame = function (otherFrame) {
             if (otherFrame) {
                 return otherFrame[SPECIAL_PROP3];
             } else {
@@ -78,16 +78,16 @@ if (typeof J$ === 'undefined') {
             }
         };
 
-        this.getCurrentShadowFrame = function () {
+        this.getCurrentFrame = function () {
             return frame;
         };
 
-        this.getClosureShadowFrame = function (fun) {
+        this.getClosureFrame = function (fun) {
             return fun[SPECIAL_PROP3];
         };
 
-        this.getShadowObjectOrFrameID = function (objectOrFrame) {
-            return objectOrFrame[SPECIAL_PROP];
+        this.getShadowObjectID = function (obj) {
+            return obj[SPECIAL_PROP];
         };
 
         this.defineFunction = function (val, type) {
@@ -118,8 +118,12 @@ if (typeof J$ === 'undefined') {
 
         this.functionEnter = function (val) {
             frameStack.push(frame = Object.create(null));
-            frame[SPECIAL_PROP] = frameId;
-            frameId = frameId + 2;
+            if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
+                Object.defineProperty(frame, SPECIAL_PROP3, {
+                    enumerable:false,
+                    writable:true
+                });
+            }
             frame[SPECIAL_PROP3] = val[SPECIAL_PROP3];
         };
 
@@ -130,8 +134,8 @@ if (typeof J$ === 'undefined') {
 
         this.scriptEnter = function () {
             frameStack.push(frame = Object.create(null));
-            frame[SPECIAL_PROP] = frameId;
-            frameId = frameId + 2;
+            //frame[SPECIAL_PROP] = frameId;
+            //frameId = frameId + 2;
             frame[SPECIAL_PROP3] = frameStack[0];
         };
 

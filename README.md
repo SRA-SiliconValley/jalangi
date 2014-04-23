@@ -282,7 +282,7 @@ You can now play the game for sometime.  Try two moves and see the console outpu
 in-browser mode, one must not use ConcolicValue to wrap a program value.  However, one could use shadow execution to collect statistics.
 Shadow memory is supported in the "inbrowser" mode.  Shadow memory library can be accessed in an analysis via J$.Globals.smemory.
  smemory.getShadowObject(obj) returns the shadow object associated with obj if type of obj is "object" or "function".
- smemory.getShadowFrame(varName) returns the shadow frame that contains the variable named "varName".
+ smemory.getFrame(varName) returns the frame that contains the variable named "varName".
 
 
 The following shows how to run the object allocation tracker analysis on the annex game:

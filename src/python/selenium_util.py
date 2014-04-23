@@ -36,11 +36,23 @@ def run_html_in_selenium(html_filename,selenium_fn):
 # creates a WebDriver for Chrome, loads the URL, and then
 # executes selenium_fn on the driver and returns the result
 def run_url_in_selenium(url,selenium_fn):
+#    return run_url_in_selenium_ff(url,selenium_fn)
     global chromedriver_loc
     d = DesiredCapabilities.CHROME
     d['loggingPrefs'] = { 'browser':'ALL' }
     os.environ["webdriver.chrome.driver"] = chromedriver_loc
     driver = webdriver.Chrome(executable_path=chromedriver_loc,desired_capabilities=d)
+    driver.set_window_size(1280,1024)
+    driver.get(url)
+    try:
+        return selenium_fn(driver)
+    finally:
+        driver.quit()
+
+def run_url_in_selenium_ff(url,selenium_fn):
+    d = DesiredCapabilities.FIREFOX
+    d['loggingPrefs'] = { 'browser':'ALL' }
+    driver = webdriver.Firefox(capabilities=d)
     driver.set_window_size(1280,1024)
     driver.get(url)
     try:

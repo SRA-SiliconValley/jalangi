@@ -28,7 +28,9 @@ var ncp = require('ncp').ncp;
 var stream = require("stream");
 var util = require("util");
 var assert = require('assert');
+var temp = require('temp').track();
 var ArgumentParser = require('argparse').ArgumentParser;
+
 
 var EXTRA_SCRIPTS_DIR = "__jalangi_extra";
 var JALANGI_RUNTIME_DIR = "jalangiRuntime";
@@ -44,7 +46,7 @@ function getJalangiRoot() {
  * so that inline scripts are instrumented.  Output is written as a full
  * copy of dir, within outputDir
  */
-function instDir(options, cb) {
+function instrument(options, cb) {
 
     if (!cb) {
         throw new Error("must pass in a callback");
@@ -299,9 +301,31 @@ function instDir(options, cb) {
         }
     };
 
-    // first, copy everything
-    var inputDir = options.inputFiles[0];
     var outputDir = options.outputDir;
+    function initOutputDir(copyDir) {
+        mkdirp.sync(copyDir);
+        esnstrument.openIIDMapFile(copyDir);
+        // write an empty 'inputs.js' file here, to make replay happy
+        // TODO make this filename more robust against name collisions
+        fs.writeFileSync(path.join(copyDir, "inputs.js"), "");
+    }
+    // are we instrumenting a directory?
+    var instDir = options.inputFiles.length === 1 && fs.lstatSync(options.inputFiles[0]).isDirectory();
+    var inputDir;
+    if (instDir) {
+        inputDir = options.inputFiles[0];
+    } else {
+        // we're instrumenting a list of JavaScript files.  copy them
+        // all to a temporary directory and call that the inputDir
+        inputDir = temp.mkdirSync("instFiles");
+        options.inputFiles.forEach(function (inputFile) {
+            assert(!fs.lstatSync(inputFile).isDirectory(), "can't handle multiple directories and files");
+            fs.writeFileSync(path.join(inputDir, path.basename(inputFile)), fs.readFileSync(inputFile));
+        });
+
+        // also set directInOutput so we get instrumented files directly in output directory
+        directInOutput = true;
+    }
     appDir = path.resolve(process.cwd(), inputDir);
     if (directInOutput) {
         copyDir = outputDir;
@@ -309,11 +333,7 @@ function instDir(options, cb) {
         var basename = path.basename(inputDir);
         copyDir = path.join(outputDir, basename);
     }
-    mkdirp.sync(copyDir);
-    esnstrument.openIIDMapFile(copyDir);
-    // write an empty 'inputs.js' file here, to make replay happy
-    // TODO make this filename more robust against name collisions
-    fs.writeFileSync(path.join(copyDir, "inputs.js"), "");
+    initOutputDir(copyDir);
     if (copyRuntime) {
         copyJalangiRuntime();
     }
@@ -345,6 +365,7 @@ function instDir(options, cb) {
         cb(err);
     };
     ncp(inputDir, copyDir, {transform:transform}, callback);
+
 }
 
 if (require.main === module) { // main script
@@ -363,11 +384,11 @@ if (require.main === module) { // main script
     parser.addArgument(['--extra_app_scripts'], { help:"list of extra application scripts to be injected and instrumented, separated by path.delimiter"});
     parser.addArgument(['--no_html'], { help: "don't inject Jalangi runtime into HTML files", action: 'storeTrue'});
     parser.addArgument(['--outputDir'], { help:"directory in which to place instrumented files", required: true });
-    parser.addArgument(['inputFiles'], { help:"files and directories to instrument", nargs: '+'});
+    parser.addArgument(['inputFiles'], { help:"either a list of JavaScript files to instrument, or a single directory under which all JavaScript and HTML files should be instrumented (modulo the --no_html and --exclude flags)", nargs: '+'});
 
     var args = parser.parseArgs();
 
-    instDir(args, function (err) {
+    instrument(args, function (err) {
         if (err) {
             console.error(err);
         }
@@ -375,7 +396,7 @@ if (require.main === module) { // main script
     });
 
 } else {
-    exports.instDir = instDir;
+    exports.instrument = instrument;
     exports.EXTRA_SCRIPTS_DIR = EXTRA_SCRIPTS_DIR;
     exports.JALANGI_RUNTIME_DIR = JALANGI_RUNTIME_DIR;
 }

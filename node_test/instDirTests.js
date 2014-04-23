@@ -31,11 +31,11 @@ describe('instrument dir tests', function () {
     it('should handle extra app scripts', function (done) {
         var options = {
             inputFiles: ["tests/html/unitApps/app1"],
-            outputDir: temp.dir,
+            outputDir: temp.mkdirSync(),
             // the exact script doesn't matter for this test
             extra_app_scripts: "tests/unit/date-conversion.js"
         };
-        instDir.instDir(options, function (err) {
+        instDir.instrument(options, function (err) {
             assert(!err, err);
             assert(fs.existsSync(path.join(options.outputDir, "app1", instDir.EXTRA_SCRIPTS_DIR, "date-conversion.js")));
             assert(!fs.existsSync(path.join(options.inputFiles[0], instDir.EXTRA_SCRIPTS_DIR)));
@@ -48,13 +48,13 @@ describe('instrument dir tests', function () {
     it('should handle multiple extra app scripts', function (done) {
         var options = {
             inputFiles: ["tests/html/unitApps/app1"],
-            outputDir: temp.dir,
+            outputDir: temp.mkdirSync(),
             // the exact script doesn't matter for this test
             extra_app_scripts:
                 "tests/unit/date-conversion.js" + path.delimiter +
                 "tests/unit/gettersetter.js"
         };
-        instDir.instDir(options, function (err) {
+        instDir.instrument(options, function (err) {
             assert(!err, err);
             assert(fs.existsSync(path.join(options.outputDir, "app1", instDir.EXTRA_SCRIPTS_DIR, "date-conversion.js")));
             assert(fs.existsSync(path.join(options.outputDir, "app1", instDir.EXTRA_SCRIPTS_DIR, "gettersetter.js")));
@@ -69,12 +69,12 @@ describe('instrument dir tests', function () {
     it('should handle copy_runtime and analysis options together', function (done) {
         var options = {
             inputFiles: ["tests/html/unitApps/app1"],
-            outputDir: temp.dir,
+            outputDir: temp.mkdirSync(),
             // the exact script doesn't matter
             analysis: "tests/unit/date-conversion.js",
             copy_runtime: true
         };
-        instDir.instDir(options, function (err) {
+        instDir.instrument(options, function (err) {
             assert(!err, err);
             assert(fs.existsSync(path.join(options.outputDir, "app1", instDir.JALANGI_RUNTIME_DIR, "date-conversion.js")));
             var html = String(fs.readFileSync(path.join(options.outputDir, "app1", "index.html")));
@@ -82,5 +82,23 @@ describe('instrument dir tests', function () {
             done();
         });
     });
+    it('should handle multiple script files', function (done) {
+        var options = {
+            inputFiles: ["tests/unit/date-conversion.js", "tests/unit/gettersetter.js"],
+            outputDir: temp.mkdirSync()
+        };
+        instDir.instrument(options, function (err) {
+            assert(!err, err);
+            assert(fs.existsSync(path.join(options.outputDir, "date-conversion.js")));
+            assert(fs.existsSync(path.join(options.outputDir, "date-conversion_orig_.js")));
+            assert(fs.existsSync(path.join(options.outputDir, "gettersetter.js")));
+            assert(fs.existsSync(path.join(options.outputDir, "gettersetter_orig_.js")));
+            done();
+        });
+    });
+//    it('should work with direct_in_output', function (done) {
+//        assert(false, "TODO");
+//        done();
+//    });
 
 });

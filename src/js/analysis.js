@@ -655,6 +655,7 @@ if (typeof J$ === 'undefined') {
                     if ((mode === MODE_REPLAY && scriptCount > 0) || isBrowserReplay) {
                         throw tmp;
                     } else {
+                        console.error(tmp);
                         console.error(tmp.stack);
                     }
                 }

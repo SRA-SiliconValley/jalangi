@@ -44,7 +44,7 @@ class JalangiInstall:
         return self.get_home() + "/src/js/instrument/esnstrument.js"
 
     def inst_dir_script(self):
-        return self.get_home() + "/src/js/commands/instrumentDir.js"
+        return self.get_home() + "/src/js/commands/instrument.js"
 
     def replay_script(self):
         return self.get_home() + "/src/js/commands/replay.js"

@@ -35,6 +35,8 @@ if (typeof J$ === 'undefined') {
     J$ = {};
 }
 
+window = {String:String, Array:Array, Error:Error, String:String, Number:Number, Date:Date, Boolean:Boolean, RegExp:RegExp};
+
 (function (sandbox) {
     var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
     var Globals = Constants.load('Globals');

@@ -356,6 +356,13 @@
 //        }
     }
 
+    // iid+2 is usually unallocated
+    // we are using iid+2 for the sub-getField operation of a method call
+    // see analysis.M
+    function printSpecialIidToLoc(ast0) {
+        printLineInfoAux(iid+2, ast0);
+    }
+
     function printIidToLoc(ast0) {
         printLineInfoAux(iid, ast0);
     }
@@ -398,6 +405,7 @@
 
     function wrapMethodCall(node, base, offset, isCtor) {
         printIidToLoc(node);
+        printSpecialIidToLoc(node);
         var ret = replaceInExpr(
             logMethodCallFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + (isCtor ? "true" : "false") + ")",
             getIid(),

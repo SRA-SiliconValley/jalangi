@@ -59,6 +59,9 @@
         };
 
         this.getField = function (iid, base, offset, val) {
+            if (base === window && offset === 'String') {
+                return val;
+            }
             return annotateValue(val, iid);
         };
 

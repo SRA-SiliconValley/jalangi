@@ -56,21 +56,12 @@ function runTest(script, instScriptFile, script_args) {
             checkResult(result);
             traceFile = result.traceFile;
             execSync.run("wc -l " + traceFile);
-            console.log("---Record")
-            console.log(result.stdout);
-            console.log(result.stderr);
             return jalangi.replay(traceFile);
         }).then(function (result) {
             checkResult(result);
-            console.log("---Replay")
-            console.log(result.stdout);
-            console.log(result.stderr);
             return jalangi.replay(traceFile, trackValuesAnalysis, testVal);
         }).then(function (result) {
             checkResult(result);
-            console.log("---A Replay")
-            console.log(result.stdout);
-            console.log(result.stderr);
             assert.equal(testVal, result.result);
         });
 }

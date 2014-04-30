@@ -353,6 +353,7 @@
             fs.writeFileSync(jsonFile, JSON.stringify(outputObj));
             traceWfh = undefined;
             smapFile = null;
+            storeInitialIID(smapOutputDir);
         }
     }
 
@@ -1577,7 +1578,6 @@
             saveCode(codeAndMData.code, instFileName, codeAndMData.metadata);
         }
         closeIIDMapFile();
-        storeInitialIID(smapOutputDir);
     }
 
     // START of Liang Gong's AST post-processor

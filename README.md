@@ -187,7 +187,7 @@ You can run origin of null and undefined tracker on a toy example by issuing the
 
 ***
 
-Jalangi provides a script for instrumenting a locally-stored web application, by instrumenting all discovered scripts on disk.  Here is how to instrument the annex app using this script.  First, run the `instrumentDir.js` script to instrument the app:
+Jalangi provides a script for instrumenting a locally-stored web application, by instrumenting all discovered scripts on disk.  Here is how to instrument the annex app using this script.  First, run the `instrument.js` script to instrument the app:
 
     node src/js/commands/instrument.js --outputDir /tmp tests/tizen/annex
 

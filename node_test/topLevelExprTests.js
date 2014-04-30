@@ -39,7 +39,7 @@ function collectTopLevel(instResult) {
 }
 
 function checkCode(code, expectedTopLevel) {
-    esnstrument.resetIIDCounters();
+    esnstrument.initializeIIDCounters();
     var instResult = esnstrument.instrumentCode(code, {wrapProgram: false, metadata: true });
     var topLevelResult = collectTopLevel(instResult.iidMetadata);
     assert.deepEqual(topLevelResult, expectedTopLevel);
@@ -61,12 +61,12 @@ describe('topLevelExprs', function () {
     it('should handle conditional expression', function() {
         // here, the condition, then, and else expressions are
         // all treated as top-level, which is fine
-        checkCode("function foo() { (flag ? a() : b()); }", [3,13,21]);
+        checkCode("function foo() { (flag ? a() : b()); }", [4,13,21]);
     });
     it('should handle if condition', function() {
         // here, the condition, then, and else expressions are
         // all treated as top-level, which is fine
-        checkCode("function foo() { if (flag) { return a(); } else { return b(); } }", [3,17,29]);
+        checkCode("function foo() { if (flag) { return a(); } else { return b(); } }", [4,17,29]);
     });
     it('should handle nested assigns and conditionl expression', function() {
         // here, the condition, then, and else expressions are

@@ -1647,6 +1647,9 @@
         sandbox.fileSuffix = FILESUFFIX1;
         sandbox.openIIDMapFile = openIIDMapFile;
         sandbox.closeIIDMapFile = closeIIDMapFile;
+        // we need to export this function so that unit tests using the APIs
+        // can reset the IID counters between tests
+        sandbox.initializeIIDCounters = initializeIIDCounters;
     }
 }((typeof J$ === 'undefined') ? (typeof exports === 'undefined' ? undefined : exports) : J$));
 

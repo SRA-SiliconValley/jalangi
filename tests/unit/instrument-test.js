@@ -116,7 +116,8 @@ function foo() {
     var x = "local";
     var e = eval;
     eval = e;
-    eval("console.log(x);")
+    for (var i=0; i<3; i++)
+        eval("if (x+1 >0) console.log(x);")
 }
 
 foo();

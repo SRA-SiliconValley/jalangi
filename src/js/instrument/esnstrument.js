@@ -246,12 +246,11 @@
     function initializeIIDCounters() {
         if (typeof J$ === 'undefined') J$ = {};
         if (!J$.initialIID) {
-            J$.initialIID = {initialIID:0};
+            J$.initialIID = {condCount:0, iid:1, opIid:2};
         }
-        var initialIID = J$.initialIID.initialIID;
-        condCount = initialIID + inc;
-        iid = initialIID + inc + 1;
-        opIid = initialIID + inc + 2;
+        condCount = J$.initialIID.condCount + inc;
+        iid = J$.initialIID.iid + inc;
+        opIid = J$.initialIID.opIid + inc;
     }
 
     // initial reset
@@ -265,7 +264,7 @@
                     var iidf = outputDir ? (require('path').join(outputDir, INITIAL_IID_FILE_NAME)) : process.cwd() + "/" + INITIAL_IID_FILE_NAME;
                     require(iidf);
                 } catch (e) {
-                    J$.initialIID = {initialIID:0};
+                    J$.initialIID = {condCount:0, iid:1, opIid:2};
                 }
             }
             initializeIIDCounters();
@@ -277,10 +276,7 @@
     function storeInitialIID(outputDir) {
         fs = require('fs');
         var iidf = outputDir ? (require('path').join(outputDir, INITIAL_IID_FILE_NAME)) : INITIAL_IID_FILE_NAME;
-        var maxIID = (condCount > iid) ? condCount : iid;
-        maxIID = (maxIID > opIid) ? maxIID : opIid;
-        maxIID = maxIID - maxIID % inc;
-        fs.writeFileSync(iidf, "(function(sandbox) { sandbox.initialIID = {initialIID:" + maxIID + "}; }(typeof " + astUtil.JALANGI_VAR + " === 'undefined'? " + astUtil.JALANGI_VAR + " = {}:" + astUtil.JALANGI_VAR + "));\n");
+        fs.writeFileSync(iidf, "(function(sandbox) { sandbox.initialIID = {condCount:" + condCount + ", iid:"+iid+", opIid:"+opIid+"}; }(typeof " + astUtil.JALANGI_VAR + " === 'undefined'? " + astUtil.JALANGI_VAR + " = {}:" + astUtil.JALANGI_VAR + "));\n");
     }
 
     function getIid() {

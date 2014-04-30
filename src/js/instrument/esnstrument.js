@@ -1650,6 +1650,7 @@
         // we need to export this function so that unit tests using the APIs
         // can reset the IID counters between tests
         sandbox.initializeIIDCounters = initializeIIDCounters;
+        sandbox.initialIIDFileName = INITIAL_IID_FILE_NAME;
     }
 }((typeof J$ === 'undefined') ? (typeof exports === 'undefined' ? undefined : exports) : J$));
 

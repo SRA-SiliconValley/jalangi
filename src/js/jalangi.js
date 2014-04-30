@@ -90,6 +90,11 @@ function instrument(inputFileName, options) {
         esnstrument.openIIDMapFile(temp.dir);
         iidMapFile = path.join(temp.dir, "jalangi_sourcemap.js");
     }
+    // blow away initial IID file if it exists
+    var initIIDFile = path.join(temp.dir, esnstrument.initialIIDFileName);
+    if (fs.existsSync(initIIDFile)) {
+        fs.unlinkSync(initIIDFile);
+    }
     var instCodeOptions = {
         wrapProgram: true,
         filename: inputFileName,

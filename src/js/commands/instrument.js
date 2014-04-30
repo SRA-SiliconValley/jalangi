@@ -186,6 +186,7 @@ function instrument(options, cb) {
             if (smemory) {
                 headerLibs = "<script>" + smemoryOption + "</script>" + headerLibs;
             }
+            headerLibs += "<script src=\"jalangi_initialIID.js\"></script>";
             headerLibs += "<script src=\"jalangi_sourcemap.js\"></script>";
 
             if (extraAppScripts.length > 0) {
@@ -302,6 +303,7 @@ function instrument(options, cb) {
     };
 
     var outputDir = options.outputDir;
+
     function initOutputDir(copyDir) {
         mkdirp.sync(copyDir);
         esnstrument.openIIDMapFile(copyDir);
@@ -309,6 +311,7 @@ function instrument(options, cb) {
         // TODO make this filename more robust against name collisions
         fs.writeFileSync(path.join(copyDir, "inputs.js"), "");
     }
+
     // are we instrumenting a directory?
     var instDir = options.inputFiles.length === 1 && fs.lstatSync(options.inputFiles[0]).isDirectory();
     var inputDir;
@@ -382,9 +385,9 @@ if (require.main === module) { // main script
     parser.addArgument(['--smemory'], { help:"Add support for shadow memory", action:'storeTrue' });
     parser.addArgument(['-c', '--copy_runtime'], { help:"Copy Jalangi runtime files into instrumented app in jalangi_rt sub-directory", action:'storeTrue'});
     parser.addArgument(['--extra_app_scripts'], { help:"list of extra application scripts to be injected and instrumented, separated by path.delimiter"});
-    parser.addArgument(['--no_html'], { help: "don't inject Jalangi runtime into HTML files", action: 'storeTrue'});
-    parser.addArgument(['--outputDir'], { help:"directory in which to place instrumented files", required: true });
-    parser.addArgument(['inputFiles'], { help:"either a list of JavaScript files to instrument, or a single directory under which all JavaScript and HTML files should be instrumented (modulo the --no_html and --exclude flags)", nargs: '+'});
+    parser.addArgument(['--no_html'], { help:"don't inject Jalangi runtime into HTML files", action:'storeTrue'});
+    parser.addArgument(['--outputDir'], { help:"directory in which to place instrumented files", required:true });
+    parser.addArgument(['inputFiles'], { help:"either a list of JavaScript files to instrument, or a single directory under which all JavaScript and HTML files should be instrumented (modulo the --no_html and --exclude flags)", nargs:'+'});
 
     var args = parser.parseArgs();
 

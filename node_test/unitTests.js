@@ -41,6 +41,7 @@ describe('unit tests', function () {
                     done();
                 },
                 function (err) {
+                    console.error(err.stack);
                     console.error(err.stdout);
                     console.error(err.stderr);
                     assert(false);

@@ -93,6 +93,15 @@ function instrument(inputFileName, options) {
     // blow away initial IID file if it exists
     var initIIDFile = path.join(temp.dir, esnstrument.initialIIDFileName);
     if (fs.existsSync(initIIDFile)) {
+        console.log("deleting existing IID file " + initIIDFile);
+        fs.unlinkSync(initIIDFile);
+    }
+    // temporary hack: also remove any initIIDFile in current working directory
+    // this is due to possible difference in working directory between record and replay
+    // TODO use a consistent working directory for record and replay
+    initIIDFile = path.join(process.cwd(), esnstrument.initialIIDFileName);
+    if (fs.existsSync(initIIDFile)) {
+        console.log("deleting existing IID file " + initIIDFile);
         fs.unlinkSync(initIIDFile);
     }
     var instCodeOptions = {

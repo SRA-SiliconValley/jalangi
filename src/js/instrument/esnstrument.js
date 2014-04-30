@@ -246,11 +246,11 @@
     function initializeIIDCounters() {
         if (typeof J$ === 'undefined') J$ = {};
         if (!J$.initialIID) {
-            J$.initialIID = {condCount:0, iid:1, opIid:2};
+            J$.initialIID = {condCount:inc+0, iid:inc+1, opIid:inc+2};
         }
-        condCount = J$.initialIID.condCount + inc;
-        iid = J$.initialIID.iid + inc;
-        opIid = J$.initialIID.opIid + inc;
+        condCount = J$.initialIID.condCount;
+        iid = J$.initialIID.iid;
+        opIid = J$.initialIID.opIid;
     }
 
     // initial reset
@@ -264,7 +264,7 @@
                     var iidf = outputDir ? (require('path').join(outputDir, INITIAL_IID_FILE_NAME)) : process.cwd() + "/" + INITIAL_IID_FILE_NAME;
                     require(iidf);
                 } catch (e) {
-                    J$.initialIID = {condCount:0, iid:1, opIid:2};
+                    J$.initialIID = {condCount:inc+0, iid:inc+1, opIid:inc+2};
                 }
             }
             initializeIIDCounters();

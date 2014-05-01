@@ -221,12 +221,11 @@ def testrr_app(filee, jalangi=util.DEFAULT_INSTALL):
 def app_instrument(filee,jalangi=util.DEFAULT_INSTALL):
     print "---- Instrumenting {} ----" .format(filee)
     util.run_node_script_std(jalangi.inst_dir_script(),
-                             '--jalangi_root', jalangi.get_home(),
                              '--direct_in_output',
                              '--selenium',
-                             '--relative',
                              '--copy_runtime',
-                             filee, ".", jalangi=jalangi)
+                             '--outputDir', '.',
+                             filee, jalangi=jalangi)
     return (".", "")
 
 def get_app_exercise_fn(app_dir):

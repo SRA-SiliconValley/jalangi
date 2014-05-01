@@ -83,8 +83,8 @@
     var logLastFunName = astUtil.JALANGI_VAR + "._";
 
     var instrumentCodeFunName = astUtil.JALANGI_VAR + ".instrumentCode";
-
-    var wrapEval = true;  // whether to wrap eval calls so that the code gets instrumented on the fly
+    
+    var instrEval = true; // whether to instrument code given to eval()
 
     var Syntax = {
         AssignmentExpression:'AssignmentExpression',
@@ -356,6 +356,13 @@
 //        }
     }
 
+    // iid+2 is usually unallocated
+    // we are using iid+2 for the sub-getField operation of a method call
+    // see analysis.M
+    function printSpecialIidToLoc(ast0) {
+        printLineInfoAux(iid+2, ast0);
+    }
+
     function printIidToLoc(ast0) {
         printLineInfoAux(iid, ast0);
     }
@@ -398,6 +405,7 @@
 
     function wrapMethodCall(node, base, offset, isCtor) {
         printIidToLoc(node);
+        printSpecialIidToLoc(node);
         var ret = replaceInExpr(
             logMethodCallFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + (isCtor ? "true" : "false") + ")",
             getIid(),
@@ -580,7 +588,7 @@
 
     function wrapEvalArg(ast) {
         printIidToLoc(ast);
-        var code = wrapEval ? instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false}," + RP +"2).code" :
+        var code = instrEval ? instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false}," + RP +"2).code" :
                               astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1)";
         var ret = replaceInExpr(
             code,
@@ -1572,7 +1580,6 @@
         var collectMetadata;
         var iidsFile = undefined;
 
-
         var argparse = require('argparse');
         var parser = new argparse.ArgumentParser({
             addHelp: true,
@@ -1580,6 +1587,7 @@
         });
         parser.addArgument(['--metadata'], { help: "Collect metadata", action: 'storeTrue'});
         parser.addArgument(['--maxIIDsFile'], { help: "File containing max IIDs", defaultValue: undefined });
+        parser.addArgument(['--instrEval'], { help: "Instrument eval() code on the fly (default: true)", defaultValue: true });
         parser.addArgument(['files'], {
             help: "files to instrument",
             nargs: argparse.Const.REMAINDER
@@ -1591,14 +1599,13 @@
             process.exit(1);
         }
 
-
         collectMetadata = args.metadata;
         if (args.maxIIDsFile !== undefined) {
             iidsFile = args.maxIIDsFile;
             loadMaxIIDs(iidsFile);
             i++;
-            wrapEval = false;
         }
+        instrEval = args.instrEval;
 
         for ( i=0 ; i < args.files.length; i++) {
             var filename = args.files[i];
@@ -1637,8 +1644,8 @@
 //            console.timeEnd("save")
         }
         closeIIDMapFile();
-        if (maxIIDsFile)
-            storeMaxIIDs(maxIIDsFile);
+        if (args.maxIIDsFile)
+            storeMaxIIDs(args.maxIIDsFile);
     }
 
     // START of Liang Gong's AST post-processor

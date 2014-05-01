@@ -21,7 +21,7 @@
  To perform analysis in browser without recording, set window.JALANGI_MODE to 'inbrowser' and J$.analysis to a suitable analysis file.
  In the inbrowser mode, one has access to the object J$.smemory, which denotes the shadow memory.
  smemory.getShadowObject(obj) returns the shadow object associated with obj if type of obj is "object" or "function".
- smemory.getShadowFrame(varName) returns the shadow frame that contains the variable named "varName".
+ smemory.getFrame(varName) returns the activation frame that contains the variable named "varName".
  To redefine all instrumentation functions, set JALANGI_MODE to 'symbolic' and J$.analysis to a suitable library containing redefinitions of W, R, etc.
 
  */
@@ -34,6 +34,8 @@
 if (typeof J$ === 'undefined') {
     J$ = {};
 }
+
+window = {String:String, Array:Array, Error:Error, String:String, Number:Number, Date:Date, Boolean:Boolean, RegExp:RegExp};
 
 (function (sandbox) {
     var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
@@ -529,7 +531,7 @@ if (typeof J$ === 'undefined') {
             // Method call (e.g., e.f())
             function M(iid, base, offset, isConstructor) {
                 return function () {
-                    var f = G(iid, base, offset);
+                    var f = G(iid+2, base, offset);
                     return invokeFun(iid, base, f, arguments, isConstructor);
                 };
             }
@@ -655,6 +657,7 @@ if (typeof J$ === 'undefined') {
                     if ((mode === MODE_REPLAY && scriptCount > 0) || isBrowserReplay) {
                         throw tmp;
                     } else {
+                        console.error(tmp);
                         console.error(tmp.stack);
                     }
                 }

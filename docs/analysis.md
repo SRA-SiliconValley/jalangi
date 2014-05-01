@@ -119,11 +119,11 @@ A direct analysis (aka inbrowser analysis) can be written using the following te
 An analysis writer can choose to implement some of the callback methods commented out in the template. See the file _src/js/analyses/objectalloc/ObjectAllocationTrackerIB.js_ for a sample analysis.  _smemory_ provides the following methods:
 
  * _getShadowObject (val)_:returns the shadow object associated with the concrete object _val_.  _val_ cannot be a string, number, boolean, undefined, or null
- * _getShadowFrame (varName)_: returns the shadow of the call frame to which the variable _varName_ belongs
- * _getCurrentShadowFrame()_: returns the shadow frame corresponding to the current call frame
- * _getParentShadowFrame(callFrame)_: returns the shadow of the call frame that is the static parent of the call frame _callFrame_
- * _getClosureShadowFrame(fun)_: returns the shadow of the closure of the function _fun_
- * _getShadowObjectOrFrameID (objectOrFrame)_: returns the unique id associated with the shadow object/frame _objectOrFrame_
+ * _getFrame (varName)_: returns the call frame to which the variable _varName_ belongs
+ * _getCurrentFrame()_: returns the current call frame
+ * _getParentFrame(callFrame)_: returns the call frame that is the static parent of the call frame _callFrame_
+ * _getClosureFrame(fun)_: returns the closure of the function _fun_
+ * _getShadowObjectID (obj)_: returns the unique id associated with the shadow object _obj_
  
 _iidToLocation(iid)_ returns the **(filename:linenumber:columnnumber)** associated with _iid_.  
 

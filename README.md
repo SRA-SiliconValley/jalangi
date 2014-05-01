@@ -189,9 +189,9 @@ You can run origin of null and undefined tracker on a toy example by issuing the
 
 Jalangi provides a script for instrumenting a locally-stored web application, by instrumenting all discovered scripts on disk.  Here is how to instrument the annex app using this script.  First, run the `instrumentDir.js` script to instrument the app:
 
-    node src/js/commands/instrumentDir.js tests/tizen/annex /tmp
+    node src/js/commands/instrument.js --outputDir /tmp tests/tizen/annex
 
-This creates an instrumented copy of annex in `/tmp/annex`.  To see other options for `instrumentDir.js`, run it with the `-h` option.
+This creates an instrumented copy of annex in `/tmp/annex`.  To see other options for `instrument.js`, run it with the `-h` option.
 
 Then, launch the Jalangi server and the HTML page by running
 
@@ -245,7 +245,7 @@ Now, you can run a dynamic analysis on the trace file by issuing the following c
 
 ***
 
-    node src/js/commands/instrumentDir.js tests/tizen/calculator /tmp
+    node src/js/commands/instrument.js --outputDir /tmp tests/tizen/calculator
 
     killall node
     python scripts/jalangi.py rrserver file:///tmp/calculator/index.html
@@ -255,7 +255,7 @@ Now, you can run a dynamic analysis on the trace file by issuing the following c
 
 ***
 
-    node src/js/commands/instrumentDir.js tests/tizen/go /tmp
+    node src/js/commands/instrument.js --outputDir /tmp tests/tizen/go
 
     killall node
     python scripts/jalangi.py rrserver file:///tmp/go/index.html
@@ -268,11 +268,11 @@ Now, you can run a dynamic analysis on the trace file by issuing the following c
 ***
 
 Jalangi allows to run an analysis, which does not use ConcolicValue, in a browser.
-Here is how to instrument the annex app with an inbrowser analysis.  First, run the `instrumentDir.js` script to instrument the app:
+Here is how to instrument the annex app with an inbrowser analysis.  First, run the `instrument.js` script to instrument the app:
 
-    node src/js/commands/instrumentDir.js --inbrowser --smemory --analysis analyses/logNaN/LogNaN.js tests/tizen/annex /tmp
+    node src/js/commands/instrument.js --inbrowser --smemory --analysis analyses/logNaN/LogNaN.js --outputDir /tmp tests/tizen/annex
 
-This creates an instrumented copy of annex in `/tmp/annex`.  To see other options for `instrumentDir.js`, run it with the `-h` option.
+This creates an instrumented copy of annex in `/tmp/annex`.  To see other options for `instrument.js`, run it with the `-h` option.
 
 Then, open the HTML page in a browser (tested on Chrome) by running
 
@@ -282,16 +282,16 @@ You can now play the game for sometime.  Try two moves and see the console outpu
 in-browser mode, one must not use ConcolicValue to wrap a program value.  However, one could use shadow execution to collect statistics.
 Shadow memory is supported in the "inbrowser" mode.  Shadow memory library can be accessed in an analysis via J$.Globals.smemory.
  smemory.getShadowObject(obj) returns the shadow object associated with obj if type of obj is "object" or "function".
- smemory.getShadowFrame(varName) returns the shadow frame that contains the variable named "varName".
+ smemory.getFrame(varName) returns the frame that contains the variable named "varName".
 
 
 The following shows how to run the object allocation tracker analysis on the annex game:
 
-    node src/js/commands/instrumentDir.js --inbrowser --smemory --analysis analyses/objectalloc/ObjectAllocationTrackerEngineIB.js tests/tizen/annex /tmp
+    node src/js/commands/instrument.js --inbrowser --smemory --analysis analyses/objectalloc/ObjectAllocationTrackerEngineIB.js --outputDir /tmp tests/tizen/annex
     open file:///tmp/annex/index.html
 
 The following shows how to run the likely type inference analysis on the annex game:
 
-    node src/js/commands/instrumentDir.js --inbrowser --smemory --analysis analyses/likelytype/LikelyTypeInferEngineIB.js tests/tizen/annex /tmp
+    node src/js/commands/instrument.js --inbrowser --smemory --analysis analyses/likelytype/LikelyTypeInferEngineIB.js --outputDir /tmp tests/tizen/annex
     open file:///tmp/annex/index.html
 

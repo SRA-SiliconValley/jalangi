@@ -70,7 +70,7 @@ JALANGI_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__),os.pardir)
 
 INSTRUMENTATION_SCRIPT = JALANGI_HOME + "/src/js/instrument/esnstrument.js"
 
-INST_DIR_SCRIPT = JALANGI_HOME + "/src/js/commands/instrumentDir.js"
+INST_DIR_SCRIPT = JALANGI_HOME + "/src/js/commands/instrument.js"
 
 REPLAY_SCRIPT = JALANGI_HOME + "/src/js/commands/replay.js"
 

@@ -17,58 +17,54 @@ Optional arguments:
                           File containing max IIDs
 
 
-## instrumentDir.js
+## instrument.js
 
-Utility to apply Jalangi instrumentation to all files in a directory
+Utility to apply Jalangi instrumentation to files or a folder
 
-	node src/js/commands/instrumentDir.js -h
-	usage: instrumentDir.js [-h] [-s] [-x EXCLUDE] [-i]
-                        [--jalangi_root JALANGI_ROOT] [--analysis ANALYSIS]
-                        [-d] [--selenium] [--in_memory_trace] [--inbrowser]
-                        [--smemory] [--relative] [-c] [--first_iid FIRST_IID]
-                        [--extra_app_scripts EXTRA_APP_SCRIPTS] [--no_html]
-                        inputDir outputDir
-
+	node src/js/commands/instrument.js -h
+    usage: instrument.js [-h] [-s] [-x EXCLUDE] [-i] [--analysis ANALYSIS] [-d]
+                     [--selenium] [--in_memory_trace] [--inbrowser]
+                     [--smemory] [-c] [--extra_app_scripts EXTRA_APP_SCRIPTS]
+                     [--no_html] --outputDir OUTPUTDIR
+                     inputFiles [inputFiles ...]
 
 Positional arguments:
 
-	inputDir              directory containing files to instrument
-  	outputDir             directory in which to create instrumented copy
+    inputFiles          either a list of JavaScript files to instrument, or a
+                        single directory under which all JavaScript and HTML
+                        files should be instrumented (modulo the --no_html
+                        and --exclude flags)
 
 Optional arguments:
 
-	-h, --help            Show this help message and exit.
-  	-s, --serialize       dump serialized ASTs along with code
-  	-x EXCLUDE, --exclude EXCLUDE
-                        do not instrument any scripts whose filename contains 
+    -h, --help            Show this help message and exit.
+    -s, --serialize       dump serialized ASTs along with code
+    -x EXCLUDE, --exclude EXCLUDE
+                        do not instrument any scripts whose filename contains
                         this substring
-  	-i, --instrumentInline
+    -i, --instrumentInline
                         instrument inline scripts
-  	--jalangi_root JALANGI_ROOT
-                        Jalangi root directory, if not working directory
-  	--analysis ANALYSIS   Analysis script for 'inbrowser'/'record' mode. 
+    --analysis ANALYSIS   Analysis script for 'inbrowser'/'record' mode.
                         Analysis must not use ConcolicValue
-  	-d, --direct_in_output
-                        Store instrumented app directly in output directory 
-                        (by default, creates a sub-directory of output 
+    -d, --direct_in_output
+                        Store instrumented app directly in output directory
+                        (by default, creates a sub-directory of output
                         directory)
-  	--selenium            Insert code so scripts can detect they are running 
+    --selenium            Insert code so scripts can detect they are running
                         under Selenium. Also keeps Jalangi trace in memory
-  	--in_memory_trace     Insert code to tell analysis to keep Jalangi trace in 
+    --in_memory_trace     Insert code to tell analysis to keep Jalangi trace in
                         memory instead of writing to WebSocket
-  	--inbrowser           Insert code to tell Jalangi to run in 'inbrowser' 
+    --inbrowser           Insert code to tell Jalangi to run in 'inbrowser'
                         analysis mode
-  	--smemory             Add support for shadow memory
-  	--relative            Use paths relative to working directory in injected 
-                        <script> tags
-  	-c, --copy_runtime    Copy Jalangi runtime files into instrumented app in 
+    --smemory             Add support for shadow memory
+    -c, --copy_runtime    Copy Jalangi runtime files into instrumented app in
                         jalangi_rt sub-directory
-  	--first_iid FIRST_IID
-                        initial IID to use during instrumentation
-  	--extra_app_scripts EXTRA_APP_SCRIPTS
-                        list of extra application scripts to be injected and 
+    --extra_app_scripts EXTRA_APP_SCRIPTS
+                        list of extra application scripts to be injected and
                         instrumented, separated by path.delimiter
-  	--no_html             don't inject Jalangi runtime into HTML files
+    --no_html             don't inject Jalangi runtime into HTML files
+    --outputDir OUTPUTDIR
+                        directory in which to place instrumented files
 
 ## direct.js
 
@@ -144,4 +140,3 @@ Positional arguments:
 Optional arguments:
   
 	-h, --help       Show this help message and exit.
-	

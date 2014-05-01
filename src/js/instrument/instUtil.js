@@ -66,29 +66,31 @@ function getHeaderCode(root) {
  * returns an HTML string of <script> tags, one of each header file, with the
  * absolute path of the header file
  */
-function getHeaderCodeAsScriptTags(root, relative, analysis) {
+function getHeaderCodeAsScriptTags(root, analysisFiles) {
     var ret = "";
-    if (analysis) {
-        // TODO do we still need this?  probably best to do this elsewhere
-        if (analysis.indexOf(path.sep) === 0) {
-            headerSources.push(analysis);
-        } else {
-            headerSources.push("src/js/" + analysis);
-        }
-    }
-    headerSources.forEach(function (src) {
-        if (root && analysis.indexOf(path.sep) !== 0) {
-            src = path.join(root, src);
-        }
-        if (relative) {
-            src = path.relative(process.cwd(), src);
-        } else {
+    var src;
+    if (analysisFiles) {
+        headerSources.forEach(function(src) {
+            if (root) {
+                src = path.join(root, src);
+            }
             src = path.resolve(src);
-        }
-        ret += "<script src=\"" + src + "\"></script>";
-    });
-    if (analysis) {
-        headerSources.pop();
+            ret += "<script src=\"" + src + "\"></script>";
+        });
+        analysisFiles.forEach(function(analysisFile) {
+            var src;
+            // TODO do we still need this?  probably best to do this elsewhere
+            if (analysisFile.indexOf(path.sep) === 0) {
+                src = analysisFile;
+            } else {
+                src = "src/js/" + analysisFile;
+            }
+            if (root && analysisFile.indexOf(path.sep) !== 0) {
+                src = path.join(root, src);
+            }
+            src = path.resolve(src);
+            ret += "<script src=\"" + src + "\"></script>";
+        });
     }
     return ret;
 }

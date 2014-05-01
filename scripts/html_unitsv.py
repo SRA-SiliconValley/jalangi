@@ -20,6 +20,7 @@ import testrunner
 tests = [
     "tests/html/unit/native_function_toString",
     "tests/html/unit/window_location",
+    "tests/html/unit/jq_reduced_1",
     "tests/html/jquery-2.0.2/jquery-2.0.2"
 ]
 

@@ -28,17 +28,25 @@ var ncp = require('ncp').ncp;
 var stream = require("stream");
 var util = require("util");
 var assert = require('assert');
+var temp = require('temp').track();
 var ArgumentParser = require('argparse').ArgumentParser;
+
 
 var EXTRA_SCRIPTS_DIR = "__jalangi_extra";
 var JALANGI_RUNTIME_DIR = "jalangiRuntime";
 
 /**
+ * computes the Jalangi root directory based on the directory of the script
+ */
+function getJalangiRoot() {
+    return path.join(__dirname, '../../..');
+}
+/**
  * Instruments all .js files found under dir, and re-writes index.html
  * so that inline scripts are instrumented.  Output is written as a full
  * copy of dir, within outputDir
  */
-function instDir(options, cb) {
+function instrument(options, cb) {
 
     if (!cb) {
         throw new Error("must pass in a callback");
@@ -53,12 +61,8 @@ function instDir(options, cb) {
 
     var dumpSerializedASTs = options.serialize;
 
-    // Jalangi root directory; current working directory by default
-    var jalangiRoot = options.jalangi_root;
+    var jalangiRoot = getJalangiRoot();
 
-    // should we use relative paths in <script> tags for runtime libs?
-
-    var relative = options.relative;
     // should we store instrumented app directly in the output directory?
     var directInOutput = options.direct_in_output;
 
@@ -71,8 +75,6 @@ function instDir(options, cb) {
     var smemory = options.smemory;
 
     var copyRuntime = options.copy_runtime;
-
-    var first_iid = options.first_iid ? parseInt(options.first_iid) : 0;
 
     // directory in which original app sits
     var appDir;
@@ -144,7 +146,7 @@ function instDir(options, cb) {
 
     var analysisCode = "window.JALANGI_MODE = \"inbrowser\"";
 
-    var smemoryOption = "window.USE_SMEMORY = true"
+    var smemoryOption = "window.USE_SMEMORY = true";
 
     HTMLRewriteStream.prototype._flush = function (cb) {
         function getContainedRuntimeScriptTags() {
@@ -172,7 +174,7 @@ function instDir(options, cb) {
             if (copyRuntime) {
                 headerLibs = getContainedRuntimeScriptTags();
             } else {
-                headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot, relative, analysisFiles);
+                headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot, analysisFiles);
             }
             if (selenium) {
                 headerLibs = "<script>" + seleniumCode + "</script>" + headerLibs;
@@ -303,9 +305,31 @@ function instDir(options, cb) {
         }
     };
 
-    // first, copy everything
-    var inputDir = options.inputDir;
     var outputDir = options.outputDir;
+    function initOutputDir(copyDir) {
+        mkdirp.sync(copyDir);
+        esnstrument.openIIDMapFile(copyDir);
+        // write an empty 'inputs.js' file here, to make replay happy
+        // TODO make this filename more robust against name collisions
+        fs.writeFileSync(path.join(copyDir, "inputs.js"), "");
+    }
+    // are we instrumenting a directory?
+    var instDir = options.inputFiles.length === 1 && fs.lstatSync(options.inputFiles[0]).isDirectory();
+    var inputDir;
+    if (instDir) {
+        inputDir = options.inputFiles[0];
+    } else {
+        // we're instrumenting a list of JavaScript files.  copy them
+        // all to a temporary directory and call that the inputDir
+        inputDir = temp.mkdirSync("instFiles");
+        options.inputFiles.forEach(function (inputFile) {
+            assert(!fs.lstatSync(inputFile).isDirectory(), "can't handle multiple directories and files");
+            fs.writeFileSync(path.join(inputDir, path.basename(inputFile)), fs.readFileSync(inputFile));
+        });
+
+        // also set directInOutput so we get instrumented files directly in output directory
+        directInOutput = true;
+    }
     appDir = path.resolve(process.cwd(), inputDir);
     if (directInOutput) {
         copyDir = outputDir;
@@ -313,11 +337,7 @@ function instDir(options, cb) {
         var basename = path.basename(inputDir);
         copyDir = path.join(outputDir, basename);
     }
-    mkdirp.sync(copyDir);
-    esnstrument.openIIDMapFile(copyDir, first_iid);
-    // write an empty 'inputs.js' file here, to make replay happy
-    // TODO make this filename more robust against name collisions
-    fs.writeFileSync(path.join(copyDir, "inputs.js"), "");
+    initOutputDir(copyDir);
     if (copyRuntime) {
         copyJalangiRuntime();
     }
@@ -349,33 +369,30 @@ function instDir(options, cb) {
         cb(err);
     };
     ncp(inputDir, copyDir, {transform:transform}, callback);
+
 }
 
-
 if (require.main === module) { // main script
-    var parser = new ArgumentParser({ addHelp:true, description:"Utility to apply Jalangi instrumentation to all files in a directory"});
+    var parser = new ArgumentParser({ addHelp:true, description:"Utility to apply Jalangi instrumentation to files or a folder."});
     parser.addArgument(['-s', '--serialize'], { help:"dump serialized ASTs along with code", action:'storeTrue' });
     parser.addArgument(['-x', '--exclude'], { help:"do not instrument any scripts whose filename contains this substring" });
     // TODO add back this option once we've fixed the relevant HTML parsing code
     parser.addArgument(['-i', '--instrumentInline'], { help:"instrument inline scripts", action:'storeTrue'});
-    parser.addArgument(['--jalangi_root'], { help:"Jalangi root directory, if not working directory" });
-    parser.addArgument(['--analysis'], { help:"Analysis scripts for 'inbrowser'/'record' mode, separated by path.delimiter. Analysis must not use ConcolicValue" });
+    parser.addArgument(['--analysis'], { help:"Analysis script(s) for 'inbrowser'/'record' mode, separated by path.delimiter. Analysis must not use ConcolicValue" });
     parser.addArgument(['-d', '--direct_in_output'], { help:"Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' });
     parser.addArgument(['--selenium'], { help:"Insert code so scripts can detect they are running under Selenium.  Also keeps Jalangi trace in memory", action:'storeTrue' });
     parser.addArgument(['--in_memory_trace'], { help:"Insert code to tell analysis to keep Jalangi trace in memory instead of writing to WebSocket", action:'storeTrue' });
     parser.addArgument(['--inbrowser'], { help:"Insert code to tell Jalangi to run in 'inbrowser' analysis mode", action:'storeTrue' });
     parser.addArgument(['--smemory'], { help:"Add support for shadow memory", action:'storeTrue' });
-    parser.addArgument(['--relative'], { help:"Use paths relative to working directory in injected <script> tags", action:'storeTrue' });
     parser.addArgument(['-c', '--copy_runtime'], { help:"Copy Jalangi runtime files into instrumented app in jalangi_rt sub-directory", action:'storeTrue'});
-    parser.addArgument(['--first_iid'], { help:"initial IID to use during instrumentation"});
     parser.addArgument(['--extra_app_scripts'], { help:"list of extra application scripts to be injected and instrumented, separated by path.delimiter"});
     parser.addArgument(['--no_html'], { help: "don't inject Jalangi runtime into HTML files", action: 'storeTrue'});
-    parser.addArgument(['inputDir'], { help:"directory containing files to instrument"});
-    parser.addArgument(['outputDir'], { help:"directory in which to create instrumented copy"});
+    parser.addArgument(['--outputDir'], { help:"directory in which to place instrumented files", required: true });
+    parser.addArgument(['inputFiles'], { help:"either a list of JavaScript files to instrument, or a single directory under which all JavaScript and HTML files should be instrumented (modulo the --no_html and --exclude flags)", nargs: '+'});
 
     var args = parser.parseArgs();
 
-    instDir(args, function (err) {
+    instrument(args, function (err) {
         if (err) {
             console.error(err);
         }
@@ -383,7 +400,7 @@ if (require.main === module) { // main script
     });
 
 } else {
-    exports.instDir = instDir;
+    exports.instrument = instrument;
     exports.EXTRA_SCRIPTS_DIR = EXTRA_SCRIPTS_DIR;
     exports.JALANGI_RUNTIME_DIR = JALANGI_RUNTIME_DIR;
 }

@@ -186,7 +186,6 @@ function instrument(options, cb) {
             if (smemory) {
                 headerLibs = "<script>" + smemoryOption + "</script>" + headerLibs;
             }
-            headerLibs += "<script src=\"jalangi_initialIID.js\"></script>";
             headerLibs += "<script src=\"jalangi_sourcemap.js\"></script>";
 
             if (extraAppScripts.length > 0) {

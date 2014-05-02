@@ -28,7 +28,7 @@
     var FILESUFFIX1 = "_jalangi_";
     var COVERAGE_FILE_NAME = "jalangi_coverage";
     var SMAP_FILE_NAME = "jalangi_sourcemap.js";
-    var INITIAL_IID_FILE_NAME = "jalangi_initialIID.js";
+    var INITIAL_IID_FILE_NAME = "jalangi_initialIID.json";
     var RP = astUtil.JALANGI_VAR + "_";
 
 //    var N_LOG_LOAD = 0,
@@ -174,20 +174,173 @@
     }
 
 
-    function saveCode(code, filename, metadata) {
+    function saveCode(code, metadata, isAppend) {
         var fs = require('fs');
         var path = require('path');
-        var n_code = code + "\n" + noInstr + "\n";
-        fs.writeFileSync(filename, n_code, "utf8");
-        if (metadata) {
-            fs.writeFileSync(filename + ".ast.json", JSON.stringify(metadata, undefined, 2), "utf8");
+        var n_code = code + "\n";
+        if (isAppend) {
+            fs.appendFileSync(instCodeFileName, n_code, "utf8");
+        } else {
+            fs.writeFileSync(instCodeFileName, n_code, "utf8");
+
         }
-        fs.writeFileSync(COVERAGE_FILE_NAME, JSON.stringify({"covered":0, "branches":condCount / inc * 2, "coverage":[]}), "utf8");
-    };
+        if (metadata) {
+            fs.writeFileSync(instCodeFileName + ".ast.json", JSON.stringify(metadata, undefined, 2), "utf8");
+        }
+        fs.writeFileSync(COVERAGE_FILE_NAME, JSON.stringify({"covered":0, "branches":condCount / IID_INC_STEP * 2, "coverage":[]}), "utf8");
+    }
 
 
     // name of the file containing the instrumented code
     var instCodeFileName;
+
+    var IID_INC_STEP = 8;
+    // current static identifier for each conditional expression
+    var condCount;
+    var iid;
+    var opIid;
+    var hasInitializedIIDs = false;
+
+    function initializeIIDCounters(forEval) {
+        var adj = forEval?IID_INC_STEP/2:0;
+        condCount = IID_INC_STEP+adj+0;
+        iid=IID_INC_STEP+adj+1;
+        opIid =IID_INC_STEP+adj+2;
+        hasInitializedIIDs = true;
+    }
+
+    function loadInitialIID(outputDir, initIIDs) {
+        var path = require('path');
+        var fs = require('fs');
+        var iidf = path.join(outputDir?outputDir:process.cwd(), INITIAL_IID_FILE_NAME);
+
+        if (initIIDs) {
+            initializeIIDCounters(false);
+        } else {
+            try {
+                var iids = JSON.parse(fs.readFileSync(iidf,"utf8"));
+                condCount = iids.condCount;
+                iid = iids.iid;
+                opIid = iids.opIid;
+                hasInitializedIIDs = true;
+            } catch(e) {
+                initializeIIDCounters(false);
+            }
+        }
+    }
+
+
+    function storeInitialIID(outputDir) {
+        var path = require('path');
+        var fs = require('fs');
+        var iidf = path.join(outputDir?outputDir:process.cwd(), INITIAL_IID_FILE_NAME);
+        fs.writeFileSync(iidf, JSON.stringify({condCount:condCount, iid:iid, opIid:opIid}));
+    }
+
+    function getIid() {
+        var tmpIid = iid;
+        iid = iid + IID_INC_STEP;
+        return createLiteralAst(tmpIid);
+    }
+
+    function getPrevIidNoInc() {
+        return createLiteralAst(iid - IID_INC_STEP);
+    }
+
+    function getCondIid() {
+        var tmpIid = condCount;
+        condCount = condCount + IID_INC_STEP;
+        return createLiteralAst(tmpIid);
+    }
+
+    function getOpIid() {
+        var tmpIid = opIid;
+        opIid = opIid + IID_INC_STEP;
+        return createLiteralAst(tmpIid);
+    }
+
+    // TODO reset this state in openIIDMapFile or its equivalent?
+    var curFileName = null;
+    var orig2Inst = {};
+    var iidSourceInfo = {};
+
+    function writeLineToIIDMap(fs, traceWfh, fh, str) {
+        if (fh) {
+            fs.writeSync(fh, str);
+        }
+        fs.writeSync(traceWfh, str);
+    }
+
+    /**
+     * if not yet open, open the IID map file and write the header.
+     * @param {string} outputDir an optional output directory for the sourcemap file
+     */
+
+    function writeIIDMapFile(outputDir, initIIDs, isAppend) {
+        var traceWfh, fs = require('fs'), path = require('path');
+        var smapFile = path.join(outputDir, SMAP_FILE_NAME);
+        if (initIIDs) {
+            traceWfh = fs.openSync(smapFile, 'w');
+        } else {
+            traceWfh = fs.openSync(smapFile, 'a');
+        }
+
+        var fh = null;
+        if (isAppend) {
+            fh = fs.openSync(instCodeFileName, 'w');
+        }
+
+        writeLineToIIDMap(fs, traceWfh, fh, "(function (sandbox) {\n if (!sandbox.iids) {sandbox.iids = []; sandbox.orig2Inst = {};}\n");
+        writeLineToIIDMap(fs, traceWfh, fh, "var iids = sandbox.iids; var orig2Inst = sandbox.orig2Inst;\n");
+        writeLineToIIDMap(fs, traceWfh, fh, "var fn = \""+curFileName+"\";\n");
+        // write all the data
+        Object.keys(iidSourceInfo).forEach(function (iid) {
+            var sourceInfo = iidSourceInfo[iid];
+            writeLineToIIDMap(fs, traceWfh, fh, "iids[" + iid + "] = [fn," + sourceInfo[1] + "," + sourceInfo[2] + "];\n");
+        });
+        Object.keys(orig2Inst).forEach(function (filename) {
+            writeLineToIIDMap(fs, traceWfh, fh, "orig2Inst[\"" + filename + "\"] = \"" + orig2Inst[filename] + "\";\n");
+        });
+        writeLineToIIDMap(fs, traceWfh, fh, "}(typeof " + astUtil.JALANGI_VAR + " === 'undefined'? " + astUtil.JALANGI_VAR + " = {}:" + astUtil.JALANGI_VAR + "));\n");
+        fs.closeSync(traceWfh);
+        if (isAppend) {
+            fs.closeSync(fh);
+        }
+        // also write output as JSON, to make consumption easier
+        var jsonFile = smapFile.replace('.js', '.json');
+        var outputObj = [iidSourceInfo, orig2Inst];
+        fs.writeFileSync(jsonFile, JSON.stringify(outputObj));
+    }
+
+
+    function printLineInfoAux(i, ast) {
+        if (ast && ast.loc) {
+            iidSourceInfo[i] = [curFileName, ast.loc.start.line, ast.loc.start.column + 1];
+            //writeLineToIIDMap('iids[' + i + '] = [filename,' + (ast.loc.start.line) + "," + (ast.loc.start.column + 1) + "];\n");
+        }
+//        else {
+//            console.log(i+":undefined:undefined");
+//        }
+    }
+
+    // iid+2 is usually unallocated
+    // we are using iid+2 for the sub-getField operation of a method call
+    // see analysis.M
+    function printSpecialIidToLoc(ast0) {
+        printLineInfoAux(iid + 2, ast0);
+    }
+
+    function printIidToLoc(ast0) {
+        printLineInfoAux(iid, ast0);
+    }
+
+    function printOpIidToLoc(ast0) {
+        printLineInfoAux(opIid, ast0);
+    }
+
+    function printCondIidToLoc(ast0) {
+        printLineInfoAux(condCount, ast0);
+    }
 
 // J$_i in expression context will replace it by an AST
 // {J$_i} will replace the body of the block statement with an array of statements passed as argument
@@ -234,157 +387,6 @@
             newNode.loc = oldNode.loc;
         if (oldNode.raw)
             newNode.raw = oldNode.loc;
-    }
-
-    var inc = 4;
-    // current static identifier for each conditional expression
-    var condCount;
-    var iid;
-    var opIid;
-    var hasInitializedIIDs = false;
-
-    function initializeIIDCounters() {
-        if (typeof J$ === 'undefined') J$ = {};
-        if (!J$.initialIID) {
-            J$.initialIID = {condCount:inc+0, iid:inc+1, opIid:inc+2};
-        }
-        condCount = J$.initialIID.condCount;
-        iid = J$.initialIID.iid;
-        opIid = J$.initialIID.opIid;
-    }
-
-    // initial reset
-
-
-    function loadInitialIID(outputDir) {
-        if (!hasInitializedIIDs) {
-            if (typeof J$ === 'undefined') J$ = {};
-            if (!J$.initialIID) {
-                try {
-                    var iidf = outputDir ? (require('path').join(outputDir, INITIAL_IID_FILE_NAME)) : process.cwd() + "/" + INITIAL_IID_FILE_NAME;
-                    require(iidf);
-                } catch (e) {
-                    J$.initialIID = {condCount:inc+0, iid:inc+1, opIid:inc+2};
-                }
-            }
-            initializeIIDCounters();
-            hasInitializedIIDs = true;
-        }
-    }
-
-
-    function storeInitialIID(outputDir) {
-        fs = require('fs');
-        var iidf = outputDir ? (require('path').join(outputDir, INITIAL_IID_FILE_NAME)) : INITIAL_IID_FILE_NAME;
-        fs.writeFileSync(iidf, "(function(sandbox) { sandbox.initialIID = {condCount:" + condCount + ", iid:"+iid+", opIid:"+opIid+"}; }(typeof " + astUtil.JALANGI_VAR + " === 'undefined'? " + astUtil.JALANGI_VAR + " = {}:" + astUtil.JALANGI_VAR + "));\n");
-    }
-
-    function getIid() {
-        var tmpIid = iid;
-        iid = iid + inc;
-        return createLiteralAst(tmpIid);
-    }
-
-    function getPrevIidNoInc() {
-        return createLiteralAst(iid - inc);
-    }
-
-    function getCondIid() {
-        var tmpIid = condCount;
-        condCount = condCount + inc;
-        return createLiteralAst(tmpIid);
-    }
-
-    function getOpIid() {
-        var tmpIid = opIid;
-        opIid = opIid + inc;
-        return createLiteralAst(tmpIid);
-    }
-
-    var traceWfh;
-    var fs;
-    // TODO reset this state in openIIDMapFile or its equivalent?
-    var curFileName = null;
-    var orig2Inst = {};
-    var iidSourceInfo = {};
-
-    function writeLineToIIDMap(str) {
-        if (traceWfh) {
-            fs.writeSync(traceWfh, str);
-        }
-    }
-
-    /** @type {string} */
-    var smapFile = null;
-    var smapOutputDir;
-
-    /**
-     * if not yet open, open the IID map file and write the header.
-     * @param {string} outputDir an optional output directory for the sourcemap file
-     */
-    function openIIDMapFile(outputDir) {
-        smapOutputDir = outputDir;
-        if (traceWfh === undefined) {
-            fs = require('fs');
-            smapFile = require('path').join(outputDir, SMAP_FILE_NAME);
-            traceWfh = fs.openSync(smapFile, 'w');
-            writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var orig2Inst = sandbox.orig2Inst = {}; var filename;\n");
-        }
-    }
-
-    /**
-     * if open, write footer and close IID map file
-     */
-    function closeIIDMapFile() {
-        if (traceWfh) {
-            // write all the data
-            Object.keys(iidSourceInfo).forEach(function (iid) {
-                var sourceInfo = iidSourceInfo[iid];
-                writeLineToIIDMap("iids[" + iid + "] = [\"" + sourceInfo[0] + "\"," + sourceInfo[1] + "," + sourceInfo[2] + "];\n");
-            });
-            Object.keys(orig2Inst).forEach(function (filename) {
-                writeLineToIIDMap("orig2Inst[\"" + filename + "\"] = \"" + orig2Inst[filename] + "\";\n");
-            });
-            writeLineToIIDMap("}(typeof " + astUtil.JALANGI_VAR + " === 'undefined'? " + astUtil.JALANGI_VAR + " = {}:" + astUtil.JALANGI_VAR + "));\n");
-            fs.closeSync(traceWfh);
-            // also write output as JSON, to make consumption easier
-            var jsonFile = smapFile.replace('.js', '.json');
-            var outputObj = [iidSourceInfo, orig2Inst];
-            fs.writeFileSync(jsonFile, JSON.stringify(outputObj));
-            traceWfh = undefined;
-            smapFile = null;
-            storeInitialIID(smapOutputDir);
-        }
-    }
-
-
-    function printLineInfoAux(i, ast) {
-        if (ast && ast.loc) {
-            iidSourceInfo[i] = [curFileName, ast.loc.start.line, ast.loc.start.column + 1];
-            //writeLineToIIDMap('iids[' + i + '] = [filename,' + (ast.loc.start.line) + "," + (ast.loc.start.column + 1) + "];\n");
-        }
-//        else {
-//            console.log(i+":undefined:undefined");
-//        }
-    }
-
-    // iid+2 is usually unallocated
-    // we are using iid+2 for the sub-getField operation of a method call
-    // see analysis.M
-    function printSpecialIidToLoc(ast0) {
-        printLineInfoAux(iid + 2, ast0);
-    }
-
-    function printIidToLoc(ast0) {
-        printLineInfoAux(iid, ast0);
-    }
-
-    function printOpIidToLoc(ast0) {
-        printLineInfoAux(opIid, ast0);
-    }
-
-    function printCondIidToLoc(ast0) {
-        printLineInfoAux(condCount, ast0);
     }
 
     function wrapPutField(node, base, offset, rvalue) {
@@ -1444,6 +1446,66 @@
     }
 
 
+    // START of Liang Gong's AST post-processor
+    function hoistFunctionDeclaration(ast, hoisteredFunctions) {
+        var key, child, startIndex = 0;
+        if (ast.body) {
+            var newBody = [];
+            if (ast.body.length > 0) { // do not hoister function declaration before J$.Fe or J$.Se
+                if (ast.body[0].type === 'ExpressionStatement') {
+                    if (ast.body[0].expression.type === 'CallExpression') {
+                        if (ast.body[0].expression.callee.object &&
+                            ast.body[0].expression.callee.object.name === 'J$'
+                            && ast.body[0].expression.callee.property
+                            &&
+                            (ast.body[0].expression.callee.property.name === 'Se' || ast.body[0].
+                                expression.callee.property.name === 'Fe')) {
+
+                            newBody.push(ast.body[0]);
+                            startIndex = 1;
+                        }
+                    }
+                }
+            }
+            for (var i = startIndex; i < ast.body.length; i++) {
+
+                if (ast.body[i].type === 'FunctionDeclaration') {
+                    newBody.push(ast.body[i]);
+                    if (newBody.length !== i + 1) {
+                        hoisteredFunctions.push(ast.body[i].id.name);
+                    }
+                }
+            }
+            for (var i = startIndex; i < ast.body.length; i++) {
+                if (ast.body[i].type !== 'FunctionDeclaration') {
+                    newBody.push(ast.body[i]);
+                }
+            }
+            while (ast.body.length > 0) {
+                ast.body.pop();
+            }
+            for (var i = 0; i < newBody.length; i++) {
+                ast.body.push(newBody[i]);
+            }
+        } else {
+            //console.log(typeof ast.body);
+        }
+        for (key in ast) {
+            if (ast.hasOwnProperty(key)) {
+                child = ast[key];
+                if (typeof child === 'object' && child !== null && key !==
+                    "scope") {
+                    hoistFunctionDeclaration(child, hoisteredFunctions);
+                }
+
+            }
+        }
+
+        return ast;
+    }
+
+    // END of Liang Gong's AST post-processor
+
     function transformString(code, visitorsPost, visitorsPre) {
 //        console.time("parse")
 //        var newAst = esprima.parse(code, {loc:true, range:true});
@@ -1507,27 +1569,17 @@
      */
     function instrumentCode(code, options, iid) {
         var tryCatchAtTop = options.wrapProgram,
-            filename = options.filename,
-            instFileName = options.instFileName,
             metadata = options.metadata;
 
-        if (filename) {
-            // this works under the assumption that the app root directory,
-            // the directory in which the sourcemap file is written, and
-            // the current working directory are all the same during replay
-            // TODO add parameters to allow these paths to be distinct
-            //writeLineToIIDMap("filename = \"" + filename + "\";\n");
-            curFileName = filename;
-            instCodeFileName = instFileName ? instFileName : makeInstCodeFileName(filename);
-            orig2Inst[curFileName] = instCodeFileName;
-            //writeLineToIIDMap("orig2Inst[filename] = \"" + instCodeFileName + "\";\n");
-        }
         if (typeof  code === "string") {
             if (iid && sandbox.analysis && sandbox.analysis.instrumentCode) {
                 code = sandbox.analysis.instrumentCode(iid, code);
             }
             if (code.indexOf(noInstr) < 0) {
-                loadInitialIID(smapOutputDir);
+                if (!hasInitializedIIDs) {
+                    // this is a call in eval
+                    initializeIIDCounters(true);
+                }
                 wrapProgramNode = tryCatchAtTop;
                 topLevelExprs = [];
                 var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
@@ -1550,109 +1602,53 @@
         }
     }
 
-    function instrumentFiles() {
+    function instrumentFile() {
         var argparse = require('argparse');
         var parser = new argparse.ArgumentParser({
             addHelp:true,
             description:"Command-line utility to perform instrumentation"
         });
         parser.addArgument(['--metadata'], { help:"Collect metadata", action:'storeTrue'});
-        parser.addArgument(['files'], {
-            help:"files to instrument",
-            nargs:argparse.Const.REMAINDER
+        parser.addArgument(['--initIID'], { help:"Initialize IIDs to 0", action:'storeTrue'});
+        parser.addArgument(['--inlineIID'], { help:"Inline IIDs in the instrumented file", action:'storeTrue'});
+        parser.addArgument(['--dirIIDFile'], { help: "Directory containing "+SMAP_FILE_NAME+" and "+INITIAL_IID_FILE_NAME, defaultValue: process.cwd() });
+        parser.addArgument(['--out'], { help: "Instrumented file name (with path).  The default is to append _jalangi_ to the original JS file name", defaultValue: undefined });
+        parser.addArgument(['file'], {
+            help:"file to instrument",
+            nargs:1
         });
         var args = parser.parseArgs();
 
-        if (args.files.length === 0) {
-            console.error("must provide files to instrument");
+        if (args.file.length === 0) {
+            console.error("must provide file to instrument");
             process.exit(1);
         }
         var collectMetadata = args.metadata;
 
-        openIIDMapFile(process.cwd());
-        for (var i = 0; i < args.files.length; i++) {
-            var filename = args.files[i];
-            filename = sanitizePath(require('path').resolve(process.cwd(), filename));
-            var instFileName = makeInstCodeFileName(filename);
-            var codeAndMData = instrumentCode(getCode(filename), {wrapProgram:true, filename:filename, instFileNAme:instFileName, metadata:collectMetadata});
-            saveCode(codeAndMData.code, instFileName, codeAndMData.metadata);
-        }
-        closeIIDMapFile();
+        loadInitialIID(args.dirIIDFile, args.initIID);
+
+        var fname = args.file[0];
+        curFileName = sanitizePath(require('path').resolve(process.cwd(), fname));
+        instCodeFileName = args.out?args.out:makeInstCodeFileName(curFileName);
+        orig2Inst[curFileName] = instCodeFileName;
+
+        var codeAndMData = instrumentCode(getCode(curFileName), {wrapProgram:true, metadata:collectMetadata});
+
+        storeInitialIID(args.dirIIDFile);
+        writeIIDMapFile(args.dirIIDFile, args.initIID, args.inlineIID);
+        saveCode(codeAndMData.code, codeAndMData.metadata, args.inlineIID);
     }
 
-    // START of Liang Gong's AST post-processor
-    function hoistFunctionDeclaration(ast, hoisteredFunctions) {
-        var key, child, startIndex = 0;
-        if (ast.body) {
-            var newBody = [];
-            if (ast.body.length > 0) { // do not hoister function declaration before J$.Fe or J$.Se
-                if (ast.body[0].type === 'ExpressionStatement') {
-                    if (ast.body[0].expression.type === 'CallExpression') {
-                        if (ast.body[0].expression.callee.object &&
-                            ast.body[0].expression.callee.object.name === 'J$'
-                            && ast.body[0].expression.callee.property
-                            &&
-                            (ast.body[0].expression.callee.property.name === 'Se' || ast.body[0].
-                                expression.callee.property.name === 'Fe')) {
 
-                            newBody.push(ast.body[0]);
-                            startIndex = 1;
-                        }
-                    }
-                }
-            }
-            for (var i = startIndex; i < ast.body.length; i++) {
 
-                if (ast.body[i].type === 'FunctionDeclaration') {
-                    newBody.push(ast.body[i]);
-                    if (newBody.length !== i + 1) {
-                        hoisteredFunctions.push(ast.body[i].id.name);
-                    }
-                }
-            }
-            for (var i = startIndex; i < ast.body.length; i++) {
-                if (ast.body[i].type !== 'FunctionDeclaration') {
-                    newBody.push(ast.body[i]);
-                }
-            }
-            while (ast.body.length > 0) {
-                ast.body.pop();
-            }
-            for (var i = 0; i < newBody.length; i++) {
-                ast.body.push(newBody[i]);
-            }
-        } else {
-            //console.log(typeof ast.body);
-        }
-        for (key in ast) {
-            if (ast.hasOwnProperty(key)) {
-                child = ast[key];
-                if (typeof child === 'object' && child !== null && key !==
-                    "scope") {
-                    hoistFunctionDeclaration(child, hoisteredFunctions);
-                }
 
-            }
-        }
-
-        return ast;
-    }
-
-    // END of Liang Gong's AST post-processor
 
     if (typeof window === 'undefined' && (typeof require !== "undefined") && require.main === module) {
-        instrumentFiles();
+        instrumentFile();
     } else {
         sandbox.instrumentCode = instrumentCode;
-        sandbox.fileSuffix = FILESUFFIX1;
-        sandbox.openIIDMapFile = openIIDMapFile;
-        sandbox.closeIIDMapFile = closeIIDMapFile;
-        // we need to export this function so that unit tests using the APIs
-        // can reset the IID counters between tests
-        sandbox.initializeIIDCounters = initializeIIDCounters;
-        sandbox.initialIIDFileName = INITIAL_IID_FILE_NAME;
     }
-}((typeof J$ === 'undefined') ? (typeof exports === 'undefined' ? undefined : exports) : J$));
+}((typeof J$ === 'undefined') ? J$ = {} : J$));
 
 
 

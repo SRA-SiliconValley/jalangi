@@ -174,10 +174,10 @@
     }
 
 
-    function saveCode(code, metadata, isAppend) {
+    function saveCode(code, metadata, isAppend, noInstrEval) {
         var fs = require('fs');
         var path = require('path');
-        var n_code = code + "\n";
+        var n_code = astUtil.JALANGI_VAR + ".noInstrEval = "+noInstrEval+";\n"+code + "\n";
         if (isAppend) {
             fs.appendFileSync(instCodeFileName, n_code, "utf8");
         } else {
@@ -202,11 +202,13 @@
     var hasInitializedIIDs = false;
 
     function initializeIIDCounters(forEval) {
-        var adj = forEval?IID_INC_STEP/2:0;
-        condCount = IID_INC_STEP+adj+0;
-        iid=IID_INC_STEP+adj+1;
-        opIid =IID_INC_STEP+adj+2;
-        hasInitializedIIDs = true;
+        if (!hasInitializedIIDs) {
+            var adj = forEval ? IID_INC_STEP / 2 : 0;
+            condCount = IID_INC_STEP + adj + 0;
+            iid = IID_INC_STEP + adj + 1;
+            opIid = IID_INC_STEP + adj + 2;
+            hasInitializedIIDs = true;
+        }
     }
 
     function loadInitialIID(outputDir, initIIDs) {
@@ -603,7 +605,7 @@
     function wrapEvalArg(ast) {
         printIidToLoc(ast);
         var ret = replaceInExpr(
-            instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false}," + RP + "2).code",
+            instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false, isEval: true}," + RP + "2).code",
             ast,
             getIid()
         );
@@ -1527,7 +1529,7 @@
     var noInstr = "// JALANGI DO NOT INSTRUMENT";
 
     function makeInstCodeFileName(name) {
-        return name.replace(".js", FILESUFFIX1 + ".js")
+        return name.replace(/.js$/, FILESUFFIX1 + ".js");
     }
 
     function getMetadata(newAst) {
@@ -1569,17 +1571,16 @@
      */
     function instrumentCode(code, options, iid) {
         var tryCatchAtTop = options.wrapProgram,
+            isEval = options.isEval,
             metadata = options.metadata;
 
         if (typeof  code === "string") {
             if (iid && sandbox.analysis && sandbox.analysis.instrumentCode) {
                 code = sandbox.analysis.instrumentCode(iid, code);
             }
-            if (code.indexOf(noInstr) < 0) {
-                if (!hasInitializedIIDs) {
+            if (code.indexOf(noInstr) < 0 && !(isEval && sandbox.noInstrEval)) {
                     // this is a call in eval
-                    initializeIIDCounters(true);
-                }
+                initializeIIDCounters(isEval);
                 wrapProgramNode = tryCatchAtTop;
                 topLevelExprs = [];
                 var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
@@ -1610,6 +1611,7 @@
         });
         parser.addArgument(['--metadata'], { help:"Collect metadata", action:'storeTrue'});
         parser.addArgument(['--initIID'], { help:"Initialize IIDs to 0", action:'storeTrue'});
+        parser.addArgument(['--noInstrEval'], { help:"Do not instrument strings passed to evals", action:'storeTrue'});
         parser.addArgument(['--inlineIID'], { help:"Inline IIDs in the instrumented file", action:'storeTrue'});
         parser.addArgument(['--dirIIDFile'], { help: "Directory containing "+SMAP_FILE_NAME+" and "+INITIAL_IID_FILE_NAME, defaultValue: process.cwd() });
         parser.addArgument(['--out'], { help: "Instrumented file name (with path).  The default is to append _jalangi_ to the original JS file name", defaultValue: undefined });
@@ -1632,11 +1634,11 @@
         instCodeFileName = args.out?args.out:makeInstCodeFileName(curFileName);
         orig2Inst[curFileName] = instCodeFileName;
 
-        var codeAndMData = instrumentCode(getCode(curFileName), {wrapProgram:true, metadata:collectMetadata});
+        var codeAndMData = instrumentCode(getCode(curFileName), {wrapProgram:true, isEval:false, metadata:collectMetadata});
 
         storeInitialIID(args.dirIIDFile);
         writeIIDMapFile(args.dirIIDFile, args.initIID, args.inlineIID);
-        saveCode(codeAndMData.code, codeAndMData.metadata, args.inlineIID);
+        saveCode(codeAndMData.code, codeAndMData.metadata, args.inlineIID, args.noInstrEval);
     }
 
 

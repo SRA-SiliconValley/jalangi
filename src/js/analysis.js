@@ -333,7 +333,7 @@ window = {String:String, Array:Array, Error:Error, String:String, Number:Number,
                     smemory.evalBegin();
                 }
                 try {
-                    return f(sandbox.instrumentCode(getConcrete(args[0]), {wrapProgram:false}).code);
+                    return f(sandbox.instrumentCode(getConcrete(args[0]), {wrapProgram:false, isEval:true}).code);
                 } finally {
                     if (rrEngine) {
                         rrEngine.RR_evalEnd();

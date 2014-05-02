@@ -311,7 +311,7 @@
             fs.closeSync(fh);
         }
         // also write output as JSON, to make consumption easier
-        var jsonFile = smapFile.replace('.js', '.json');
+        var jsonFile = smapFile.replace(/.js$/, '.json');
         var outputObj = [iidSourceInfo, orig2Inst];
         fs.writeFileSync(jsonFile, JSON.stringify(outputObj));
         fs.writeFileSync(path.join(outputDir, COVERAGE_FILE_NAME), JSON.stringify({"covered":0, "branches":condCount / IID_INC_STEP * 2, "coverage":[]}), "utf8");

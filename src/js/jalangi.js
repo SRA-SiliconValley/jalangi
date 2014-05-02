@@ -86,36 +86,17 @@ function instrument(inputFileName, options) {
     var outputFileName = getInstOutputFile(options.outputFile);
     var iidMapFile, iidMetadataFile;
     var inputCode = String(fs.readFileSync(inputFileName));
-    if (options.iidMap) {
-        esnstrument.openIIDMapFile(temp.dir);
-        iidMapFile = path.join(temp.dir, "jalangi_sourcemap.js");
-    }
-    // blow away initial IID file if it exists
-    var initIIDFile = path.join(temp.dir, esnstrument.initialIIDFileName);
-    if (fs.existsSync(initIIDFile)) {
-        console.log("deleting existing IID file " + initIIDFile);
-        fs.unlinkSync(initIIDFile);
-    }
-    // temporary hack: also remove any initIIDFile in current working directory
-    // this is due to possible difference in working directory between record and replay
-    // TODO use a consistent working directory for record and replay
-    initIIDFile = path.join(process.cwd(), esnstrument.initialIIDFileName);
-    if (fs.existsSync(initIIDFile)) {
-        console.log("deleting existing IID file " + initIIDFile);
-        fs.unlinkSync(initIIDFile);
-    }
     var instCodeOptions = {
         wrapProgram: true,
         filename: inputFileName,
         instFileName: outputFileName,
-        metadata: options.serialize
+        metadata: options.serialize,
+        initIID: true,
+        dirIIDFile: temp.dir
     };
-    var instResult = esnstrument.instrumentCode(inputCode, instCodeOptions);
+    var instResult = esnstrument.instrumentCodeDeprecated(inputCode, instCodeOptions);
     var instCode = instResult.code;
     fs.writeFileSync(outputFileName, instCode);
-    if (options.iidMap) {
-        esnstrument.closeIIDMapFile();
-    }
     if (options.serialize) {
         var metadata = instResult.iidMetadata;
         // TODO choose a better file name here

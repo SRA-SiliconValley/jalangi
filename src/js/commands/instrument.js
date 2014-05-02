@@ -83,7 +83,10 @@ function instrument(options, cb) {
     var copyDir;
 
     // analysis to run in browser (?)
-    var analysis = options.analysis;
+    var analysis = [];
+    if (options.analysis) {
+        analysis = options.analysis.split(path.delimiter);
+    }
 
     /**
      * extra scripts to inject into the application and instrument
@@ -162,9 +165,7 @@ function instrument(options, cb) {
                 result += "<script src=\"" + fileName + "\"></script>";
             };
             instUtil.headerSources.forEach(addScript);
-            if (analysis) {
-                addScript(analysis);
-            }
+            analysis.forEach(addScript);
             return result;
         }
 
@@ -178,7 +179,14 @@ function instrument(options, cb) {
             if (copyRuntime) {
                 headerLibs = getContainedRuntimeScriptTags();
             } else {
-                headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot, analysis);
+                var tmp3 = "";
+                analysis.forEach(function (src) {
+                    src = path.resolve(src);
+                    tmp3 += "<script src=\"" + src + "\"></script>";
+                });
+
+                headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot);
+                headerLibs = headerLibs + tmp3;
             }
             if (selenium) {
                 headerLibs = "<script>" + seleniumCode + "</script>" + headerLibs;
@@ -309,10 +317,10 @@ function instrument(options, cb) {
             fs.writeFileSync(outputFile, String(fs.readFileSync(srcFile)));
         };
         instUtil.headerSources.forEach(copyFile);
-        if (analysis) {
-            var outputFile = path.join(outputDir, path.basename(analysis));
-            fs.writeFileSync(outputFile, String(fs.readFileSync(analysis)));
-        }
+        analysis.forEach(function(f) {
+            var outputFile = path.join(outputDir, path.basename(f));
+            fs.writeFileSync(outputFile, String(fs.readFileSync(f)));
+        });
     };
 
     var outputDir = options.outputDir;

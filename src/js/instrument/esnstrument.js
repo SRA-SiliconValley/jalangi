@@ -26,7 +26,7 @@
     }
 
     var FILESUFFIX1 = "_jalangi_";
-    var COVERAGE_FILE_NAME = "jalangi_coverage";
+    var COVERAGE_FILE_NAME = "jalangi_coverage.json";
     var SMAP_FILE_NAME = "jalangi_sourcemap.js";
     var INITIAL_IID_FILE_NAME = "jalangi_initialIID.json";
     var RP = astUtil.JALANGI_VAR + "_";
@@ -187,7 +187,6 @@
         if (metadata) {
             fs.writeFileSync(instCodeFileName + ".ast.json", JSON.stringify(metadata, undefined, 2), "utf8");
         }
-        fs.writeFileSync(COVERAGE_FILE_NAME, JSON.stringify({"covered":0, "branches":condCount / IID_INC_STEP * 2, "coverage":[]}), "utf8");
     }
 
 
@@ -315,6 +314,7 @@
         var jsonFile = smapFile.replace('.js', '.json');
         var outputObj = [iidSourceInfo, orig2Inst];
         fs.writeFileSync(jsonFile, JSON.stringify(outputObj));
+        fs.writeFileSync(path.join(outputDir, COVERAGE_FILE_NAME), JSON.stringify({"covered":0, "branches":condCount / IID_INC_STEP * 2, "coverage":[]}), "utf8");
     }
 
 

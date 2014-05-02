@@ -66,26 +66,15 @@ function getHeaderCode(root) {
  * returns an HTML string of <script> tags, one of each header file, with the
  * absolute path of the header file
  */
-function getHeaderCodeAsScriptTags(root, analysis) {
+function getHeaderCodeAsScriptTags(root) {
     var ret = "";
-    if (analysis) {
-        // TODO do we still need this?  probably best to do this elsewhere
-        if (analysis.indexOf(path.sep) === 0) {
-            headerSources.push(analysis);
-        } else {
-            headerSources.push("src/js/" + analysis);
-        }
-    }
     headerSources.forEach(function (src) {
-        if (root && analysis && analysis.indexOf(path.sep) !== 0) {
+        if (root) {
             src = path.join(root, src);
         }
         src = path.resolve(src);
         ret += "<script src=\"" + src + "\"></script>";
     });
-    if (analysis) {
-        headerSources.pop();
-    }
     return ret;
 }
 

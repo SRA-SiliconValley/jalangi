@@ -106,9 +106,15 @@ function instrument(options, cb) {
             wrapProgram:true,
             filename:origname,
             instFileName:instname,
-            serialize:dumpSerializedASTs
+            metadata:dumpSerializedASTs,
+            dirIIDFile: copyDir,
+            initIID: firstEntry
         };
-        var instResult = esnstrument.instrumentCode(src, options);
+        if (firstEntry) {
+            firstEntry = false;
+        }
+
+        var instResult = esnstrument.instrumentCodeDeprecated(src, options);
         var instrumentedCode = instResult.code;
         // TODO make this async?
         fs.writeFileSync(path.join(copyDir, origname), src);
@@ -217,17 +223,25 @@ function instrument(options, cb) {
 
     InstrumentJSStream.prototype._transform = accumulateData;
 
+    var firstEntry = true;
+
     InstrumentJSStream.prototype._flush = function (cb) {
         console.log("instrumenting " + this.origScriptName);
         var options = {
             wrapProgram:true,
             filename:this.origScriptName,
             instFileName:this.instScriptName,
-            metadata:dumpSerializedASTs
+            metadata:dumpSerializedASTs,
+            dirIIDFile: copyDir,
+            initIID: firstEntry
         };
+        if (firstEntry) {
+            firstEntry = false;
+        }
+
         var instResult;
         try {
-            instResult = esnstrument.instrumentCode(this.data, options);
+            instResult = esnstrument.instrumentCodeDeprecated(this.data, options);
         } catch (e) {
             if (e instanceof SyntaxError) {
                 // just output the same file
@@ -305,7 +319,7 @@ function instrument(options, cb) {
 
     function initOutputDir(copyDir) {
         mkdirp.sync(copyDir);
-        esnstrument.openIIDMapFile(copyDir);
+//        esnstrument.openIIDMapFile(copyDir);
         // write an empty 'inputs.js' file here, to make replay happy
         // TODO make this filename more robust against name collisions
         fs.writeFileSync(path.join(copyDir, "inputs.js"), "");
@@ -356,7 +370,7 @@ function instrument(options, cb) {
     }
 
     var callback = function (err) {
-        esnstrument.closeIIDMapFile();
+//        esnstrument.closeIIDMapFile();
         if (extraAppScripts.length > 0) {
             var extraScriptDir = path.join(appDir, EXTRA_SCRIPTS_DIR);
             extraAppScripts.forEach(function (script) {

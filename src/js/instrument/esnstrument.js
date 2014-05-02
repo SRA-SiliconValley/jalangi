@@ -216,11 +216,13 @@
         var fs = require('fs');
         var iidf = path.join(outputDir?outputDir:process.cwd(), INITIAL_IID_FILE_NAME);
 
+
         if (initIIDs) {
             initializeIIDCounters(false);
         } else {
             try {
-                var iids = JSON.parse(fs.readFileSync(iidf,"utf8"));
+                var line;
+                var iids = JSON.parse(line = fs.readFileSync(iidf,"utf8"));
                 condCount = iids.condCount;
                 iid = iids.iid;
                 opIid = iids.opIid;
@@ -235,8 +237,9 @@
     function storeInitialIID(outputDir) {
         var path = require('path');
         var fs = require('fs');
+        var line;
         var iidf = path.join(outputDir?outputDir:process.cwd(), INITIAL_IID_FILE_NAME);
-        fs.writeFileSync(iidf, JSON.stringify({condCount:condCount, iid:iid, opIid:opIid}));
+        fs.writeFileSync(iidf, line = JSON.stringify({condCount:condCount, iid:iid, opIid:opIid}));
     }
 
     function getIid() {
@@ -1603,6 +1606,23 @@
         }
     }
 
+    function instrumentAux(code, args) {
+        orig2Inst = {};
+        iidSourceInfo = {};
+
+        curFileName = args.filename;
+        instCodeFileName = args.instFileName;
+        orig2Inst[curFileName] = instCodeFileName;
+
+        loadInitialIID(args.dirIIDFile, args.initIID);
+
+        var codeAndMData = instrumentCode(code, {wrapProgram:true, isEval:false, metadata:args.metadata});
+
+        storeInitialIID(args.dirIIDFile);
+        writeIIDMapFile(args.dirIIDFile, args.initIID, args.inlineIID);
+        return codeAndMData;
+    }
+
     function instrumentFile() {
         var argparse = require('argparse');
         var parser = new argparse.ArgumentParser({
@@ -1625,25 +1645,19 @@
             console.error("must provide file to instrument");
             process.exit(1);
         }
-        var collectMetadata = args.metadata;
-
-        loadInitialIID(args.dirIIDFile, args.initIID);
 
         var fname = args.file[0];
-        curFileName = sanitizePath(require('path').resolve(process.cwd(), fname));
-        instCodeFileName = args.out?args.out:makeInstCodeFileName(curFileName);
-        orig2Inst[curFileName] = instCodeFileName;
+        args.filename = sanitizePath(require('path').resolve(process.cwd(), fname));
+        args.instFileName = args.out?args.out:makeInstCodeFileName(fname);
 
-        var codeAndMData = instrumentCode(getCode(curFileName), {wrapProgram:true, isEval:false, metadata:collectMetadata});
-
-        storeInitialIID(args.dirIIDFile);
-        writeIIDMapFile(args.dirIIDFile, args.initIID, args.inlineIID);
+        var codeAndMData = instrumentAux(getCode(fname), args);
         saveCode(codeAndMData.code, codeAndMData.metadata, args.inlineIID, args.noInstrEval);
     }
 
 
-
-
+    if (typeof exports !== 'undefined' && this.exports !== exports) {
+        exports.instrumentCodeDeprecated = instrumentAux;
+    }
 
     if (typeof window === 'undefined' && (typeof require !== "undefined") && require.main === module) {
         instrumentFile();

@@ -722,7 +722,7 @@
     function createCallAsFunEnterStatement(node) {
         printIidToLoc(node);
         var ret = replaceInStatement(
-            logFunctionEnterFunName + "(" + RP + "1,arguments.callee, this)",
+            logFunctionEnterFunName + "(" + RP + "1,arguments.callee, this, arguments)",
             getIid()
         );
         transferLoc(ret[0].expression, node);

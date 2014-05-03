@@ -79,7 +79,7 @@ A direct analysis (aka inbrowser analysis) can be written using the following te
 //
 //        this.endExecution = function () {};
 //
-//        this.functionEnter = function (iid, fun, dis /* this */) {};
+//        this.functionEnter = function (iid, fun, dis /* this */, args) {};
 //
 //        this.functionExit = function (iid) {
 //            return false;
@@ -221,7 +221,7 @@ These kind of analyses supports shadow values (denoted by objects of type Concol
 //
 //        this.endExecution = function () {};
 //
-//        this.functionEnter = function (iid, fun, dis /* this */) {};
+//        this.functionEnter = function (iid, fun, dis /* this */, args) {};
 //
 //        this.functionExit = function (iid) {
 //            return false;

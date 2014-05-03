@@ -96,7 +96,7 @@
 //
 //        this.endExecution = function () {};
 //
-//        this.functionEnter = function (iid, fun, dis /* this */) {};
+//        this.functionEnter = function (iid, fun, dis /* this */, args) {};
 //
 //        this.functionExit = function (iid) {
 //            return false;

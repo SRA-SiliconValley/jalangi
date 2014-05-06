@@ -25,7 +25,8 @@
 var assert = require("assert"),
     astUtil = require("./../src/js/utils/astUtil.js"),
     acorn = require("acorn"),
-    esnstrument = require("./../src/js/instrument/esnstrument");
+    esnstrument = require("./../src/js/instrument/esnstrument"),
+    temp = require('temp');
 
 
 function collectTopLevel(instResult) {

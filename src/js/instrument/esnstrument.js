@@ -215,8 +215,8 @@
         var fs = require('fs');
         var iidf = path.join(outputDir?outputDir:process.cwd(), INITIAL_IID_FILE_NAME);
 
-
         if (initIIDs) {
+            hasInitializedIIDs = false;
             initializeIIDCounters(false);
         } else {
             try {

@@ -537,7 +537,7 @@ window = {String:String, Array:Array, Error:Error, String:String, Number:Number,
             }
 
             // Function enter
-            function Fe(iid, val, dis /* this */) {
+            function Fe(iid, val, dis /* this */,args) {
                 if (rrEngine) {
                     rrEngine.RR_Fe(iid, val, dis);
                 }
@@ -551,7 +551,7 @@ window = {String:String, Array:Array, Error:Error, String:String, Number:Number,
                         val = rrEngine.RR_getConcolicValue(val);
                     }
                     try {
-                        sandbox.analysis.functionEnter(iid, val, dis);
+                        sandbox.analysis.functionEnter(iid, val, dis, args);
                     } catch (e) {
                         clientAnalysisException(e);
                     }

@@ -105,7 +105,7 @@ function instrument(inputFileName, options) {
     }
     return {
         outputFile: outputFileName,
-        iidMapFile: iidMapFile,
+        iidMapFile: path.join(instCodeOptions.dirIIDFile,"jalangi_sourcemap.js"),
         iidMetadataFile: iidMetadataFile
     };
 }

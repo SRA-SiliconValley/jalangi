@@ -1609,7 +1609,9 @@
     function instrumentAux(code, args) {
         orig2Inst = {};
         iidSourceInfo = {};
-
+        if (!args.dirIIDFile) {
+            throw new Error("must provide dirIIDFile");
+        }
         curFileName = args.filename;
         instCodeFileName = args.instFileName;
         orig2Inst[curFileName] = instCodeFileName;

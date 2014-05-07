@@ -37,7 +37,7 @@
 //        }
 //
         this.putFieldPre = function (iid, base, offset, val) {
-            if (!HOP(base, offset)) {
+            if (typeof val !== 'function' && base && !HOP(base, offset)) {
                 var tmp = base.__proto__;
                 while(tmp) {
                     if (HOP(tmp, offset)) {

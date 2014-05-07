@@ -26,15 +26,16 @@
                                 var ret1, ret2;
                                 var thisFun = arguments.callee;
                                 var len = thisFun.afs.length;
-
-                                ret1 = thisFun.afs[0].apply(thisFun.afThis[0],arguments);
+                                var args = Array.prototype.slice.call(arguments,0)
+                                ret1 = thisFun.afs[0].apply(thisFun.afThis[0],args);
 
                                 for(var i=1; i<len; i++) {
-                                    ret2 = thisFun.afs[i].apply(thisFun.afThis[i],arguments);
+                                    ret2 = thisFun.afs[i].apply(thisFun.afThis[i],args);
                                     if (ret1 !== ret2 && !(isNaN(ret1) && isNaN(ret2))) {
                                         throw new Error("Return value of "+thisFun.afName+" must be same for all analyses "+ret1+" !== "+ret2);
                                     }
                                 }
+                                return ret1;
                             };
                             fun.afs = [];
                             fun.afThis = [];

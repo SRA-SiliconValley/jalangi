@@ -46,12 +46,12 @@ global.USE_SMEMORY=args.smemory;
 global.ANALYSIS_SCRIPT=args.analysis;
 
 var path = require('path');
+require('./../InputManager2');
 var Headers = require('./../Headers');
 Headers.headerSources.forEach(function(src){
     require('./../../../'+src);
 });
 
-require('./../InputManager2');
 try {
     require(process.cwd()+'/inputs');
 } catch(e) {}

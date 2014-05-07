@@ -28,7 +28,7 @@ var parser = new argparse.ArgumentParser({
 });
 parser.addArgument(['--smemory'], { help: "Use shadow memory", action: 'storeTrue'});
 parser.addArgument(['--tracefile'], { help: "Location to store trace file", defaultValue: DEFAULT_TRACE_FILE_NAME });
-parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run during replay"});
+parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run during replay", action:"append"});
 var args = parser.parseArgs();
 
 
@@ -47,10 +47,9 @@ function runAnalysis(initParam) {
     } catch(e) {}
 
     if (args.analysis) {
-        var analysis = args.analysis.split(path.delimiter);
-        analysis.forEach(function(src) {
+        args.analysis.forEach(function (src) {
             require(path.resolve(src));
-        })
+        });
     }
 
     if (J$.analysis && J$.analysis.init) {

@@ -27,7 +27,7 @@ var parser = new argparse.ArgumentParser({
     description: "Command-line utility to perform Jalangi's direct analysis"
 });
 parser.addArgument(['--smemory'], { help: "Use shadow memory", action: 'storeTrue'});
-parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run"});
+parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run", action:'append'});
 parser.addArgument(['script_and_args'], {
     help: "script to record and CLI arguments for that script",
     nargs: argparse.Const.REMAINDER
@@ -51,10 +51,9 @@ Headers.headerSources.forEach(function(src){
 });
 
 if (args.analysis) {
-    var analysis = args.analysis.split(path.delimiter);
-    analysis.forEach(function(src) {
+    args.analysis.forEach(function (src) {
         require(path.resolve(src));
-    })
+    });
 }
 
 

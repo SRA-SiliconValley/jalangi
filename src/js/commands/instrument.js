@@ -83,10 +83,7 @@ function instrument(options, cb) {
     var copyDir;
 
     // analysis to run in browser (?)
-    var analysis = [];
-    if (options.analysis) {
-        analysis = options.analysis.split(path.delimiter);
-    }
+    var analysis = options.analysis;
 
     /**
      * extra scripts to inject into the application and instrument
@@ -165,7 +162,9 @@ function instrument(options, cb) {
                 result += "<script src=\"" + fileName + "\"></script>";
             };
             instUtil.headerSources.forEach(addScript);
-            analysis.forEach(addScript);
+            if (analysis) {
+                analysis.forEach(addScript);
+            }
             return result;
         }
 
@@ -180,10 +179,12 @@ function instrument(options, cb) {
                 headerLibs = getContainedRuntimeScriptTags();
             } else {
                 var tmp3 = "";
-                analysis.forEach(function (src) {
-                    src = path.resolve(src);
-                    tmp3 += "<script src=\"" + src + "\"></script>";
-                });
+                if (analysis) {
+                    analysis.forEach(function (src) {
+                        src = path.resolve(src);
+                        tmp3 += "<script src=\"" + src + "\"></script>";
+                    });
+                }
 
                 headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot);
                 headerLibs = headerLibs + tmp3;
@@ -317,10 +318,12 @@ function instrument(options, cb) {
             fs.writeFileSync(outputFile, String(fs.readFileSync(srcFile)));
         };
         instUtil.headerSources.forEach(copyFile);
-        analysis.forEach(function(f) {
-            var outputFile = path.join(outputDir, path.basename(f));
-            fs.writeFileSync(outputFile, String(fs.readFileSync(f)));
-        });
+        if (analysis) {
+            analysis.forEach(function (f) {
+                var outputFile = path.join(outputDir, path.basename(f));
+                fs.writeFileSync(outputFile, String(fs.readFileSync(f)));
+            });
+        }
     };
 
     var outputDir = options.outputDir;
@@ -398,7 +401,7 @@ if (require.main === module) { // main script
     parser.addArgument(['-x', '--exclude'], { help:"do not instrument any scripts whose filename contains this substring" });
     // TODO add back this option once we've fixed the relevant HTML parsing code
     parser.addArgument(['-i', '--instrumentInline'], { help:"instrument inline scripts", action:'storeTrue'});
-    parser.addArgument(['--analysis'], { help:"Analysis script for 'inbrowser'/'record' mode.  Analysis must not use ConcolicValue" });
+    parser.addArgument(['--analysis'], { help:"Analysis script for 'inbrowser'/'record' mode.  Analysis must not use ConcolicValue", action:"append" });
     parser.addArgument(['-d', '--direct_in_output'], { help:"Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' });
     parser.addArgument(['--selenium'], { help:"Insert code so scripts can detect they are running under Selenium.  Also keeps Jalangi trace in memory", action:'storeTrue' });
     parser.addArgument(['--in_memory_trace'], { help:"Insert code to tell analysis to keep Jalangi trace in memory instead of writing to WebSocket", action:'storeTrue' });

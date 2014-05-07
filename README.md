@@ -183,6 +183,10 @@ You can run origin of null and undefined tracker on a toy example by issuing the
 
     python scripts/jalangi.py analyze -a src/js/analyses/trackundefinednull/UndefinedNullTrackingEngine tests/unit/track_undef_null
 
+### Chaining Dynamic Analyses
+
+    python scripts/jalangi.py direct --analysis src/js/analyses/ChainedAnalyses.js --analysis src/js/analyses/dlint/UndefinedOffset.js --analysis src/js/analyses/dlint/ShadowProtoProperty.js tests/unit/dlint1
+
 ### Record and replay a web application.
 
 ***

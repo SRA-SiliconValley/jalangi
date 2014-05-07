@@ -14,24 +14,34 @@
         ];
 
         this.addAnalysis = function(analysis) {
-            var self = this;
+            var self = this, tmp;
+
             for (var f in funList) {
                 if (HOP(funList,f)) {
-                    if (analysis[f]) {
-                        (function(fld) {
-                            var af = analysis[fld];
-                            var old = self[fld];
-                            self[fld] = function () {
-                                if (old) {
-                                    var ret1 = old.apply(self, arguments);
+                    var field = funList[f];
+                    if (tmp=analysis[field]) {
+                        var fun = self[field];
+                        if (!fun) {
+                            fun = self[field] = function() {
+                                var ret1, ret2;
+                                var thisFun = arguments.callee;
+                                var len = thisFun.afs.length;
+
+                                ret1 = thisFun.afs[0].apply(thisFun.afThis[0],arguments);
+
+                                for(var i=1; i<len; i++) {
+                                    ret2 = thisFun.afs[i].apply(thisFun.afThis[i],arguments);
+                                    if (ret1 !== ret2 && !(isNaN(ret1) && isNaN(ret2))) {
+                                        throw new Error("Return value of "+thisFun.afName+" must be same for all analyses "+ret1+" !== "+ret2);
+                                    }
                                 }
-                                var ret2 = af.apply(analysis, arguments);
-                                if (old && ret1 !== ret2 && !(isNaN(ret1) && isNaN(ret2))) {
-                                    throw new Error("Return value of "+f+" must be same from all analyses: "+ret1+" !== "+ret2);
-                                }
-                                return ret2;
-                            }
-                        }(f));
+                            };
+                            fun.afs = [];
+                            fun.afThis = [];
+                            fun.afName = field;
+                        }
+                        fun.afs.push(tmp);
+                        fun.afThis.push(analysis);
                     }
                 }
             }
@@ -127,16 +137,14 @@
 
     }
 
+    sandbox.analysis = new ChainedAnalyses();
     if (sandbox.Constants.isBrowser) {
-        sandbox.analysis = new ChainedAnalyses();
         window.addEventListener('keydown', function (e) {
             // keyboard shortcut is Alt-Shift-T for now
             if (e.altKey && e.shiftKey && e.keyCode === 84) {
                 sandbox.analysis.endExecution();
             }
         });
-    } else {
-        module.exports = ChainedAnalyses;
     }
 
 }(J$));

@@ -80,7 +80,6 @@ function initOutputDir() {
 	outputDir = scriptDirToTry;
 	// write an empty 'inputs.js' file here, to make replay happy
 	// TODO make this filename more robust against name collisions
-	fs.writeFileSync(path.join(outputDir, "inputs.js"), "");
 }
 /**
  * start the instrumenting proxy.  This will instrument

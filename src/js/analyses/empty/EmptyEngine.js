@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-(function (module) {
+(function (sandbox) {
 
     function EmptyEngine() {
         var ConcolicValue = require('./../../ConcolicValue');
@@ -26,5 +26,5 @@
 
     }
 
-    module.exports = EmptyEngine;
+    sandbox.analysis = new EmptyEngine();
 }(J$));

@@ -206,6 +206,6 @@
 
     }
 
-    module.exports = ObjectAllocationTrackerEngine;
+    sandbox.analysis = new ObjectAllocationTrackerEngine();
 
 }(J$));

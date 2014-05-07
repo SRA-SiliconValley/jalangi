@@ -7,10 +7,6 @@ if (typeof J$ === 'undefined') {
 
     Constants.isBrowser = !(typeof exports !== 'undefined' && this.exports !== exports);
 
-    Constants.load = function (lib) {
-        return (typeof sandbox[lib] === 'undefined' ? require('./' + lib + '.js') : sandbox[lib]);
-    };
-
     Constants.IN_MEMORY_TRACE = Constants.isBrowser && (window.__JALANGI_IN_MEMORY_TRACE__);
 
     Constants.HAS_OWN_PROPERTY = Object.prototype.hasOwnProperty;
@@ -159,11 +155,6 @@ if (typeof J$ === 'undefined') {
             }
 
         }
-    }
-
-
-    if (typeof module !== 'undefined') {
-        module.exports = Constants;
     }
 
 })(J$);

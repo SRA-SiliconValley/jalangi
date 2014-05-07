@@ -101,16 +101,14 @@ A direct analysis (aka inbrowser analysis) can be written using the following te
 
     }
     
+    sandbox.analysis = new SampleAnalysis();
     if (sandbox.Constants.isBrowser) {
-        sandbox.analysis = new SampleAnalysis();
         window.addEventListener('keydown', function (e) {
             // keyboard shortcut is Alt-Shift-T for now
             if (e.altKey && e.shiftKey && e.keyCode === 84) {
                 sandbox.analysis.endExecution();
             }
         });
-    } else {
-        module.exports = SampleAnalysis;
     }
 
 }(J$));
@@ -134,7 +132,7 @@ An analysis can be performed on a JavaScript file by issuing the following comma
 	    
 An analysis can be performed on an web app using the Chrome browser by issuing the following commands:
 
-    node src/js/commands/instrument.js --inbrowser --smemory --analysis analyses/objectalloc/ObjectAllocationTrackerEngineIB.js --outputDir /tmp tests/tizen/annex
+    node src/js/commands/instrument.js --inbrowser --smemory --analysis src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB.js --outputDir /tmp tests/tizen/annex
     open file:///tmp/annex/index.html
 
 While performing analysis in a browser, one needs to press Alt-Shift-T to end the analysis and to print the analysis results in the console.
@@ -241,7 +239,7 @@ These kind of analyses supports shadow values (denoted by objects of type Concol
 //        };
     }
 
-    module.exports = SampleAnalysis;
+    sandbox.analysis = new SampleAnalysis();
 }(J$));
 ``` 
 

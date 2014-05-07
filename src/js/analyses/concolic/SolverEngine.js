@@ -37,7 +37,7 @@
             });
 
             var run = libc.system;*/
-    	    es = require('execSync')
+    	    var es = require('execSync')
             es.exec(cmd);
         }
 

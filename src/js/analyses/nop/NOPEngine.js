@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-(function (module) {
+(function (sandbox) {
 
     function NOPEngine() {
         var ConcolicValue = require('./../../ConcolicValue');
@@ -116,5 +116,5 @@
 //        };
     }
 
-    module.exports = NOPEngine;
-}(module));
+    sandbox.analysis = new NOPEngine();
+}(J$));

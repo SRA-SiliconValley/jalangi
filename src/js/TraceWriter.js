@@ -6,9 +6,9 @@ if (typeof J$ === 'undefined') {
 
 
     sandbox.TraceWriter = function () {
-        var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
-        var Globals = Constants.load('Globals');
-        var Config = Constants.load('Config');
+        var Constants = sandbox.Constants;
+        var Globals = sandbox.Globals;
+        var Config = sandbox.Config;
 
         var bufferSize = 0;
         var buffer = [];
@@ -146,10 +146,6 @@ if (typeof J$ === 'undefined') {
                 this.flush();
             }
         };
-    }
-
-    if (typeof module !== 'undefined') {
-        module.exports = sandbox.TraceWriter;
     }
 
 })(J$);

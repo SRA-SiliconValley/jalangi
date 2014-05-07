@@ -38,12 +38,11 @@ if (typeof J$ === 'undefined') {
 window = {String:String, Array:Array, Error:Error, String:String, Number:Number, Date:Date, Boolean:Boolean, RegExp:RegExp};
 
 (function (sandbox) {
-    var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
-    var Globals = Constants.load('Globals');
-    var Config = Constants.load('Config');
-    var SMemory = Constants.load('SMemory');
-    var RecordReplayEngine = Constants.load('RecordReplayEngine');
-    Constants.load("iidToLocation");
+    var Constants = sandbox.Constants;
+    var Globals = sandbox.Globals;
+    var Config = sandbox.Config;
+    var SMemory = sandbox.SMemory;
+    var RecordReplayEngine = sandbox.RecordReplayEngine;
 
 //    var Globals = (typeof sandbox.Globals === 'undefined'? require('./Globals.js'): sandbox.Globals);
 //    var Config = (typeof sandbox.Config === 'undefined'? require('./Config.js'): sandbox.Config);
@@ -113,10 +112,6 @@ window = {String:String, Array:Array, Error:Error, String:String, Number:Number,
             }
             if (initSMemory) {
                 sandbox.smemory = smemory = new SMemory();
-            }
-            if (analysis_script) {
-                var AnalysisEngine = require(require('path').resolve(analysis_script));
-                sandbox.analysis = new AnalysisEngine();
             }
 
 
@@ -1196,7 +1191,7 @@ window = {String:String, Array:Array, Error:Error, String:String, Number:Number,
     if (Constants.isBrowser) {
         init(window.JALANGI_MODE, undefined, window.USE_SMEMORY);
     } else { // node.js
-        exports.init = init;
+        init(global.JALANGI_MODE, global.ANALYSIS_SCRIPT, global.USE_SMEMORY);
     }
 
 })(J$);

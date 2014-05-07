@@ -21,7 +21,7 @@ if (typeof J$ === 'undefined') {
 }
 
 (function (sandbox) {
-    var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
+    var Constants = sandbox.Constants;
     var isBrowser = Constants.isBrowser;
     var isInit = false;
 
@@ -45,9 +45,5 @@ if (typeof J$ === 'undefined') {
         }
         return iid+"";
     };
-
-    if (typeof module !== 'undefined') {
-        module.exports = sandbox.iidToLocation;
-    }
 
 }(J$));

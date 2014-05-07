@@ -12,8 +12,4 @@ if (typeof J$ === 'undefined') {
     Config.MAX_BUF_SIZE = 64000;
     Config.LOG_ALL_READS_AND_BRANCHES = false;
 
-    if (typeof module !== 'undefined') {
-        module.exports = Config;
-    }
-
 }(J$));

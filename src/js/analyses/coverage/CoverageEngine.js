@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-(function (module) {
+(function (sandbox) {
     function CoverageEngine() {
         var TRACE_FILE_NAME = "jalangi_trace";
         var TAINT_SUMMARY = "jalangi_taint";
@@ -63,5 +63,5 @@
 
     }
 
-    module.exports = CoverageEngine;
-}(module));
+    sandbox.analysis = new CoverageEngine();
+}(J$));

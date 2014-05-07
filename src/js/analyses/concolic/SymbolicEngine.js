@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-(function (module) {
+(function (sandbox) {
 
     function SymbolicEngine() {
 
@@ -847,5 +847,6 @@
 
 //----------------------------------------- End symbolic execution and constraint generation -------------------
 
-    module.exports = SymbolicEngine;
-}(module));
+
+    sandbox.analysis = new SymbolicEngine();
+}(J$));

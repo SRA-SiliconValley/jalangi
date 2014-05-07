@@ -85,5 +85,5 @@
         };
     }
 
-    module.exports = TrackValuesEngine;
+    sandbox.analysis = new TrackValuesEngine();
 }(J$));

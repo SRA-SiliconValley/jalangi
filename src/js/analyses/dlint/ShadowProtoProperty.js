@@ -45,11 +45,12 @@
                             info[iid] = {};
                         }
                         info[iid][offset] = (info[iid][offset]|0) + 1;
-                        return;
+                        return val;
                     }
                     tmp = tmp.__proto__;
                 }
             }
+            return val;
         };
 //
 //        this.putField = function (iid, base, offset, val) {
@@ -105,7 +106,8 @@
             });
             for (var x in tmp) {
                 if (HOP(tmp, x)) {
-                    console.log("Written property "+ x.offset+" at "+iidToLocation(x.iid)+" "+ x.count+" times and it shadows the property in its prototype.");
+                    x = tmp[x];
+                    console.log("Written property "+ x.offset+" at "+iidToLocation(x.iid)+" "+ x.count+" time(s) and it shadows the property in its prototype.");
                 }
             }
         };

@@ -2,35 +2,45 @@
 
 Command-line utility to perform instrumentation
 
-	node src/js/instrument/esnstrument.js -h
-	usage: esnstrument.js [-h] [--metadata] [--maxIIDsFile MAXIIDSFILE] ...
+    node src/js/instrument/esnstrument.js -h
+    usage: esnstrument.js [-h] [--metadata] [--initIID] [--noInstrEval]
+                      [--inlineIID] [--dirIIDFile DIRIIDFILE] [--out OUT]
+                      file
 
 Positional arguments:
 
-	files                 files to instrument
+    file                  file to instrument
 
 Optional arguments:
 
-	-h, --help            Show this help message and exit.
-  	--metadata            Collect metadata
-  	--maxIIDsFile MAXIIDSFILE
-                          File containing max IIDs
+    -h, --help            Show this help message and exit.
+    --metadata            Collect metadata
+    --initIID             Initialize IIDs to 0
+    --noInstrEval         Do not instrument strings passed to evals
+    --inlineIID           Inline IIDs in the instrumented file
+    --dirIIDFile DIRIIDFILE
+                        Directory containing jalangi_sourcemap.js and
+                        jalangi_initialIID.json
+    --out OUT             Instrumented file name (with path). The default is to
+                        append _jalangi_ to the original JS file name
 
 
 ## instrument.js
 
 Utility to apply Jalangi instrumentation to files or a folder
 
-	node src/js/commands/instrument.js -h
+    node src/js/commands/instrument.js -h
     usage: instrument.js [-h] [-s] [-x EXCLUDE] [-i] [--analysis ANALYSIS] [-d]
                      [--selenium] [--in_memory_trace] [--inbrowser]
                      [--smemory] [-c] [--extra_app_scripts EXTRA_APP_SCRIPTS]
                      [--no_html] --outputDir OUTPUTDIR
                      inputFiles [inputFiles ...]
 
+Utility to apply Jalangi instrumentation to files or a folder.
+
 Positional arguments:
 
-    inputFiles          either a list of JavaScript files to instrument, or a
+    inputFiles            either a list of JavaScript files to instrument, or a
                         single directory under which all JavaScript and HTML
                         files should be instrumented (modulo the --no_html
                         and --exclude flags)
@@ -82,7 +92,7 @@ Optional arguments:
   
 	-h, --help           Show this help message and exit.
     --smemory            Use shadow memory
-    --analysis ANALYSIS  path to analysis file to run
+    --analysis ANALYSIS  absolute path to analysis file to run
 
 ## record.js
 

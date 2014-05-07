@@ -330,7 +330,7 @@ function instrument(options, cb) {
 //        esnstrument.openIIDMapFile(copyDir);
         // write an empty 'inputs.js' file here, to make replay happy
         // TODO make this filename more robust against name collisions
-        fs.writeFileSync(path.join(copyDir, "inputs.js"), "");
+        // fs.writeFileSync(path.join(copyDir, "inputs.js"), "");
     }
 
     // are we instrumenting a directory?

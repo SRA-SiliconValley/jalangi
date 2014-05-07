@@ -35,7 +35,6 @@ def analysis(analysis, browser_rec, filee, jalangi=util.DEFAULT_INSTALL):
     os.chdir("jalangi_tmp")
     #Instrument file first
     (instrumented_f,out) = instrument(filee, jalangi=jalangi)
-    util.mkempty("inputs.js")
     print "---- Recording execution of {} ----".format(filee)
     if browser_rec:
         selenium_browser_record(filee, instrumented_f,jalangi)
@@ -53,7 +52,6 @@ def direct_analysis(analysis, filee, jalangi=util.DEFAULT_INSTALL):
     os.chdir("jalangi_tmp")
     #Instrument file first
     (instrumented_f,out) = instrument(filee, jalangi=jalangi)
-    util.mkempty("inputs.js")
     print "---- Analyzing {} directly ----".format(filee)
     print direct(filee, instrumented_f, jalangi, analysis=analysis)
     util.move_coverage(jalangi)

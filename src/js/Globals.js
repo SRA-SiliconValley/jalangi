@@ -13,7 +13,4 @@ if (typeof J$ === 'undefined') {
     Globals.traceWriter;
     Globals.loadAndBranchLogs = [];
 
-    if (typeof module !== 'undefined') {
-        module.exports = Globals;
-    }
 }(J$));

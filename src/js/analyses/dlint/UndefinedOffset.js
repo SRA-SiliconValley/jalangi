@@ -93,7 +93,8 @@
             });
             for (var x in tmp) {
                 if (HOP(tmp, x)) {
-                    console.log("Accessed property 'undefined' at "+iidToLocation(x.iid)+" "+ x.count+" times.");
+                    x = tmp[x];
+                    console.log("Accessed property 'undefined' at "+iidToLocation(x.iid)+" "+ x.count+" time(s).");
                 }
             }
         };

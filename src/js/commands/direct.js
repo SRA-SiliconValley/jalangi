@@ -41,13 +41,23 @@ if (args.script_and_args.length === 0) {
 // hacking process.argv; see below
 var script = args.script_and_args.shift();
 
-var analysis = require('./../analysis');
-analysis.init("inbrowser", args.analysis, args.smemory);
-require('./../InputManager');
-require('./../instrument/esnstrument');
-require(process.cwd() + '/inputs.js');
+global.JALANGI_MODE="inbrowser";
+global.USE_SMEMORY=args.smemory;
 
 var path = require('path');
+var Headers = require('./../Headers');
+Headers.headerSources.forEach(function(src){
+    require('./../../../'+src);
+});
+
+if (args.analysis) {
+    var analysis = args.analysis.split(path.delimiter);
+    analysis.forEach(function(src) {
+        require(path.resolve(src));
+    })
+}
+
+
 // hack process.argv for the child script
 script = path.resolve(script);
 var newArgs = [process.argv[0], script];

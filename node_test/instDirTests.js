@@ -71,7 +71,7 @@ describe('instrument dir tests', function () {
             inputFiles: ["tests/html/unitApps/app1"],
             outputDir: temp.mkdirSync(),
             // the exact script doesn't matter
-            analysis: "tests/unit/date-conversion.js",
+            analysis: ["tests/unit/date-conversion.js"],
             copy_runtime: true
         };
         inst.instrument(options, function (err) {

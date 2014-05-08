@@ -36,7 +36,7 @@
 //
 //        this.makeConcolicPost = function () {};
 //
-//        this.declare = function (iid, name, val, isArgument) {};
+//        this.declare = function (iid, name, val, isArgument, argIndex) {};
 //
 //        this.literalPre = function (iid, val) {};
 //

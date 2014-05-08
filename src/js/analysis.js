@@ -251,6 +251,7 @@ window = {String:String, Array:Array, Error:Error, String:String, Number:Number,
             var lastVal;
             var switchLeft;
             var switchKeyStack = [];
+            var argIndex;
 
 
             /**
@@ -533,6 +534,7 @@ window = {String:String, Array:Array, Error:Error, String:String, Number:Number,
 
             // Function enter
             function Fe(iid, val, dis /* this */,args) {
+                argIndex = 0;
                 if (rrEngine) {
                     rrEngine.RR_Fe(iid, val, dis);
                 }
@@ -764,6 +766,9 @@ window = {String:String, Array:Array, Error:Error, String:String, Number:Number,
 
             // variable declaration (Init)
             function N(iid, name, val, isArgumentSync) {
+                if (isArgumentSync) {
+                    argIndex++;
+                }
                 if (rrEngine) {
                     val = rrEngine.RR_N(iid, name, val, isArgumentSync);
                 }
@@ -772,7 +777,11 @@ window = {String:String, Array:Array, Error:Error, String:String, Number:Number,
                 }
                 if (sandbox.analysis && sandbox.analysis.declare) {
                     try {
-                        sandbox.analysis.declare(iid, name, val, isArgumentSync);
+                        if (isArgumentSync && argIndex>1) {
+                            sandbox.analysis.declare(iid, name, val, isArgumentSync, argIndex-2);
+                        } else {
+                            sandbox.analysis.declare(iid, name, val, isArgumentSync);
+                        }
                     } catch (e) {
                         clientAnalysisException(e);
                     }

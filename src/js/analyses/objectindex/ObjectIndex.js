@@ -75,28 +75,32 @@
         var Config = sandbox.Config;
         var HOP = Constants.HOP;
         var executionIndex = new ExecutionIndex();
+        var sort = Array.prototype.sort;
 
         var info = {};
 
         function printInfo(info, tab) {
             for (var iid in info) {
-                if (HOP(info, iid) && iid !== 'count') {
+                if (HOP(info, iid) && iid !== 'count' && iid !== 'total') {
                     console.log(tab+"#"+info[iid].count+":"+iidToLocation(iid));
                     printInfo(info[iid], tab+"    ");
                 }
             }
         }
 
-        function addCount(index, i) {
+        function addCount(index, i, isInit) {
             var tmp = info;
             for (var j = index.length-1; j>=i; j--) {
                 var iid = index[j].iid;
                 if(!tmp[iid]) {
-                    tmp[iid] = {count:0};
+                    tmp[iid] = {count:0, total:0};
                 }
                 tmp = tmp[iid];
             }
             tmp.count++;
+            if (isInit) {
+                tmp.total++;
+            }
         }
 
         function subtractCount(index, i) {
@@ -130,7 +134,7 @@
                 if (sobj.creationIndex === undefined) {
                     sobj.creationIndex = executionIndex.executionIndexGetIndex();
                     sobj.i = sobj.creationIndex.length-1;
-                    addCount(sobj.creationIndex, sobj.i);
+                    addCount(sobj.creationIndex, sobj.i, true);
                 }
             }
         }
@@ -198,15 +202,17 @@
 //
 //        this.readPre = function (iid, name, val, isGlobal) {};
 //
-//        this.read = function (iid, name, val, isGlobal) {
-//            return val;
-//        };
+        this.read = function (iid, name, val, isGlobal) {
+            accessObject(smemory.getFrame(name));
+            return val;
+        };
 //
 //        this.writePre = function (iid, name, val, oldValue) {};
 //
-//        this.write = function (iid, name, val, oldValue) {
-//            return val;
-//        };
+        this.write = function (iid, name, val, oldValue) {
+            accessObject(smemory.getFrame(name));
+            return val;
+        };
 //
 //        this.binaryPre = function (iid, op, left, right) {};
 //
@@ -229,12 +235,30 @@
 //        this.beginExecution = function (data) {};
 //
         this.endExecution = function () {
-            printInfo(info, "");
+            var tmp = [];
+            for (var iid in info) {
+                if (HOP(info, iid)) {
+                    tmp.push({iid:iid, count:info[iid].total});
+                }
+            }
+            sort.call(tmp, function(a,b) {
+                return b.count - a.count;
+            });
+            for (var x in tmp) {
+                if (HOP(tmp, x)) {
+                    var iid = tmp[x].iid;
+                    console.log("#"+info[iid].count+"(total="+info[iid].total+"):"+iidToLocation(iid));
+                    printInfo(info[iid], "    ");
+                }
+            }
+
+//            printInfo(info, "");
 //            console.log(JSON.stringify(info));
         };
 //
         this.functionEnter = function (iid, fun, dis /* this */, args) {
             executionIndex.executionIndexCall();
+            annotateObject(iid, smemory.getCurrentFrame());
         };
 //
         this.functionExit = function (iid) {
@@ -261,4 +285,13 @@
     }
 
     sandbox.analysis = new ObjectIndex();
+    if (sandbox.Constants.isBrowser) {
+        window.addEventListener('keydown', function (e) {
+            // keyboard shortcut is Alt-Shift-T for now
+            if (e.altKey && e.shiftKey && e.keyCode === 84) {
+                sandbox.analysis.endExecution();
+            }
+        });
+    }
+
 }(J$));

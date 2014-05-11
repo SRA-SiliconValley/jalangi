@@ -81,14 +81,14 @@
 
         function printInfo(info, tab) {
             for (var iid in info) {
-                if (HOP(info, iid) && iid !== 'count' && iid !== 'total') {
+                if (HOP(info, iid) && iid !== 'count' && iid !== 'total' && iid !== 'isFrame') {
                     console.log(tab+"#"+info[iid].count+":"+iidToLocation(iid));
                     printInfo(info[iid], tab+"    ");
                 }
             }
         }
 
-        function addCount(index, i, isInit) {
+        function addCount(index, i, isInit, isFrame) {
             var tmp = info;
             for (var j = index.length-1; j>=i; j--) {
                 var iid = index[j].iid;
@@ -126,7 +126,7 @@
         }
 
 
-        function annotateObject(iid, obj) {
+        function annotateObject(iid, obj, isFrame) {
             var sobj = smemory.getShadowObject(obj);
 
             if (sobj) {
@@ -134,7 +134,8 @@
                 if (sobj.creationIndex === undefined) {
                     sobj.creationIndex = executionIndex.executionIndexGetIndex();
                     sobj.i = sobj.creationIndex.length-1;
-                    addCount(sobj.creationIndex, sobj.i, true);
+                    sobj.creationIndex[sobj.i].iid = (isFrame?"f":"o")+sobj.creationIndex[sobj.i].iid;
+                    addCount(sobj.creationIndex, sobj.i, true, isFrame);
                 }
             }
         }
@@ -168,7 +169,7 @@
 //        this.literalPre = function (iid, val) {};
 //
         this.literal = function (iid, val) {
-            annotateObject(iid, val);
+            annotateObject(iid, val, false);
             return val;
         };
 //
@@ -178,7 +179,7 @@
 //
         this.invokeFun = function (iid, f, base, args, val, isConstructor) {
             if (isConstructor) {
-                annotateObject(iid, val);
+                annotateObject(iid, val, false);
             }
             accessObject(f);
             return val;
@@ -247,7 +248,7 @@
             for (var x in tmp) {
                 if (HOP(tmp, x)) {
                     var iid = tmp[x].iid;
-                    console.log("#"+info[iid].count+"(total="+info[iid].total+"):"+iidToLocation(iid));
+                    console.log(iid.substring(0,1)+"#"+info[iid].count+"(total="+info[iid].total+"):"+iidToLocation(iid.substring(1)));
                     printInfo(info[iid], "    ");
                 }
             }
@@ -258,7 +259,7 @@
 //
         this.functionEnter = function (iid, fun, dis /* this */, args) {
             executionIndex.executionIndexCall();
-            annotateObject(iid, smemory.getCurrentFrame());
+            annotateObject(iid, smemory.getCurrentFrame(), true);
         };
 //
         this.functionExit = function (iid) {

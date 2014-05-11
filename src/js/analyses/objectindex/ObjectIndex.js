@@ -82,7 +82,7 @@
         function printInfo(info, tab) {
             for (var iid in info) {
                 if (HOP(info, iid) && iid !== 'count' && iid !== 'total' && iid !== 'isFrame') {
-                    console.log(tab+"#"+info[iid].count+":"+iidToLocation(iid));
+                    console.log(tab+"accessed "+info[iid].count+" time(s) in function containing line "+iidToLocation(iid));
                     printInfo(info[iid], tab+"    ");
                 }
             }
@@ -248,7 +248,8 @@
             for (var x in tmp) {
                 if (HOP(tmp, x)) {
                     var iid = tmp[x].iid;
-                    console.log(iid.substring(0,1)+"#"+info[iid].count+"(total="+info[iid].total+"):"+iidToLocation(iid.substring(1)));
+                    console.log((iid.substring(0,1)==="f"?"call frame":"object/function/array")+" allocated at "+iidToLocation(iid.substring(1))+
+                        " "+info[iid].total+" time(s) is accessed "+info[iid].count+" time(s) locally");
                     printInfo(info[iid], "    ");
                 }
             }

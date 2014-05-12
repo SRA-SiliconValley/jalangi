@@ -13,11 +13,11 @@ if (typeof J$ === 'undefined') {
 
         // get the constants in local variables for faster access
 
-        var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
-        var Globals = Constants.load('Globals');
-        var Config = Constants.load('Config');
-        var TraceWriter = Constants.load('TraceWriter');
-        var TraceReader = Constants.load('TraceReader');
+        var Constants = sandbox.Constants;
+        var Globals = sandbox.Globals;
+        var Config = sandbox.Config;
+        var TraceWriter = sandbox.TraceWriter;
+        var TraceReader = sandbox.TraceReader;
 
         var SPECIAL_PROP = Constants.SPECIAL_PROP;
         var SPECIAL_PROP2 = Constants.SPECIAL_PROP2;
@@ -768,10 +768,6 @@ if (typeof J$ === 'undefined') {
         };
     }
 
-
-    if (typeof module !== 'undefined') {
-        module.exports = sandbox.RecordReplayEngine;
-    }
 
     //----------------------------------- End Record Replay Engine ---------------------------------
 }(J$));

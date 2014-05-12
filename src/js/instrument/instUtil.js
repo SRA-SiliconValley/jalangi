@@ -34,7 +34,6 @@ var headerSources = ["src/js/Constants.js",
     "src/js/iidToLocation.js",
     "src/js/RecordReplayEngine.js",
     "src/js/analysis.js",
-    "src/js/InputManager.js",
     "node_modules/escodegen/escodegen.browser.js",
     "node_modules/acorn/acorn.js",
     "src/js/utils/astUtil.js",
@@ -66,32 +65,15 @@ function getHeaderCode(root) {
  * returns an HTML string of <script> tags, one of each header file, with the
  * absolute path of the header file
  */
-function getHeaderCodeAsScriptTags(root, analysisFiles) {
+function getHeaderCodeAsScriptTags(root) {
     var ret = "";
-    var src;
-    if (analysisFiles) {
-        headerSources.forEach(function(src) {
-            if (root) {
-                src = path.join(root, src);
-            }
-            src = path.resolve(src);
-            ret += "<script src=\"" + src + "\"></script>";
-        });
-        analysisFiles.forEach(function(analysisFile) {
-            var src;
-            // TODO do we still need this?  probably best to do this elsewhere
-            if (analysisFile.indexOf(path.sep) === 0) {
-                src = analysisFile;
-            } else {
-                src = "src/js/" + analysisFile;
-            }
-            if (root && analysisFile.indexOf(path.sep) !== 0) {
-                src = path.join(root, src);
-            }
-            src = path.resolve(src);
-            ret += "<script src=\"" + src + "\"></script>";
-        });
-    }
+    headerSources.forEach(function (src) {
+        if (root) {
+            src = path.join(root, src);
+        }
+        src = path.resolve(src);
+        ret += "<script src=\"" + src + "\"></script>";
+    });
     return ret;
 }
 

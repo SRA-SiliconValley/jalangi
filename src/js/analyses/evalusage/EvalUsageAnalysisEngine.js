@@ -121,16 +121,14 @@
 
     }
 
+    sandbox.analysis = new EvalUsageAnalysisEngine();
     if (sandbox.Constants.isBrowser) {
-        sandbox.analysis = new EvalUsageAnalysisEngine();
         window.addEventListener('keydown', function (e) {
             // keyboard shortcut is Alt-Shift-T for now
             if (e.altKey && e.shiftKey && e.keyCode === 84) {
                 sandbox.analysis.endExecution();
             }
         });
-    } else {
-        module.exports = EvalUsageAnalysisEngine;
     }
 
 }(J$));

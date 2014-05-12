@@ -564,16 +564,14 @@
     }
 
 
+    sandbox.analysis = new LikelyTypeInferEngineIB();
     if (sandbox.Constants.isBrowser) {
-        sandbox.analysis = new LikelyTypeInferEngineIB();
         window.addEventListener('keydown', function (e) {
             // keyboard shortcut is Alt-Shift-T for now
             if (e.altKey && e.shiftKey && e.keyCode === 84) {
                 sandbox.analysis.endExecution();
             }
         });
-    } else {
-        module.exports = LikelyTypeInferEngineIB;
     }
 
 }(J$));

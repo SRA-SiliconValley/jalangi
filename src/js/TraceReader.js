@@ -5,9 +5,9 @@ if (typeof J$ === 'undefined') {
 (function (sandbox) {
 
     sandbox.TraceReader = function () {
-        var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
-        var Globals = Constants.load('Globals');
-        var Config = Constants.load('Config');
+        var Constants = sandbox.Constants;
+        var Globals = sandbox.Globals;
+        var Config = sandbox.Config;
 
         var F_SEQ = Constants.F_SEQ;
         var F_TYPE = Constants.F_TYPE;
@@ -172,9 +172,5 @@ if (typeof J$ === 'undefined') {
 
 
     };
-
-    if (typeof module !== 'undefined') {
-        module.exports = sandbox.TraceReader;
-    }
 
 })(J$);

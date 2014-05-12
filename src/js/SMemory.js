@@ -7,7 +7,7 @@ if (typeof J$ === 'undefined') {
 
 (function (sandbox) {
     sandbox.SMemory = function () {
-        var Constants = (typeof sandbox.Constants === 'undefined' ? require('Constants.js') : sandbox.Constants);
+        var Constants = sandbox.Constants;
 
         var SPECIAL_PROP = Constants.SPECIAL_PROP + "M";
         var SPECIAL_PROP2 = Constants.SPECIAL_PROP2 + "M";
@@ -145,10 +145,6 @@ if (typeof J$ === 'undefined') {
         };
 
     };
-
-    if (typeof module !== 'undefined') {
-        module.exports = sandbox.SMemory;
-    }
 
 }(J$));
 

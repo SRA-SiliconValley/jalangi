@@ -183,11 +183,15 @@ You can run origin of null and undefined tracker on a toy example by issuing the
 
     python scripts/jalangi.py analyze -a src/js/analyses/trackundefinednull/UndefinedNullTrackingEngine tests/unit/track_undef_null
 
+### Chaining Dynamic Analyses
+
+    python scripts/jalangi.py direct --analysis src/js/analyses/ChainedAnalyses.js --analysis src/js/analyses/dlint/UndefinedOffset.js --analysis src/js/analyses/dlint/ShadowProtoProperty.js tests/unit/dlint1
+
 ### Record and replay a web application.
 
 ***
 
-Jalangi provides a script for instrumenting a locally-stored web application, by instrumenting all discovered scripts on disk.  Here is how to instrument the annex app using this script.  First, run the `instrumentDir.js` script to instrument the app:
+Jalangi provides a script for instrumenting a locally-stored web application, by instrumenting all discovered scripts on disk.  Here is how to instrument the annex app using this script.  First, run the `instrument.js` script to instrument the app:
 
     node src/js/commands/instrument.js --outputDir /tmp tests/tizen/annex
 
@@ -270,7 +274,7 @@ Now, you can run a dynamic analysis on the trace file by issuing the following c
 Jalangi allows to run an analysis, which does not use ConcolicValue, in a browser.
 Here is how to instrument the annex app with an inbrowser analysis.  First, run the `instrument.js` script to instrument the app:
 
-    node src/js/commands/instrument.js --inbrowser --smemory --analysis analyses/logNaN/LogNaN.js --outputDir /tmp tests/tizen/annex
+    node src/js/commands/instrument.js --inbrowser --smemory --analysis src/js/analyses/logNaN/LogNaN.js --outputDir /tmp tests/tizen/annex
 
 This creates an instrumented copy of annex in `/tmp/annex`.  To see other options for `instrument.js`, run it with the `-h` option.
 
@@ -287,7 +291,7 @@ Shadow memory is supported in the "inbrowser" mode.  Shadow memory library can b
 
 The following shows how to run the object allocation tracker analysis on the annex game:
 
-    node src/js/commands/instrument.js --inbrowser --smemory --analysis analyses/objectalloc/ObjectAllocationTrackerEngineIB.js --outputDir /tmp tests/tizen/annex
+    node src/js/commands/instrument.js --inbrowser --smemory --analysis src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB.js --outputDir /tmp tests/tizen/annex
     open file:///tmp/annex/index.html
 
 The following shows how to run the likely type inference analysis on the annex game:

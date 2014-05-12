@@ -36,15 +36,13 @@
 
     }
 
+    sandbox.analysis = new LogNaN();
     if (sandbox.Constants.isBrowser) {
-        sandbox.analysis = new LogNaN();
         window.addEventListener('keydown', function (e) {
             // keyboard shortcut is Alt-Shift-T for now
             if (e.altKey && e.shiftKey && e.keyCode === 84) {
                 sandbox.analysis.endExecution();
             }
         });
-    } else {
-        module.exports = LogNaN;
     }
 }(J$));

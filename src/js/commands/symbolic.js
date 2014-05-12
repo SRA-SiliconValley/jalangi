@@ -41,16 +41,22 @@ if (args.script_and_args.length === 0) {
 var script = args.script_and_args.shift();
 
 
-// load InputManager2 *before* analysis,
-// as symbolic analysis may load instrumented
-// files that rely on InputManager2 symbols
-require('./../InputManager2');
-var analysis = require('./../analysis');
-analysis.init("symbolic", args.analysis);
-require('./../instrument/esnstrument');
-require(process.cwd() + '/inputs.js');
+global.JALANGI_MODE="symbolic";
+global.USE_SMEMORY=args.smemory;
+global.ANALYSIS_SCRIPT=args.analysis;
 
 var path = require('path');
+require('./../InputManager2');
+var Headers = require('./../Headers');
+Headers.headerSources.forEach(function(src){
+    require('./../../../'+src);
+});
+
+try {
+    require(process.cwd()+'/inputs');
+} catch(e) {}
+
+
 // hack process.argv for the child script
 script = path.resolve(script);
 var newArgs = [process.argv[0], script];

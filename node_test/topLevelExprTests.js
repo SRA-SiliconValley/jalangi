@@ -25,7 +25,8 @@
 var assert = require("assert"),
     astUtil = require("./../src/js/utils/astUtil.js"),
     acorn = require("acorn"),
-    esnstrument = require("./../src/js/instrument/esnstrument");
+    esnstrument = require("./../src/js/instrument/esnstrument"),
+    temp = require('temp');
 
 
 function collectTopLevel(instResult) {
@@ -39,48 +40,47 @@ function collectTopLevel(instResult) {
 }
 
 function checkCode(code, expectedTopLevel) {
-    esnstrument.resetIIDCounters();
-    var instResult = esnstrument.instrumentCode(code, {wrapProgram: false, metadata: true });
+    var instResult = esnstrument.instrumentCodeDeprecated(code, {wrapProgram: false, metadata: true, dirIIDFile: temp.dir, initIID: true });
     var topLevelResult = collectTopLevel(instResult.iidMetadata);
     assert.deepEqual(topLevelResult, expectedTopLevel);
 }
 
 describe('topLevelExprs', function () {
     it('should handle basic', function () {
-        checkCode("3+4+5", [10]);
+        checkCode("3+4+5", [18]);
     });
     it('should handle expression statement', function() {
-        checkCode("function foo() { fizz(); }", [9]);
+        checkCode("function foo() { fizz(); }", [17]);
     });
     it('should handle return', function() {
-        checkCode("function foo() { return (4+(7-3)); }", [17]);
+        checkCode("function foo() { return (4+(7-3)); }", [33]);
     });
     it('should handle deref of function result', function() {
-        checkCode("var x = foo().f;", [17]);
+        checkCode("var x = foo().f;", [33]);
     });
     it('should handle conditional expression', function() {
         // here, the condition, then, and else expressions are
         // all treated as top-level, which is fine
-        checkCode("function foo() { (flag ? a() : b()); }", [3,13,21]);
+        checkCode("function foo() { (flag ? a() : b()); }", [8,25,41]);
     });
     it('should handle if condition', function() {
         // here, the condition, then, and else expressions are
         // all treated as top-level, which is fine
-        checkCode("function foo() { if (flag) { return a(); } else { return b(); } }", [3,17,29]);
+        checkCode("function foo() { if (flag) { return a(); } else { return b(); } }", [8,33,57]);
     });
     it('should handle nested assigns and conditionl expression', function() {
         // here, the condition, then, and else expressions are
         // all treated as top-level, which is fine
-        checkCode("function foo() { x = y = (a ? b : c); }", [21]);
+        checkCode("function foo() { x = y = (a ? b : c); }", [41]);
     });
     it('should handle multi-statement function', function() {
-        checkCode("function foo() { fizz(); x = 3+5+baz().f; }", [9,33]);
+        checkCode("function foo() { fizz(); x = 3+5+baz().f; }", [17,65]);
     });
     it('should handle function declared in object literal', function() {
-        checkCode("var x = { foo: function() { fizz(); x = 3+5+baz().f; } };",  [9,33,53]);
+        checkCode("var x = { foo: function() { fizz(); x = 3+5+baz().f; } };",  [17,65,105]);
     });
     it('should handle function called with object literal', function() {
-        checkCode("var x = function() {}; x({'0': 1, '1' : 2});",  [17,37]);
+        checkCode("var x = function() {}; x({'0': 1, '1' : 2});",  [33,73]);
     });
 
 });

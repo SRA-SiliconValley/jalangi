@@ -18,7 +18,7 @@
 
 (function(exports){
     var fs = require('fs');
-    var COVERAGE_FILE_NAME = "jalangi_coverage";
+    var COVERAGE_FILE_NAME = "jalangi_coverage.json";
 
     var getBranchInfo = (function() {
         var branchInfo;

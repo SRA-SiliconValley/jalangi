@@ -26,8 +26,9 @@
     }
 
     var FILESUFFIX1 = "_jalangi_";
-    var COVERAGE_FILE_NAME = "jalangi_coverage";
+    var COVERAGE_FILE_NAME = "jalangi_coverage.json";
     var SMAP_FILE_NAME = "jalangi_sourcemap.js";
+    var INITIAL_IID_FILE_NAME = "jalangi_initialIID.json";
     var RP = astUtil.JALANGI_VAR + "_";
 
 //    var N_LOG_LOAD = 0,
@@ -169,8 +170,182 @@
         return fs.readFileSync(filename, "utf8");
     }
 
+    function regex_escape(text) {
+        return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+    }
+
+
+    function saveCode(code, metadata, isAppend, noInstrEval) {
+        var fs = require('fs');
+        var path = require('path');
+        var n_code = astUtil.JALANGI_VAR + ".noInstrEval = "+noInstrEval+";\n"+code + "\n";
+        if (isAppend) {
+            fs.appendFileSync(instCodeFileName, n_code, "utf8");
+        } else {
+            fs.writeFileSync(instCodeFileName, n_code, "utf8");
+
+        }
+        if (metadata) {
+            fs.writeFileSync(instCodeFileName + ".ast.json", JSON.stringify(metadata, undefined, 2), "utf8");
+        }
+    }
+
+
     // name of the file containing the instrumented code
     var instCodeFileName;
+
+    var IID_INC_STEP = 8;
+    // current static identifier for each conditional expression
+    var condCount;
+    var iid;
+    var opIid;
+    var hasInitializedIIDs = false;
+
+    function initializeIIDCounters(forEval) {
+        if (!hasInitializedIIDs) {
+            var adj = forEval ? IID_INC_STEP / 2 : 0;
+            condCount = IID_INC_STEP + adj + 0;
+            iid = IID_INC_STEP + adj + 1;
+            opIid = IID_INC_STEP + adj + 2;
+            hasInitializedIIDs = true;
+        }
+    }
+
+    function loadInitialIID(outputDir, initIIDs) {
+        var path = require('path');
+        var fs = require('fs');
+        var iidf = path.join(outputDir?outputDir:process.cwd(), INITIAL_IID_FILE_NAME);
+
+        if (initIIDs) {
+            hasInitializedIIDs = false;
+            initializeIIDCounters(false);
+        } else {
+            try {
+                var line;
+                var iids = JSON.parse(line = fs.readFileSync(iidf,"utf8"));
+                condCount = iids.condCount;
+                iid = iids.iid;
+                opIid = iids.opIid;
+                hasInitializedIIDs = true;
+            } catch(e) {
+                initializeIIDCounters(false);
+            }
+        }
+    }
+
+
+    function storeInitialIID(outputDir) {
+        var path = require('path');
+        var fs = require('fs');
+        var line;
+        var iidf = path.join(outputDir?outputDir:process.cwd(), INITIAL_IID_FILE_NAME);
+        fs.writeFileSync(iidf, line = JSON.stringify({condCount:condCount, iid:iid, opIid:opIid}));
+    }
+
+    function getIid() {
+        var tmpIid = iid;
+        iid = iid + IID_INC_STEP;
+        return createLiteralAst(tmpIid);
+    }
+
+    function getPrevIidNoInc() {
+        return createLiteralAst(iid - IID_INC_STEP);
+    }
+
+    function getCondIid() {
+        var tmpIid = condCount;
+        condCount = condCount + IID_INC_STEP;
+        return createLiteralAst(tmpIid);
+    }
+
+    function getOpIid() {
+        var tmpIid = opIid;
+        opIid = opIid + IID_INC_STEP;
+        return createLiteralAst(tmpIid);
+    }
+
+    // TODO reset this state in openIIDMapFile or its equivalent?
+    var curFileName = null;
+    var orig2Inst = {};
+    var iidSourceInfo = {};
+
+    function writeLineToIIDMap(fs, traceWfh, fh, str) {
+        if (fh) {
+            fs.writeSync(fh, str);
+        }
+        fs.writeSync(traceWfh, str);
+    }
+
+    /**
+     * if not yet open, open the IID map file and write the header.
+     * @param {string} outputDir an optional output directory for the sourcemap file
+     */
+
+    function writeIIDMapFile(outputDir, initIIDs, isAppend) {
+        var traceWfh, fs = require('fs'), path = require('path');
+        var smapFile = path.join(outputDir, SMAP_FILE_NAME);
+        if (initIIDs) {
+            traceWfh = fs.openSync(smapFile, 'w');
+        } else {
+            traceWfh = fs.openSync(smapFile, 'a');
+        }
+
+        var fh = null;
+        if (isAppend) {
+            fh = fs.openSync(instCodeFileName, 'w');
+        }
+
+        writeLineToIIDMap(fs, traceWfh, fh, "(function (sandbox) {\n if (!sandbox.iids) {sandbox.iids = []; sandbox.orig2Inst = {};}\n");
+        writeLineToIIDMap(fs, traceWfh, fh, "var iids = sandbox.iids; var orig2Inst = sandbox.orig2Inst;\n");
+        writeLineToIIDMap(fs, traceWfh, fh, "var fn = \""+curFileName+"\";\n");
+        // write all the data
+        Object.keys(iidSourceInfo).forEach(function (iid) {
+            var sourceInfo = iidSourceInfo[iid];
+            writeLineToIIDMap(fs, traceWfh, fh, "iids[" + iid + "] = [fn," + sourceInfo[1] + "," + sourceInfo[2] + "];\n");
+        });
+        Object.keys(orig2Inst).forEach(function (filename) {
+            writeLineToIIDMap(fs, traceWfh, fh, "orig2Inst[\"" + filename + "\"] = \"" + orig2Inst[filename] + "\";\n");
+        });
+        writeLineToIIDMap(fs, traceWfh, fh, "}(typeof " + astUtil.JALANGI_VAR + " === 'undefined'? " + astUtil.JALANGI_VAR + " = {}:" + astUtil.JALANGI_VAR + "));\n");
+        fs.closeSync(traceWfh);
+        if (isAppend) {
+            fs.closeSync(fh);
+        }
+        // also write output as JSON, to make consumption easier
+        var jsonFile = smapFile.replace(/.js$/, '.json');
+        var outputObj = [iidSourceInfo, orig2Inst];
+        fs.writeFileSync(jsonFile, JSON.stringify(outputObj));
+        fs.writeFileSync(path.join(outputDir, COVERAGE_FILE_NAME), JSON.stringify({"covered":0, "branches":condCount / IID_INC_STEP * 2, "coverage":[]}), "utf8");
+    }
+
+    function printLineInfoAux(i, ast) {
+        if (ast && ast.loc) {
+            iidSourceInfo[i] = [curFileName, ast.loc.start.line, ast.loc.start.column + 1];
+            //writeLineToIIDMap('iids[' + i + '] = [filename,' + (ast.loc.start.line) + "," + (ast.loc.start.column + 1) + "];\n");
+        }
+//        else {
+//            console.log(i+":undefined:undefined");
+//        }
+    }
+
+    // iid+2 is usually unallocated
+    // we are using iid+2 for the sub-getField operation of a method call
+    // see analysis.M
+    function printSpecialIidToLoc(ast0) {
+        printLineInfoAux(iid + 2, ast0);
+    }
+
+    function printIidToLoc(ast0) {
+        printLineInfoAux(iid, ast0);
+    }
+
+    function printOpIidToLoc(ast0) {
+        printLineInfoAux(opIid, ast0);
+    }
+
+    function printCondIidToLoc(ast0) {
+        printLineInfoAux(condCount, ast0);
+    }
 
 // J$_i in expression context will replace it by an AST
 // {J$_i} will replace the body of the block statement with an array of statements passed as argument
@@ -217,162 +392,6 @@
             newNode.loc = oldNode.loc;
         if (oldNode.raw)
             newNode.raw = oldNode.loc;
-    }
-
-    var inc = 4;
-    // current static identifier for each conditional expression
-    var condCount;
-    var iid;
-    var opIid;
-
-    function resetIIDCounters(initialIID) {
-        if (!initialIID) {
-            initialIID = 0;
-        }
-        condCount = initialIID+inc;
-        iid = initialIID+inc+1;
-        opIid = initialIID+inc+2;
-    }
-
-    // initial reset
-    resetIIDCounters(0);
-   
-    /**
-     * Sets the idd counters to values loaded from the given file.
-     * (Only call this when running as node application.)
-     * @param {string} fileName
-     */
-    function loadMaxIIDs(fileName) {
-        var fs = require('fs');
-        try {
-            var json = fs.readFileSync(fileName, "utf8");
-        } catch (e) {
-            // file doesn't exit -- start with normal iid counters
-            return;
-        }
-        var counters = JSON.parse(json);
-        condCount = counters.condCount;
-        iid = counters.iid;
-        opIid = counters.opIid;
-    }
-
-    /**
-     * Store the current iid counters to the given file.
-     * @param {String} fileName
-     */
-    function storeMaxIIDs(fileName) {
-        var fs = require('fs');
-        var counters = {condCount:condCount, iid:iid, opIid:opIid};
-        fs.writeFileSync(fileName, JSON.stringify(counters), "utf8");
-    }
-
-    function getIid() {
-        var tmpIid = iid;
-        iid = iid + inc;
-        return createLiteralAst(tmpIid);
-    }
-
-    function getPrevIidNoInc() {
-        return createLiteralAst(iid - inc);
-    }
-
-    function getCondIid() {
-        var tmpIid = condCount;
-        condCount = condCount + inc;
-        return createLiteralAst(tmpIid);
-    }
-
-    function getOpIid() {
-        var tmpIid = opIid;
-        opIid = opIid + inc;
-        return createLiteralAst(tmpIid);
-    }
-
-    var traceWfh;
-    var fs;
-    // TODO reset this state in openIIDMapFile or its equivalent?
-    var curFileName = null;
-    var orig2Inst = {};
-    var iidSourceInfo = {};
-
-    function writeLineToIIDMap(str) {
-        if (traceWfh) {
-            fs.writeSync(traceWfh, str);
-        }
-    }
-
-    /** @type {string} */
-    var smapFile = null;
-    /**
-     * if not yet open, open the IID map file and write the header.
-     * @param {string} outputDir an optional output directory for the sourcemap file
-     * @param {number?} first_iid if specified, the first IID to use
-     */
-    function openIIDMapFile(outputDir, first_iid) {
-        if (traceWfh === undefined) {
-            fs = require('fs');
-            smapFile = outputDir ? (require('path').join(outputDir, SMAP_FILE_NAME)) : SMAP_FILE_NAME;
-            traceWfh = fs.openSync(smapFile, 'w');
-            writeLineToIIDMap("(function (sandbox) { var iids = sandbox.iids = []; var orig2Inst = sandbox.orig2Inst = {}; var filename;\n");
-            if (first_iid) {
-                // round down to nearest multiple of 4
-                var initialIID = first_iid - (first_iid%inc);
-                resetIIDCounters(initialIID);
-            }
-        }
-    }
-
-    /**
-     * if open, write footer and close IID map file
-     */
-    function closeIIDMapFile() {
-        if (traceWfh) {
-            // write all the data
-            Object.keys(iidSourceInfo).forEach(function (iid) {
-                var sourceInfo = iidSourceInfo[iid];
-                writeLineToIIDMap("iids[" + iid + "] = [\"" + sourceInfo[0] + "\"," + sourceInfo[1] + "," + sourceInfo[2] + "];\n");
-            });
-            Object.keys(orig2Inst).forEach(function (filename) {
-                writeLineToIIDMap("orig2Inst[\"" + filename + "\"] = \"" + orig2Inst[filename] + "\";\n");
-            });
-            writeLineToIIDMap("}(typeof " + astUtil.JALANGI_VAR + " === 'undefined'? " + astUtil.JALANGI_VAR + " = {}:" + astUtil.JALANGI_VAR + "));\n");
-            fs.closeSync(traceWfh);
-            // also write output as JSON, to make consumption easier
-            var jsonFile = smapFile.replace('.js','.json');
-            var outputObj = [iidSourceInfo,orig2Inst];
-            fs.writeFileSync(jsonFile, JSON.stringify(outputObj));
-            traceWfh = undefined;
-            smapFile = null;
-        }
-    }
-
-    function printLineInfoAux(i, ast) {
-        if (ast && ast.loc) {
-            iidSourceInfo[i] = [curFileName, ast.loc.start.line, ast.loc.start.column+1];
-            //writeLineToIIDMap('iids[' + i + '] = [filename,' + (ast.loc.start.line) + "," + (ast.loc.start.column + 1) + "];\n");
-        }
-//        else {
-//            console.log(i+":undefined:undefined");
-//        }
-    }
-
-    // iid+2 is usually unallocated
-    // we are using iid+2 for the sub-getField operation of a method call
-    // see analysis.M
-    function printSpecialIidToLoc(ast0) {
-        printLineInfoAux(iid+2, ast0);
-    }
-
-    function printIidToLoc(ast0) {
-        printLineInfoAux(iid, ast0);
-    }
-
-    function printOpIidToLoc(ast0) {
-        printLineInfoAux(opIid, ast0);
-    }
-
-    function printCondIidToLoc(ast0) {
-        printLineInfoAux(condCount, ast0);
     }
 
     function wrapPutField(node, base, offset, rvalue) {
@@ -442,7 +461,7 @@
     function wrapRead(node, name, val, isReUseIid, isGlobal, isPseudoGlobal) {
         printIidToLoc(node);
         var ret = replaceInExpr(
-            logReadFunName + "(" + RP + "1, " + RP + "2, " + RP + "3," + (isGlobal ? "true" : "false") + "," + (isPseudoGlobal ? "true" : "false") +")",
+            logReadFunName + "(" + RP + "1, " + RP + "2, " + RP + "3," + (isGlobal ? "true" : "false") + "," + (isPseudoGlobal ? "true" : "false") + ")",
             isReUseIid ? getPrevIidNoInc() : getIid(),
             name,
             val
@@ -487,7 +506,7 @@
     function wrapWrite(node, name, val, lhs, isGlobal, isPseudoGlobal) {
         printIidToLoc(node);
         var ret = replaceInExpr(
-            logWriteFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + RP + "4,"+(isGlobal?"true":"false")+","+(isPseudoGlobal?"true":"false")+")",
+            logWriteFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + RP + "4," + (isGlobal ? "true" : "false") + "," + (isPseudoGlobal ? "true" : "false") + ")",
             getIid(),
             name,
             val,
@@ -538,8 +557,8 @@
     function ifObjectExpressionHasGetterSetter(node) {
         if (node.type === "ObjectExpression") {
             var kind, len = node.properties.length;
-            for (var i=0; i<len; i++) {
-                if ((kind = node.properties[i].kind) ==='get' || kind === 'set') {
+            for (var i = 0; i < len; i++) {
+                if ((kind = node.properties[i].kind) === 'get' || kind === 'set') {
                     return true;
                 }
             }
@@ -551,7 +570,7 @@
         printIidToLoc(node);
         var hasGetterSetter = ifObjectExpressionHasGetterSetter(node);
         var ret = replaceInExpr(
-            logLitFunName + "(" + RP + "1, " + RP + "2, " + RP + "3,"+hasGetterSetter+")",
+            logLitFunName + "(" + RP + "1, " + RP + "2, " + RP + "3," + hasGetterSetter + ")",
             getIid(),
             ast,
             createLiteralAst(funId)
@@ -591,7 +610,7 @@
         var code = instrEval ? instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false}," + RP +"2).code" :
                               astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1)";
         var ret = replaceInExpr(
-            code,
+            instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false, isEval: true}," + RP + "2).code",
             ast,
             getIid()
         );
@@ -724,7 +743,7 @@
     function createCallAsFunEnterStatement(node) {
         printIidToLoc(node);
         var ret = replaceInStatement(
-            logFunctionEnterFunName + "(" + RP + "1,arguments.callee, this)",
+            logFunctionEnterFunName + "(" + RP + "1,arguments.callee, this, arguments)",
             getIid()
         );
         transferLoc(ret[0].expression, node);
@@ -889,7 +908,7 @@
         var ret;
         if (node.left.type === 'Identifier') {
             if (scope.hasVar(node.left.name)) {
-                ret = wrapWrite(node.right, createLiteralAst(node.left.name), node.right, node.left,false,scope.isGlobal(node.left.name));
+                ret = wrapWrite(node.right, createLiteralAst(node.left.name), node.right, node.left, false, scope.isGlobal(node.left.name));
             } else {
                 ret = wrapWriteWithUndefinedCheck(node.right, createLiteralAst(node.left.name), node.right, node.left);
 
@@ -1245,8 +1264,7 @@
                     node.callee.callee.property.name === 'M')) {
                 exprDepth++;
             }
-        }
-        ,
+        },
         "FunctionExpression":function (node, context) {
             exprDepthStack.push(exprDepth);
             exprDepth = 0;
@@ -1273,8 +1291,7 @@
                 exprDepth--;
             }
             return node;
-        }
-        ,
+        },
         "FunctionExpression":function (node, context) {
             exprDepth = exprDepthStack.pop();
             return node;
@@ -1284,7 +1301,6 @@
             return node;
         }
     };
-
 
 
     function addScopes(ast) {
@@ -1361,7 +1377,7 @@
 
         // rename arguments to J$_arguments
         var fromName = 'arguments';
-        var toName = astUtil.JALANGI_VAR+"_arguments";
+        var toName = astUtil.JALANGI_VAR + "_arguments";
 
         function handleFun(node) {
             var oldScope = currentScope;
@@ -1414,7 +1430,7 @@
             'FunctionDeclaration':popScope,
             'FunctionExpression':popScope,
             'Identifier':function (node, context) {         // rename arguments to J$_arguments
-                if (context === astUtil.CONTEXT.RHS  && node.name === fromName && currentScope.hasOwnVar(toName)) {
+                if (context === astUtil.CONTEXT.RHS && node.name === fromName && currentScope.hasOwnVar(toName)) {
                     node.name = toName;
                 }
                 return node;
@@ -1436,217 +1452,6 @@
         astUtil.transformAst(ast, visitorPost, visitorPre);
     }
 
-
-    function transformString(code, visitorsPost, visitorsPre) {
-//        console.time("parse")
-//        var newAst = esprima.parse(code, {loc:true, range:true});
-        var newAst = acorn.parse(code, {locations:true, ranges:true});
-//        console.timeEnd("parse")
-//        console.time("transform")
-        addScopes(newAst);
-        var len = visitorsPost.length;
-        for (var i = 0; i < len; i++) {
-            newAst = astUtil.transformAst(newAst, visitorsPost[i], visitorsPre[i], astUtil.CONTEXT.RHS);
-        }
-//        console.timeEnd("transform")
-//        console.log(JSON.stringify(newAst,null,"  "));
-        return newAst;
-    }
-
-    // if this string is discovered inside code passed to instrumentCode(),
-    // the code will not be instrumented
-    var noInstr = "// JALANGI DO NOT INSTRUMENT";
-
-    function makeInstCodeFileName(name) {
-        return name.replace(/.js$/, FILESUFFIX1 + ".js")
-    }
-
-    function getMetadata(newAst) {
-        var serialized = astUtil.serialize(newAst);
-        if (topLevelExprs) {
-            // update serialized AST table to include top-level expr info
-            topLevelExprs.forEach(function (iid) {
-                var entry = serialized[iid];
-                if (!entry) {
-                    entry = {};
-                    serialized[iid] = entry;
-                }
-                entry.topLevelExpr = true;
-            });
-        }
-        return serialized;
-    }
-
-    /**
-     * Instruments the provided code.
-     *
-     * @param {string} code The code to instrument
-     * @param {{wrapProgram: boolean, filename: string, instFileName: string, serialize: boolean }} options
-     *    Options for code generation:
-     *      'wrapProgram': Should the instrumented code be wrapped with prefix code to load libraries,
-     * code to indicate script entry and exit, etc.? should be false for code being eval'd
-     *      'filename': What is the "original" filename of the instrumented code?
-     *                 optional.  if the IID map file is open, it will be updated during
-     *                 instrumentation with source locations pointing to this filename
-     'instFileName': What should the filename for the instrumented code be?
-     *                 If not provided, and the filename parameter is provided, defaults to
-     *                 filename_jalangi_.js.  We need this filename because it gets written
-     *                 into the trace produced by the instrumented code during record
-     'metadata': Should metadata about IIDs be provided (currently serialized ASTs and top-level expressions)?
-     * @return {{code:string, iidMetadata: object}} an object whose 'code' property is the instrumented code string,
-     * and whose 'serializedAST' property has a JSON representation of the serialized AST, of the serialize
-     * parameter was true
-     *
-     */
-    function instrumentCode(code, options, iid) {
-        var oldCondCount,
-            tryCatchAtTop = options.wrapProgram,
-            filename = options.filename,
-            instFileName = options.instFileName,
-            metadata = options.metadata;
-
-        if (filename) {
-            // this works under the assumption that the app root directory,
-            // the directory in which the sourcemap file is written, and
-            // the current working directory are all the same during replay
-            // TODO add parameters to allow these paths to be distinct
-            //writeLineToIIDMap("filename = \"" + filename + "\";\n");
-            curFileName = filename;
-            instCodeFileName = instFileName ? instFileName : makeInstCodeFileName(filename);
-            orig2Inst[curFileName] = instCodeFileName;
-            //writeLineToIIDMap("orig2Inst[filename] = \"" + instCodeFileName + "\";\n");
-        }
-        if (typeof  code === "string"){
-            if (iid && sandbox.analysis && sandbox.analysis.instrumentCode) {
-                code = sandbox.analysis.instrumentCode(iid, code);
-            }
-            if (code.indexOf(noInstr) < 0) {
-                if (!tryCatchAtTop) {
-                    // this means we are inside an eval
-                    // set to 3 so condition ids inside eval'd code won't conflict
-                    // with containing script
-                    // TODO what about multiple levels of nested evals?
-                    oldCondCount = condCount;
-                    condCount = 3;
-                }
-                wrapProgramNode = tryCatchAtTop;
-                topLevelExprs = [];
-                var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
-                // post-process AST to hoist function declarations (required for Firefox)
-                var hoistedFcts = [];
-                newAst = hoistFunctionDeclaration(newAst, hoistedFcts);
-                var newCode = escodegen.generate(newAst);
-
-                if (!tryCatchAtTop) {
-                    condCount = oldCondCount;
-                }
-                var ret = newCode + "\n" + noInstr + "\n";
-                if (metadata) {
-                    return { code:ret, iidMetadata: getMetadata(newAst) };
-                } else {
-                    return {code:ret};
-                }
-            } else {
-                return code;
-            }
-        } else {
-            return code;
-        }
-    }
-
-    function instrumentFile() {
-        var i;
-        var fs = require('fs');
-        var path = require('path');
-
-        function regex_escape(text) {
-            return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
-        }
-
-
-        var saveCode = function (code, filename, fileOnly, metadata) {
-            var n_code = code + "\n" + noInstr + "\n";
-            n_code += '\n//# sourceMappingURL=' + fileOnly + '.map';
-            fs.writeFileSync(filename, n_code, "utf8");
-            if (metadata) {
-                fs.writeFileSync(filename + ".ast.json", JSON.stringify(metadata, undefined, 2), "utf8");
-            }
-            fs.writeFileSync(COVERAGE_FILE_NAME, JSON.stringify({"covered":0, "branches":condCount / inc * 2, "coverage":[]}), "utf8");
-        };
-
-
-        openIIDMapFile();
-
-        var collectMetadata;
-        var iidsFile = undefined;
-
-        var argparse = require('argparse');
-        var parser = new argparse.ArgumentParser({
-            addHelp: true,
-            description: "Command-line utility to perform instrumentation"
-        });
-        parser.addArgument(['--metadata'], { help: "Collect metadata", action: 'storeTrue'});
-        parser.addArgument(['--maxIIDsFile'], { help: "File containing max IIDs", defaultValue: undefined });
-        parser.addArgument(['--instrEval'], { help: "Instrument eval() code on the fly (default: true)", defaultValue: true });
-        parser.addArgument(['files'], {
-            help: "files to instrument",
-            nargs: argparse.Const.REMAINDER
-        });
-        var args = parser.parseArgs();
-
-        if (args.files.length === 0) {
-            console.error("must provide files to instrument");
-            process.exit(1);
-        }
-
-        collectMetadata = args.metadata;
-        if (args.maxIIDsFile !== undefined) {
-            iidsFile = args.maxIIDsFile;
-            loadMaxIIDs(iidsFile);
-            i++;
-        }
-        instrEval = args.instrEval;
-
-        for ( i=0 ; i < args.files.length; i++) {
-            var filename = args.files[i];
-            curFileName = sanitizePath(require('path').resolve(process.cwd(), filename));
-            //writeLineToIIDMap("filename = \"" + sanitizePath(require('path').resolve(process.cwd(), filename)) + "\";\n");
-            console.log("Instrumenting " + filename + " ...");
-//            console.time("load")
-            var code = getCode(filename);
-//            console.timeEnd("load")
-            wrapProgramNode = true;
-            instCodeFileName = makeInstCodeFileName(filename);
-            orig2Inst[curFileName] = sanitizePath(require('path').resolve(process.cwd(), instCodeFileName));
-            //writeLineToIIDMap("orig2Inst[filename] = \"" + sanitizePath(require('path').resolve(process.cwd(), instCodeFileName)) + "\";\n");
-            topLevelExprs = [];
-            var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
-            // post-process AST to hoist function declarations (required for Firefox)
-            var hoistedFcts = [];
-            newAst = hoistFunctionDeclaration(newAst, hoistedFcts);
-            //console.log(JSON.stringify(newAst, null, '\t'));
-
-            var newFileOnly = path.basename(instCodeFileName);
-//            var fileOnly = path.basename(filename);
-            //var smap = escodegen.generate(newAst, {sourceMap: fileOnly});
-            //smap = smap.replace(fileOnly, newFileOnly);
-            //fs.writeFileSync(newFileName+".map", smap,"utf8");
-
-//            console.time("generate")
-            var n_code = escodegen.generate(newAst);
-//            console.timeEnd("generate")
-//            console.time("save")
-            if (collectMetadata) {
-                saveCode(n_code, instCodeFileName, newFileOnly, getMetadata(newAst));
-            } else {
-                saveCode(n_code, instCodeFileName, newFileOnly);
-            }
-//            console.timeEnd("save")
-        }
-        closeIIDMapFile();
-        if (args.maxIIDsFile)
-            storeMaxIIDs(args.maxIIDsFile);
-    }
 
     // START of Liang Gong's AST post-processor
     function hoistFunctionDeclaration(ast, hoisteredFunctions) {
@@ -1705,23 +1510,166 @@
 
         return ast;
     }
+
     // END of Liang Gong's AST post-processor
+
+    function transformString(code, visitorsPost, visitorsPre) {
+//        console.time("parse")
+//        var newAst = esprima.parse(code, {loc:true, range:true});
+        var newAst = acorn.parse(code, {locations:true, ranges:true});
+//        console.timeEnd("parse")
+//        console.time("transform")
+        addScopes(newAst);
+        var len = visitorsPost.length;
+        for (var i = 0; i < len; i++) {
+            newAst = astUtil.transformAst(newAst, visitorsPost[i], visitorsPre[i], astUtil.CONTEXT.RHS);
+        }
+//        console.timeEnd("transform")
+//        console.log(JSON.stringify(newAst,null,"  "));
+        return newAst;
+    }
+
+    // if this string is discovered inside code passed to instrumentCode(),
+    // the code will not be instrumented
+    var noInstr = "// JALANGI DO NOT INSTRUMENT";
+
+    function makeInstCodeFileName(name) {
+        return name.replace(/.js$/, FILESUFFIX1 + ".js");
+    }
+
+    function getMetadata(newAst) {
+        var serialized = astUtil.serialize(newAst);
+        if (topLevelExprs) {
+            // update serialized AST table to include top-level expr info
+            topLevelExprs.forEach(function (iid) {
+                var entry = serialized[iid];
+                if (!entry) {
+                    entry = {};
+                    serialized[iid] = entry;
+                }
+                entry.topLevelExpr = true;
+            });
+        }
+        return serialized;
+    }
+
+    /**
+     * Instruments the provided code.
+     *
+     * @param {string} code The code to instrument
+     * @param {{wrapProgram: boolean, filename: string, instFileName: string, serialize: boolean }} options
+     *    Options for code generation:
+     *      'wrapProgram': Should the instrumented code be wrapped with prefix code to load libraries,
+     * code to indicate script entry and exit, etc.? should be false for code being eval'd
+     *      'filename': What is the "original" filename of the instrumented code?
+     *                 optional.  if the IID map file is open, it will be updated during
+     *                 instrumentation with source locations pointing to this filename
+     'instFileName': What should the filename for the instrumented code be?
+     *                 If not provided, and the filename parameter is provided, defaults to
+     *                 filename_jalangi_.js.  We need this filename because it gets written
+     *                 into the trace produced by the instrumented code during record
+     'metadata': Should metadata about IIDs be provided (currently serialized ASTs and top-level expressions)?
+     * @return {{code:string, iidMetadata: object}} an object whose 'code' property is the instrumented code string,
+     * and whose 'serializedAST' property has a JSON representation of the serialized AST, of the serialize
+     * parameter was true
+     *
+     */
+    function instrumentCode(code, options, iid) {
+        var tryCatchAtTop = options.wrapProgram,
+            isEval = options.isEval,
+            metadata = options.metadata;
+
+        if (typeof  code === "string") {
+            if (iid && sandbox.analysis && sandbox.analysis.instrumentCode) {
+                code = sandbox.analysis.instrumentCode(iid, code);
+            }
+            if (code.indexOf(noInstr) < 0 && !(isEval && sandbox.noInstrEval)) {
+                    // this is a call in eval
+                initializeIIDCounters(isEval);
+                wrapProgramNode = tryCatchAtTop;
+                topLevelExprs = [];
+                var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
+                // post-process AST to hoist function declarations (required for Firefox)
+                var hoistedFcts = [];
+                newAst = hoistFunctionDeclaration(newAst, hoistedFcts);
+                var newCode = escodegen.generate(newAst);
+
+                var ret = newCode + "\n" + noInstr + "\n";
+                if (metadata) {
+                    return { code:ret, iidMetadata:getMetadata(newAst) };
+                } else {
+                    return {code:ret};
+                }
+            } else {
+                return {code:code};
+            }
+        } else {
+            return {code:code};
+        }
+    }
+
+    function instrumentAux(code, args) {
+        orig2Inst = {};
+        iidSourceInfo = {};
+        if (!args.dirIIDFile) {
+            throw new Error("must provide dirIIDFile");
+        }
+        curFileName = args.filename;
+        instCodeFileName = args.instFileName;
+        orig2Inst[curFileName] = instCodeFileName;
+
+        loadInitialIID(args.dirIIDFile, args.initIID);
+
+        var codeAndMData = instrumentCode(code, {wrapProgram:true, isEval:false, metadata:args.metadata});
+
+        storeInitialIID(args.dirIIDFile);
+        writeIIDMapFile(args.dirIIDFile, args.initIID, args.inlineIID);
+        return codeAndMData;
+    }
+
+    function instrumentFile() {
+        var argparse = require('argparse');
+        var parser = new argparse.ArgumentParser({
+            addHelp:true,
+            description:"Command-line utility to perform instrumentation"
+        });
+        parser.addArgument(['--metadata'], { help:"Collect metadata", action:'storeTrue'});
+        parser.addArgument(['--initIID'], { help:"Initialize IIDs to 0", action:'storeTrue'});
+        parser.addArgument(['--noInstrEval'], { help:"Do not instrument strings passed to evals", action:'storeTrue'});
+        parser.addArgument(['--inlineIID'], { help:"Inline IIDs in the instrumented file", action:'storeTrue'});
+        parser.addArgument(['--dirIIDFile'], { help: "Directory containing "+SMAP_FILE_NAME+" and "+INITIAL_IID_FILE_NAME, defaultValue: process.cwd() });
+        parser.addArgument(['--out'], { help: "Instrumented file name (with path).  The default is to append _jalangi_ to the original JS file name", defaultValue: undefined });
+        parser.addArgument(['file'], {
+            help:"file to instrument",
+            nargs:1
+        });
+        var args = parser.parseArgs();
+
+        if (args.file.length === 0) {
+            console.error("must provide file to instrument");
+            process.exit(1);
+        }
+
+        var fname = args.file[0];
+        args.filename = sanitizePath(require('path').resolve(process.cwd(), fname));
+        args.instFileName = args.out?args.out:makeInstCodeFileName(fname);
+
+        var codeAndMData = instrumentAux(getCode(fname), args);
+        saveCode(codeAndMData.code, codeAndMData.metadata, args.inlineIID, args.noInstrEval);
+    }
+
+
+    if (typeof exports !== 'undefined' && this.exports !== exports) {
+        exports.instrumentCodeDeprecated = instrumentAux;
+    }
 
     if (typeof window === 'undefined' && (typeof require !== "undefined") && require.main === module) {
         instrumentFile();
-        //console.log(instrumentCode('({"f1":"hello", "f2":"world"})', true));
     } else {
         sandbox.instrumentCode = instrumentCode;
-        sandbox.instrumentFile = instrumentFile;
-        sandbox.fileSuffix = FILESUFFIX1;
-        sandbox.openIIDMapFile = openIIDMapFile;
-        sandbox.closeIIDMapFile = closeIIDMapFile;
-        sandbox.resetIIDCounters = resetIIDCounters;
     }
-}((typeof J$ === 'undefined') ? (typeof exports === 'undefined' ? undefined : exports) : J$));
+}((typeof J$ === 'undefined') ? J$ = {} : J$));
 
 
 
-//console.log(transformString("var x = 3 * 4;", visitor1));
-//console.log(transformFile("tests/unit/instrument-test.js", [visitorRRPost, visitorOps], [visitorRRPre, undefined]));
 

@@ -86,22 +86,17 @@ function instrument(inputFileName, options) {
     var outputFileName = getInstOutputFile(options.outputFile);
     var iidMapFile, iidMetadataFile;
     var inputCode = String(fs.readFileSync(inputFileName));
-    if (options.iidMap) {
-        esnstrument.openIIDMapFile(temp.dir);
-        iidMapFile = path.join(temp.dir, "jalangi_sourcemap.js");
-    }
     var instCodeOptions = {
         wrapProgram: true,
         filename: inputFileName,
         instFileName: outputFileName,
-        metadata: options.serialize
+        metadata: options.serialize,
+        initIID: true,
+        dirIIDFile: temp.dir
     };
-    var instResult = esnstrument.instrumentCode(inputCode, instCodeOptions);
+    var instResult = esnstrument.instrumentCodeDeprecated(inputCode, instCodeOptions);
     var instCode = instResult.code;
     fs.writeFileSync(outputFileName, instCode);
-    if (options.iidMap) {
-        esnstrument.closeIIDMapFile();
-    }
     if (options.serialize) {
         var metadata = instResult.iidMetadata;
         // TODO choose a better file name here
@@ -110,7 +105,7 @@ function instrument(inputFileName, options) {
     }
     return {
         outputFile: outputFileName,
-        iidMapFile: iidMapFile,
+        iidMapFile: path.join(instCodeOptions.dirIIDFile,"jalangi_sourcemap.js"),
         iidMetadataFile: iidMetadataFile
     };
 }

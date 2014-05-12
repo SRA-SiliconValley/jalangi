@@ -27,7 +27,7 @@ var parser = new argparse.ArgumentParser({
     description: "Command-line utility to perform Jalangi's direct analysis"
 });
 parser.addArgument(['--smemory'], { help: "Use shadow memory", action: 'storeTrue'});
-parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run"});
+parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run", action:'append'});
 parser.addArgument(['script_and_args'], {
     help: "script to record and CLI arguments for that script",
     nargs: argparse.Const.REMAINDER
@@ -41,13 +41,22 @@ if (args.script_and_args.length === 0) {
 // hacking process.argv; see below
 var script = args.script_and_args.shift();
 
-var analysis = require('./../analysis');
-analysis.init("inbrowser", args.analysis, args.smemory);
-require('./../InputManager');
-require('./../instrument/esnstrument');
-require(process.cwd() + '/inputs.js');
+global.JALANGI_MODE="inbrowser";
+global.USE_SMEMORY=args.smemory;
 
 var path = require('path');
+var Headers = require('./../Headers');
+Headers.headerSources.forEach(function(src){
+    require('./../../../'+src);
+});
+
+if (args.analysis) {
+    args.analysis.forEach(function (src) {
+        require(path.resolve(src));
+    });
+}
+
+
 // hack process.argv for the child script
 script = path.resolve(script);
 var newArgs = [process.argv[0], script];

@@ -1,32 +1,14 @@
-/*
- * Copyright 2013 Samsung Information Systems America, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-// Author: Koushik Sen
 
 (function (sandbox) {
+    function UndefinedOffset() {
+        var smemory = sandbox.smemory;
+        var iidToLocation = sandbox.iidToLocation;
+        var Constants = sandbox.Constants;
+        var Config = sandbox.Config;
+        var HOP = Constants.HOP;
+        var sort = Array.prototype.sort;
 
-    function NOPEngine() {
-        var ConcolicValue = require('./../../ConcolicValue');
-
-        if (!(this instanceof NOPEngine)) {
-            return new NOPEngine();
-        }
-
-        var getConcrete = this.getConcrete = ConcolicValue.getConcrete;
-        var getSymbolic = this.getSymbolic = ConcolicValue.getSymbolic;
+        var info = {};
 
 //        this.installAxiom = function (c) {};
 //
@@ -36,7 +18,7 @@
 //
 //        this.makeConcolicPost = function () {};
 //
-//        this.declare = function (iid, name, val, isArgument, argIndex) {};
+//        this.declare = function (iid, name, val, isArgument) {};
 //
 //        this.literalPre = function (iid, val) {};
 //
@@ -48,15 +30,20 @@
 //            return val;
 //        };
 //
-//        this.getFieldPre = function (iid, base, offset) {};
+        this.getFieldPre = function (iid, base, offset) {
+            if (offset === undefined)
+                info[iid] = (info[iid]|0) + 1;
+        };
 //
 //        this.getField = function (iid, base, offset, val) {
 //            return val;
 //        }
 //
-//        this.putFieldPre = function (iid, base, offset, val) {
-//            return val;
-//        };
+        this.putFieldPre = function (iid, base, offset, val) {
+            if (offset === undefined)
+                info[iid] = (info[iid]|0) + 1;
+            return val;
+        };
 //
 //        this.putField = function (iid, base, offset, val) {
 //            return val;
@@ -94,9 +81,25 @@
 //
 //        this.beginExecution = function (data) {};
 //
-//        this.endExecution = function () {};
-//
-//        this.functionEnter = function (iid, fun, dis /* this */, args) {};
+        this.endExecution = function () {
+            var tmp = [];
+            for (var iid in info) {
+                if (HOP(info, iid)) {
+                    tmp.push({iid:iid, count:info[iid]});
+                }
+            }
+            sort.call(tmp, function(a,b) {
+               return b.count - a.count;
+            });
+            for (var x in tmp) {
+                if (HOP(tmp, x)) {
+                    x = tmp[x];
+                    console.log("Accessed property 'undefined' at "+iidToLocation(x.iid)+" "+ x.count+" time(s).");
+                }
+            }
+        };
+
+//        this.functionEnter = function (iid, fun, dis /* this */) {};
 //
 //        this.functionExit = function (iid) {
 //            return false;
@@ -114,7 +117,10 @@
 //        this.instrumentCode = function(iid, code) {
 //            return code;
 //        };
+
+
     }
 
-    sandbox.analysis = new NOPEngine();
+//    sandbox.analysis = new UndefinedOffset();
+    sandbox.analysis.addAnalysis(new UndefinedOffset());
 }(J$));

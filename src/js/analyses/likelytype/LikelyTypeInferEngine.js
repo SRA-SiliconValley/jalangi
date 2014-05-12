@@ -556,6 +556,6 @@
 
     }
 
-    module.exports = LikelyTypeInferEngine;
+    sandbox.analysis = new LikelyTypeInferEngine();
 
 }(J$));

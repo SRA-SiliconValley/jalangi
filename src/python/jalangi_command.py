@@ -38,30 +38,30 @@ class AnalysisCommand:
     description = "Run a Jalangi Analysis"
     def execute(self, params):
         parser = OptionParser()
-        parser.add_option("-a", "--analysis", dest="analysis",
-                          help="Use analysis implemented in ANALYSIS", default="%NOT_SET")
+        parser.add_option("-a", "--analysis", dest="analysis", action="append",
+                          help="Use analysis implemented in ANALYSIS", default=[])
         parser.add_option("-b", "--browser", action="store_true", dest="browser",
                           help="Record in browser", default=False)
         (options, args) = parser.parse_args(args=params)
-        if len(args) < 1 or options.analysis == "%NOT_SET":
+        if len(args) < 1 or len(options.analysis) == 0:
             print "Invalid command line"
             parser.print_help()
             sys.exit(1)
-        print commands.analysis(os.path.abspath(options.analysis), options.browser, os.path.abspath(args[0]))
+        print commands.analysis([os.path.abspath(x) for x in options.analysis], options.browser, os.path.abspath(args[0]))
 
 class DirectAnalysisCommand:
     name = "DirectAnalysis"
     description = "Run a Jalangi Analysis Directly"
     def execute(self, params):
         parser = OptionParser()
-        parser.add_option("-a", "--analysis", dest="analysis",
-                          help="Use analysis implemented in ANALYSIS", default="%NOT_SET")
+        parser.add_option("-a", "--analysis", dest="analysis", action="append",
+                          help="Use analysis implemented in ANALYSIS", default=[])
         (options, args) = parser.parse_args(args=params)
-        if len(args) < 1 or options.analysis == "%NOT_SET":
+        if len(args) < 1 or len(options.analysis) == 0:
             print "Invalid command line"
             parser.print_help()
             sys.exit(1)
-        print commands.direct_analysis(os.path.abspath(options.analysis), os.path.abspath(args[0]))
+        print commands.direct_analysis([os.path.abspath(x) for x in options.analysis], os.path.abspath(args[0]))
 
 class TestRecordReplayCommand:
     name = "Analysis"

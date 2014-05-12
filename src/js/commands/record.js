@@ -15,12 +15,12 @@
  */
 
 // Author: Manu Sridharan
+// Author: Koushik Sen
 
 /*jslint node: true */
 /*global process */
 /*global J$ */
 
-var analysis = require('./../analysis');
 var argparse = require('argparse');
 var DEFAULT_TRACE_FILE_NAME = 'jalangi_trace';
 var parser = new argparse.ArgumentParser({
@@ -29,7 +29,7 @@ var parser = new argparse.ArgumentParser({
 });
 parser.addArgument(['--smemory'], { help: "Use shadow memory", action: 'storeTrue'});
 parser.addArgument(['--tracefile'], { help: "Location to store trace file", defaultValue: DEFAULT_TRACE_FILE_NAME });
-parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run during record"});
+parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run during record", action:"append"});
 parser.addArgument(['script_and_args'], {
     help: "script to record and CLI arguments for that script",
     nargs: argparse.Const.REMAINDER
@@ -42,11 +42,30 @@ if (args.script_and_args.length === 0) {
 // we shift here so we can use the rest of the array later when
 // hacking process.argv; see below
 var script = args.script_and_args.shift();
-analysis.init("record", args.analysis, args.smemory);
+
+global.JALANGI_MODE="record";
+global.USE_SMEMORY=args.smemory;
+
+var path = require('path');
+var Headers = require('./../Headers');
+Headers.headerSources.forEach(function(src){
+    require('./../../../'+src);
+});
 require('./../InputManager');
-require('./../instrument/esnstrument');
-require(process.cwd() + '/inputs.js');
+try {
+    require(process.cwd()+'/inputs');
+} catch(e) {}
+
+
+if (args.analysis) {
+    args.analysis.forEach(function (src) {
+        require(path.resolve(src));
+    });
+}
+
 J$.setTraceFileName(args.tracefile);
+
+
 var path = require('path');
 // hack process.argv for the child script
 script = path.resolve(script);

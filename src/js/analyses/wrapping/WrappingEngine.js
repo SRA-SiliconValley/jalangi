@@ -123,5 +123,5 @@
 
     }
 
-    module.exports = WrapperEngine;
+    sandbox.analysis = new WrapperEngine();
 }(J$));

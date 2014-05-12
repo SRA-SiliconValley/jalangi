@@ -71,7 +71,7 @@
             invokedAtIid = iid;
         }
 
-        this.functionEnter = function (iid, fun, dis /* this */) {
+        this.functionEnter = function (iid, fun, dis /* this */, args) {
             var callerIid = callStack[callStack.length - 1];
             if (!HOP(callerIidToCalleeIidsMap, callerIid)) {
                 callerIidToCalleeIidsMap[callerIid] = {};
@@ -103,15 +103,13 @@
 
     }
 
+    sandbox.analysis = new CallGraphEngine();
     if (sandbox.Constants.isBrowser) {
-        sandbox.analysis = new CallGraphEngine();
         window.addEventListener('keydown', function (e) {
             // keyboard shortcut is Alt-Shift-T for now
             if (e.altKey && e.shiftKey && e.keyCode === 84) {
                 sandbox.analysis.endExecution();
             }
         });
-    } else {
-        module.exports = CallGraphEngine;
     }
 }(J$));

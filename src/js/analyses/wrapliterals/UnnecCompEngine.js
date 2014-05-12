@@ -27,5 +27,5 @@
         }
     }
 
-    module.exports = UnnecCompEngine;
+    sandbox.analysis = new UnnecCompEngine();
 }(J$));

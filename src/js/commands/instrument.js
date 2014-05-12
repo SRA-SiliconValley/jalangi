@@ -106,9 +106,15 @@ function instrument(options, cb) {
             wrapProgram:true,
             filename:origname,
             instFileName:instname,
-            serialize:dumpSerializedASTs
+            metadata:dumpSerializedASTs,
+            dirIIDFile: copyDir,
+            initIID: firstEntry
         };
-        var instResult = esnstrument.instrumentCode(src, options);
+        if (firstEntry) {
+            firstEntry = false;
+        }
+
+        var instResult = esnstrument.instrumentCodeDeprecated(src, options);
         var instrumentedCode = instResult.code;
         // TODO make this async?
         fs.writeFileSync(path.join(copyDir, origname), src);
@@ -156,10 +162,8 @@ function instrument(options, cb) {
                 result += "<script src=\"" + fileName + "\"></script>";
             };
             instUtil.headerSources.forEach(addScript);
-            if (analysisFiles) {
-                analysisFiles.split(path.delimiter).forEach(function (analysisFile) {
-                    addScript(analysisFile);
-                });
+            if (analysis) {
+                analysis.forEach(addScript);
             }
             return result;
         }
@@ -174,7 +178,16 @@ function instrument(options, cb) {
             if (copyRuntime) {
                 headerLibs = getContainedRuntimeScriptTags();
             } else {
-                headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot, analysisFiles);
+                var tmp3 = "";
+                if (analysis) {
+                    analysis.forEach(function (src) {
+                        src = path.resolve(src);
+                        tmp3 += "<script src=\"" + src + "\"></script>";
+                    });
+                }
+
+                headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot);
+                headerLibs = headerLibs + tmp3;
             }
             if (selenium) {
                 headerLibs = "<script>" + seleniumCode + "</script>" + headerLibs;
@@ -219,17 +232,25 @@ function instrument(options, cb) {
 
     InstrumentJSStream.prototype._transform = accumulateData;
 
+    var firstEntry = true;
+
     InstrumentJSStream.prototype._flush = function (cb) {
         console.log("instrumenting " + this.origScriptName);
         var options = {
             wrapProgram:true,
             filename:this.origScriptName,
             instFileName:this.instScriptName,
-            metadata:dumpSerializedASTs
+            metadata:dumpSerializedASTs,
+            dirIIDFile: copyDir,
+            initIID: firstEntry
         };
+        if (firstEntry) {
+            firstEntry = false;
+        }
+
         var instResult;
         try {
-            instResult = esnstrument.instrumentCode(this.data, options);
+            instResult = esnstrument.instrumentCodeDeprecated(this.data, options);
         } catch (e) {
             if (e instanceof SyntaxError) {
                 // just output the same file
@@ -297,22 +318,24 @@ function instrument(options, cb) {
             fs.writeFileSync(outputFile, String(fs.readFileSync(srcFile)));
         };
         instUtil.headerSources.forEach(copyFile);
-        if (analysisFiles) {
-            analysisFiles.split(path.delimiter).forEach(function (analysisFile) {
-                var outputFile = path.join(outputDir, path.basename(analysisFile));
-                fs.writeFileSync(outputFile, String(fs.readFileSync(analysisFile)));
+        if (analysis) {
+            analysis.forEach(function (f) {
+                var outputFile = path.join(outputDir, path.basename(f));
+                fs.writeFileSync(outputFile, String(fs.readFileSync(f)));
             });
         }
     };
 
     var outputDir = options.outputDir;
+
     function initOutputDir(copyDir) {
         mkdirp.sync(copyDir);
-        esnstrument.openIIDMapFile(copyDir);
+//        esnstrument.openIIDMapFile(copyDir);
         // write an empty 'inputs.js' file here, to make replay happy
         // TODO make this filename more robust against name collisions
-        fs.writeFileSync(path.join(copyDir, "inputs.js"), "");
+        // fs.writeFileSync(path.join(copyDir, "inputs.js"), "");
     }
+
     // are we instrumenting a directory?
     var instDir = options.inputFiles.length === 1 && fs.lstatSync(options.inputFiles[0]).isDirectory();
     var inputDir;
@@ -358,7 +381,7 @@ function instrument(options, cb) {
     }
 
     var callback = function (err) {
-        esnstrument.closeIIDMapFile();
+//        esnstrument.closeIIDMapFile();
         if (extraAppScripts.length > 0) {
             var extraScriptDir = path.join(appDir, EXTRA_SCRIPTS_DIR);
             extraAppScripts.forEach(function (script) {
@@ -378,7 +401,7 @@ if (require.main === module) { // main script
     parser.addArgument(['-x', '--exclude'], { help:"do not instrument any scripts whose filename contains this substring" });
     // TODO add back this option once we've fixed the relevant HTML parsing code
     parser.addArgument(['-i', '--instrumentInline'], { help:"instrument inline scripts", action:'storeTrue'});
-    parser.addArgument(['--analysis'], { help:"Analysis script(s) for 'inbrowser'/'record' mode, separated by path.delimiter. Analysis must not use ConcolicValue" });
+    parser.addArgument(['--analysis'], { help:"Analysis script for 'inbrowser'/'record' mode.  Analysis must not use ConcolicValue", action:"append" });
     parser.addArgument(['-d', '--direct_in_output'], { help:"Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' });
     parser.addArgument(['--selenium'], { help:"Insert code so scripts can detect they are running under Selenium.  Also keeps Jalangi trace in memory", action:'storeTrue' });
     parser.addArgument(['--in_memory_trace'], { help:"Insert code to tell analysis to keep Jalangi trace in memory instead of writing to WebSocket", action:'storeTrue' });
@@ -386,9 +409,9 @@ if (require.main === module) { // main script
     parser.addArgument(['--smemory'], { help:"Add support for shadow memory", action:'storeTrue' });
     parser.addArgument(['-c', '--copy_runtime'], { help:"Copy Jalangi runtime files into instrumented app in jalangi_rt sub-directory", action:'storeTrue'});
     parser.addArgument(['--extra_app_scripts'], { help:"list of extra application scripts to be injected and instrumented, separated by path.delimiter"});
-    parser.addArgument(['--no_html'], { help: "don't inject Jalangi runtime into HTML files", action: 'storeTrue'});
-    parser.addArgument(['--outputDir'], { help:"directory in which to place instrumented files", required: true });
-    parser.addArgument(['inputFiles'], { help:"either a list of JavaScript files to instrument, or a single directory under which all JavaScript and HTML files should be instrumented (modulo the --no_html and --exclude flags)", nargs: '+'});
+    parser.addArgument(['--no_html'], { help:"don't inject Jalangi runtime into HTML files", action:'storeTrue'});
+    parser.addArgument(['--outputDir'], { help:"directory in which to place instrumented files", required:true });
+    parser.addArgument(['inputFiles'], { help:"either a list of JavaScript files to instrument, or a single directory under which all JavaScript and HTML files should be instrumented (modulo the --no_html and --exclude flags)", nargs:'+'});
 
     var args = parser.parseArgs();
 

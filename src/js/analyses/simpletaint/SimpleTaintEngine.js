@@ -16,7 +16,7 @@
 
 // Author: Koushik Sen
 
-(function (module) {
+(function (sandbox) {
 
     function SimpleTaintEngine() {
         var TRACE_FILE_NAME = "jalangi_trace";
@@ -93,5 +93,5 @@
         }
     }
 
-    module.exports = SimpleTaintEngine;
-}(module));
+    sandbox.analysis = new SimpleTaintEngine();
+}(J$));

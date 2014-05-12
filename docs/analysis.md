@@ -79,7 +79,7 @@ A direct analysis (aka inbrowser analysis) can be written using the following te
 //
 //        this.endExecution = function () {};
 //
-//        this.functionEnter = function (iid, fun, dis /* this */) {};
+//        this.functionEnter = function (iid, fun, dis /* this */, args) {};
 //
 //        this.functionExit = function (iid) {
 //            return false;
@@ -101,16 +101,14 @@ A direct analysis (aka inbrowser analysis) can be written using the following te
 
     }
     
+    sandbox.analysis = new SampleAnalysis();
     if (sandbox.Constants.isBrowser) {
-        sandbox.analysis = new SampleAnalysis();
         window.addEventListener('keydown', function (e) {
             // keyboard shortcut is Alt-Shift-T for now
             if (e.altKey && e.shiftKey && e.keyCode === 84) {
                 sandbox.analysis.endExecution();
             }
         });
-    } else {
-        module.exports = SampleAnalysis;
     }
 
 }(J$));
@@ -134,7 +132,7 @@ An analysis can be performed on a JavaScript file by issuing the following comma
 	    
 An analysis can be performed on an web app using the Chrome browser by issuing the following commands:
 
-    node src/js/commands/instrumentDir.js --inbrowser --smemory --analysis analyses/objectalloc/ObjectAllocationTrackerEngineIB.js tests/tizen/annex /tmp
+    node src/js/commands/instrument.js --inbrowser --smemory --analysis src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB.js --outputDir /tmp tests/tizen/annex
     open file:///tmp/annex/index.html
 
 While performing analysis in a browser, one needs to press Alt-Shift-T to end the analysis and to print the analysis results in the console.
@@ -221,7 +219,7 @@ These kind of analyses supports shadow values (denoted by objects of type Concol
 //
 //        this.endExecution = function () {};
 //
-//        this.functionEnter = function (iid, fun, dis /* this */) {};
+//        this.functionEnter = function (iid, fun, dis /* this */, args) {};
 //
 //        this.functionExit = function (iid) {
 //            return false;
@@ -241,7 +239,7 @@ These kind of analyses supports shadow values (denoted by objects of type Concol
 //        };
     }
 
-    module.exports = SampleAnalysis;
+    sandbox.analysis = new SampleAnalysis();
 }(J$));
 ``` 
 
@@ -259,7 +257,7 @@ One can run a shadow-memory based analysis during replay by issuing:
  
 A replay analysis can be performed in the Chrome browser by issuing the following commands:
 
-    node src/js/commands/instrumentDir.js tests/tizen/annex /tmp
+    node src/js/commands/instrument.js --outputDir /tmp tests/tizen/annex
     killall node
     python scripts/jalangi.py rrserver file:///tmp/annex/index.html    
     cp jalangi_trace1 /tmp/annex

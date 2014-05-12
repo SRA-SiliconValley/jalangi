@@ -21,11 +21,12 @@
 var assert = require("assert"),
 	astUtil = require("./../src/js/utils/astUtil.js"),
 	acorn = require("acorn"),
-    esnstrument = require("./../src/js/instrument/esnstrument");
+    esnstrument = require("./../src/js/instrument/esnstrument"),
+    temp = require('temp');
 
 	
 function checkCode(code) {
-    var instCode = esnstrument.instrumentCode(code, {wrapProgram: false}).code;
+    var instCode = esnstrument.instrumentCodeDeprecated(code, {wrapProgram: false, dirIIDFile: temp.dir}).code;
 //    console.log(instCode);
 	var ast = acorn.parse(instCode);
 	// NOTE: this is not a robust way to do a deep copy of ASTs,

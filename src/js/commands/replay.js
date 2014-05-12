@@ -28,19 +28,34 @@ var parser = new argparse.ArgumentParser({
 });
 parser.addArgument(['--smemory'], { help: "Use shadow memory", action: 'storeTrue'});
 parser.addArgument(['--tracefile'], { help: "Location to store trace file", defaultValue: DEFAULT_TRACE_FILE_NAME });
-parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run during replay"});
+parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run during replay", action:"append"});
 var args = parser.parseArgs();
 
 
 function runAnalysis(initParam) {
-    var analysis = require('./../analysis');
-    analysis.init("replay", args.analysis, args.smemory);
+    global.JALANGI_MODE="replay";
+    global.USE_SMEMORY=args.smemory;
+
+    var path = require('path');
+    var Headers = require('./../Headers');
+    Headers.headerSources.forEach(function(src){
+        require('./../../../'+src);
+    });
+    require('./../InputManager');
+    try {
+        require(process.cwd()+'/inputs');
+    } catch(e) {}
+
+    if (args.analysis) {
+        args.analysis.forEach(function (src) {
+            require(path.resolve(src));
+        });
+    }
+
     if (J$.analysis && J$.analysis.init) {
         J$.analysis.init(initParam ? initParam : {});
     }
-    require('./../InputManager');
-    require('./../instrument/esnstrument');
-    require(process.cwd() + '/inputs.js');
+
     try {
 //    console.log("Starting replay ...")
         J$.setTraceFileName(args.tracefile);

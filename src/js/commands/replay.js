@@ -48,7 +48,12 @@ function runAnalysis(initParam) {
 
     if (args.analysis) {
         args.analysis.forEach(function (src) {
-            require(path.resolve(src));
+            var Analysis = require(path.resolve(src));
+            // The old interface for analyses was to return a Constructor.
+            // Continue to support this interface
+            if (Analysis && typeof Analysis === 'function') {
+                J$.analysis = new Analysis();
+            }
         });
     }
 

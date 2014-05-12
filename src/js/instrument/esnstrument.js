@@ -1618,7 +1618,8 @@
 
         loadInitialIID(args.dirIIDFile, args.initIID);
 
-        var codeAndMData = instrumentCode(code, {wrapProgram:true, isEval:false, metadata:args.metadata});
+        var wrapProgram = HOP(args, 'wrapProgram') ? args.wrapProgram : true;
+        var codeAndMData = instrumentCode(code, {wrapProgram:wrapProgram, isEval:false, metadata:args.metadata});
 
         storeInitialIID(args.dirIIDFile);
         writeIIDMapFile(args.dirIIDFile, args.initIID, args.inlineIID);

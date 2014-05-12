@@ -83,7 +83,7 @@ function instrument(options, cb) {
     var copyDir;
 
     // analysis to run in browser (?)
-    var analysisFiles = options.analysis;
+    var analysis = options.analysis;
 
     /**
      * extra scripts to inject into the application and instrument

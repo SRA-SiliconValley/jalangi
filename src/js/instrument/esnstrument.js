@@ -84,8 +84,6 @@
     var logLastFunName = astUtil.JALANGI_VAR + "._";
 
     var instrumentCodeFunName = astUtil.JALANGI_VAR + ".instrumentCode";
-    
-    var instrEval = true; // whether to instrument code given to eval()
 
     var Syntax = {
         AssignmentExpression:'AssignmentExpression',
@@ -317,6 +315,7 @@
         fs.writeFileSync(jsonFile, JSON.stringify(outputObj));
         fs.writeFileSync(path.join(outputDir, COVERAGE_FILE_NAME), JSON.stringify({"covered":0, "branches":condCount / IID_INC_STEP * 2, "coverage":[]}), "utf8");
     }
+
 
     function printLineInfoAux(i, ast) {
         if (ast && ast.loc) {
@@ -607,8 +606,6 @@
 
     function wrapEvalArg(ast) {
         printIidToLoc(ast);
-        var code = instrEval ? instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false}," + RP +"2).code" :
-                              astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1)";
         var ret = replaceInExpr(
             instrumentCodeFunName + "(" + astUtil.JALANGI_VAR + ".getConcrete(" + RP + "1), {wrapProgram: false, isEval: true}," + RP + "2).code",
             ast,

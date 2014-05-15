@@ -96,7 +96,7 @@ function instrument(options, cb) {
 
 
     function createOrigScriptFilename(name) {
-        return name.replace(".js", "_orig_.js");
+        return name.replace(new RegExp(".js$"), "_orig_.js");
     }
 
     function rewriteInlineScript(src, metadata) {

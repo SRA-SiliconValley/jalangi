@@ -1654,7 +1654,7 @@
         args.instFileName = args.out?args.out:makeInstCodeFileName(fname);
 
         var codeAndMData = instrumentAux(getCode(fname), args);
-        saveCode(codeAndMData.code, codeAndMData.metadata, args.inlineIID, args.noInstrEval);
+        saveCode(codeAndMData.code, codeAndMData.iidMetadata, args.inlineIID, args.noInstrEval);
     }
 
 

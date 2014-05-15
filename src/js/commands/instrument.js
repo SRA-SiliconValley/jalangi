@@ -135,9 +135,10 @@ function instrument(options, cb) {
 
     var Transform = stream.Transform;
 
-    function HTMLRewriteStream(options) {
+    function HTMLRewriteStream(options, filename) {
         Transform.call(this, options);
         this.data = "";
+        this.filename = filename;
     }
 
     util.inherits(HTMLRewriteStream, Transform);
@@ -173,52 +174,56 @@ function instrument(options, cb) {
         } else {
             // just inject our header code
             var headIndex = this.data.indexOf("<head>");
-            assert.ok(headIndex !== -1, "couldn't find head element");
-            var headerLibs;
-            if (copyRuntime) {
-                headerLibs = getContainedRuntimeScriptTags();
+            if (headIndex === -1) {
+                console.error("WARNING: could not find <head> element in HTML file " + this.filename);
+                this.push(this.data);
             } else {
-                var tmp3 = "";
-                if (analysis) {
-                    analysis.forEach(function (src) {
-                        src = path.resolve(src);
-                        tmp3 += "<script src=\"" + src + "\"></script>";
+                var headerLibs;
+                if (copyRuntime) {
+                    headerLibs = getContainedRuntimeScriptTags();
+                } else {
+                    var tmp3 = "";
+                    if (analysis) {
+                        analysis.forEach(function (src) {
+                            src = path.resolve(src);
+                            tmp3 += "<script src=\"" + src + "\"></script>";
+                        });
+                    }
+
+                    headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot);
+                    headerLibs = headerLibs + tmp3;
+                }
+                if (selenium) {
+                    headerLibs = "<script>" + seleniumCode + "</script>" + headerLibs;
+                }
+                if (inMemoryTrace) {
+                    headerLibs = "<script>" + inMemoryTraceCode + "</script>" + headerLibs;
+                }
+                if (inbrowser) {
+                    headerLibs = "<script>" + analysisCode + "</script>" + headerLibs;
+                }
+                if (smemory) {
+                    headerLibs = "<script>" + smemoryOption + "</script>" + headerLibs;
+                }
+                headerLibs += "<script src=\"jalangi_sourcemap.js\"></script>";
+
+                if (extraAppScripts.length > 0) {
+                    // we need to inject script tags for the extra app scripts,
+                    // which have been copied into the app directory
+                    extraAppScripts.forEach(function (script) {
+                        var scriptSrc = path.join(EXTRA_SCRIPTS_DIR, path.basename(script));
+                        headerLibs += "<script src=\"" + scriptSrc + "\"></script>";
                     });
                 }
-
-                headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot);
-                headerLibs = headerLibs + tmp3;
+                var newHTML = this.data.slice(0, headIndex + 6) + headerLibs + this.data.slice(headIndex + 6);
+                this.push(newHTML);
             }
-            if (selenium) {
-                headerLibs = "<script>" + seleniumCode + "</script>" + headerLibs;
-            }
-            if (inMemoryTrace) {
-                headerLibs = "<script>" + inMemoryTraceCode + "</script>" + headerLibs;
-            }
-            if (inbrowser) {
-                headerLibs = "<script>" + analysisCode + "</script>" + headerLibs;
-            }
-            if (smemory) {
-                headerLibs = "<script>" + smemoryOption + "</script>" + headerLibs;
-            }
-            headerLibs += "<script src=\"jalangi_sourcemap.js\"></script>";
-
-            if (extraAppScripts.length > 0) {
-                // we need to inject script tags for the extra app scripts,
-                // which have been copied into the app directory
-                extraAppScripts.forEach(function (script) {
-                    var scriptSrc = path.join(EXTRA_SCRIPTS_DIR, path.basename(script));
-                    headerLibs += "<script src=\"" + scriptSrc + "\"></script>";
-                });
-            }
-            var newHTML = this.data.slice(0, headIndex + 6) + headerLibs + this.data.slice(headIndex + 6);
-            this.push(newHTML);
         }
         cb();
     };
 
-    function rewriteHtml(readStream, writeStream) {
-        readStream.pipe(new HTMLRewriteStream()).pipe(writeStream);
+    function rewriteHtml(readStream, writeStream, filename) {
+        readStream.pipe(new HTMLRewriteStream(null, filename)).pipe(writeStream);
     }
 
     function InstrumentJSStream(options, origScriptName, instScriptName) {
@@ -289,7 +294,7 @@ function instrument(options, cb) {
             if (options.no_html) {
                 readStream.pipe(writeStream);
             } else {
-                rewriteHtml(readStream, writeStream);
+                rewriteHtml(readStream, writeStream, file.name);
             }
         } else if (extension === '.js') {
             if ((!excludePattern || file.name.indexOf(excludePattern) === -1)) {

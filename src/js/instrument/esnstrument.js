@@ -1514,7 +1514,7 @@
     function transformString(code, visitorsPost, visitorsPre) {
 //        console.time("parse")
 //        var newAst = esprima.parse(code, {loc:true, range:true});
-        var newAst = acorn.parse(code, {locations:true, ranges:true});
+        var newAst = acorn.parse(code, { locations:true });
 //        console.timeEnd("parse")
 //        console.time("transform")
         addScopes(newAst);

@@ -74,7 +74,7 @@ def instrument(filee,output_dir=".",jalangi=util.DEFAULT_INSTALL):
     returns: A tuple of the filename of the instrumented version and the output of Jalangi
     """
     print "---- Instrumenting {} ----" .format(filee)
-    util.run_node_script_std(jalangi.instrumentation_script(), filee + ".js",  jalangi=jalangi)
+    util.run_node_script_std(jalangi.instrumentation_script(), "--initIID", filee + ".js",  jalangi=jalangi)
     return (os.path.basename(filee) + "_jalangi_.js", "")
 
 def replay(f=None, jalangi=util.DEFAULT_INSTALL, analysis=None):

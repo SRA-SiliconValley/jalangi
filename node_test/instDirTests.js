@@ -96,6 +96,20 @@ describe('instrument dir tests', function () {
             done();
         });
     });
+    it('should handle only_include option', function (done) {
+        var options = {
+            inputFiles: ["tests/html/unitApps/app2"],
+            outputDir: temp.mkdirSync(),
+            only_include: "src1" + path.delimiter + "src3"
+        };
+        inst.instrument(options, function (err) {
+            assert(!err, err);
+            assert(fs.existsSync(path.join(options.outputDir, "app2", "src1", "foo_orig_.js")));
+            assert(fs.existsSync(path.join(options.outputDir, "app2", "src3", "baz_orig_.js")));
+            assert(!fs.existsSync(path.join(options.outputDir, "app2", "src2", "bar_orig_.js")));
+            done();
+        });
+    });
 //    it('should work with direct_in_output', function (done) {
 //        assert(false, "TODO");
 //        done();

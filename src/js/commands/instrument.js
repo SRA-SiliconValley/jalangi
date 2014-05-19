@@ -59,6 +59,12 @@ function instrument(options, cb) {
 
     var excludePattern = options.exclude;
 
+    var onlyIncludeList = null;
+
+    if (options.only_include) {
+        onlyIncludeList = options.only_include.split(path.delimiter);
+    }
+
     var dumpSerializedASTs = options.serialize;
 
     var jalangiRoot = getJalangiRoot();
@@ -288,19 +294,43 @@ function instrument(options, cb) {
         readStream.pipe(fs.createWriteStream(path.join(copyDir, origScriptCopyName)));
     }
 
+    /**
+     * determine if a file is in the include list
+     * @param fileName
+     * @returns {boolean}
+     */
+    function includedFile(fileName) {
+        var relativePath = fileName.substring(appDir.length+1);
+        var result = false;
+        for (var i = 0; i < onlyIncludeList.length; i++) {
+            var prefix = onlyIncludeList[i];
+            if (relativePath.indexOf(prefix) === 0) {
+                result = true;
+                break;
+            }
+        }
+        return result;
+    }
+
     function transform(readStream, writeStream, file) {
         var extension = path.extname(file.name);
         if (extension === '.html') {
-            if (options.no_html) {
+            if (options.no_html || (onlyIncludeList && !includedFile(file.name))) {
                 readStream.pipe(writeStream);
             } else {
                 rewriteHtml(readStream, writeStream, file.name);
             }
         } else if (extension === '.js') {
-            if ((!excludePattern || file.name.indexOf(excludePattern) === -1)) {
+            // we instrument a JS file iff:
+            // (1) an include list is specified and the file name is included, or
+            // (2) an include list is not specified, and the file path does not
+            //     contain the excludePattern
+            var instrumentJSFile = (onlyIncludeList && includedFile(file.name)) ||
+                (!onlyIncludeList && (!excludePattern || file.name.indexOf(excludePattern) === -1));
+            if (instrumentJSFile) {
                 instrumentJS(readStream, writeStream, file.name);
             } else {
-                console.log("excluding " + file.name);
+//                console.log("excluding " + file.name);
                 readStream.pipe(writeStream);
             }
         } else {
@@ -403,7 +433,8 @@ function instrument(options, cb) {
 if (require.main === module) { // main script
     var parser = new ArgumentParser({ addHelp:true, description:"Utility to apply Jalangi instrumentation to files or a folder."});
     parser.addArgument(['-s', '--serialize'], { help:"dump serialized ASTs along with code", action:'storeTrue' });
-    parser.addArgument(['-x', '--exclude'], { help:"do not instrument any scripts whose filename contains this substring" });
+    parser.addArgument(['-x', '--exclude'], { help:"do not instrument any scripts whose file path contains this substring" });
+    parser.addArgument(['--only_include'], { help: "list of path prefixes specifying which sub-directories should be instrumented, separated by path.delimiter"});
     // TODO add back this option once we've fixed the relevant HTML parsing code
     parser.addArgument(['-i', '--instrumentInline'], { help:"instrument inline scripts", action:'storeTrue'});
     parser.addArgument(['--analysis'], { help:"Analysis script for 'inbrowser'/'record' mode.  Analysis must not use ConcolicValue", action:"append" });

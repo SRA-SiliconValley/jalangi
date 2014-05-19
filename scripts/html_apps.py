@@ -18,6 +18,7 @@ import testrunner
 
 
 tests = [
+    "tests/html/unitApps/dataset_app",
     "tests/tizen/annex",
     "tests/tizen/calculator",
     "tests/tizen/go"

@@ -43,7 +43,7 @@ var headerSources = ["src/js/Constants.js",
 /**
  * concatenates required scripts for Jalangi to run in the browser into a single string
  */
-var headerCode;
+var headerCode = "";
 
 function headerCodeInit(root) {
     headerSources.forEach(function (src) {

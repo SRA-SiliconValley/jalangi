@@ -1612,6 +1612,12 @@
         if (!args.dirIIDFile) {
             throw new Error("must provide dirIIDFile");
         }
+        if (!args.filename) {
+            throw new Error("must provide filename");
+        }
+        if (!args.instFileName) {
+            throw new Error("must provide instFileName");
+        }
         curFileName = args.filename;
         instCodeFileName = args.instFileName;
         orig2Inst[curFileName] = instCodeFileName;

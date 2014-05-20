@@ -58,8 +58,18 @@ function rewriter(src, metadata) {
 	var filename = path.join(outputDir, basename);
 	// TODO check for file conflicts and handle appropriately
 	fs.writeFileSync(filename, src);
-	var instrumented = esnstrument.instrumentCode(src, { wrapProgram: true, filename: basename}).code;
-	fs.writeFileSync(filename.replace(".js",esnstrument.fileSuffix+".js"), instrumented);
+
+    var instFileName = basename.replace(new RegExp(".js$"), "_jalangi_.js");
+
+    var options = {
+        wrapProgram: true,
+        filename: basename,
+        instFileName: instFileName,
+        dirIIDFile: outputDir,
+        metadata: true
+    };
+    var instrumented = esnstrument.instrumentCodeDeprecated(src, options).code;
+	fs.writeFileSync(path.join(outputDir, instFileName), instrumented);
 	return instrumented;
 }
 
@@ -87,8 +97,6 @@ function initOutputDir() {
  * Jalangi scripts at the top of the file.
  */
 function startJalangiProxy() {
-	// set up the instrumenter to write the source map file to the output directory
-	esnstrument.openIIDMapFile(outputDir);
 	proxy.start({ headerCode: instUtil.getHeaderCode(), rewriter: rewriter, port: 8501 });
 }
 
@@ -108,14 +116,3 @@ startJalangiProxy();
 
 // TODO add command-line option to not launch websocket proxy
 jalangi_ws.start({ outputDir: outputDir });
-
-// TODO temporary hack; this is very gross.  we need separate IID map files per script file
-var exitFun = function () {
-	console.log("closing IID map file...");
-	esnstrument.closeIIDMapFile();
-	console.log("done");
-	process.exit();
-};
-
-process.on('exit', exitFun);
-process.on('SIGINT', exitFun);

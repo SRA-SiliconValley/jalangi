@@ -49,10 +49,10 @@ if (typeof J$ === 'undefined') {
             var traceFh = new FileLineReader(Globals.traceFileName);
             while (traceFh.hasNextLine()) {
                 var record = JSON.parse(traceFh.nextLine(), decodeNaNandInfForJSON);
-                if (((type = record[F_TYPE]) === T_OBJECT || type === T_ARRAY || type === T_FUNCTION) && record[F_FUNNAME] !== N_LOG_HASH) {
+                if (((type = record[F_TYPE]) === T_OBJECT || type === T_ARRAY || type === T_FUNCTION) && record[F_FUNNAME] !== N_LOG_HASH && record[F_VALUE] !== Constants.UNKNOWN) {
                     this.objectIdLife[record[F_VALUE]] = record[F_SEQ];
                 }
-                if (record[F_FUNNAME] === N_LOG_LOAD) {
+                if (record[F_FUNNAME] === N_LOG_LOAD && record[F_VALUE] !== Constants.UNKNOWN) {
                     this.objectIdLife[record[F_VALUE]] = record[F_SEQ];
                 }
             }
@@ -64,7 +64,7 @@ if (typeof J$ === 'undefined') {
             return ret;
         };
 
-        this.canDeleteReference = function(recordedArray) {
+        this.canDeleteReference = function (recordedArray) {
             var ret = (this.objectIdLife[recordedArray[F_VALUE]] === recordedArray[F_SEQ]);
             return ret;
         };

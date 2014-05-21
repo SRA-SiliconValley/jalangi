@@ -40,6 +40,8 @@ if (typeof J$ === 'undefined') {
     Constants.F_SEQ = 3;
     Constants.F_FUNNAME = 4;
 
+    Constants.UNKNOWN = -1;
+
     Constants.N_LOG_FUNCTION_ENTER = 4;
     Constants.N_LOG_SCRIPT_ENTER = 6;
     Constants.N_LOG_GETFIELD = 8;

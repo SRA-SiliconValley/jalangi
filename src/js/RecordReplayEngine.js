@@ -685,7 +685,8 @@ if (typeof J$ === 'undefined') {
                         f = getConcrete(syncValue(ret, undefined, 0));
                         ret = traceReader.getNext();
                         var dis = syncValue(ret, undefined, 0);
-                        f.call(dis);
+                        Function.prototype.call.call(f, dis);
+//                        f.call(dis);
                     } else if (ret[F_FUNNAME] === N_LOG_SCRIPT_ENTER) {
                         var path = getConcrete(syncValue(ret, undefined, 0));
                         if (Constants.isBrowserReplay) {

@@ -35,7 +35,7 @@ if (typeof J$ === 'undefined') {
     J$ = {};
 }
 
-window = {String:String, Array:Array, Error:Error, String:String, Number:Number, Date:Date, Boolean:Boolean, RegExp:RegExp};
+window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boolean:Boolean, RegExp:RegExp};
 
 (function (sandbox) {
     var Constants = sandbox.Constants;
@@ -381,7 +381,8 @@ window = {String:String, Array:Array, Error:Error, String:String, Number:Number,
                         if (isConstructor) {
                             val = callAsConstructor(g, args);
                         } else {
-                            val = g.apply(base, args);
+                            val = Function.prototype.apply.call(g, base, args);
+                            //val = g.apply(base, args);
                         }
                     } else {
                         if (rrEngine) {

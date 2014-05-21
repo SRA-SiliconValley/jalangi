@@ -15,6 +15,7 @@ if (typeof J$ === 'undefined') {
         var N_LOG_FUNCTION_LIT = Constants.N_LOG_FUNCTION_LIT;
         var objectId = 1;
         var frameId = 2;
+        var scriptCount = 0;
         var HOP = Constants.HOP;
 
 
@@ -133,15 +134,21 @@ if (typeof J$ === 'undefined') {
         };
 
         this.scriptEnter = function () {
-            frameStack.push(frame = Object.create(null));
-            //frame[SPECIAL_PROP] = frameId;
-            //frameId = frameId + 2;
-            frame[SPECIAL_PROP3] = frameStack[0];
+            scriptCount++;
+            if (scriptCount>1) {
+                frameStack.push(frame = Object.create(null));
+                //frame[SPECIAL_PROP] = frameId;
+                //frameId = frameId + 2;
+                frame[SPECIAL_PROP3] = frameStack[0];
+            }
         };
 
         this.scriptReturn = function () {
-            frameStack.pop();
-            frame = frameStack[frameStack.length - 1];
+            if (scriptCount>1) {
+                frameStack.pop();
+                frame = frameStack[frameStack.length - 1];
+            }
+            scriptCount--;
         };
 
     };

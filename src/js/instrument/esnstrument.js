@@ -1614,7 +1614,9 @@
         }
         curFileName = args.filename;
         instCodeFileName = args.instFileName;
-        orig2Inst[curFileName] = instCodeFileName;
+        if (curFileName && instCodeFileName) {
+            orig2Inst[curFileName] = instCodeFileName;
+        }
 
         loadInitialIID(args.dirIIDFile, args.initIID);
 

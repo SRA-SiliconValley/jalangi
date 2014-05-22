@@ -33,8 +33,10 @@
             var val_s = getSymbolic(val);
             if (val_s) {
                 return val;
-            } else {
+            } else if (typeof val !== 'function' || val.name !== 'call') {
                 return new ConcolicValue(val, (str ? str : "") + " initialized at " + iidToLocation(iid));
+            } else {
+                return val;
             }
         }
 

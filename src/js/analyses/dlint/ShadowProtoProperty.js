@@ -1,3 +1,5 @@
+// Author: Koushik Sen
+
 
 (function (sandbox) {
     function ShadowProtoProperty() {
@@ -22,7 +24,9 @@
 //
 //        this.literalPre = function (iid, val) {};
 //
-//        this.literal = function (iid, val) {};
+//        this.literal = function (iid, val) {
+//            return val;
+//        };
 //
 //        this.invokeFunPre = function (iid, f, base, args, isConstructor) {};
 //

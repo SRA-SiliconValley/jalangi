@@ -1,11 +1,10 @@
 // Author: Koushik Sen
 
+
 (function (sandbox) {
-    function UndefinedOffset() {
-        var smemory = sandbox.smemory;
+    function CheckNaN() {
         var iidToLocation = sandbox.iidToLocation;
         var Constants = sandbox.Constants;
-        var Config = sandbox.Config;
         var HOP = Constants.HOP;
         var sort = Array.prototype.sort;
 
@@ -29,24 +28,30 @@
 //
 //        this.invokeFunPre = function (iid, f, base, args, isConstructor) {};
 //
-//        this.invokeFun = function (iid, f, base, args, val, isConstructor) {
-//            return val;
-//        };
-//
-        this.getFieldPre = function (iid, base, offset) {
-            if (offset === undefined)
+        this.invokeFun = function (iid, f, base, args, val, isConstructor) {
+            if (val !== val) {
                 info[iid] = (info[iid]|0) + 1;
-        };
-//
-//        this.getField = function (iid, base, offset, val) {
-//            return val;
-//        }
-//
-        this.putFieldPre = function (iid, base, offset, val) {
-            if (offset === undefined)
-                info[iid] = (info[iid]|0) + 1;
+            }
             return val;
         };
+
+//        this.getFieldPre = function (iid, base, offset) {
+//            if (offset === undefined)
+//                info[iid] = (info[iid]|0) + 1;
+//        };
+//
+        this.getField = function (iid, base, offset, val) {
+            if (val !== val) {
+                info[iid] = (info[iid]|0) + 1;
+            }
+            return val;
+        };
+//
+//        this.putFieldPre = function (iid, base, offset, val) {
+//            if (offset === undefined)
+//                info[iid] = (info[iid]|0) + 1;
+//            return val;
+//        };
 //
 //        this.putField = function (iid, base, offset, val) {
 //            return val;
@@ -66,15 +71,21 @@
 //
 //        this.binaryPre = function (iid, op, left, right) {};
 //
-//        this.binary = function (iid, op, left, right, result_c) {
-//            return result_c;
-//        };
+        this.binary = function (iid, op, left, right, result_c) {
+            if (result_c !== result_c) {
+                info[iid] = (info[iid]|0) + 1;
+            }
+            return result_c;
+        };
 //
 //        this.unaryPre = function (iid, op, left) {};
 //
-//        this.unary = function (iid, op, left, result_c) {
-//            return result_c;
-//        };
+        this.unary = function (iid, op, left, result_c) {
+            if (result_c !== result_c) {
+                info[iid] = (info[iid]|0) + 1;
+            }
+            return result_c;
+        };
 //
 //        this.conditionalPre = function (iid, left) {};
 //
@@ -92,12 +103,12 @@
                 }
             }
             sort.call(tmp, function(a,b) {
-               return b.count - a.count;
+                return b.count - a.count;
             });
             for (var x in tmp) {
                 if (HOP(tmp, x)) {
                     x = tmp[x];
-                    console.log("Accessed property 'undefined' at "+iidToLocation(x.iid)+" "+ x.count+" time(s).");
+                    console.log("Observed NaN at "+iidToLocation(x.iid)+" "+ x.count+" time(s).");
                 }
             }
         };
@@ -125,5 +136,5 @@
     }
 
 //    sandbox.analysis = new UndefinedOffset();
-    sandbox.analysis = new UndefinedOffset();
+    sandbox.analysis = new CheckNaN();
 }(J$));

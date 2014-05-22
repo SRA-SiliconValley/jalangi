@@ -93,5 +93,5 @@
     }
 
 //    sandbox.analysis = new UndefinedOffset();
-    sandbox.analysis.addAnalysis(new CheckReturn());
+    sandbox.analysis = new CheckReturn();
 }(J$));

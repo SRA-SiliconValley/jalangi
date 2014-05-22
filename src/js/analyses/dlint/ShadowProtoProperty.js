@@ -134,5 +134,5 @@
 
     }
 
-    sandbox.analysis.addAnalysis(new ShadowProtoProperty());
+    sandbox.analysis = new ShadowProtoProperty();
 }(J$));

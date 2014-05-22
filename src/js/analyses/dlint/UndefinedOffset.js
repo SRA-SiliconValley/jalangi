@@ -122,5 +122,5 @@
     }
 
 //    sandbox.analysis = new UndefinedOffset();
-    sandbox.analysis.addAnalysis(new UndefinedOffset());
+    sandbox.analysis = new UndefinedOffset();
 }(J$));

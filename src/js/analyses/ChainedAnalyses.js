@@ -138,6 +138,16 @@
 
     }
 
+    var thisAnalysis = new ChainedAnalyses();
+    Object.defineProperty(sandbox, 'analysis', {
+        get: function() {
+            return thisAnalysis;
+        },
+        set: function(a) {
+            thisAnalysis.addAnalysis(a);
+        }
+    });
+
     sandbox.analysis = new ChainedAnalyses();
     if (sandbox.Constants.isBrowser) {
         window.addEventListener('keydown', function (e) {

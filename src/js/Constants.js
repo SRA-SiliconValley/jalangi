@@ -9,7 +9,14 @@ if (typeof J$ === 'undefined') {
 
     Constants.IN_MEMORY_TRACE = Constants.isBrowser && (window.__JALANGI_IN_MEMORY_TRACE__);
 
-    Constants.HAS_OWN_PROPERTY = Object.prototype.hasOwnProperty;
+    var APPLY = Constants.APPLY = Function.prototype.apply;
+    var CALL = Constants.CALL = Function.prototype.call;
+    APPLY.apply = APPLY;
+    APPLY.call = CALL;
+    CALL.apply = APPLY;
+    CALL.call = CALL;
+
+    var HAS_OWN_PROPERTY = Constants.HAS_OWN_PROPERTY = Object.prototype.hasOwnProperty;
     Constants.HAS_OWN_PROPERTY_CALL = Object.prototype.hasOwnProperty.call;
 
 
@@ -84,7 +91,7 @@ if (typeof J$ === 'undefined') {
     }
 
     var HOP = Constants.HOP = function (obj, prop) {
-        return (prop + "" === '__proto__') || Constants.HAS_OWN_PROPERTY_CALL.apply(Constants.HAS_OWN_PROPERTY, [obj, prop]);
+        return (prop + "" === '__proto__') || CALL.call(HAS_OWN_PROPERTY, obj, prop); //Constants.HAS_OWN_PROPERTY_CALL.apply(Constants.HAS_OWN_PROPERTY, [obj, prop]);
     }
 
     Constants.hasGetterSetter = function (obj, prop, isGetter) {

@@ -27,12 +27,12 @@ if (typeof J$ === 'undefined') {
     Constants.SPECIAL_PROP4 = "*" + PREFIX1 + "W*";
 
     Constants.MODE_RECORD = 1;
-    Constants.MODE_REPLAY = 2
+    Constants.MODE_REPLAY = 2;
     Constants.MODE_NO_RR_IGNORE_UNINSTRUMENTED = 3;
     Constants.MODE_NO_RR = 4;
     Constants.MODE_DIRECT = 5;
 
-    Constants.T_NULL = 0
+    Constants.T_NULL = 0;
     Constants.T_NUMBER = 1;
     Constants.T_BOOLEAN = 2;
     var T_STRING = Constants.T_STRING = 3;

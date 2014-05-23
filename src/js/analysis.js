@@ -211,28 +211,16 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
                 var type = typeof val, str;
                 if (type !== 'object' && type !== 'function') {
                     str = loc + ":" + iid + ":" + type + ":" + val;
-                    if (isBrowser)
-                        loadAndBranchLogs.push(str);
-                    else
-                        console.log(str);
+                    loadAndBranchLogs.push(str);
                 } else if (val === null) {
                     str = loc + ":" + iid + ":" + type + ":" + val;
-                    if (isBrowser)
-                        loadAndBranchLogs.push(str);
-                    else
-                        console.log(str);
+                    loadAndBranchLogs.push(str);
                 } else if (HOP(val, SPECIAL_PROP) && HOP(val[SPECIAL_PROP], SPECIAL_PROP)) {
                     str = loc + ":" + iid + ":" + type + ":" + val[SPECIAL_PROP][SPECIAL_PROP];
-                    if (isBrowser)
-                        loadAndBranchLogs.push(str);
-                    else
-                        console.log(str);
+                    loadAndBranchLogs.push(str);
                 } else {
                     str = loc + ":" + iid + ":" + type + ":object";
-                    if (isBrowser)
-                        loadAndBranchLogs.push(str);
-                    else
-                        console.log(str);
+                    loadAndBranchLogs.push(str);
                 }
             }
 
@@ -554,6 +542,7 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
                         clientAnalysisException(e);
                     }
                 }
+                printValueForTesting("Call", iid, val);
             }
 
             // Function exit
@@ -1096,6 +1085,12 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
             function endExecution() {
                 if (branchCoverageInfo)
                     branchCoverageInfo.storeBranchInfo();
+                if (Config.LOG_ALL_READS_AND_BRANCHES) {
+                    if (mode === MODE_REPLAY) {
+                        require('fs').writeFileSync("readAndBranchLogs.replay", JSON.stringify(Globals.loadAndBranchLogs, undefined, 4), "utf8");
+                    }
+                }
+
                 if (sandbox.analysis && sandbox.analysis.endExecution) {
                     try {
                         return sandbox.analysis.endExecution();

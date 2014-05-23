@@ -584,6 +584,12 @@ if (typeof J$ === 'undefined') {
                 frame = frameStack[frameStack.length - 1];
                 if (Globals.mode === MODE_RECORD && frameStack.length <= 1) {
                     traceWriter.flush();
+                    if (Config.LOG_ALL_READS_AND_BRANCHES) {
+                        if (Globals.mode === MODE_RECORD && !Constants.isBrowser) {
+                            require('fs').writeFileSync("readAndBranchLogs.record", JSON.stringify(Globals.loadAndBranchLogs, undefined, 4), "utf8");
+                        }
+                    }
+
                 }
             }
             if (Constants.isBrowserReplay) {

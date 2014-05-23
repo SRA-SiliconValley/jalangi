@@ -40,13 +40,13 @@ call_fail(["easy_install","selenium"])
 os.chdir("thirdparty");
 print "---> Downloading chromedriver"
 if platform == "darwin":
-    urlretrieve("http://chromedriver.storage.googleapis.com/2.9/chromedriver_mac32.zip",
+    urlretrieve("http://chromedriver.storage.googleapis.com/2.10/chromedriver_mac32.zip",
                 "chromedriver.zip")
 elif platform == "linux2":
-    urlretrieve("http://chromedriver.storage.googleapis.com/2.9/chromedriver_linux64.zip",
+    urlretrieve("http://chromedriver.storage.googleapis.com/2.10/chromedriver_linux64.zip",
                 "chromedriver.zip")
 else: #windows
-    urlretrieve("http://chromedriver.storage.googleapis.com/2.9/chromedriver_win32.zip",
+    urlretrieve("http://chromedriver.storage.googleapis.com/2.10/chromedriver_win32.zip",
                 "chromedriver.zip")
 z = zipfile.ZipFile("chromedriver.zip", mode="r")
 z.extractall()

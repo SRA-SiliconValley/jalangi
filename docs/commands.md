@@ -30,52 +30,54 @@ Optional arguments:
 Utility to apply Jalangi instrumentation to files or a folder
 
     node src/js/commands/instrument.js -h
-    usage: instrument.js [-h] [-s] [-x EXCLUDE] [-i] [--analysis ANALYSIS] [-d]
-                     [--selenium] [--in_memory_trace] [--inbrowser]
-                     [--smemory] [-c] [--extra_app_scripts EXTRA_APP_SCRIPTS]
-                     [--no_html] --outputDir OUTPUTDIR
+    usage: instrument.js [-h] [-s] [-x EXCLUDE] [--only_include ONLY_INCLUDE] [-i]
+                     [--analysis ANALYSIS] [-d] [--selenium]
+                     [--in_memory_trace] [--inbrowser] [--smemory] [-c]
+                     [--extra_app_scripts EXTRA_APP_SCRIPTS] [--no_html]
+                     --outputDir OUTPUTDIR
                      inputFiles [inputFiles ...]
 
 Utility to apply Jalangi instrumentation to files or a folder.
 
 Positional arguments:
-
-    inputFiles            either a list of JavaScript files to instrument, or a
-                        single directory under which all JavaScript and HTML
-                        files should be instrumented (modulo the --no_html
-                        and --exclude flags)
+    inputFiles            either a list of JavaScript files to instrument, or a 
+                          single directory under which all JavaScript and HTML 
+                          files should be instrumented (modulo the --no_html 
+                          and --exclude flags)
 
 Optional arguments:
-
     -h, --help            Show this help message and exit.
     -s, --serialize       dump serialized ASTs along with code
     -x EXCLUDE, --exclude EXCLUDE
-                        do not instrument any scripts whose filename contains
-                        this substring
+                          do not instrument any scripts whose file path 
+                          contains this substring
+    --only_include ONLY_INCLUDE
+                          list of path prefixes specifying which 
+                          sub-directories should be instrumented, separated by 
+                          path.delimiter
     -i, --instrumentInline
-                        instrument inline scripts
-    --analysis ANALYSIS   Analysis script for 'inbrowser'/'record' mode.
-                        Analysis must not use ConcolicValue
+                          instrument inline scripts
+    --analysis ANALYSIS   Analysis script for 'inbrowser'/'record' mode. 
+                          Analysis must not use ConcolicValue
     -d, --direct_in_output
-                        Store instrumented app directly in output directory
-                        (by default, creates a sub-directory of output
-                        directory)
-    --selenium            Insert code so scripts can detect they are running
-                        under Selenium. Also keeps Jalangi trace in memory
-    --in_memory_trace     Insert code to tell analysis to keep Jalangi trace in
-                        memory instead of writing to WebSocket
-    --inbrowser           Insert code to tell Jalangi to run in 'inbrowser'
-                        analysis mode
+                          Store instrumented app directly in output directory 
+                          (by default, creates a sub-directory of output 
+                          directory)
+    --selenium            Insert code so scripts can detect they are running 
+                          under Selenium. Also keeps Jalangi trace in memory
+    --in_memory_trace     Insert code to tell analysis to keep Jalangi trace in 
+                          memory instead of writing to WebSocket
+    --inbrowser           Insert code to tell Jalangi to run in 'inbrowser' 
+                          analysis mode
     --smemory             Add support for shadow memory
-    -c, --copy_runtime    Copy Jalangi runtime files into instrumented app in
-                        jalangi_rt sub-directory
+    -c, --copy_runtime    Copy Jalangi runtime files into instrumented app in 
+                          jalangi_rt sub-directory
     --extra_app_scripts EXTRA_APP_SCRIPTS
-                        list of extra application scripts to be injected and
-                        instrumented, separated by path.delimiter
+                          list of extra application scripts to be injected and 
+                          instrumented, separated by path.delimiter
     --no_html             don't inject Jalangi runtime into HTML files
     --outputDir OUTPUTDIR
-                        directory in which to place instrumented files
-
+                          directory in which to place instrumented files
 ## direct.js
 
 Command-line utility to perform Jalangi's direct analysis

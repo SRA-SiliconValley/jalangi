@@ -723,6 +723,7 @@ if (typeof J$ === 'undefined') {
         }
 
 
+        var tmp_LOG_ALL_READS_AND_BRANCHES = false;
         if (Globals.mode === MODE_REPLAY) {
             traceReader = new TraceReader();
             this.addRecord = traceReader.addRecord;
@@ -739,9 +740,11 @@ if (typeof J$ === 'undefined') {
                     if (e.altKey && e.shiftKey && e.keyCode === 84) {
                         traceWriter.stopTracing();
                         traceWriter.onflush(function () {
-                            if (Config.LOG_ALL_READS_AND_BRANCHES) console.save(Globals.loadAndBranchLogs, "readAndBranchLogs.record");
+                            if (tmp_LOG_ALL_READS_AND_BRANCHES) console.save(Globals.loadAndBranchLogs, "readAndBranchLogs.record");
                             alert("trace flush complete");
                         });
+                        tmp_LOG_ALL_READS_AND_BRANCHES = Config.LOG_ALL_READS_AND_BRANCHES;
+                        Config.LOG_ALL_READS_AND_BRANCHES = false;
                     }
                 });
             }

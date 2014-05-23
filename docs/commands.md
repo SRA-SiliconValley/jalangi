@@ -40,12 +40,14 @@ Utility to apply Jalangi instrumentation to files or a folder
 Utility to apply Jalangi instrumentation to files or a folder.
 
 Positional arguments:
+
     inputFiles            either a list of JavaScript files to instrument, or a 
                           single directory under which all JavaScript and HTML 
                           files should be instrumented (modulo the --no_html 
                           and --exclude flags)
 
 Optional arguments:
+
     -h, --help            Show this help message and exit.
     -s, --serialize       dump serialized ASTs along with code
     -x EXCLUDE, --exclude EXCLUDE

@@ -322,10 +322,12 @@ function instrument(options, cb) {
             }
         } else if (extension === '.js') {
             // we instrument a JS file iff:
-            // (1) an include list is specified and the file name is included, or
-            // (2) an include list is not specified, and the file path does not
+            // (1) it's an extra app script, or
+            // (2) an include list is specified and the file name is included, or
+            // (3) an include list is not specified, and the file path does not
             //     contain the excludePattern
-            var instrumentJSFile = (onlyIncludeList && includedFile(file.name)) ||
+            var instrumentJSFile = file.name.indexOf(EXTRA_SCRIPTS_DIR) !== -1 ||
+                (onlyIncludeList && includedFile(file.name)) ||
                 (!onlyIncludeList && (!excludePattern || file.name.indexOf(excludePattern) === -1));
             if (instrumentJSFile) {
                 instrumentJS(readStream, writeStream, file.name);

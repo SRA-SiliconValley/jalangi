@@ -7,6 +7,7 @@ if (typeof J$ === 'undefined') {
     var Globals = sandbox.Globals = {};
     Globals.mode;
     Globals.isInstrumentedCaller;
+    Globals.isMethodCall;
     Globals.isConstructorCall;
     Globals.isBrowserReplay;
     Globals.traceFileName;

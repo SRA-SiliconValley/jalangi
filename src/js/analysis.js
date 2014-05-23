@@ -90,7 +90,7 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
         var isBrowserReplay = Globals.isBrowserReplay = Constants.isBrowser && Globals.mode === MODE_REPLAY;
         Globals.isInstrumentedCaller = false;
         Globals.isConstructorCall = false;
-
+        Globals.isMethodCall = false;
 
         if (Globals.mode === MODE_DIRECT) {
             /* JALANGI_ANALYSIS file must define all instrumentation functions such as U, B, C, C1, C2, W, R, G, P */
@@ -329,13 +329,16 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
             }
 
 
-            function invokeFun(iid, base, f, args, isConstructor) {
-                var g, invoke, val, ic, tmp_rrEngine, tmpIsConstructorCall, tmpIsInstrumentedCaller, idx;
+            function invokeFun(iid, base, f, args, isConstructor, isMethod) {
+                var g, invoke, val, ic, tmp_rrEngine, tmpIsConstructorCall, tmpIsInstrumentedCaller, idx, tmpIsMethodCall;
 
                 var f_c = getConcrete(f);
 
                 tmpIsConstructorCall = Globals.isConstructorCall;
                 Globals.isConstructorCall = isConstructor;
+                tmpIsMethodCall = Globals.isMethodCall;
+                Globals.isMethodCall = isMethod;
+
 
                 if (sandbox.analysis && sandbox.analysis.invokeFunPre) {
                     tmp_rrEngine = rrEngine;
@@ -382,6 +385,7 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
                     popSwitchKey();
                     Globals.isInstrumentedCaller = tmpIsInstrumentedCaller;
                     Globals.isConstructorCall = tmpIsConstructorCall;
+                    Globals.isMethodCall = tmpIsMethodCall;
                 }
 
                 if (!ic && arr[1]) {
@@ -509,7 +513,7 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
             function F(iid, f, isConstructor) {
                 return function () {
                     var base = this;
-                    return invokeFun(iid, base, f, arguments, isConstructor);
+                    return invokeFun(iid, base, f, arguments, isConstructor, false);
                 }
             }
 
@@ -517,7 +521,7 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
             function M(iid, base, offset, isConstructor) {
                 return function () {
                     var f = G(iid+2, base, offset);
-                    return invokeFun(iid, base, f, arguments, isConstructor);
+                    return invokeFun(iid, base, f, arguments, isConstructor, true);
                 };
             }
 

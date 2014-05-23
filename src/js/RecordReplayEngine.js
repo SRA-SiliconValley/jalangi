@@ -479,7 +479,7 @@ if (typeof J$ === 'undefined') {
             if (Globals.mode === MODE_RECORD) {
                 if (trackedVal === val ||
                     (val !== val && trackedVal !== trackedVal) ||
-                    (name === "this" && Globals.isInstrumentedCaller && !Globals.isConstructorCall)) {
+                    (name === "this" && Globals.isInstrumentedCaller && !Globals.isConstructorCall && Globals.isMethodCall)) {
                     seqNo++;
                     ret = val;
                 } else {
@@ -489,7 +489,7 @@ if (typeof J$ === 'undefined') {
             } else if (Globals.mode === MODE_REPLAY) {
                 if (traceReader.getCurrent() === undefined) {
                     traceReader.next();
-                    if (name === "this" && Globals.isInstrumentedCaller && !Globals.isConstructorCall) {
+                    if (name === "this" && Globals.isInstrumentedCaller && !Globals.isConstructorCall && Globals.isMethodCall) {
                         ret = val;
                     } else {
                         ret = trackedVal;

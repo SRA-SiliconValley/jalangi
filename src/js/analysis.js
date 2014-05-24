@@ -884,6 +884,9 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
                         break;
                     case "instanceof":
                         result_c = left_c instanceof right_c;
+                        if (rrEngine) {
+                            result_c = rrEngine.RR_L(iid, result_c, N_LOG_RETURN);
+                        }
                         break;
                     case "in":
                         result_c = left_c in right_c;

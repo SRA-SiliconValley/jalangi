@@ -664,7 +664,7 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
             function T(iid, val, type, hasGetterSetter) {
                 if (sandbox.analysis && sandbox.analysis.literalPre) {
                     try {
-                        sandbox.analysis.literalPre(iid, val);
+                        sandbox.analysis.literalPre(iid, val, hasGetterSetter);
                     } catch (e) {
                         clientAnalysisException(e);
                     }
@@ -688,7 +688,7 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
                 // inform analysis, which may modify the literal
                 if (sandbox.analysis && sandbox.analysis.literal) {
                     try {
-                        val = sandbox.analysis.literal(iid, val);
+                        val = sandbox.analysis.literal(iid, val, hasGetterSetter);
                     } catch (e) {
                         clientAnalysisException(e);
                     }

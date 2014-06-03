@@ -66,7 +66,6 @@ if (args.analysis) {
 J$.setTraceFileName(args.tracefile);
 
 
-var path = require('path');
 // hack process.argv for the child script
 script = path.resolve(script);
 var newArgs = [process.argv[0], script];

@@ -169,6 +169,7 @@ function instrument(options, cb) {
                 result += "<script src=\"" + fileName + "\"></script>";
             };
             instUtil.headerSources.forEach(addScript);
+            result += "<script src=\"jalangi_sourcemap.js\"></script>";
             if (analysis) {
                 analysis.forEach(addScript);
             }
@@ -197,6 +198,7 @@ function instrument(options, cb) {
                     }
 
                     headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot);
+                    headerLibs += "<script src=\"jalangi_sourcemap.js\"></script>";
                     headerLibs = headerLibs + tmp3;
                 }
                 if (selenium) {
@@ -211,7 +213,6 @@ function instrument(options, cb) {
                 if (smemory) {
                     headerLibs = "<script>" + smemoryOption + "</script>" + headerLibs;
                 }
-                headerLibs += "<script src=\"jalangi_sourcemap.js\"></script>";
 
                 if (extraAppScripts.length > 0) {
                     // we need to inject script tags for the extra app scripts,

@@ -29,4 +29,12 @@ describe('instrument tests', function () {
         var iidMap = String(fs.readFileSync(instResult.iidMapFile));
         assert.equal(iidMap.split('\n')[3], "var fn = \"tests/unit/instrument-test.js\";");
     });
+    it('should handle direct analysis', function(done) {
+        var testFile = "tests/unit/instrument-test.js";
+        var instResult = jalangi.instrument(testFile, {iidMap: true, relative: true});
+        jalangi.direct(instResult.outputFile, ['src/js/analyses/logNaN/logNaN.js']).then(function () { done(); }, function (err) {
+            console.log(err.stderr);
+            done();
+        }).done();
+    })
 });

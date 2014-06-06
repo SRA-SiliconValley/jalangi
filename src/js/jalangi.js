@@ -163,6 +163,38 @@ function replay(traceFile, clientAnalysis, initParam) {
     return procUtil.runChildAndCaptureOutput(forkedProcess);
 }
 
+/**
+ * direct analysis of an instrumented file
+ * @param {string} script the instrumented script to analyze
+ * @param {string[]} clientAnalyses the analyses to run
+ * @param {object} [initParam] parameter to pass to client init() function
+ * @return promise|Q.promise promise that gets resolved at the end of analysis.  The promise
+ * is resolved with an object with properties:
+ *     'exitCode': the exit code from the process doing replay
+ *     'stdout': the stdout of the replay process
+ *     'stderr': the stderr of the replay process
+ *     'result': the result returned by the analysis, if any
+ */
+function direct(script, clientAnalyses, initParam) {
+    var cliArgs = [];
+    if (!script) {
+        throw new Error("must provide a script to analyze");
+    }
+    if (!clientAnalyses) {
+        throw new Error("must provide an analysis to run");
+    }
+    clientAnalyses.forEach(function (analysis) {
+        cliArgs.push('--analysis');
+        cliArgs.push(analysis);
+    });
+    cliArgs.push(script);
+    var forkedProcess = fork(path.resolve(__dirname, "./commands/direct.js"),
+        cliArgs, { silent: true });
+    forkedProcess.send({initParam: initParam});
+    return procUtil.runChildAndCaptureOutput(forkedProcess);
+}
+
 exports.instrument = instrument;
 exports.record = record;
 exports.replay = replay;
+exports.direct = direct;

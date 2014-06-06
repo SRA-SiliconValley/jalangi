@@ -33,36 +33,54 @@ parser.addArgument(['script_and_args'], {
     nargs: argparse.Const.REMAINDER
 });
 var args = parser.parseArgs();
-if (args.script_and_args.length === 0) {
-    console.error("must provide script to record");
-    process.exit(1);
-}
-// we shift here so we can use the rest of the array later when
-// hacking process.argv; see below
-var script = args.script_and_args.shift();
 
-global.JALANGI_MODE="inbrowser";
-global.USE_SMEMORY=args.smemory;
+function runAnalysis(initParam) {
+    if (args.script_and_args.length === 0) {
+        console.error("must provide script to record");
+        process.exit(1);
+    }
+    // we shift here so we can use the rest of the array later when
+    // hacking process.argv; see below
+    var script = args.script_and_args.shift();
 
-var path = require('path');
-var Headers = require('./../Headers');
-Headers.headerSources.forEach(function(src){
-    require('./../../../'+src);
-});
+    global.JALANGI_MODE="inbrowser";
+    global.USE_SMEMORY=args.smemory;
 
-if (args.analysis) {
-    args.analysis.forEach(function (src) {
-        require(path.resolve(src));
+    var path = require('path');
+    var Headers = require('./../Headers');
+    Headers.headerSources.forEach(function(src){
+        require('./../../../'+src);
     });
+
+    if (args.analysis) {
+        args.analysis.forEach(function (src) {
+            require(path.resolve(src));
+        });
+    }
+
+
+    // hack process.argv for the child script
+    script = path.resolve(script);
+    var newArgs = [process.argv[0], script];
+    newArgs = newArgs.concat(args.script_and_args);
+    process.argv = newArgs;
+    try {
+        require(script);
+    } finally {
+        var result = J$.endExecution();
+        if (process.send && args.analysis) {
+            // we assume send is synchronous
+            process.send({result:result});
+        }
+    }
+    process.exit();
 }
 
-
-// hack process.argv for the child script
-script = path.resolve(script);
-var newArgs = [process.argv[0], script];
-newArgs = newArgs.concat(args.script_and_args);
-process.argv = newArgs;
-require(script);
-
-J$.endExecution();
+if (process.send) {
+    process.on('message', function (m) {
+        runAnalysis(m.initParam);
+    });
+} else {
+    runAnalysis(null);
+}
 

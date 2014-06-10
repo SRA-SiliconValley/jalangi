@@ -173,6 +173,29 @@
         return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
     }
 
+    /**
+     * rather than just calling JSON.stringify() on the metadata,
+     * we write it out line-by-line to avoid having to construct the full
+     * string in memory (which can fail for large inputs)
+     * @param filename
+     * @param metadata
+     */
+    function writeMetadata(filename, metadata) {
+        var fs = require('fs');
+        var fd = fs.openSync(filename, 'w');
+        fs.writeSync(fd, "{\n");
+        Object.keys(metadata).forEach(function (iid, ind, array) {
+            var str = JSON.stringify(iid) + ":";
+            str += JSON.stringify(metadata[iid],undefined,2);
+            if (ind < array.length-1) {
+                str += ",\n";
+            }
+            fs.writeSync(fd,str);
+        });
+        fs.writeSync(fd,"}\n");
+        fs.closeSync(fd);
+    }
+
 
     function saveCode(code, metadata, isAppend, noInstrEval) {
         var fs = require('fs');
@@ -185,7 +208,7 @@
 
         }
         if (metadata) {
-            fs.writeFileSync(instCodeFileName + ".ast.json", JSON.stringify(metadata, undefined, 2), "utf8");
+            writeMetadata(instCodeFileName + ".ast.json", metadata);
         }
     }
 

@@ -282,19 +282,21 @@ Then, open the HTML page in a browser (tested on Chrome) by running
 
     open file:///tmp/annex/index.html
 
-You can now play the game for sometime.  Try two moves and see the console output.  In the
+You can now play the game for sometime.  Try two moves and see the console output after pressing Shift-Alt-T.  In the
 in-browser mode, one must not use ConcolicValue to wrap a program value.  However, one could use shadow execution to collect statistics.
 Shadow memory is supported in the "inbrowser" mode.  Shadow memory library can be accessed in an analysis via J$.Globals.smemory.
  smemory.getShadowObject(obj) returns the shadow object associated with obj if type of obj is "object" or "function".
  smemory.getFrame(varName) returns the frame that contains the variable named "varName".
 
 
-The following shows how to run the object allocation tracker analysis on the annex game:
+The following shows how to run the object allocation tracker analysis on the annex game.  After playing the game for 
+some time, press Shift-Alt-T to print the analysis results on the console.
 
     node src/js/commands/instrument.js --inbrowser --smemory --analysis src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB.js --outputDir /tmp tests/tizen/annex
     open file:///tmp/annex/index.html
 
-The following shows how to run the likely type inference analysis on the annex game:
+The following shows how to run the likely type inference analysis on the annex game. After playing the game for 
+some time, press Shift-Alt-T to print the analysis results on the console.
 
     node src/js/commands/instrument.js --inbrowser --smemory --analysis analyses/likelytype/LikelyTypeInferEngineIB.js --outputDir /tmp tests/tizen/annex
     open file:///tmp/annex/index.html

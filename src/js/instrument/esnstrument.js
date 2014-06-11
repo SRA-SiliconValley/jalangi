@@ -1089,8 +1089,9 @@
                 'arguments':node.arguments
             };
             transferLoc(ret, node);
-            var ret1 = wrapLiteral(node, ret, N_LOG_OBJECT_LIT);
-            return ret1;
+            return ret;
+//            var ret1 = wrapLiteral(node, ret, N_LOG_OBJECT_LIT);
+//            return ret1;
         },
         "CallExpression":function (node) {
             var isEval = node.callee.type === 'Identifier' && node.callee.name === "eval";

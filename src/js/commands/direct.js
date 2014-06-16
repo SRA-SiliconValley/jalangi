@@ -58,6 +58,9 @@ function runAnalysis(initParam) {
         });
     }
 
+    if (J$.analysis && J$.analysis.init) {
+        J$.analysis.init(initParam ? initParam : {});
+    }
 
     // hack process.argv for the child script
     script = path.resolve(script);

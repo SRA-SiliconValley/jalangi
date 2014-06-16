@@ -85,7 +85,9 @@ Optional arguments:
 Command-line utility to perform Jalangi's direct analysis
 
 	node src/js/commands/direct.js -h
-	usage: direct.js [-h] [--smemory] [--analysis ANALYSIS] ...
+    usage: direct.js [-h] [--smemory] [--analysis ANALYSIS]
+                 [--initParam INITPARAM]
+                 ...
 
 
 Positional arguments:
@@ -97,7 +99,9 @@ Optional arguments:
 	-h, --help           Show this help message and exit.
     --smemory            Use shadow memory
     --analysis ANALYSIS  absolute path to analysis file to run
-
+    --initParam INITPARAM
+                        initialization parameter for analysis, specified as 
+                        key:value
 ## record.js
 
 Command-line utility to perform Jalangi's record phase

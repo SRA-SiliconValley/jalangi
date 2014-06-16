@@ -28,6 +28,7 @@ var parser = new argparse.ArgumentParser({
 });
 parser.addArgument(['--smemory'], { help: "Use shadow memory", action: 'storeTrue'});
 parser.addArgument(['--analysis'], { help: "absolute path to analysis file to run", action:'append'});
+parser.addArgument(['--initParam'], { help: "initialization parameter for analysis, specified as key:value", action:'append'});
 parser.addArgument(['script_and_args'], {
     help: "script to record and CLI arguments for that script",
     nargs: argparse.Const.REMAINDER
@@ -84,6 +85,17 @@ if (process.send) {
         runAnalysis(m.initParam);
     });
 } else {
-    runAnalysis(null);
+    var initParam = null;
+    if (args.initParam) {
+        initParam = {};
+        args.initParam.forEach(function (keyVal) {
+            var split = keyVal.split(':');
+            if (split.length !== 2) {
+                throw new Error("invalid initParam " + keyVal);
+            }
+            initParam[split[0]] = split[1];
+        });
+    }
+    runAnalysis(initParam);
 }
 

@@ -73,6 +73,7 @@ function writeMetadataToFile(metadata, filename) {
  *     'iidMap': should an IID map file be generated with source locations?  defaults to false
  *     'serialize': should ASTs be serialized? defaults to false
  *     'relative': should we use relative path references to the input file?
+ *     'dirIIDFile': where should the IID file be written?
  * @return {{ outputFile: string, iidMapFile: string, iidMetadataFile: string }} output file locations, as appropriate
  *          based on the options
  */
@@ -86,13 +87,14 @@ function instrument(inputFileName, options) {
     var outputFileName = getInstOutputFile(options.outputFile);
     var iidMapFile, iidMetadataFile;
     var inputCode = String(fs.readFileSync(inputFileName));
+    var dirIIDFile = options.dirIIDFile ? options.dirIIDFile : temp.dir;
     var instCodeOptions = {
         wrapProgram: true,
         filename: inputFileName,
         instFileName: outputFileName,
         metadata: options.serialize,
         initIID: true,
-        dirIIDFile: temp.dir
+        dirIIDFile: dirIIDFile
     };
     var instResult = esnstrument.instrumentCodeDeprecated(inputCode, instCodeOptions);
     var instCode = instResult.code;

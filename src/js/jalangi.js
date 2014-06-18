@@ -21,11 +21,13 @@
 /*global __dirname */
 
 var esnstrument = require('./instrument/esnstrument');
+var instDir = require('./commands/instrument');
 var procUtil = require('./utils/procUtil');
 var fs = require('fs');
 var path = require('path');
 var fork = require('child_process').fork;
 var temp = require('temp');
+var Q = require("q");
 temp.track();
 
 function getInstOutputFile(filePath) {
@@ -112,7 +114,26 @@ function instrument(inputFileName, options) {
     };
 }
 
-
+/**
+ * instruments a directory.  see src/js/commands/instrument.js for details.
+ * creates a temporary output directory if none specified.
+ * @param options instrument options.  see src/js/commands/instrument.js
+ * @return promise|Q.promise promise that gets resolved at the end of instrumentation
+ */
+function instrumentDir(options) {
+    if (!options.outputDir) {
+        options.outputDir = temp.mkdirSync();
+    }
+    var deferred = Q.defer();
+    instDir.instrument(options, function (err) {
+        if (err) {
+            deferred.reject(err);
+        } else {
+            deferred.resolve({ outputDir: options.outputDir});
+        }
+    });
+    return deferred.promise;
+}
 
 /**
  * record execution of an instrumented script
@@ -197,6 +218,7 @@ function direct(script, clientAnalyses, initParam) {
 }
 
 exports.instrument = instrument;
+exports.instrumentDir = instrumentDir;
 exports.record = record;
 exports.replay = replay;
 exports.direct = direct;

@@ -110,9 +110,19 @@ describe('instrument dir tests', function () {
             done();
         });
     });
-//    it('should work with direct_in_output', function (done) {
-//        assert(false, "TODO");
-//        done();
-//    });
-
+    it('should handle initParam option', function (done) {
+        var options = {
+            inputFiles: ["tests/html/unitApps/app1"],
+            outputDir: temp.mkdirSync(),
+            // the exact script doesn't matter
+            analysis: ["tests/unit/date-conversion.js"],
+            initParam: ["fizz:buzz","bizz:bazz"]
+        };
+        inst.instrument(options, function (err) {
+            assert(!err, err);
+            var html = String(fs.readFileSync(path.join(options.outputDir, "app1", "index.html")));
+            assert(html.indexOf('<script>if (J$.analysis.init) { J$.analysis.init({"fizz":"buzz","bizz":"bazz"}); }</script>') !== -1);
+            done();
+        });
+    });
 });

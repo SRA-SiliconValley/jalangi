@@ -339,6 +339,18 @@
         // also write output as JSON, to make consumption easier
         var jsonFile = smapFile.replace(/.js$/, '.json');
         var outputObj = [iidSourceInfo, orig2Inst];
+        if (!initIIDs && fs.existsSync(jsonFile)) {
+            var oldInfo = JSON.parse(fs.readFileSync(jsonFile));
+            var oldIIDInfo = oldInfo[0];
+            var oldOrig2Inst = oldInfo[1];
+            Object.keys(iidSourceInfo).forEach(function (iid) {
+                oldIIDInfo[iid] = iidSourceInfo[iid];
+            })
+            Object.keys(orig2Inst).forEach(function (filename) {
+                oldOrig2Inst[filename] = orig2Inst[filename];
+            });
+            outputObj = [oldIIDInfo,oldOrig2Inst];
+        }
         fs.writeFileSync(jsonFile, JSON.stringify(outputObj));
         fs.writeFileSync(path.join(outputDir, COVERAGE_FILE_NAME), JSON.stringify({"covered":0, "branches":condCount / IID_INC_STEP * 2, "coverage":[]}), "utf8");
     }

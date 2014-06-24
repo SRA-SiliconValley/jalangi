@@ -71,7 +71,7 @@ J$ = {};
 //        return single.W(iid, name, val);
 //    }
 //
-//    function N(iid, name, val, isArgumentSync) {
+//    function N(iid, name, val, isArgumentSync, isLocalSync) {
 //        return single.N(iid, name, val, isArgumentSync);
 //    }
 //

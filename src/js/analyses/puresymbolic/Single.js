@@ -16,13 +16,13 @@
 
 // Author: Koushik Sen
 
-(function(sandbox) {
+(function (sandbox) {
 
     var EVAL_ORG = eval;
 
     var PREFIX1 = "J$";
-    var SPECIAL_PROP2 = "*"+PREFIX1+"I*";
-    var  N_LOG_FUNCTION_LIT = 12;
+    var SPECIAL_PROP2 = "*" + PREFIX1 + "I*";
+    var N_LOG_FUNCTION_LIT = 12;
 
     //-------------------------------- End constants ---------------------------------
 
@@ -30,33 +30,34 @@
     //-------------------------------------- Symbolic functions -----------------------------------------------------------
 
     function create_concrete_invoke(f) {
-        return function() {
+        return function () {
             var len = arguments.length;
-            for (var i = 0; i<len; i++) {
+            for (var i = 0; i < len; i++) {
                 arguments[i] = concretize(arguments[i]);
             }
-            return f.apply(concretize(this),arguments);
+            return f.apply(concretize(this), arguments);
         }
     }
 
     function create_concrete_invoke_cons(f) {
-        return function() {
+        return function () {
             var len = arguments.length;
-            for (var i = 0; i<len; i++) {
+            for (var i = 0; i < len; i++) {
                 arguments[i] = concretize(arguments[i]);
             }
             return f.apply(this, arguments);
         }
     }
 
-    function regex_escape (text) {
+    function regex_escape(text) {
         return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
     }
 
-    function string_fromCharCode () {
+    function string_fromCharCode() {
         var ints = [];
-        var i, len=arguments.length, flag = false;;
-        for (i=0; i < len; i++) {
+        var i, len = arguments.length, flag = false;
+        ;
+        for (i = 0; i < len; i++) {
             if (arguments[i] instanceof SymbolicLinear) {
                 flag = true;
             }
@@ -71,13 +72,13 @@
         return newSym;
     }
 
-    function regexp_test (str) {
+    function regexp_test(str) {
         // this is a regexp object
         var newSym;
 
         if (isSymbolic(str) && str.isCompound && str.isCompound()) {
-            newSym = J$.readInput("",true);
-            pc.addAxiom(B(0,"==",newSym,str));
+            newSym = J$.readInput("", true);
+            pc.addAxiom(B(0, "==", newSym, str));
         } else {
             newSym = str;
         }
@@ -86,7 +87,7 @@
 
     var sfuns;
 
-    function getSymbolicFunctionToInvoke (f, isConstructor) {
+    function getSymbolicFunctionToInvoke(f, isConstructor) {
         if (f === Array ||
             f === Error ||
             f === String ||
@@ -113,7 +114,7 @@
                 return sfuns.string_charAt;
             } else if (f === String.prototype.lastIndexOf) {
                 return sfuns.string_lastIndexOf;
-            }  else if (f === String.prototype.substring) {
+            } else if (f === String.prototype.substring) {
                 return sfuns.string_substring;
             } else if (f === String.prototype.substr) {
                 return sfuns.string_substr;
@@ -222,7 +223,7 @@
     }
 
     function simplify(val) {
-        var solution= getFullSolution(getCurrentSolution());
+        var solution = getFullSolution(getCurrentSolution());
         var concrete = val.substitute(solution);
         if (concrete === SymbolicBool.true) {
             concrete = true;
@@ -234,7 +235,7 @@
 
     function makeConcrete(val, pathConstraint, warn) {
         if (!isSymbolic(val)) {
-            return {concrete: val};
+            return {concrete:val};
         }
 
         if (warn) {
@@ -254,35 +255,35 @@
         }
 
         if (isSymbolic(concrete)) {
-            throw new Error("Failed to concretize the symbolic value "+val+
-                " with path constraint "+pathConstraint);
+            throw new Error("Failed to concretize the symbolic value " + val +
+                " with path constraint " + pathConstraint);
         }
 
         if (typeof concrete === 'boolean') {
             return {
-                constraint: val,
-                concrete: concrete
+                constraint:val,
+                concrete:concrete
             };
         } else if (isSymbolicNumber(val)) {
             return {
-                constraint: val.subtractLong(concrete).setop("=="),
-                concrete: concrete
+                constraint:val.subtractLong(concrete).setop("=="),
+                concrete:concrete
             }
         } else if (isSymbolicString(val)) {
             return {
-                constraint: new SymbolicStringPredicate("==", val, concrete),
-                concrete: concrete
+                constraint:new SymbolicStringPredicate("==", val, concrete),
+                concrete:concrete
             }
 
         } else {
-            throw new Error("Unknown symbolic type "+val+ " with path constraint "+
-                pathConstraint + " inputs "+JSON.stringify(J$.inputs));
+            throw new Error("Unknown symbolic type " + val + " with path constraint " +
+                pathConstraint + " inputs " + JSON.stringify(J$.inputs));
         }
     }
 
     function isFeasible(val, branch) {
         var pred = makePredicate(val);
-        var ret = makeConcrete(branch?pred:pred.not(), pc.getPC(), false);
+        var ret = makeConcrete(branch ? pred : pred.not(), pc.getPC(), false);
         if (ret.concrete) {
             return true;
         } else {
@@ -325,10 +326,10 @@
 
         if (type === 'string') {
             ret = makeSymbolicString(idx);
-        } else if (type === 'number' || type === 'boolean'){
+        } else if (type === 'number' || type === 'boolean') {
             ret = makeSymbolicNumber(idx);
         } else {
-            throw new Error("Cannot make "+val+" of type "+(typeof val) + " symbolic");
+            throw new Error("Cannot make " + val + " of type " + (typeof val) + " symbolic");
         }
         return ret;
     }
@@ -362,15 +363,14 @@
         return;
         var type = typeof val;
         if (type !== 'object' && type !== 'function') {
-            console.log(loc+":"+iid+":"+type+":"+val);
+            console.log(loc + ":" + iid + ":" + type + ":" + val);
         }
-        if (val===null) {
-            console.log(loc+":"+iid+":"+type+":"+val);
+        if (val === null) {
+            console.log(loc + ":" + iid + ":" + type + ":" + val);
         }
     }
 
     //---------------------------- End utility functions -------------------------------
-
 
 
     //----------------------------------- Begin concolic execution ---------------------------------
@@ -383,7 +383,7 @@
         return eval('new Constructor(' + a.join() + ')');
     }
 
-    function callAsNativeConstructor (Constructor, args) {
+    function callAsNativeConstructor(Constructor, args) {
         if (args.length === 0) {
             return new Constructor();
         }
@@ -407,9 +407,10 @@
 
     function callAsConstructor(Constructor, args) {
         if (isNative(Constructor)) {
-            return callAsNativeConstructor(Constructor,args);
+            return callAsNativeConstructor(Constructor, args);
         } else {
-            var Temp = function(){}, inst, ret;
+            var Temp = function () {
+            }, inst, ret;
             Temp.prototype = Constructor.prototype;
             inst = new Temp;
             ret = Constructor.apply(inst, args);
@@ -419,7 +420,7 @@
 
 
     function invokeEval(base, f, args) {
-        return f.call(base,J$.instrumentCode(args[0],{wrapProgram: false}).code);
+        return f.call(base, J$.instrumentCode(args[0], {wrapProgram:false}).code);
     }
 
 
@@ -428,10 +429,10 @@
 
         var f_m = getSymbolicFunctionToInvoke(f, isConstructor);
 
-        invoke = f_m || f === undefined || HOP(f,SPECIAL_PROP2) || typeof f !== "function";
-        g = f_m || f ;
+        invoke = f_m || f === undefined || HOP(f, SPECIAL_PROP2) || typeof f !== "function";
+        g = f_m || f;
 
-        if (g === EVAL_ORG){
+        if (g === EVAL_ORG) {
             val = invokeEval(base, g, args);
         } else if (invoke) {
             if (isConstructor) {
@@ -439,7 +440,7 @@
             } else {
                 val = g.apply(base, args);
             }
-        }  else {
+        } else {
             val = undefined;
         }
         return val;
@@ -447,14 +448,14 @@
 
 
     function F(iid, f, isConstructor) {
-        return function() {
+        return function () {
             var base = this;
             return invokeFun(iid, base, f, arguments, isConstructor);
         }
     }
 
     function M(iid, base, offset, isConstructor) {
-        return function() {
+        return function () {
             var f = G(iid, base, offset);
             return invokeFun(iid, base, f, arguments, isConstructor);
         };
@@ -469,7 +470,7 @@
 
     var scriptCount = 0;
 
-    function Se(iid,val) {
+    function Se(iid, val) {
         scriptCount++;
     }
 
@@ -514,14 +515,14 @@
         return val;
     }
 
-    function N(iid, name, val, isArgumentSync) {
+    function N(iid, name, val, isArgumentSync, isLocalSync) {
         return val;
     }
 
 
-    function A(iid,base,offset,op) {
-        var oprnd1 = G(iid,base, offset);
-        return function(oprnd2) {
+    function A(iid, base, offset, op) {
+        var oprnd1 = G(iid, base, offset);
+        return function (oprnd2) {
             var val = B(iid, op, oprnd1, oprnd2);
             return P(iid, base, offset, val);
         };
@@ -545,7 +546,7 @@
                 return String.prototype.substr;
             } else if (offset === "charCodeAt") {
                 return String.prototype.charCodeAt;
-            }  else if (offset === "charAt") {
+            } else if (offset === "charAt") {
                 return String.prototype.charAt;
             } else if (offset === "replace") {
                 return String.prototype.replace;
@@ -596,7 +597,7 @@
             } else if (isSymbolicNumber(left) || isSymbolicNumber(right) || typeof left === 'number' || typeof right === 'number') {
                 type = 'number';
             }
-            if (type==='string') {
+            if (type === 'string') {
                 if (isSymbolicNumber(left)) {
                     left = symbolicIntToString(left);
                 }
@@ -647,7 +648,7 @@
                 if (left == left)
                     ret = right.subtractFrom(left);
             }
-        } else if (op === "<" || op === ">" || op === "<=" || op === ">="  || op === "==" || op === "!="  || op === "==="  || op === "!==") {
+        } else if (op === "<" || op === ">" || op === "<=" || op === ">=" || op === "==" || op === "!=" || op === "===" || op === "!==") {
             if (isSymbolicNumber(left) && isSymbolicNumber(right)) {
                 if (left.op !== SymbolicLinear.UN) {
                     if (right)
@@ -662,7 +663,7 @@
                 } else {
                     ret = left.subtract(right);
                     if (!isSymbolicNumber(ret)) {
-                        switch(op) {
+                        switch (op) {
                             case "<":
                                 ret = ret < 0;
                                 break;
@@ -684,7 +685,7 @@
                                 ret = ret !== 0;
                                 break;
                             default:
-                                throw new Error("Operator "+op+" unknown");
+                                throw new Error("Operator " + op + " unknown");
                         }
                     }
                 }
@@ -706,26 +707,26 @@
                 else {
                     ret = right.subtractFrom(left);
                 }
-            } else  if (op === "===" || op === "!==" || op === "==" || op === "!=") {
+            } else if (op === "===" || op === "!==" || op === "==" || op === "!=") {
                 if (op === "===" || op === '!==') {
-                    op = op.substring(0,2);
+                    op = op.substring(0, 2);
                 }
                 if (isSymbolicString(left) && isSymbolicString(right)) {
-                    ret = new SymbolicStringPredicate(op,left,right);
+                    ret = new SymbolicStringPredicate(op, left, right);
                 } else if (isSymbolicString(left) && typeof right === 'string') {
-                    ret = new SymbolicStringPredicate(op,left,right);
+                    ret = new SymbolicStringPredicate(op, left, right);
                 } else if (isSymbolicString(right) && typeof left === 'string') {
-                    ret = new SymbolicStringPredicate(op,left,right);
+                    ret = new SymbolicStringPredicate(op, left, right);
                 }
             }
             if (isSymbolicNumber(ret)) {
                 if (op === "===" || op === '!==') {
-                    op = op.substring(0,2);
+                    op = op.substring(0, 2);
                 }
                 ret = ret.setop(op);
             }
 
-        } else if(op === "*") {
+        } else if (op === "*") {
             if (isSymbolicString(left)) {
                 left = symbolicStringToInt(left);
             }
@@ -742,12 +743,12 @@
             }
         } else if (op === "regexin") {
             if (isSymbolicString(left)) {
-                ret = new SymbolicStringPredicate("regexin",left, concretize(right));
+                ret = new SymbolicStringPredicate("regexin", left, concretize(right));
             }
         } else if (op === '|') {
             if (isSymbolicString(left) && typeof right === 'number' && right === 0) {
                 ret = symbolicStringToInt(left);
-            } else  if (isSymbolicString(right) && typeof left === 'number' && left === 0) {
+            } else if (isSymbolicString(right) && typeof left === 'number' && left === 0) {
                 ret = symbolicStringToInt(right);
             }
         }
@@ -766,7 +767,7 @@
         left_c = concretize(left);
         right_c = concretize(right);
 
-        switch(op) {
+        switch (op) {
             case "+":
                 result_c = left_c + right_c;
                 break;
@@ -840,7 +841,7 @@
                 result_c = right_c.test(left_c);
                 break;
             default:
-                throw new Error(op +" at "+iid+" not found");
+                throw new Error(op + " at " + iid + " not found");
                 break;
         }
         return result_c;
@@ -854,15 +855,15 @@
             }
             return ret;
         } else if (left_s instanceof SymbolicStringExpression) {
-            ret = new SymbolicStringPredicate("!=",left_s,"");
+            ret = new SymbolicStringPredicate("!=", left_s, "");
             return ret;
-        } else if (left_s instanceof SymbolicStringPredicate  ||
+        } else if (left_s instanceof SymbolicStringPredicate ||
             left_s instanceof ToStringPredicate ||
             left_s instanceof FromCharCodePredicate ||
             left_s instanceof SymbolicBool) {
             return ret;
         }
-        throw new Error("Unknown symbolic value "+left_s);
+        throw new Error("Unknown symbolic value " + left_s);
     }
 
 
@@ -897,46 +898,46 @@
 
         left_c = concretize(left);
 
-        switch(op) {
+        switch (op) {
             case "+":
-                result_c = + left_c;
+                result_c = +left_c;
                 break;
             case "-":
-                result_c = - left_c;
+                result_c = -left_c;
                 break;
             case "~":
-                result_c = ~ left_c;
+                result_c = ~left_c;
                 break;
             case "!":
-                result_c = ! left_c;
+                result_c = !left_c;
                 break;
             case "typeof":
                 result_c = typeof left_c;
                 break;
             default:
-                throw new Error(op +" at "+iid+" not found");
+                throw new Error(op + " at " + iid + " not found");
                 break;
         }
 
         return result_c;
     }
 
-    var branchIndex = (function() {
+    var branchIndex = (function () {
         var index = 0;
 
         return {
-            getNext: function(){
+            getNext:function () {
                 return getCurrentSolutionIndex()[index];
             },
 
-            setNext: function (branch) {
+            setNext:function (branch) {
                 getCurrentSolutionIndex()[index++] = branch;
             },
 
-            getCurrentIndex: function(branch) {
+            getCurrentIndex:function (branch) {
                 var ret = [];
                 var i;
-                for (i=0; i<index; i++) {
+                for (i = 0; i < index; i++) {
                     ret.push(getCurrentSolutionIndex()[i]);
                 }
                 ret.push(branch);
@@ -948,17 +949,16 @@
     function takeBranch(val, branch) {
         if (isSymbolic(val)) {
             var pred = makePredicate(val);
-            pred = branch?pred:pred.not();
+            pred = branch ? pred : pred.not();
             pc.addAxiom(pred);
             branchIndex.setNext(branch);
         }
     }
 
 
-
     function generateInput(val, branch) {
         var pred = makePredicate(val);
-        var ret = new SymbolicBool("&&", pc.getPC(), branch?pred:pred.not());
+        var ret = new SymbolicBool("&&", pc.getPC(), branch ? pred : pred.not());
         var solution = solver.generateInputs(ret);
         if (solution) {
             solver.writeInputs(getFullSolution(solution), branchIndex.getCurrentIndex(branch));

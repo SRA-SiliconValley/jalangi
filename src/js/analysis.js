@@ -520,13 +520,13 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
             // Method call (e.g., e.f())
             function M(iid, base, offset, isConstructor) {
                 return function () {
-                    var f = G(iid+2, base, offset);
+                    var f = G(iid + 2, base, offset);
                     return invokeFun(iid, base, f, arguments, isConstructor, true);
                 };
             }
 
             // Function enter
-            function Fe(iid, val, dis /* this */,args) {
+            function Fe(iid, val, dis /* this */, args) {
                 argIndex = 0;
                 if (rrEngine) {
                     rrEngine.RR_Fe(iid, val, dis);
@@ -719,7 +719,7 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
                         clientAnalysisException(e);
                     }
                 }
-                if (rrEngine && (name==='this' || isGlobal)) {
+                if (rrEngine && (name === 'this' || isGlobal)) {
                     val = rrEngine.RR_R(iid, name, val);
                 }
                 if (sandbox.analysis && sandbox.analysis.read) {
@@ -759,20 +759,21 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
             }
 
             // variable declaration (Init)
-            function N(iid, name, val, isArgumentSync) {
+            function N(iid, name, val, isArgumentSync, isLocalSync) {
+                // isLocalSync is only true when we sync variables inside a for-in loop
                 if (isArgumentSync) {
                     argIndex++;
                 }
                 if (rrEngine) {
                     val = rrEngine.RR_N(iid, name, val, isArgumentSync);
                 }
-                if (smemory) {
+                if (!isLocalSync && smemory) {
                     smemory.initialize(name);
                 }
-                if (sandbox.analysis && sandbox.analysis.declare) {
+                if (!isLocalSync && sandbox.analysis && sandbox.analysis.declare) {
                     try {
-                        if (isArgumentSync && argIndex>1) {
-                            sandbox.analysis.declare(iid, name, val, isArgumentSync, argIndex-2);
+                        if (isArgumentSync && argIndex > 1) {
+                            sandbox.analysis.declare(iid, name, val, isArgumentSync, argIndex - 2);
                         } else {
                             sandbox.analysis.declare(iid, name, val, isArgumentSync);
                         }

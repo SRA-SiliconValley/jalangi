@@ -416,7 +416,7 @@ module.exports = function (sandbox) {
         return ret;
     }
 
-    function N(iid, name, val, isArgumentSync) {
+    function N(iid, name, val, isArgumentSync, isLocalSync) {
         if (isArgumentSync)
             return single.wrapUndefined(val, false);
         return val;

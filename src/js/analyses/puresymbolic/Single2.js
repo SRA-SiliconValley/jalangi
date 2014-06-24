@@ -649,7 +649,7 @@ module.exports = function (sandbox) {
         return val;
     }
 
-    function N(iid, name, val, isArgumentSync) {
+    function N(iid, name, val, isArgumentSync, isLocalSync) {
         if (isArgumentSync)
             return wrapUndefined(val, false);
         return val;

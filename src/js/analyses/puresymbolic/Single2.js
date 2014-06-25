@@ -1179,7 +1179,7 @@ module.exports = function (sandbox) {
     sandbox.endExecution = endExecution;
 
     sandbox.getPC = getPC;
-    sandbox.treatUndefinedAsInput = true;
+    sandbox.treatUndefinedAsInput = false;
     sandbox.wrapUndefined = wrapUndefined;
     sandbox.initUndefinedFunction = initUndefinedFunction;
     sandbox.initUndefinedNumber = initUndefinedNumber;

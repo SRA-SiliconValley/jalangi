@@ -104,6 +104,11 @@
         }
     }
 
+    function C (i) {
+        this.a = i;
+        this.b = i + 1;
+    }
+
     var sum = 1;
     var testfun;
     switch(process.argv[2]) {
@@ -126,8 +131,9 @@
     }
 
     for (var i=0; i<N; i++) {
-        var o = arr[i%SZ] = {a:i, b:i+1};
+        var o = arr[i%SZ] = new C(i);
         var x = testfun(o);
+        x = x + testfun(o);
         sum = x;
     }
     console.log(sum);

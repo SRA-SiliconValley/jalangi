@@ -28,8 +28,8 @@
     var solver = new SolverEngine();
     var PATH_FILE_NAME = 'jalangi_path';
     var fs = require('fs');
-    var MAX_PATH_COUNT = 10;
-    var MAX_CALL_DEPTH = 10;
+    var MAX_PATH_COUNT = 10000;
+    var MAX_CALL_DEPTH = 10000;
 
 //    var pathConstraint = BDD.one;
 //    var pathIndex;

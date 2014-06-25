@@ -53,8 +53,8 @@
                     var oldPred = this.values[i].pred;
                     this.values[i] = {pred:pred.or(this.values[i].pred), value:value};
                     // console.log("Reduced "+oldPred.toString()+" ***** and ******** "+pred.toString()+" ****** to ******* "+this.values[i].pred.toString()+" for "+value);
-                    console.log("Reduced BDD size "+(BDD.size(oldPred)+BDD.size(pred)-BDD.size(this.values[i].pred))+
-                        " for "+value);
+                    //console.log("Reduced BDD size "+(BDD.size(oldPred)+BDD.size(pred)-BDD.size(this.values[i].pred))+
+                    //    " for "+value);
                     //console.log("Reduced "+oldPred.toString()+" ***** and ******** "+pred.toString()+" ****** to ******* "+this.values[i].pred.toString()+" for "+value);
                     return;
                 }

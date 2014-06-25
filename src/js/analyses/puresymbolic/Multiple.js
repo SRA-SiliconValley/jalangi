@@ -28,11 +28,11 @@ module.exports = function (sandbox) {
     var SPECIAL_PROP2 = "*" + PREFIX1 + "I*";
     var EVAL_ORG = eval;
 
-    var TRACE_CALL = true;
-    var TRACE_BRANCH = true;
+    var TRACE_CALL = false;
+    var TRACE_BRANCH = false;
     var TRACE_WRITE = false;
-    var TRACE_RETURNS = true;
-    var TRACE_TESTS = true;
+    var TRACE_RETURNS = false;
+    var TRACE_TESTS = false;
 
     var exceptionVal;
     var returnVal = [];

@@ -30,6 +30,8 @@
     var fs = require('fs');
     var MAX_PATH_COUNT = 10000;
     var MAX_CALL_DEPTH = 10000;
+    var stats = require('../../utils/StatCollector');
+    var STAT_FLAG = stats.STAT_FLAG;
 
 //    var pathConstraint = BDD.one;
 //    var pathIndex;
@@ -54,29 +56,36 @@
     var startCountingOps = false;
 
     function getBDDFromFormula(formula) {
+        if (STAT_FLAG) stats.resumeTimer("bdd");
+
         if (formula === SymbolicBool.true) {
+            if (STAT_FLAG) stats.suspendTimer("bdd");
             return BDD.one;
         }
         if (formula === SymbolicBool.false) {
+            if (STAT_FLAG) stats.suspendTimer("bdd");
             return BDD.zero;
         }
         var str = formula.toString();
         var nstr = formula.not().toString();
         var ret;
         if ((ret = formulaCache[str])!== undefined) {
-            return ret;
         } else if ((ret = formulaCache[nstr])!== undefined) {
-            return ret.not();
+            ret = ret.not();
         } else {
             literalToFormulas.push(formula);
             ret = BDD.build(literalToFormulas.length);
             formulaCache[str] = ret;
-            return ret;
         }
+        if (STAT_FLAG) stats.suspendTimer("bdd");
+        return ret;
     }
 
     function getFormulaFromBDD(bdd) {
-        return BDD.getFormula(bdd, literalToFormulas);
+        if (STAT_FLAG) stats.resumeTimer("bdd");
+        var ret = BDD.getFormula(bdd, literalToFormulas);
+        if (STAT_FLAG) stats.suspendTimer("bdd");
+        return ret;
     }
 
 

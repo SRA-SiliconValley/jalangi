@@ -62,6 +62,10 @@
             this.values.push({pred:pred, value:value});
         },
 
+        size: function() {
+            return this.values.length;
+        },
+
         toString:function () {
             var i, len = this.values.length, sb = "[";
 
@@ -71,7 +75,7 @@
             sb = sb + "]";
             return sb;
         }
-    }
+    };
 
     module.exports = PredValues;
 }(module));

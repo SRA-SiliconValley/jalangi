@@ -27,6 +27,9 @@ module.exports = function (sandbox) {
     var PREFIX1 = "J$";
     var SPECIAL_PROP2 = "*" + PREFIX1 + "I*";
     var EVAL_ORG = eval;
+    var stats = require('../../utils/StatCollector');
+    var STAT_FLAG = stats.STAT_FLAG;
+
 
     var TRACE_CALL = false;
     var TRACE_BRANCH = false;
@@ -454,8 +457,9 @@ module.exports = function (sandbox) {
                 ret = addValue(ret, pred, oldValue.values[i].value);
             }
         }
+        if (STAT_FLAG) stats.addToAccumulator("vs-size", ret.size());
         return ret;
-    };
+    }
 
 
     function B(iid, op, left, right) {
@@ -595,7 +599,7 @@ module.exports = function (sandbox) {
         scriptCount--;
         var ret2 = pc.generateInputs(scriptCount == 0, false);
         if (scriptCount == 0) {
-            single.writeICount();
+            stats.storeStats();
         }
         if (TRACE_TESTS && ret2)
             console.log(pad + "Generated the input " + JSON.stringify(ret2));

@@ -25,6 +25,8 @@ module.exports = function (sandbox) {
     var SPECIAL_PROP2 = "*" + PREFIX1 + "I*";
     var N_LOG_FUNCTION_LIT = 12;
     var STATS_FILE_NAME = "jalangi_multiex_stats";
+    var stats = require('../../utils/StatCollector');
+    var STAT_FLAG = stats.STAT_FLAG;
 
     //-------------------------------- End constants ---------------------------------
 
@@ -42,12 +44,7 @@ module.exports = function (sandbox) {
     var SolverEngine = require('./SolverEngine');
     var pc = require('./PathConstraint');
 
-    var iCount;
-    try {
-        iCount = JSON.parse(require('fs').readFileSync(STATS_FILE_NAME, "utf8"));
-    } catch (e) {
-        iCount = 0;
-    }
+    stats.loadStats();
 
 
     var exceptionVal;
@@ -56,10 +53,6 @@ module.exports = function (sandbox) {
     var MAX_CALL_DEPTH = pc.getMAX_CALL_DEPTH();
 
     //---------------------------- Utility functions -------------------------------
-
-    function writeICount() {
-        require('fs').writeFileSync(STATS_FILE_NAME, JSON.stringify(iCount), "utf8");
-    }
 
     function getPC() {
         return pc;
@@ -910,8 +903,10 @@ module.exports = function (sandbox) {
 
         var result_c, left_c, right_c;
 
-        if (pc.startCountingOps())
-            iCount++;
+        if (pc.startCountingOps()) {
+            if (STAT_FLAG) stats.addToCounter("operations");
+        }
+        if (STAT_FLAG) stats.addToCounter("operations (inc. reexecution)");
         left = initUndefinedForBinary(op, left, right);
         right = initUndefinedForBinary(op, right, left);
 
@@ -1047,8 +1042,10 @@ module.exports = function (sandbox) {
     function U(iid, op, left) {
         var left_c, result_c;
 
-        if (pc.startCountingOps())
-            iCount++;
+        if (pc.startCountingOps()){
+            if (STAT_FLAG) stats.addToCounter("operations");
+        }
+        if (STAT_FLAG) stats.addToCounter("operations (inc. reexecution)");
         left = initUndefinedForUnary(op, left);
 
         if ((result_c = unarys(iid, op, left))) {
@@ -1143,7 +1140,7 @@ module.exports = function (sandbox) {
     }
 
     function endExecution() {
-        writeICount();
+        stats.storeStats();
         pc.generateInputs(true, true);
     }
 
@@ -1184,7 +1181,6 @@ module.exports = function (sandbox) {
     sandbox.initUndefinedFunction = initUndefinedFunction;
     sandbox.initUndefinedNumber = initUndefinedNumber;
     sandbox.initUndefinedString = initUndefinedString;
-    sandbox.writeICount = writeICount;
 
 };
 

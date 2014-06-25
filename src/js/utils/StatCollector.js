@@ -6,10 +6,13 @@
     var StatCollector = {};
     var STATS_FILE_NAME = "jalangi_stats";
 
+
+    StatCollector.STAT_FLAG = true;
+
     StatCollector.resumeTimer = function (timerName) {
         var timer;
         if (!(timer = timers[timerName])) {
-            timers[timerName] = {begin:-1, total:0};
+            timer = timers[timerName] = {begin:-1, total:0};
         }
         if (timer.begin >= 0) {
             throw new Error("Trying to resume active timer " + timerName);
@@ -29,7 +32,7 @@
     StatCollector.addToAccumulator = function (accumulatorName, val) {
         var accumulator;
         if (!(accumulator = accumulators[accumulatorName])) {
-            accumulators[accumulatorName] = {count:0, sum:0, max:undefined, min:undefined};
+            accumulator = accumulators[accumulatorName] = {count:0, sum:0, max:undefined, min:undefined};
         }
         accumulator.count++;
         accumulator.sum += val;
@@ -40,7 +43,7 @@
         }
         if (accumulator.min === undefined) {
             accumulator.min = val;
-        } else if (val < accumulator.max) {
+        } else if (val < accumulator.min) {
             accumulator.min = val;
         }
     };
@@ -63,5 +66,31 @@
         require('fs').writeFileSync(STATS_FILE_NAME, JSON.stringify({timers:timers, counters:counters, accumulators:accumulators}), "utf8");
     };
 
+    StatCollector.printStats = function() {
+        for(var timer in timers) {
+            if (timers.hasOwnProperty(timer)) {
+                console.log("Time spent in "+timer+" = "+timers[timer].total+" ms");
+            }
+        }
+        for (var counter in counters) {
+            if (counters.hasOwnProperty(counter)) {
+                console.log("Number of "+counter+" = "+counters[counter]);
+            }
+        }
+        for (var accumulator in accumulator) {
+            if (accumulators.hasOwnProperty(accumulator)) {
+                var val = accumulators[accumulator];
+                console.log(accumulator+": average = "+(val.sum/val.count)+" max = "+val.max+" min = "+val.min);
+            }
+        }
+    };
+
     sandbox.exports = StatCollector;
 }(module));
+
+if (require.main === module) {
+    var stats = module.exports;
+    stats.loadStats();
+    stats.printStats();
+
+}

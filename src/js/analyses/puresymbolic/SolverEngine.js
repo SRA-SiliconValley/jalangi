@@ -30,6 +30,8 @@
         var TAIL_FILE_NAME = "jalangi_tail";
 
         var SymbolicBool = require('../concolic/SymbolicBool');
+        var stats = require('../../utils/StatCollector');
+        var STAT_FLAG = stats.STAT_FLAG;
 
         function execSync(cmd) {
             /*   var FFI = require("ffi");
@@ -176,6 +178,7 @@
         this.writeInputs =  function(currentSolution, index) {
             var iCount = 0;
 
+            if (STAT_FLAG) stats.addToCounter("inputs");
             try {
                 iCount = JSON.parse(fs.readFileSync(TAIL_FILE_NAME,"utf8"));
             } catch(e) {
@@ -201,6 +204,8 @@
         this.generateInputs = function(formula) {
             var newInputs, count, MAX_COUNT = 100, negatedSolution = "TRUE", extra, allTrue;
 
+            if (STAT_FLAG) stats.resumeTimer("solver");
+            if (STAT_FLAG) stats.addToCounter("solver calls");
             if (formula) {
                 //console.log("*****************  Solving "+formula);
                     count = 0;
@@ -215,6 +220,7 @@
                                 if (count > 1) {
                                     console.log("Solved constraint after trial # "+count);
                                 }
+                                if (STAT_FLAG) stats.suspendTimer("solver");
                                 return newInputs;
                             } else {
                                 if (extra) {
@@ -224,11 +230,13 @@
                                 }
                             }
                         } else {
+                            if (STAT_FLAG) stats.suspendTimer("solver");
                             return null;
                         }
                         count++;
                     }
             }
+            if (STAT_FLAG) stats.suspendTimer("solver");
             return null;
         };
 

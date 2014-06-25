@@ -2,6 +2,8 @@
 
 (function(BDD){
     var SymbolicBool = require('../concolic/SymbolicBool');
+    var stats = require('../../utils/StatCollector');
+    var STAT_FLAG = stats.STAT_FLAG;
 
     function Hash() {
         this.table = [];
@@ -100,19 +102,31 @@
     }
 
     Node.prototype.toString = function() {
-      return BDD.getFormula(this).toString();
+        if (STAT_FLAG) stats.resumeTimer("bdd");
+        var ret = BDD.getFormula(this).toString();
+        if (STAT_FLAG) stats.suspendTimer("bdd");
+        return ret;
     };
 
     Node.prototype.and = function(u) {
-        return BDD.apply("&&", this, u);
+        if (STAT_FLAG) stats.resumeTimer("bdd");
+        var ret = BDD.apply("&&", this, u);
+        if (STAT_FLAG) stats.suspendTimer("bdd");
+        return ret;
     };
 
     Node.prototype.or = function(u) {
-        return BDD.apply("||", this, u);
+        if (STAT_FLAG) stats.resumeTimer("bdd");
+        var ret = BDD.apply("||", this, u);
+        if (STAT_FLAG) stats.suspendTimer("bdd");
+        return ret;
     };
 
     Node.prototype.not = function(u) {
-        return BDD.not(this);
+        if (STAT_FLAG) stats.resumeTimer("bdd");
+        var ret = BDD.not(this);
+        if (STAT_FLAG) stats.suspendTimer("bdd");
+        return ret;
     };
 
     Node.prototype.isZero = function() {

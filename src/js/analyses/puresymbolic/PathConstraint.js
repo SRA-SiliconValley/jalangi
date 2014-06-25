@@ -71,7 +71,9 @@
         var ret;
         if ((ret = formulaCache[str])!== undefined) {
         } else if ((ret = formulaCache[nstr])!== undefined) {
+            if (STAT_FLAG) stats.suspendTimer("bdd");
             ret = ret.not();
+            if (STAT_FLAG) stats.resumeTimer("bdd");
         } else {
             literalToFormulas.push(formula);
             ret = BDD.build(literalToFormulas.length);

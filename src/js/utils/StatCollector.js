@@ -77,7 +77,7 @@
                 console.log("Number of "+counter+" = "+counters[counter]);
             }
         }
-        for (var accumulator in accumulator) {
+        for (var accumulator in accumulators) {
             if (accumulators.hasOwnProperty(accumulator)) {
                 var val = accumulators[accumulator];
                 console.log(accumulator+": average = "+(val.sum/val.count)+" max = "+val.max+" min = "+val.min);

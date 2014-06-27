@@ -45,6 +45,8 @@ module.exports = function (sandbox) {
     var pc = require('./PathConstraint');
 
     stats.loadStats();
+    if (STAT_FLAG) stats.addToCounter("inputs");
+
 
 
     var exceptionVal;

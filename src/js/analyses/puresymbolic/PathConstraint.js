@@ -400,6 +400,22 @@
     }
 
 
+    function getSolutionAll(pred) {
+        var i, len = pred.values.length, ret = new PredValues(), soln, tmp;
+
+        for (i=0; i<len; i++) {
+            var c = pred.values[i].pred;
+            c = getFormulaFromBDD(c);
+            tmp = solver.generateInputs(c);
+            if (tmp) {
+                if (STAT_FLAG) stats.addToCounter("inputs");
+                ret.addValue(pred.values[i].pred, pred.values[i].value);
+                soln = tmp;
+            }
+        }
+        return {pc:ret, solution:soln};
+    }
+
     function getSolution(pred, branch) {
         var c = branch?pred.disjunctAll():pred.disjunctAll().not();
         c = getFormulaFromBDD(c);
@@ -463,8 +479,9 @@
             ret = v;
         } else {
             if (frame.updateSolutionIfSatisfiable(falseBranch)) {
-                if (tmp = getSolution(trueBranch, true)) {
-                    frame.setNextPathIndexElement({done:false, branch:false, solution: tmp, pc: trueBranch, lastVal: lastVal, iid: iid});
+                tmp = getSolutionAll(trueBranch);
+                if (tmp.solution) {
+                    frame.setNextPathIndexElement({done:false, branch:false, solution: tmp.solution, pc: tmp.pc, lastVal: lastVal, iid: iid});
                 } else {
                     frame.setNextPathIndexElement({done:true, branch:false, solution: null, pc: null, lastVal: lastVal, iid: iid});
 
@@ -472,8 +489,9 @@
                 ret = false;
                 frame.addAxiom(falseBranch, true);
             } else if (frame.updateSolutionIfSatisfiable(trueBranch)) {
-                if (tmp = getSolution(falseBranch, true)) {
-                    frame.setNextPathIndexElement({done:false, branch:true, solution: tmp, pc: falseBranch, lastVal: lastVal, iid:iid});
+                tmp = getSolutionAll(falseBranch);
+                if (tmp.solution) {
+                    frame.setNextPathIndexElement({done:false, branch:true, solution: tmp.solution, pc: tmp.pc, lastVal: lastVal, iid:iid});
                 } else {
                     frame.setNextPathIndexElement({done:true, branch:true, solution: null, pc: null, lastVal: lastVal, iid:iid});
                 }

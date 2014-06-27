@@ -20,6 +20,7 @@
 (function (module) {
 
     var BDD = require('./BDD');
+    var MERGE_ENABLED = false;
 
     function PredValues(pred, value) {
         if (!(this instanceof PredValues)) {
@@ -67,18 +68,34 @@
     PredValues.prototype = {
         constructor:PredValues,
 
+        pathsToValueRatio:function (pred, value) {
+            var i, len = this.values.length, j, similars=0;
+
+                for (i = 0; i < len; ++i) {
+                    inner: for (j=0; j<i; j++) {
+                        if (this.values[i].value === this.values[j].value) {
+                            similars ++;
+                            break inner;
+                        }
+                    }
+                }
+            return len*1.0/(len-similars);
+        },
+
         addValue:function (pred, value) {
             var i, len = this.values.length;
 
-            for (i = 0; i < len; ++i) {
-                if (this.values[i].value === value) {
-                    var oldPred = this.values[i].pred;
-                    this.values[i] = {pred:pred.or(this.values[i].pred), value:value};
-                    // console.log("Reduced "+oldPred.toString()+" ***** and ******** "+pred.toString()+" ****** to ******* "+this.values[i].pred.toString()+" for "+value);
-                    //console.log("Reduced BDD size "+(BDD.size(oldPred)+BDD.size(pred)-BDD.size(this.values[i].pred))+
-                    //    " for "+value);
-                    //console.log("Reduced "+oldPred.toString()+" ***** and ******** "+pred.toString()+" ****** to ******* "+this.values[i].pred.toString()+" for "+value);
-                    return;
+            if (MERGE_ENABLED) {
+                for (i = 0; i < len; ++i) {
+                    if (this.values[i].value === value) {
+                        var oldPred = this.values[i].pred;
+                        this.values[i] = {pred: pred.or(this.values[i].pred), value: value};
+                        // console.log("Reduced "+oldPred.toString()+" ***** and ******** "+pred.toString()+" ****** to ******* "+this.values[i].pred.toString()+" for "+value);
+                        //console.log("Reduced BDD size "+(BDD.size(oldPred)+BDD.size(pred)-BDD.size(this.values[i].pred))+
+                        //    " for "+value);
+                        //console.log("Reduced "+oldPred.toString()+" ***** and ******** "+pred.toString()+" ****** to ******* "+this.values[i].pred.toString()+" for "+value);
+                        return;
+                    }
                 }
             }
             this.values.push({pred:pred, value:value});

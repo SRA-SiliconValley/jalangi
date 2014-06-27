@@ -441,6 +441,7 @@ module.exports = function (sandbox) {
             }
         }
         if (STAT_FLAG) stats.addToAccumulator("vs-size", ret.size());
+        if (STAT_FLAG) stats.addToAccumulator("paths to value ratio", ret.pathsToValueRatio());
         return ret;
     }
 
@@ -452,20 +453,21 @@ module.exports = function (sandbox) {
         left = makePredValues(BDD.one, left);
         right = makePredValues(BDD.one, right);
 
-        var i, j, leni = left.values.length, lenj = right.values.length, pred, value, ret, newPC = new PredValues(), lenk, k, tmppc;
+        var i, j, leni = left.values.length, lenj = right.values.length, pred, value, ret, newPC = new PredValues(), lenk, k;
         for (i = 0; i < leni; ++i) {
             for (j = 0; j < lenj; ++j) {
                 pred = left.values[i].pred.and(right.values[j].pred);
-                //tmppc = pc.getPC();
                 pred = pc.getPC().and(pred);
 
-                //lenk =
+                lenk = pred.values.length;
                 if (!pred.isZero()) {
                     pc.pushFrame(pred);
-                    if (op !== undefined) {
-                        value = single.B(iid, op, left.values[i].value, right.values[j].value);
-                    } else {
-                        value = single.G(iid, left.values[i].value, right.values[j].value);
+                    for(k=0; k<lenk; k++) {
+                        if (op !== undefined) {
+                            value = single.B(iid, op, left.values[i].value, right.values[j].value);
+                        } else {
+                            value = single.G(iid, left.values[i].value, right.values[j].value);
+                        }
                     }
                     ret = PredValues.addValue(ret, pc.getPC(), value);
                     newPC = newPC.or(pc.getPC());
@@ -483,13 +485,16 @@ module.exports = function (sandbox) {
         }
         left = makePredValues(BDD.one, left);
 
-        var i, leni = left.values.length, pred, value, ret, newPC = new PredValues();
+        var i, leni = left.values.length, pred, value, ret, newPC = new PredValues(), lenk, k;
         for (i = 0; i < leni; ++i) {
             pred = pc.getPC().and(left.values[i].pred);
 
+            lenk = pred.values.length;
             if (!pred.isZero()) {
                 pc.pushFrame(pred);
-                value = single.U(iid, op, left.values[i].value);
+                for(k=0; k<lenk; k++) {
+                    value = single.U(iid, op, left.values[i].value);
+                }
                 ret = PredValues.addValue(ret, pc.getPC(), value);
                 newPC = newPC.or(pc.getPC());
                 pc.popFrame();

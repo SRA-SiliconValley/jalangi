@@ -178,7 +178,6 @@
         this.writeInputs =  function(currentSolution, index) {
             var iCount = 0;
 
-            if (STAT_FLAG) stats.addToCounter("inputs");
             try {
                 iCount = JSON.parse(fs.readFileSync(TAIL_FILE_NAME,"utf8"));
             } catch(e) {

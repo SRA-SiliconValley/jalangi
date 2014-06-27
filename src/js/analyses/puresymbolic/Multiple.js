@@ -456,6 +456,7 @@ module.exports = function (sandbox) {
         left = makePredValues(BDD.one, left);
         right = makePredValues(BDD.one, right);
 
+        if (STAT_FLAG && op !== undefined) stats.addToCounter("multiex operations");
         var i, j, leni = left.values.length, lenj = right.values.length, pred, value, ret, newPC = new PredValues(), lenk, k;
         for (i = 0; i < leni; ++i) {
             for (j = 0; j < lenj; ++j) {
@@ -488,6 +489,7 @@ module.exports = function (sandbox) {
         }
         left = makePredValues(BDD.one, left);
 
+        if (STAT_FLAG) stats.addToCounter("multiex operations");
         var i, leni = left.values.length, pred, value, ret, newPC = new PredValues(), lenk, k;
         for (i = 0; i < leni; ++i) {
             pred = pc.getPC().and(left.values[i].pred);

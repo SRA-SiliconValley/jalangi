@@ -19,8 +19,23 @@
 
 (function (module) {
 
+    var MERGE_ENABLED = true;
+
     var BDD = require('./BDD');
-    var MERGE_ENABLED = false;
+    var Symbolic = require('./../concolic/Symbolic');
+
+    function isWithinTheory(val) {
+        if (val === null) {
+            return false;
+        } else if (typeof val === 'undefined' || typeof val === 'string' || typeof val === 'boolean') {
+            return true;
+        } else if (typeof val === 'number' && Math.floor(val) === val) {
+            return true;
+        }
+        return val.type === Symbolic;
+    }
+
+
 
     function PredValues(pred, value) {
         if (!(this instanceof PredValues)) {
@@ -71,15 +86,28 @@
         pathsToValueRatio:function (pred, value) {
             var i, len = this.values.length, j, similars=0;
 
-                for (i = 0; i < len; ++i) {
-                    inner: for (j=0; j<i; j++) {
-                        if (this.values[i].value === this.values[j].value) {
-                            similars ++;
-                            break inner;
-                        }
+            for (i = 0; i < len; ++i) {
+                inner: for (j=0; j<i; j++) {
+                    if (this.values[i].value === this.values[j].value) {
+                        similars ++;
+                        break inner;
                     }
                 }
+            }
             return len*1.0/(len-similars);
+        },
+
+        isWithinTheory: function() {
+            var i, len = this.values.length;
+
+            if (len <= 1) return true;
+
+            for (i = 0; i < len; ++i) {
+                if (!isWithinTheory(this.values[i].value)) {
+                    return false;
+                }
+            }
+            return true;
         },
 
         addValue:function (pred, value) {

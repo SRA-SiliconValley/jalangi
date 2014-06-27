@@ -908,7 +908,6 @@ module.exports = function (sandbox) {
         if (pc.startCountingOps()) {
             if (STAT_FLAG) stats.addToCounter("operations");
         }
-        if (STAT_FLAG) stats.addToCounter("operations (inc. reexecution)");
         left = initUndefinedForBinary(op, left, right);
         right = initUndefinedForBinary(op, right, left);
 
@@ -1047,7 +1046,6 @@ module.exports = function (sandbox) {
         if (pc.startCountingOps()){
             if (STAT_FLAG) stats.addToCounter("operations");
         }
-        if (STAT_FLAG) stats.addToCounter("operations (inc. reexecution)");
         left = initUndefinedForUnary(op, left);
 
         if ((result_c = unarys(iid, op, left))) {

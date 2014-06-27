@@ -18,10 +18,6 @@ import testrunner
 
 tests = [
     ("tests/compos/arbitrary1",2),
-    ("tests/compos/arbitrary2",16),
-    ("tests/compos/arbitrary3",2),
-    ("tests/compos/arbitrary4",13),
-    ("tests/compos/fac",12),
     ("tests/compos/fac2",12),
     ("tests/compos/parser",323),
     ("tests/compos/parser2",165),

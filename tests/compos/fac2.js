@@ -7,6 +7,6 @@ function fac(n) {
 }
 
 var v = J$.readInput(2);
-if (v < 4) {
+if (v < 10) {
     fac(v);
 }

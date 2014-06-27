@@ -442,6 +442,7 @@ module.exports = function (sandbox) {
         }
         if (STAT_FLAG) stats.addToAccumulator("vs-size", ret.size());
         if (STAT_FLAG) stats.addToAccumulator("paths to value ratio", ret.pathsToValueRatio());
+        if (STAT_FLAG) ret.isWithinTheory()?stats.addToCounter("within theory assignments"):stats.addToCounter("outside theory assignments");
         return ret;
     }
 

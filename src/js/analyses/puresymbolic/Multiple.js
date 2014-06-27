@@ -17,6 +17,10 @@
 // Author: Koushik Sen
 
 module.exports = function (sandbox) {
+    var stats = require('../../utils/StatCollector');
+    var STAT_FLAG = stats.STAT_FLAG;
+    stats.resumeTimer("total");
+
     var single = {};
     require('./Single2')(single);
     var PredValues = require('./PredValues');
@@ -27,8 +31,6 @@ module.exports = function (sandbox) {
     var PREFIX1 = "J$";
     var SPECIAL_PROP2 = "*" + PREFIX1 + "I*";
     var EVAL_ORG = eval;
-    var stats = require('../../utils/StatCollector');
-    var STAT_FLAG = stats.STAT_FLAG;
 
 
     var TRACE_CALL = false;
@@ -590,6 +592,7 @@ module.exports = function (sandbox) {
         scriptCount--;
         var ret2 = pc.generateInputs(scriptCount == 0, false);
         if (scriptCount == 0) {
+            stats.suspendTimer("total");
             stats.storeStats();
         }
         if (TRACE_TESTS && ret2)

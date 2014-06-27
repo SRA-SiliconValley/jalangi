@@ -548,8 +548,11 @@ module.exports = function (sandbox) {
         if (pc.isRetracing()) {
             return;
         }
-        base = makePredValues(BDD.one, base);
-        f = makePredValues(BDD.one, f);
+//        base = makePredValues(BDD.one, base);
+//        f = makePredValues(BDD.one, f);
+
+        base = makePredValues(BDD.one, base).mergeMax();
+        f = makePredValues(BDD.one, f).mergeMax();
 
         var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret, tmp, f2, newPC = new PredValues();
         pushSwitchKey();

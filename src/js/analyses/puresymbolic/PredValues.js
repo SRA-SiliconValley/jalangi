@@ -110,10 +110,22 @@
             return true;
         },
 
-        addValue:function (pred, value) {
+        mergeMax: function() {
+            if (MERGE_ENABLED) return this;
+
+            var ret = new PredValues();
             var i, len = this.values.length;
 
-            if (MERGE_ENABLED) {
+            for (i = 0; i < len; ++i) {
+                ret.addValue(this.values[i].pred, this.values[i].value, true);
+            }
+            return ret;
+        },
+
+        addValue:function (pred, value, forceMerge) {
+            var i, len = this.values.length;
+
+            if (MERGE_ENABLED || forceMerge) {
                 for (i = 0; i < len; ++i) {
                     if (this.values[i].value === value) {
                         var oldPred = this.values[i].pred;

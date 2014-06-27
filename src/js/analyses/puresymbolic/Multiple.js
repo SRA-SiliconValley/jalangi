@@ -19,7 +19,6 @@
 module.exports = function (sandbox) {
     var stats = require('../../utils/StatCollector');
     var STAT_FLAG = stats.STAT_FLAG;
-    stats.resumeTimer("total");
 
     var single = {};
     require('./Single2')(single);
@@ -587,6 +586,9 @@ module.exports = function (sandbox) {
 
     function Se(iid, val) {
         //pc.pushFrame(pc.getPC());
+        if (scriptCount===0) {
+            stats.resumeTimer("total");
+        }
         scriptCount++;
     }
 

@@ -6,4 +6,7 @@ function fac(n) {
         return n*fac(n-1);
 }
 
-fac();
+var v = J$.readInput(2);
+if (v < 4) {
+    fac(v);
+}

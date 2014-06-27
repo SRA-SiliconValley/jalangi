@@ -19,11 +19,7 @@
 
 (function (module) {
 
-    var SymbolicBool = require('../concolic/SymbolicBool');
-    var SolverEngine = require('./SolverEngine');
     var BDD = require('./BDD');
-
-    var solver = new SolverEngine();
 
     function PredValues(pred, value) {
         if (!(this instanceof PredValues)) {
@@ -38,9 +34,35 @@
             }
         } else {
             this.values = [];
-            this.values[0] = {pred:pred, value:value};
+            if (pred !== undefined && !pred.isZero()) {
+                this.values[0] = {pred: pred, value: value};
+            }
         }
     }
+
+    PredValues.addValue = function(ret, pred, value) {
+        var i, len, tPred;
+
+        if (!(value instanceof PredValues)) {
+            value = new PredValues(BDD.one, value);
+        }
+
+        len = value.values.length;
+
+        for (i = 0; i < len; ++i) {
+            tPred = pred.and(value.values[i].pred);
+            var len2 = tPred.values.length;
+            for (var j=0; j<len2; j++) {
+                if (!ret) {
+                    ret = new PredValues(tPred.values[j].pred, value.values[i].value);
+                } else {
+                    ret.addValue(tPred.values[j].pred, value.values[i].value);
+                }
+            }
+        }
+        return ret;
+    };
+
 
     PredValues.prototype = {
         constructor:PredValues,
@@ -64,6 +86,51 @@
 
         size: function() {
             return this.values.length;
+        },
+
+        and: function(other) {
+            var ret, phi;
+            if (!(other instanceof BDD.Node)) {
+                throw new Error("other = "+other+" should be a BDD.");
+            }
+            var i, len = this.values.length;
+            ret = new PredValues();
+            for (i = 0; i < len; ++i) {
+                phi = this.values[i].pred.and(other);
+                if (!phi.isZero()) {
+                    ret.addValue(phi,this.values[i].value);
+                }
+            }
+            return ret;
+        },
+
+        or: function(other) {
+            if (!(other instanceof PredValues)) {
+                throw new Error("other = "+other+" should be a PredValues.");
+            }
+            var ret = new PredValues(this);
+            var i, len = other.values.length;
+            for (i = 0; i < len; ++i) {
+                ret.addValue(other.values[i].pred,other.values[i].value);
+            }
+            return ret;
+        },
+
+        disjunctAll: function() {
+            var ret = BDD.zero;
+
+            var i, len = this.values.length;
+            for (i = 0; i < len; ++i) {
+                if (this.values[i].value !== true) {
+                    throw new Error("PredValues "+this+" is not a path constraint");
+                }
+                ret = ret.or(this.values[i].pred);
+            }
+            return ret;
+        },
+
+        isZero: function() {
+            return this.values.length === 0;
         },
 
         toString:function () {

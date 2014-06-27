@@ -6,4 +6,4 @@ function fac(n) {
         return 1;
 }
 
-fac();
+fac(J$.readInput(2));

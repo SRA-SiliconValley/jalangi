@@ -23,6 +23,7 @@
     var SymbolicBool = require('./../concolic/SymbolicBool');
     var Symbolic = require('./../concolic/Symbolic');
     var SolverEngine = require('./SolverEngine');
+    var PredValues = require('./PredValues');
     var getIIDInfo = require('./../../utils/IIDInfo');
     var BDD = require('./BDD');
     var solver = new SolverEngine();
@@ -135,12 +136,12 @@
         this.formulaCount = 0;
         this.returnValue = undefined;
         this.index = 0;
-        this.aggregatePC = BDD.zero;
+        this.aggregatePC = new PredValues();
         this.solution = solution;
     }
 
     Frame.prototype.init = function() {
-        this.pathConstraint = BDD.one;
+        this.pathConstraint = new PredValues(BDD.one, true);
         try {
             this.pathIndex = JSON.parse(fs.readFileSync(PATH_FILE_NAME,"utf8"));
             if (this.pathIndex.length === 0) {
@@ -204,9 +205,9 @@
         } else if (val === 'ignore') {
             this.formulaStack.pop();
         } else {
-            if (!(val instanceof BDD.Node)) {
-                throw new Error(val+" must of type Node");
-            }
+//            if (!(val instanceof BDD.Node)) {
+//                throw new Error(val+" must of type Node");
+//            }
             if (branch !== undefined) {
                 if (!branch){
                     val = val.not();
@@ -217,7 +218,7 @@
 
         if (this.formulaCount===0 && this.formulaStack.length > 0 ) {
             var tmp = this.formulaStack.pop();
-            this.pathConstraint = this.pathConstraint.and(tmp);
+            this.pathConstraint = tmp;
             if (this.pathConstraint.isZero()) {
                 throw new Error("Throwing exception to prune infeasible path.");
             }
@@ -226,7 +227,7 @@
 
     Frame.prototype.updateSolution = function() {
         this.solution = combine(J$.inputs, this.solution);
-        var f = getFormulaFromBDD(this.pathConstraint);
+        var f = getFormulaFromBDD(this.pathConstraint.disjunctAll());
         var concrete = f.substitute(this.solution);
         if (concrete === SymbolicBool.false) {
             concrete = f;
@@ -245,7 +246,7 @@
 
     Frame.prototype.updateSolutionIfSatisfiable = function(pred) {
         this.updateSolution();
-        var f = getFormulaFromBDD(pred);
+        var f = getFormulaFromBDD(pred.disjunctAll());
         var concrete = f.substitute(this.solution);
         if (concrete === SymbolicBool.false) {
             return false;
@@ -400,7 +401,7 @@
 
 
     function getSolution(pred, branch) {
-        var c = frame.pathConstraint.and(branch?pred:pred.not());
+        var c = branch?pred.disjunctAll():pred.disjunctAll().not();
         c = getFormulaFromBDD(c);
         return solver.generateInputs(c);
     }
@@ -448,7 +449,7 @@
                 }
                 frame.addAxiom(val, ret = true);
             } else {
-                frame.pathConstraint = BDD.zero;
+                frame.pathConstraint = new PredValues();
                 throw new Error("Throwing exception to prune infeasible path.");
             }
         }
@@ -479,7 +480,7 @@
                 ret = true;
                 frame.addAxiom(trueBranch, true);
             } else {
-                frame.pathConstraint = BDD.zero;
+                frame.pathConstraint = new PredValues();
                 throw new Error("Throwing exception to prune infeasible path.");
             }
         }

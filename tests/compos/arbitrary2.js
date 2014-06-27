@@ -1,8 +1,3 @@
-if (typeof window === "undefined") {
-    require('../../src/js/InputManager2');
-    require(process.cwd()+'/inputs');
-}
-
 Array.prototype.swap=function swapf(a, b)
 {
     var tmp=this[a];

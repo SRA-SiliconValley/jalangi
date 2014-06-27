@@ -1,9 +1,3 @@
-if (typeof window === "undefined") {
-    require('../../src/js/InputManager2');
-    require(process.cwd()+'/inputs');
-}
-
-
 function foo(x) {
     if (x > 0) {
         return 1;
@@ -12,4 +6,5 @@ function foo(x) {
     }
 }
 
-foo();
+var v = J$.readInput(1);
+foo(v);

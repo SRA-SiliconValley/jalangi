@@ -46,7 +46,15 @@ module.exports = function (sandbox) {
 
     function makePredValues(pred, value) {
         if (!(value instanceof PredValues)) {
-            value = new PredValues(pred, value);
+            if (!(pred instanceof PredValues)) {
+                value = new PredValues(pred, value);
+            } else {
+                var ret = new PredValues(), len = pred.values.length;
+                for(var i=0; i<len; i++) {
+                    ret.addValue(pred.values[i].pred, value);
+                }
+                value = ret;
+            }
         }
         return value;
     }
@@ -62,39 +70,14 @@ module.exports = function (sandbox) {
         } else {
             console.log(pad + "Backtracking current function");
         }
-        console.log(pad + "  Path constraint in BDD form " + pc.getPC().toString());
-        console.log(pad + "                  in predicate form " + pc.getFormulaFromBDD(pc.getPC()).toString());
-        console.log(pad + "  Aggregate path constraint in BDD form " + pc.getAggregatePC().toString());
-        console.log(pad + "                          in predicate form " + pc.getFormulaFromBDD(pc.getAggregatePC()).toString());
+        console.log(pad + "  Path constraint in BDD form " + pc.getPC().disjunctAll().toString());
+        console.log(pad + "                  in predicate form " + pc.getFormulaFromBDD(pc.getPC().disjunctAll()).toString());
+        console.log(pad + "  Aggregate path constraint in BDD form " + pc.getAggregatePC().disjunctAll().toString());
+        console.log(pad + "                          in predicate form " + pc.getFormulaFromBDD(pc.getAggregatePC().disjunctAll()).toString());
         console.log(pad + "  Aggregate return value " + pc.getReturnVal());
     }
 
 
-    function addValue(ret, pred, value) {
-        var i, len, tPred;
-
-        if (value instanceof PredValues) {
-            len = value.values.length;
-
-            for (i = 0; i < len; ++i) {
-                tPred = pred.and(value.values[i].pred);
-                if (!tPred.isZero()) {
-                    if (!ret) {
-                        ret = new PredValues(tPred, value.values[i].value);
-                    } else {
-                        ret.addValue(tPred, value.values[i].value);
-                    }
-                }
-            }
-        } else {
-            if (!ret) {
-                ret = new PredValues(pred, value);
-            } else {
-                ret.addValue(pred, value);
-            }
-        }
-        return ret;
-    }
 
     function makeSymbolic(idx, val) {
         return single.makeSymbolic(idx, val);
@@ -129,7 +112,7 @@ module.exports = function (sandbox) {
                 indices[i] = 0;
                 maxIndices[i] = args[i].values.length;
             }
-            newPC = BDD.zero;
+            newPC = new PredValues();
             ret = undefined;
 
             do {
@@ -151,13 +134,13 @@ module.exports = function (sandbox) {
                     } else {
                         value = f.apply(pc.concretize(single.initUndefinedNumber(getSingle(this))), cArgs);
                     }
-                    ret = addValue(ret, pc.getPC(), value);
+                    ret = PredValues.addValue(ret, pc.getPC(), value);
                     newPC = newPC.or(pc.getPC());
                     pc.popFrame();
                 }
             } while (nextIndices(indices, maxIndices));
 
-            pc.setPC(pc.getPC().and(newPC));
+            pc.setPC(newPC);
             return ret;
         }
     }
@@ -441,12 +424,12 @@ module.exports = function (sandbox) {
         newValue = makePredValues(pc.getPC(), newValue);
 
 
-        var i, len, pred, notPc = pc.getPC().not();
+        var i, len, pred, notPc = new PredValues(pc.getPC().disjunctAll().not(), true);
         len = newValue.values.length;
         for (i = 0; i < len; ++i) {
-            pred = newValue.values[i].pred.and(pc.getPC());
+            pred = pc.getPC().and(newValue.values[i].pred);
             if (!pred.isZero()) {
-                ret = addValue(ret, pred, newValue.values[i].value);
+                ret = PredValues.addValue(ret, pred, newValue.values[i].value);
             }
         }
 
@@ -454,7 +437,7 @@ module.exports = function (sandbox) {
         for (i = 0; i < len; ++i) {
             pred = notPc.and(oldValue.values[i].pred);
             if (!pred.isZero()) {
-                ret = addValue(ret, pred, oldValue.values[i].value);
+                ret = PredValues.addValue(ret, pred, oldValue.values[i].value);
             }
         }
         if (STAT_FLAG) stats.addToAccumulator("vs-size", ret.size());
@@ -469,12 +452,14 @@ module.exports = function (sandbox) {
         left = makePredValues(BDD.one, left);
         right = makePredValues(BDD.one, right);
 
-        var i, j, leni = left.values.length, lenj = right.values.length, pred, value, ret, newPC = BDD.zero;
+        var i, j, leni = left.values.length, lenj = right.values.length, pred, value, ret, newPC = new PredValues(), lenk, k, tmppc;
         for (i = 0; i < leni; ++i) {
             for (j = 0; j < lenj; ++j) {
                 pred = left.values[i].pred.and(right.values[j].pred);
+                //tmppc = pc.getPC();
                 pred = pc.getPC().and(pred);
 
+                //lenk =
                 if (!pred.isZero()) {
                     pc.pushFrame(pred);
                     if (op !== undefined) {
@@ -482,13 +467,13 @@ module.exports = function (sandbox) {
                     } else {
                         value = single.G(iid, left.values[i].value, right.values[j].value);
                     }
-                    ret = addValue(ret, pc.getPC(), value);
+                    ret = PredValues.addValue(ret, pc.getPC(), value);
                     newPC = newPC.or(pc.getPC());
                     pc.popFrame();
                 }
             }
         }
-        pc.setPC(pc.getPC().and(newPC));
+        pc.setPC(newPC);
         return ret;
     }
 
@@ -498,25 +483,25 @@ module.exports = function (sandbox) {
         }
         left = makePredValues(BDD.one, left);
 
-        var i, leni = left.values.length, pred, value, ret, newPC = BDD.zero;
+        var i, leni = left.values.length, pred, value, ret, newPC = new PredValues();
         for (i = 0; i < leni; ++i) {
             pred = pc.getPC().and(left.values[i].pred);
 
             if (!pred.isZero()) {
                 pc.pushFrame(pred);
                 value = single.U(iid, op, left.values[i].value);
-                ret = addValue(ret, pc.getPC(), value);
+                ret = PredValues.addValue(ret, pc.getPC(), value);
                 newPC = newPC.or(pc.getPC());
                 pc.popFrame();
             }
         }
-        pc.setPC(pc.getPC().and(newPC));
+        pc.setPC(newPC);
         return ret;
     }
 
     function G(iid, base, offset) {
         return B(iid, undefined, base, offset);
-    };
+    }
 
     function P(iid, left, right, val) {
         var ret;
@@ -526,7 +511,7 @@ module.exports = function (sandbox) {
         left = makePredValues(BDD.one, left);
         right = makePredValues(BDD.one, right);
 
-        var i, j, leni = left.values.length, lenj = right.values.length, pred, newPC = BDD.zero;
+        var i, j, leni = left.values.length, lenj = right.values.length, pred, newPC = new PredValues();
         for (i = 0; i < leni; ++i) {
             for (j = 0; j < lenj; ++j) {
                 pred = left.values[i].pred.and(right.values[j].pred);
@@ -546,7 +531,7 @@ module.exports = function (sandbox) {
                 }
             }
         }
-        pc.setPC(pc.getPC().and(newPC));
+        pc.setPC(newPC);
     }
 
 
@@ -557,7 +542,7 @@ module.exports = function (sandbox) {
         base = makePredValues(BDD.one, base);
         f = makePredValues(BDD.one, f);
 
-        var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret, tmp, f2, newPC = BDD.zero;
+        var i, j, leni = base.values.length, lenj = f.values.length, pred, value, ret, tmp, f2, newPC = new PredValues();
         pushSwitchKey();
         try {
             for (i = 0; i < leni; ++i) {
@@ -569,19 +554,19 @@ module.exports = function (sandbox) {
                         f2 = f.values[j].value;
                         if (f2 === J$.addAxiom) {
                             value = singleInvokeFun(iid, base.values[i].value, f2, args, isConstructor);
-                            ret = addValue(ret, pred, value);
+                            ret = PredValues.addValue(ret, pred, value);
                             newPC = newPC.or(pc.getPC());
                         } else {
                             pc.pushFrame(pred);
                             value = singleInvokeFun(iid, base.values[i].value, f2, args, isConstructor);
-                            ret = addValue(ret, pc.getPC(), value);
+                            ret = PredValues.addValue(ret, pc.getPC(), value);
                             newPC = newPC.or(pc.getPC());
                             pc.popFrame();
                         }
                     }
                 }
             }
-            pc.setPC(pc.getPC().and(newPC));
+            pc.setPC(newPC);
         } finally {
             popSwitchKey();
         }
@@ -636,7 +621,7 @@ module.exports = function (sandbox) {
         var isException = (exceptionVal !== undefined) || !ret2;
         if (!isException) {
             var retVal = returnVal.pop();
-            retVal = addValue(aggrRet, pc.getPC(), retVal);
+            retVal = PredValues.addValue(aggrRet, pc.getPC(), retVal);
             returnVal.push(retVal);
         } else {
             returnVal.pop();
@@ -775,7 +760,7 @@ module.exports = function (sandbox) {
 
         lastVal = left;
         left = makePredValues(BDD.one, left);
-        var i, leni = left.values.length, pred1 = BDD.zero, pred2 = BDD.zero, ret;
+        var i, leni = left.values.length, pred1 = BDD.zero, pred2 = BDD.zero;
         for (i = 0; i < leni; ++i) {
             ret = makePredicate(left.values[i].value);
             ret = pc.getBDDFromFormula(ret);

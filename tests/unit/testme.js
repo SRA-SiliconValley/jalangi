@@ -1,10 +1,5 @@
 
 
-if (typeof window === "undefined") {
-    require('../../src/js/InputManager');
-    require(process.cwd()+'/inputs');
-}
-
 var x = J$.readInput(0);
 var y = J$.readInput(0);
 var r = 9.1;

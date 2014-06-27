@@ -19,7 +19,7 @@
 
 (function (module) {
 
-    var MERGE_ENABLED = false;
+    var MERGE_ENABLED = true;
 
     var BDD = require('./BDD');
     var Symbolic = require('./../concolic/Symbolic');

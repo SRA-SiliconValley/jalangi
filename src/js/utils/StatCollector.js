@@ -15,6 +15,7 @@
             timer = timers[timerName] = {begin:-1, total:0};
         }
         if (timer.begin >= 0) {
+            console.log("Trying to resume active timer " + timerName);
             throw new Error("Trying to resume active timer " + timerName);
         }
         timer.begin = Date.now();
@@ -24,6 +25,10 @@
         var timer, now = Date.now();
         if (!(timer = timers[timerName])) {
             throw new Error("Trying to suspend a non-existent timer " + timerName);
+        }
+        if (timer.begin === -1) {
+            console.log("Trying to suspend inactive timer " + timerName)
+            throw new Error("Trying to resume inactive timer " + timerName);
         }
         timer.total += (now - timer.begin);
         timer.begin = -1;

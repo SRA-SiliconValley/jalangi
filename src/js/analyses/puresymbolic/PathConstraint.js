@@ -336,9 +336,13 @@
             c = getFormulaFromBDD(c);
             tmp = solver.generateInputs(c);
             if (tmp) {
+                if (STAT_FLAG) stats.addToCounter("sat");
+
 //                if (STAT_FLAG) stats.addToCounter("inputs");
                 ret.addValue(pred.values[i].pred, pred.values[i].value);
                 soln = tmp;
+            } else {
+                if (STAT_FLAG) stats.addToCounter("unsat");
             }
         }
         return {pc:ret, solution:soln};

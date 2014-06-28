@@ -31,7 +31,7 @@ if (typeof J$ === 'undefined') {
     // have another function call in a finally block (see test
     // call_in_finally.js)
 
-    var returnVal = [];
+    var returnStack = [];
     var exceptionVal;
     var lastVal;
     var switchLeft;
@@ -103,8 +103,6 @@ if (typeof J$ === 'undefined') {
                 f = aret.f;
                 base = aret.base;
                 args = aret.args;
-                isConstructor = aret.isConstructor;
-                isMethod = aret.isMethod;
                 skip = aret.skip;
             }
         }
@@ -158,7 +156,7 @@ if (typeof J$ === 'undefined') {
         if (sandbox.analysis && sandbox.analysis.literal) {
             aret = sandbox.analysis.literal(iid, val, hasGetterSetter);
             if (aret) {
-                val = aret.val;
+                val = aret.result;
             }
         }
         return val;
@@ -167,9 +165,9 @@ if (typeof J$ === 'undefined') {
     function H(iid, val) {
         var aret;
         if (sandbox.analysis && sandbox.analysis.hash) {
-            aret = sandbox.analysis.hash(iid, val);
+            aret = sandbox.analysis.forinObject(iid, val);
             if (aret) {
-                val = aret.val;
+                val = aret.result;
             }
         }
         return val;
@@ -191,7 +189,7 @@ if (typeof J$ === 'undefined') {
                 sandbox.analysis.declare(iid, name, val, isArgument, -1);
             }
             if (aret) {
-                val = aret.val;
+                val = aret.result;
             }
         }
         return val;
@@ -216,7 +214,7 @@ if (typeof J$ === 'undefined') {
         if (sandbox.analysis && sandbox.analysis.getField) {
             aret = sandbox.analysis.getField(iid, base, offset, val);
             if (aret) {
-                val = aret.val;
+                val = aret.result;
             }
         }
         return val;
@@ -242,7 +240,7 @@ if (typeof J$ === 'undefined') {
         if (sandbox.analysis && sandbox.analysis.putField) {
             aret = sandbox.analysis.putField(iid, base, offset, val);
             if (aret) {
-                val = aret.val;
+                val = aret.result;
             }
         }
         return val;
@@ -257,7 +255,7 @@ if (typeof J$ === 'undefined') {
         if (sandbox.analysis && sandbox.analysis.read) {
             aret = sandbox.analysis.read(iid, name, val, isGlobal, isPseudoGlobal);
             if (aret) {
-                val = aret.val;
+                val = aret.result;
             }
         }
         return val;
@@ -269,7 +267,7 @@ if (typeof J$ === 'undefined') {
         if (sandbox.analysis && sandbox.analysis.write) {
             aret = sandbox.analysis.write(iid, name, val, lhs, isGlobal, isPseudoGlobal);
             if (aret) {
-                val = aret.val;
+                val = aret.result;
             }
         }
         return val;
@@ -282,15 +280,8 @@ if (typeof J$ === 'undefined') {
 
     // Return statement
     function Rt(iid, val) {
-        var aret;
-        if (sandbox.analysis && sandbox.analysis.return_) {
-            aret = sandbox.analysis.return_(iid, val);
-            if (aret) {
-                val = aret.val;
-            }
-        }
-        returnVal.pop();
-        returnVal.push(val);
+        returnStack.pop();
+        returnStack.push(val);
         return val;
     }
 
@@ -298,29 +289,36 @@ if (typeof J$ === 'undefined') {
     // added around every function by instrumentation.  Reads
     // the return value stored by call to Rt()
     function Ra() {
-        var ret = returnVal.pop();
+        var returnVal = returnStack.pop();
         exceptionVal = undefined;
-        return ret;
+        return returnVal;
     }
 
     // Function enter
-    function Fe(iid, val, dis /* this */, args) {
+    function Fe(iid, f, dis /* this */, args) {
         argIndex = 0;
-        returnVal.push(undefined);
+        returnStack.push(undefined);
         exceptionVal = undefined;
         if (sandbox.analysis && sandbox.analysis.functionEnter) {
-            sandbox.analysis.functionEnter(iid, val, dis, args);
+            sandbox.analysis.functionEnter(iid, f, dis, args);
         }
     }
 
     // Function exit
     function Fr(iid) {
-        var ret = false, tmp, aret;
+        var isBacktrack = false, tmp, aret, returnVal;
+
+        returnVal = returnStack.pop();
         if (sandbox.analysis && sandbox.analysis.functionExit) {
-            aret = sandbox.analysis.functionExit(iid);
+            aret = sandbox.analysis.functionExit(iid, returnVal, exceptionVal);
             if (aret) {
-                ret = aret.cont;
+                returnVal = aret.returnVal;
+                exceptionVal = aret.exceptionVal;
+                isBacktrack = aret.isBacktrack;
             }
+        }
+        if (!isBacktrack) {
+            returnStack.push(returnVal);
         }
         // if there was an uncaught exception, throw it
         // here, to preserve exceptional control flow
@@ -329,7 +327,7 @@ if (typeof J$ === 'undefined') {
             exceptionVal = undefined;
             throw tmp;
         }
-        return ret;
+        return isBacktrack;
     }
 
     // Script enter
@@ -341,9 +339,12 @@ if (typeof J$ === 'undefined') {
 
     // Script exit
     function Sr(iid) {
-        var tmp;
+        var tmp, aret;
         if (sandbox.analysis && sandbox.analysis.scriptExit) {
-            sandbox.analysis.scriptExit(iid);
+            aret = sandbox.analysis.scriptExit(iid, exceptionVal);
+            if (aret) {
+                exceptionVal = aret.exceptionVal;
+            }
         }
         if (exceptionVal !== undefined) {
             tmp = exceptionVal;
@@ -532,7 +533,7 @@ if (typeof J$ === 'undefined') {
         if (sandbox.analysis && sandbox.analysis.conditional) {
             aret = sandbox.analysis.conditional(iid, left);
             if (aret) {
-                left = aret.left;
+                left = aret.result;
             }
         }
         return left;
@@ -542,9 +543,9 @@ if (typeof J$ === 'undefined') {
     function C(iid, left) {
         var aret;
         if (sandbox.analysis && sandbox.analysis.conditional) {
-            aret = sandbox.analysis.conditionalPre(iid, left);
+            aret = sandbox.analysis.conditional(iid, left);
             if (aret) {
-                left = aret.left;
+                left = aret.result;
             }
         }
 
@@ -586,20 +587,6 @@ if (typeof J$ === 'undefined') {
     sandbox.Rt = Rt; // returned value
     sandbox.Ra = Ra;
     sandbox.Ex = Ex;
-
     sandbox.endExecution = endExecution;
 })(J$);
 
-
-//@todo:@assumption arguments.callee is available
-//@todo:@assumptions SPECIAL_PROP = "*J$*" is added to every object, but its enumeration is avoided in instrumented code
-//@todo:@assumptions ReferenceError when accessing an undeclared uninitialized variable won't be thrown
-//@todo:@assumption window.x is not initialized in node.js replay mode when var x = e is done in the global scope, but handled using syncValues
-//@todo:@assumption eval is not renamed
-//@todo: with needs to be handled
-//@todo: new Function and setTimeout
-//@todo: @assumption implicit call of toString and valueOf on objects during type conversion
-// could lead to inaccurate replay if the object fields are not synchronized
-//@todo: @assumption JSON.stringify of any float could be inaccurate, so logging could be inaccurate
-//@todo: implicit type conversion from objects/arrays/functions during binary and unary operations could break record/replay
-// change line: 1 to line: 8 in node_modules/source-map/lib/source-map/source-node.js

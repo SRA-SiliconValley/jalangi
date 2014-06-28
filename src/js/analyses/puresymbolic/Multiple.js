@@ -597,23 +597,33 @@ module.exports = function (sandbox) {
 
     function Sr(iid) {
         scriptCount--;
-        var ret2 = pc.generateInputs(scriptCount == 0, false);
-        if (scriptCount == 0) {
+        if (scriptCount === 0) {
+//            if (STAT_FLAG) stats.addToCounter("DSE inputs");
             stats.suspendTimer("total");
-            stats.storeStats();
         }
-        if (TRACE_TESTS && ret2)
-            console.log(pad + "Generated the input " + JSON.stringify(ret2));
-        var isException = (exceptionVal !== undefined) || !ret2;
+        pc.backtrack();
+//        if (TRACE_TESTS && ret2)
+//            console.log(pad + "Generated the input " + JSON.stringify(ret2));
+        var isException = (exceptionVal !== undefined);// || !ret2;
 
         var isBackTrack = pc.resetFrame(undefined, isException);
+        if (isBackTrack) {
+            if (STAT_FLAG) stats.addToCounter("MULTIEX inputs");
+        } else if (scriptCount == 0) {
+            if (STAT_FLAG) stats.addToCounter("MULTIEX inputs");
+            var len = pc.getPC().size(), i;
+            for (i=0; i<len; i++)
+                if (STAT_FLAG) stats.addToCounter("DSE inputs");
+            stats.storeStats();
+        }
+
         if (TRACE_RETURNS)
             printLogAtReturns(isBackTrack);
         if (isException && exceptionVal) {
             if (scriptCount == 0) {
                 console.log("Pruning path.  No need to worry.")
                 //console.log("FYI: exception.  No need to worry.")
-                //console.log(exceptionVal.stack);
+                console.log(exceptionVal.stack);
             }
             exceptionVal = undefined;
         }
@@ -630,11 +640,9 @@ module.exports = function (sandbox) {
 
     function Fr(iid) {
         funCallDepth--;
-        var ret2, aggrRet = pc.getReturnVal();
-        ret2 = pc.generateInputs(false, false);
-        if (TRACE_TESTS && ret2)
-            console.log(pad + "Generated the input " + JSON.stringify(ret2));
-        var isException = (exceptionVal !== undefined) || !ret2;
+        var aggrRet = pc.getReturnVal();
+        pc.backtrack();
+        var isException = (exceptionVal !== undefined);
         if (!isException) {
             var retVal = returnVal.pop();
             retVal = PredValues.addValue(aggrRet, pc.getPC(), retVal);
@@ -645,6 +653,7 @@ module.exports = function (sandbox) {
         }
         var isBackTrack = pc.resetFrame(retVal, isException);
         if (isBackTrack) {
+            if (STAT_FLAG) stats.addToCounter("MULTIEX inputs");
             returnVal.pop();
         }
         if (TRACE_RETURNS)
@@ -654,7 +663,7 @@ module.exports = function (sandbox) {
         // @todo need to revisit
         if (isException && exceptionVal) {
             console.log("Pruning path.  No need to worry.")
-            //console.log(exceptionVal.stack);
+            console.log(exceptionVal.stack);
             exceptionVal = undefined;
         }
 
@@ -750,15 +759,7 @@ module.exports = function (sandbox) {
         }
 
         left = B(iid, "===", switchLeft, left);
-
-        var i, leni = left.values.length, pred1 = BDD.zero, pred2 = BDD.zero, ret, tmp;
-        for (i = 0; i < leni; ++i) {
-            ret = makePredicate(left.values[i].value);
-            ret = pc.getBDDFromFormula(ret);
-            pred1 = pred1.or(left.values[i].pred.and(ret));
-            pred2 = pred2.or(left.values[i].pred.and(ret.not()));
-        }
-        var ret2 = pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), switchLeft);
+        var ret2 = pc.branchBoth(iid, pc.getPC(), left, switchLeft, makePredicate);
         if (TRACE_BRANCH) {
             console.log(pad + "Branching at " + getIIDInfo(iid) + " with result " + ret2);
             console.log(pad + "true branch condition in BDD form " + ret.toString());
@@ -776,14 +777,7 @@ module.exports = function (sandbox) {
 
         lastVal = left;
         left = makePredValues(BDD.one, left);
-        var i, leni = left.values.length, pred1 = BDD.zero, pred2 = BDD.zero;
-        for (i = 0; i < leni; ++i) {
-            ret = makePredicate(left.values[i].value);
-            ret = pc.getBDDFromFormula(ret);
-            pred1 = pred1.or(left.values[i].pred.and(ret));
-            pred2 = pred2.or(left.values[i].pred.and(ret.not()));
-        }
-        var ret2 = pc.branchBoth(iid, pc.getPC().and(pred2), pc.getPC().and(pred1), lastVal);
+        var ret2 = pc.branchBoth(iid, pc.getPC(), left, lastVal, makePredicate);
         if (TRACE_BRANCH) {
             console.log(pad + "Branching at " + getIIDInfo(iid) + " with result " + ret2);
             console.log(pad + "  true branch condition in BDD form " + ret.toString());

@@ -45,7 +45,7 @@ module.exports = function (sandbox) {
     var pc = require('./PathConstraint');
 
     stats.loadStats();
-    if (STAT_FLAG) stats.addToCounter("inputs");
+//    if (STAT_FLAG) stats.addToCounter("inputs");
 
 
 
@@ -1141,7 +1141,6 @@ module.exports = function (sandbox) {
 
     function endExecution() {
         stats.storeStats();
-        pc.generateInputs(true, true);
     }
 
     sandbox.U = U; // Unary operation

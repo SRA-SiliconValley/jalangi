@@ -1,9 +1,4 @@
 //Copyright Thomas Stjernegaard Jeppesen. All Rights Reserved.
-if (typeof window === "undefined") {
-    require('../../src/js/InputManager');
-    require(process.cwd()+'/inputs');
-}
-
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
 //You may obtain a copy of the License at
@@ -1053,6 +1048,11 @@ RedBlackMap.prototype.isEmpty = function(){
 
 
 var rb = new RedBlackMap();
+
+//rb.insert(0,3);
+//rb.insert(0,3);
+//rb.insert(2,3);
+//rb.insert(3,3);
 
 rb.insert(J$.readInput(0), 3);
 rb.insert(J$.readInput(1), 3);

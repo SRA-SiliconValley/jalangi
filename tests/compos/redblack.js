@@ -1,7 +1,7 @@
-if (typeof window === "undefined") {
-    require('../../src/js/InputManager2');
-    require(process.cwd()+'/inputs');
-}
+//if (typeof window === "undefined") {
+//    require('../../src/js/InputManager2');
+//    require(process.cwd()+'/inputs');
+//}
 
 // https://github.com/fitzgen/pfds-js/blob/master/red-black-trees.js
 
@@ -103,13 +103,13 @@ function insert (x, t) {
 
 var tree = empty;
 var x, y, z, w, u;
-x = J$.readInput(0);
-y = J$.readInput(0);
-z = J$.readInput(0);
-w = J$.readInput(0);
-u = J$.readInput(0);
+//x = J$.readInput(0);
+//y = J$.readInput(0);
+//z = J$.readInput(0);
+//w = J$.readInput(0);
+//u = J$.readInput(0);
 
-tree = insert(x, tree);
-tree = insert(y, tree);
-tree = insert(z, tree);
-tree = insert(w, tree);
+tree = insert(2, tree);
+tree = insert(0, tree);
+tree = insert(1, tree);
+//tree = insert(w, tree);

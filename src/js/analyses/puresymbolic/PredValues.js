@@ -19,7 +19,7 @@
 
 (function (module) {
 
-    var MERGE_ENABLED = true;
+    var MERGE_ENABLED = false;
 
     var BDD = require('./BDD');
     var Symbolic = require('./../concolic/Symbolic');
@@ -150,8 +150,10 @@
             if (!(other instanceof BDD.Node)) {
                 throw new Error("other = "+other+" should be a BDD.");
             }
+            if (other.isOne()) return this;
             var i, len = this.values.length;
             ret = new PredValues();
+            if (other.isZero()) return ret;
             for (i = 0; i < len; ++i) {
                 phi = this.values[i].pred.and(other);
                 if (!phi.isZero()) {
@@ -165,6 +167,7 @@
             if (!(other instanceof PredValues)) {
                 throw new Error("other = "+other+" should be a PredValues.");
             }
+            if (other.isZero()) return this;
             var ret = new PredValues(this);
             var i, len = other.values.length;
             for (i = 0; i < len; ++i) {

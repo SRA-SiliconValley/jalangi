@@ -133,6 +133,11 @@
         return this === BDD.zero;
     };
 
+    Node.prototype.isOne = function() {
+        return this === BDD.one;
+    };
+
+
     BDD.one = new Node(10000000, null, null, 1);
     BDD.zero = new Node(10000000, null, null, 0);
 

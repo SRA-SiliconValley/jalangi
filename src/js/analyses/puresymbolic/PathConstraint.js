@@ -34,23 +34,6 @@
     var stats = require('../../utils/StatCollector');
     var STAT_FLAG = stats.STAT_FLAG;
 
-//    var pathConstraint = BDD.one;
-//    var pathIndex;
-//    try {
-//        pathIndex = JSON.parse(fs.readFileSync(PATH_FILE_NAME,"utf8"));
-//        if (pathIndex.length === 0) {
-//            process.exit(0);
-//        }
-//    } catch (e) {
-//        pathIndex = [];
-//    }
-//    var index = 0;
-//    var formulaStack = [];
-//    formulaStack.count = 0;
-//    var solution = pathIndex.length>0? pathIndex[pathIndex.length-1].solution: null;
-//    var pathCount = 0;
-//    var returnValue;
-//    var aggregatePC;
 
     var literalToFormulas = [];
     var formulaCache = {};
@@ -128,7 +111,7 @@
         return tmp;
     }
 
-    function Frame (pc, solution) {
+    function Frame (pc) {
         this.pathConstraint = pc;
         this.pathIndex = [];
         this.pathCount = 0;
@@ -137,7 +120,6 @@
         this.returnValue = undefined;
         this.index = 0;
         this.aggregatePC = new PredValues();
-        this.solution = solution;
     }
 
     Frame.prototype.init = function() {
@@ -151,7 +133,6 @@
             this.pathIndex = [];
             startCountingOps = true;
         }
-        this.solution = this.pathIndex.length>0? this.pathIndex[this.pathIndex.length-1].solution: null;
 
     };
 
@@ -159,10 +140,8 @@
         this.aggregatePC = other.aggregatePC.or(other.pathConstraint);
         var pathIndex = other.pathIndex;
         if (pathIndex.length<=0) {
-            this.solution = other.solution;
             this.pathConstraint = this.aggregatePC;
         } else {
-            this.solution = pathIndex[pathIndex.length-1].solution;
             this.pathConstraint = pathIndex[pathIndex.length-1].pc;
         }
         this.pathCount = other.pathCount + 1;
@@ -225,95 +204,27 @@
         }
     };
 
-    Frame.prototype.updateSolution = function() {
-        this.solution = combine(J$.inputs, this.solution);
-        var f = getFormulaFromBDD(this.pathConstraint.disjunctAll());
-        var concrete = f.substitute(this.solution);
-        if (concrete === SymbolicBool.false) {
-            concrete = f;
-        }
-        if (concrete !== SymbolicBool.true) {
-            if (isSymbolic(concrete)) {
-                var tmp = solver.generateInputs(concrete);
-                if (tmp) {
-                    this.solution = combine(this.solution, tmp);
-                } else {
-                    this.solution = undefined;
-                }
-            }
-        }
-    };
-
-    Frame.prototype.updateSolutionIfSatisfiable = function(pred) {
-        this.updateSolution();
-        var f = getFormulaFromBDD(pred.disjunctAll());
-        var concrete = f.substitute(this.solution);
-        if (concrete === SymbolicBool.false) {
-            return false;
-        } else if (concrete === SymbolicBool.true) {
-            return true;
-        } else if (isSymbolic(concrete)) {
-            var tmp = solver.generateInputs(concrete);
-            if (tmp) {
-                this.solution = combine(this.solution, tmp);
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            throw new Error("This is bad.  Should not be reachable "+concrete);
-        }
-    };
 
 
-    Frame.prototype.generateInputs = function(forceWrite, forSingle) {
+
+    Frame.prototype.backtrack = function() {
         var elem;
 
         while(this.pathIndex.length > 0) {
             elem = this.pathIndex.pop();
-            if (!elem.done && (!forSingle || (this.pathIndex[elem.counterIndex].count <= MAX_PATH_COUNT))) {
-                this.pathIndex.push({done: true, branch: !elem.branch, solution: elem.solution,
+            if (!elem.done) {
+                this.pathIndex.push({done: true, branch: !elem.branch,
                     pc: elem.pc, lastVal: elem.lastVal, iid: elem.iid,
                     counterIndex: elem.counterIndex, count: elem.count});
-                if (forSingle) {
-                    this.pathIndex[elem.counterIndex].count++;
-                }
                 break;
             }
         }
         this.index = 0;
-
-
-        this.updateSolution();
-        var ret = (this.pathIndex.length > 0);
-        if (this.solution && (ret || forceWrite)) {
-            solver.writeInputs(this.solution, []);
-        }
-
         if (this.pathCount > MAX_PATH_COUNT) {
             this.pathIndex = [];
         }
-        fs.writeFileSync(PATH_FILE_NAME,JSON.stringify(this.pathIndex),"utf8");
-        return this.solution;
-    };
-
-    Frame.prototype.makeConcrete = function(pred, branch) {
-        this.updateSolution();
-        var c = branch?pred:pred.not();
-        if ((c instanceof BDD.Node)) {
-            c = getFormulaFromBDD(c);
-        }
-        var concrete = c.substitute(this.solution);
-        if (concrete === SymbolicBool.true) {
-            return true;
-        } else if (concrete === SymbolicBool.false) {
-            return false;
-        }
-        if (isSymbolic(concrete)) {
-            throw new Error("Throwing exception to prune infeasible path.");
-        } else {
-            return concrete;
-        }
+        var ret = (this.pathIndex.length > 0);
+        return ret;
     };
 
     Frame.prototype.setNextPathIndexElement = function (elem) {
@@ -339,16 +250,13 @@
     var frameStack = [];
 
     function pushFrame(pc) {
-        var solution = frame.solution;
         frameStack.push(frame);
 
-        frame = new Frame(pc, solution);
+        frame = new Frame(pc);
     }
 
     function popFrame() {
-        var solution = frame.solution;
         frame = frameStack.pop();
-        frame.solution = solution;
         return frame;
     }
 
@@ -400,27 +308,6 @@
     }
 
 
-    function getSolutionAll(pred) {
-        var i, len = pred.values.length, ret = new PredValues(), soln, tmp;
-
-        for (i=0; i<len; i++) {
-            var c = pred.values[i].pred;
-            c = getFormulaFromBDD(c);
-            tmp = solver.generateInputs(c);
-            if (tmp) {
-                if (STAT_FLAG) stats.addToCounter("inputs");
-                ret.addValue(pred.values[i].pred, pred.values[i].value);
-                soln = tmp;
-            }
-        }
-        return {pc:ret, solution:soln};
-    }
-
-    function getSolution(pred, branch) {
-        var c = branch?pred.disjunctAll():pred.disjunctAll().not();
-        c = getFormulaFromBDD(c);
-        return solver.generateInputs(c);
-    }
 
     var pathPerFunctionCounter = [];
 
@@ -440,60 +327,71 @@
         pathPerFunctionCounter.pop();
     }
 
-    function branch(val) {
-        var v, ret, tmp;
-        if (!(val instanceof BDD.Node)) {
-            throw new Error(val+" must of type Node");
-        }
-        if ((v = frame.getNextPathIndexElement()) !== undefined) {
-            frame.addAxiom(val, ret = v.branch);
-        } else {
-            startCountingOps = true;
-            if (frame.makeConcrete(val, false)) {
-                if (tmp = getSolution(val, true)) {
-                    frame.setNextPathIndexElement({done:false, branch:false, solution: tmp, counterIndex: getCounterIndex()});
-                } else {
-                    frame.setNextPathIndexElement({done:true, branch:false, solution: tmp, counterIndex: getCounterIndex()});
-                }
-                frame.addAxiom(val, ret = false);
-            } else if (frame.makeConcrete(val, true)) {
-                if (tmp = getSolution(val, false)) {
-                    frame.setNextPathIndexElement({done:false, branch:true, solution: tmp, counterIndex: getCounterIndex()});
-                    //console.log("Solution (else) "+JSON.stringify(tmp)+" for pc = "+getFormulaFromBDD(val));
-                } else {
-                    frame.setNextPathIndexElement({done:true, branch:true, solution: tmp, counterIndex: getCounterIndex()});
-                }
-                frame.addAxiom(val, ret = true);
-            } else {
-                frame.pathConstraint = new PredValues();
-                throw new Error("Throwing exception to prune infeasible path.");
+
+    function getSolutionAll(pred) {
+        var i, len = pred.values.length, ret = new PredValues(), soln, tmp;
+
+        for (i=0; i<len; i++) {
+            var c = pred.values[i].pred;
+            c = getFormulaFromBDD(c);
+            tmp = solver.generateInputs(c);
+            if (tmp) {
+//                if (STAT_FLAG) stats.addToCounter("inputs");
+                ret.addValue(pred.values[i].pred, pred.values[i].value);
+                soln = tmp;
             }
         }
-        return ret;
+        return {pc:ret, solution:soln};
+    }
+
+    function createBothConstraints(pc, val, makePredicate) {
+        var i, leni = val.values.length, c, pred1 = new PredValues(), pred2 = new PredValues(), tmp, soln1, soln2;
+        for (i = 0; i < leni; ++i) {
+            c = makePredicate(val.values[i].value);
+            c = getBDDFromFormula(c);
+            if (c.isOne()) {
+                pred1 = pred1.or(pc.and(val.values[i].pred));
+            } else if (c.isZero()) {
+                pred2 = pred2.or(pc.and(val.values[i].pred));
+            } else {
+                tmp = getSolutionAll(pc.and(val.values[i].pred.and(c)));
+                if (!tmp.pc.isZero()) {
+                    soln1 = tmp.solution;
+                    pred1 = pred1.or(tmp.pc);
+                }
+                tmp = getSolutionAll(pc.and(val.values[i].pred.and(c.not())));
+                if (!tmp.pc.isZero()) {
+                    soln2 = tmp.solution;
+                    pred2 = pred2.or(tmp.pc);
+                }
+            }
+        }
+        return {truePc: pred1, falsePc: pred2, trueSolution: soln1, falseSolution:soln2};
     }
 
 
-    function branchBoth(iid, falseBranch, trueBranch, lastVal) {
-        var v, ret, tmp;
+    function branchBoth(iid, pc, val, lastVal, makePredicate) {
+        var v, ret, tmp, trueBranch, falseBranch;
         if ((v = frame.getNextPathIndexElement()) !== undefined) {
             ret = v;
         } else {
-            if (frame.updateSolutionIfSatisfiable(falseBranch)) {
-                tmp = getSolutionAll(trueBranch);
-                if (tmp.solution) {
-                    frame.setNextPathIndexElement({done:false, branch:false, solution: tmp.solution, pc: tmp.pc, lastVal: lastVal, iid: iid});
+            tmp = createBothConstraints(pc, val, makePredicate);
+            trueBranch = tmp.truePc;
+            falseBranch = tmp.falsePc;
+            if (!falseBranch.isZero()) {
+                if (!trueBranch.isZero()) {
+                    frame.setNextPathIndexElement({done:false, branch:false, pc: tmp.truePc, lastVal: lastVal, iid: iid});
                 } else {
-                    frame.setNextPathIndexElement({done:true, branch:false, solution: null, pc: null, lastVal: lastVal, iid: iid});
+                    frame.setNextPathIndexElement({done:true, branch:false, pc: null, lastVal: lastVal, iid: iid});
 
                 }
                 ret = false;
                 frame.addAxiom(falseBranch, true);
-            } else if (frame.updateSolutionIfSatisfiable(trueBranch)) {
-                tmp = getSolutionAll(falseBranch);
-                if (tmp.solution) {
-                    frame.setNextPathIndexElement({done:false, branch:true, solution: tmp.solution, pc: tmp.pc, lastVal: lastVal, iid:iid});
+            } else if (!trueBranch.isZero()) {
+                if (!falseBranch.isZero()) {
+                    frame.setNextPathIndexElement({done:false, branch:true, pc: tmp.falsePc, lastVal: lastVal, iid:iid});
                 } else {
-                    frame.setNextPathIndexElement({done:true, branch:true, solution: null, pc: null, lastVal: lastVal, iid:iid});
+                    frame.setNextPathIndexElement({done:true, branch:true, pc: null, lastVal: lastVal, iid:iid});
                 }
                 ret = true;
                 frame.addAxiom(trueBranch, true);
@@ -508,24 +406,16 @@
     function concretize(val) {
         if (!isSymbolic(val)) {
             return val;
+        } else {
+            return val.substitute(J$.inputs);
         }
 
-        var concrete = frame.makeConcrete(val, true);
-        if (typeof concrete === 'boolean') {
-            J$.addAxiom(val);
-        } else if (isSymbolicNumber(val)) {
-            J$.addAxiom(val.subtractLong(concrete).setop("=="));
-        } else if (isSymbolicString(val)) {
-            J$.addAxiom(new SymbolicStringPredicate("==", val, concrete));
-        } else {
-            throw new Error("Unknown symbolic type "+val+ " with path constraint "+ getPC());
-        }
-        return concrete;
+//        throw new Error("Concretization of symbolic value is not supported");
     }
 
 
-    function generateInputs(forceWrite, forSingle) {
-        return frame.generateInputs(forceWrite, forSingle);
+    function backtrack() {
+        return frame.backtrack();
     }
 
     function isStartCountingOps() {
@@ -537,10 +427,9 @@
     }
 
     sandbox.addAxiom = addAxiom;
-    sandbox.branch = branch;
     sandbox.concretize = concretize;
     sandbox.getBDDFromFormula = getBDDFromFormula;
-    sandbox.generateInputs = generateInputs;
+    sandbox.backtrack = backtrack;
     sandbox.functionEnter = functionEnter;
     sandbox.functionExit = functionExit;
     sandbox.getMAX_CALL_DEPTH = getMAX_CALL_DEPTH;

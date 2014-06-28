@@ -17,12 +17,6 @@
 // Author: Koushik Sen
 
 
-if (typeof window === "undefined") {
-    require('../../src/js/InputManager');
-    require(process.cwd()+'/inputs');
-}
-
-
 var v = J$.readInput(1);
 var w = J$.readInput(false);
 

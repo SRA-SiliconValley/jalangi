@@ -93,6 +93,22 @@ if (typeof J$ === 'undefined') {
         return f(sandbox.instrumentCode(args[0], {wrapProgram:false, isEval:true}).code);
     }
 
+    function callFun(base, f, args, isConstructor) {
+        var result;
+        pushSwitchKey();
+        try {
+            if (f === EVAL_ORG) {
+                result = invokeEval(base, f, args);
+            } else if (isConstructor) {
+                result = callAsConstructor(f, args);
+            } else {
+                result = Function.prototype.apply.call(f, base, args);
+            }
+            return result;
+        } finally {
+            popSwitchKey();
+        }
+    }
 
     function invokeFun(iid, base, f, args, isConstructor, isMethod) {
         var aret, skip = false, result;
@@ -107,18 +123,7 @@ if (typeof J$ === 'undefined') {
             }
         }
         if (!skip) {
-            pushSwitchKey();
-            try {
-                if (f === EVAL_ORG) {
-                    result = invokeEval(base, f, args);
-                } else if (isConstructor) {
-                    result = callAsConstructor(f, args);
-                } else {
-                    result = Function.prototype.apply.call(f, base, args);
-                }
-            } finally {
-                popSwitchKey();
-            }
+            result = callFun(f, base, args, isConstructor);
         }
         if (sandbox.analysis && sandbox.analysis.invokeFun) {
             aret = sandbox.analysis.invokeFun(iid, f, base, args, result, isConstructor, isMethod);
@@ -588,5 +593,8 @@ if (typeof J$ === 'undefined') {
     sandbox.Ra = Ra;
     sandbox.Ex = Ex;
     sandbox.endExecution = endExecution;
+
+    sandbox.callFunction = callFun;
+    sandbox.EVAL_ORG = EVAL_ORG;
 })(J$);
 

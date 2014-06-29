@@ -50,22 +50,9 @@
 
 
         this.endExecution = function() {
-            var tmp = [];
-            for (var iid in info) {
-                if (HOP(info, iid)) {
-                    tmp.push({iid:iid, count:info[iid]});
-                }
-            }
-            sort.call(tmp, function(a,b) {
-                return b.count - a.count;
+            sandbox.Utils.printInfo(info, function(x) {
+                console.log("Function at "+iidToLocation(x.iid)+" called "+ x.count+" time(s) with more arguments that expected.");
             });
-            for (var x in tmp) {
-                if (HOP(tmp, x)) {
-                    x = tmp[x];
-                    console.log("Function at "+iidToLocation(x.iid)+" called "+ x.count+" time(s) with more arguments that expected.");
-                }
-            }
-
         };
     }
     sandbox.analysis = new MyAnalysis();

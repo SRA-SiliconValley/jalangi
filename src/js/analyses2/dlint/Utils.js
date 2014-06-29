@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2014 Samsung Information Systems America, Inc.
  *
@@ -17,36 +16,30 @@
 
 // Author: Koushik Sen
 
-
 (function (sandbox) {
-
-    function MyAnalysis () {
-        var iidToLocation = sandbox.iidToLocation;
+    function Utils () {
         var Constants = sandbox.Constants;
         var HOP = Constants.HOP;
         var sort = Array.prototype.sort;
 
-        var info = {};
-
-        this.getFieldPre = function(iid, base, offset){
-            if (offset === undefined)
-                info[iid] = (info[iid]|0) + 1;
-        };
-
-        this.putFieldPre = function(iid, base, offset, val){
-            if (offset === undefined)
-                info[iid] = (info[iid]|0) + 1;
-        };
-
-
-        this.endExecution = function() {
-            sandbox.Utils.printInfo(info, function(x) {
-                console.log("Accessed property 'undefined' at "+iidToLocation(x.iid)+" "+ x.count+" time(s).");
+        this.printInfo = function(info, f) {
+            var tmp = [];
+            for (var iid in info) {
+                if (HOP(info, iid)) {
+                    tmp.push({iid:iid, count:info[iid]});
+                }
+            }
+            sort.call(tmp, function(a,b) {
+                return b.count - a.count;
             });
+            for (var x in tmp) {
+                if (HOP(tmp, x)) {
+                    x = tmp[x];
+                    f(x);
+                }
+            }
         };
     }
-    sandbox.analysis = new MyAnalysis();
+    sandbox.Utils = new Utils();
 })(J$);
-
-
 

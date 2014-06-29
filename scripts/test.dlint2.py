@@ -1,10 +1,20 @@
 import sj
 import sys
 
+analyses = ['../src/js/analyses2/ChainedAnalyses2.js',
+ '../src/js/analyses2/dlint/Utils.js',
+ '../src/js/analyses2/dlint/FunCalledWithMoreArguments.js',
+ '../src/js/analyses2/dlint/UndefinedOffset.js',
+ '../src/js/analyses2/dlint/CheckNaN.js',
+ '../src/js/analyses2/dlint/ConcatUndefinedToString.js',
+ '../src/js/analyses2/dlint/ShadowProtoProperty.js']
+
+analysesStr = ' --analysis '+(' --analysis '.join(analyses))
+
 def testDlint (file, output):
     sj.create_and_cd_jalangi_tmp()
     sj.execute_np(sj.INSTRUMENTATION_SCRIPT+' ../tests/dlint/'+file+'.js')
-    out = sj.execute_return_np(sj.ANALYSIS2_SCRIPT+' --analysis ../src/js/analyses2/ChainedAnalyses2.js --analysis ../src/js/analyses2/dlint/FunCalledWithMoreArguments.js --analysis ../src/js/analyses2/dlint/UndefinedOffset.js  --analysis ../src/js/analyses2/dlint/CheckNaN.js  --analysis ../src/js/analyses2/dlint/ShadowProtoProperty.js ../tests/dlint/'+file+'_jalangi_.js')
+    out = sj.execute_return_np(sj.ANALYSIS2_SCRIPT+ analysesStr+' ../tests/dlint/'+file+'_jalangi_.js')
     if output != out:
         print "{} failed".format(file)
         print out
@@ -30,3 +40,8 @@ out="""Function at (/Users/ksen/Dropbox/jalangi/tests/dlint/dlint2.js:6:1) calle
 Function at (/Users/ksen/Dropbox/jalangi/tests/dlint/dlint2.js:14:1) called 1 time(s) with more arguments that expected.
 """
 testDlint('dlint2',out)
+
+out="""Concatenated undefined to a string at (/Users/ksen/Dropbox/jalangi/tests/dlint/dlint3.js:6:5) 1 time(s).
+Concatenated undefined to a string at (/Users/ksen/Dropbox/jalangi/tests/dlint/dlint3.js:7:5) 1 time(s).
+"""
+testDlint('dlint3',out)

@@ -36,14 +36,15 @@
 (function (sandbox) {
     function MyAnalysis () {
         var iidToLocation = sandbox.iidToLocation;
-        var Constants = sandbox.Constants;
-        var HOP = Constants.HOP;
-        var sort = Array.prototype.sort;
+
+        function isNative(f) {
+            return f.toString().indexOf('[native code]') > -1 || f.toString().indexOf('[object ') === 0;
+        }
 
         var info = {};
 
         this.invokeFunPre = function(iid, f, base, args, isConstructor, isMethod){
-            if (f.length < args.length) {
+            if (f.length < args.length && !isNative(f)) {
                 info[iid] = (info[iid]|0) + 1;
             }
         };

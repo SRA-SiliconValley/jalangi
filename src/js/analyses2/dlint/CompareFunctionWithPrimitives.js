@@ -2,9 +2,6 @@
 (function (sandbox) {
     function MyAnalysis () {
         var iidToLocation = sandbox.iidToLocation;
-        var Constants = sandbox.Constants;
-        var HOP = Constants.HOP;
-        var sort = Array.prototype.sort;
 
         var info = {};
 

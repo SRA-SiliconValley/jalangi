@@ -93,7 +93,7 @@ if (typeof J$ === 'undefined') {
         return f(sandbox.instrumentCode(args[0], {wrapProgram:false, isEval:true}).code);
     }
 
-    function callFun(base, f, args, isConstructor) {
+    function callFun(f, base, args, isConstructor) {
         var result;
         pushSwitchKey();
         try {
@@ -344,11 +344,12 @@ if (typeof J$ === 'undefined') {
 
     // Script exit
     function Sr(iid) {
-        var tmp, aret;
+        var tmp, aret, isBacktrack;
         if (sandbox.analysis && sandbox.analysis.scriptExit) {
             aret = sandbox.analysis.scriptExit(iid, exceptionVal);
             if (aret) {
                 exceptionVal = aret.exceptionVal;
+                isBacktrack = aret.isBacktrack;
             }
         }
         if (exceptionVal !== undefined) {
@@ -356,6 +357,7 @@ if (typeof J$ === 'undefined') {
             exceptionVal = undefined;
             throw tmp;
         }
+        return isBacktrack;
     }
 
 
@@ -531,14 +533,16 @@ if (typeof J$ === 'undefined') {
 
     // case label inside switch
     function C2(iid, left) {
-        var aret;
+        var aret, result;
 
-        left = B(iid, "===", switchLeft, left);
+        result = B(iid, "===", switchLeft, left);
 
         if (sandbox.analysis && sandbox.analysis.conditional) {
-            aret = sandbox.analysis.conditional(iid, left);
+            aret = sandbox.analysis.conditional(iid, result);
             if (aret) {
-                left = aret.result;
+                if (result && !aret.result) {
+                    left = !left;
+                }
             }
         }
         return left;
@@ -594,6 +598,7 @@ if (typeof J$ === 'undefined') {
     sandbox.Ex = Ex;
     sandbox.endExecution = endExecution;
 
+    sandbox.getConcrete = function(v){return v;};
     sandbox.callFunction = callFun;
     sandbox.EVAL_ORG = EVAL_ORG;
 })(J$);

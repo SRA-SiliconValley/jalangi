@@ -18,8 +18,22 @@
 // Author: Koushik Sen
 
 
-(function (sandbox) {
+// In the following callbacks one can choose to not return anything.
+// If all of the callbacks return nothing, we get a passive analysis where the
+// concrete execution happens unmodified and callbacks are used to observe the execution.
+// Once can choose to return suitable objects with specified fields in some callbacks
+// to modify the behavior of the concrete execution.  For example, one could set the skip
+// field of an object returned from putFieldPre to true to skip the actual putField operation.
+// Similarly, one could set the result field of the object returned from a write callback
+// to modify the value that is actually written to a variable. The result field of the object
+// returned from a conditional callback can be suitably set to change the control-flow of the
+// program execution.  In functionExit and scriptExit,
+// one can set the isBacktrack field of the returned object to true to reexecute the body of
+// the function from the beginning.  This in conjunction with the ability to change the
+// control-flow of a program enables us to explore the different paths of a function in
+// symbolic execution.
 
+(function (sandbox) {
     function MyAnalysis () {
         this.invokeFunPre = function(iid, f, base, args, isConstructor, isMethod){return {f:f,base:base,args:args,skip:false};};
 
@@ -49,7 +63,7 @@
 
         this.scriptEnter = function(iid, val){};
 
-        this.scriptExit = function(iid, exceptionVal){return {exceptionVal:exceptionVal};};
+        this.scriptExit = function(iid, exceptionVal){return {exceptionVal:exceptionVal,isBacktrack:false};};
 
         this.binaryPre = function(iid, op, left, right){return {op:op,left:left,right:right,skip:false};};
 

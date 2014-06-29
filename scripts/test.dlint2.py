@@ -4,6 +4,7 @@ import sys
 analyses = ['../src/js/analyses2/ChainedAnalyses2.js',
  '../src/js/analyses2/dlint/Utils.js',
  '../src/js/analyses2/dlint/FunCalledWithMoreArguments.js',
+ '../src/js/analyses2/dlint/CompareFunctionWithPrimitives.js',
  '../src/js/analyses2/dlint/UndefinedOffset.js',
  '../src/js/analyses2/dlint/CheckNaN.js',
  '../src/js/analyses2/dlint/ConcatUndefinedToString.js',
@@ -45,3 +46,7 @@ out="""Concatenated undefined to a string at (/Users/ksen/Dropbox/jalangi/tests/
 Concatenated undefined to a string at (/Users/ksen/Dropbox/jalangi/tests/dlint/dlint3.js:7:5) 1 time(s).
 """
 testDlint('dlint3',out)
+
+out="""Comparing a function with a number or string or boolean at (/Users/ksen/Dropbox/jalangi/tests/dlint/dlint4.js:4:5) 1 time(s).
+"""
+testDlint('dlint4',out)

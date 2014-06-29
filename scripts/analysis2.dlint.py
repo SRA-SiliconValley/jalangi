@@ -3,6 +3,7 @@ import sys
 
 analyses = ['../src/js/analyses2/ChainedAnalyses2.js',
  '../src/js/analyses2/dlint/Utils.js',
+ '../src/js/analyses2/dlint/CompareFunctionWithPrimitives.js',
  '../src/js/analyses2/dlint/FunCalledWithMoreArguments.js',
  '../src/js/analyses2/dlint/UndefinedOffset.js',
  '../src/js/analyses2/dlint/CheckNaN.js',

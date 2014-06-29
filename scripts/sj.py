@@ -57,10 +57,29 @@ def execute_return(script, **kwargs):
              f.seek(0)
              return f.read()
 
+def execute_return_np(script, **kwargs):
+    """Execute script and returns output string"""
+    saveStdErr = kwargs['savestderr'] if 'savestderr' in kwargs else False
+    cmd = [find_node()] + script.split()
+    with NamedTemporaryFile() as f:
+         try:
+             subprocess.check_call(cmd,stdout=f,
+                                   stderr=f if saveStdErr else open(os.devnull, 'wb'),bufsize=1000)
+             f.seek(0)
+             return f.read()
+         except subprocess.CalledProcessError as e:
+             f.seek(0)
+             return f.read()
+
 def execute(script, *args):
     """Execute script and print output"""
     cmd = [find_node()] + script.split()
     print ' '.join(cmd)
+    subprocess.call(cmd)
+
+def execute_np(script, *args):
+    """Execute script and print output"""
+    cmd = [find_node()] + script.split()
     subprocess.call(cmd)
 
 

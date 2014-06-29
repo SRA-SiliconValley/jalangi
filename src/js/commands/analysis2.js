@@ -71,7 +71,7 @@ function runAnalysis(initParam) {
             process.send({result:result});
         }
     }
-    process.exit();
+//    process.exit();
 }
 
 if (process.send) {

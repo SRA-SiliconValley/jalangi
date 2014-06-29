@@ -78,6 +78,10 @@ function instrument(options, cb) {
 
     var inbrowser = options.inbrowser;
 
+    var analysis2 = options.analysis2;
+
+    instUtil.setHeaders(analysis2);
+
     var smemory = options.smemory;
 
     var copyRuntime = options.copy_runtime;
@@ -456,6 +460,7 @@ function instrument(options, cb) {
 if (require.main === module) { // main script
     var parser = new ArgumentParser({ addHelp:true, description:"Utility to apply Jalangi instrumentation to files or a folder."});
     parser.addArgument(['-s', '--serialize'], { help:"dump serialized ASTs along with code", action:'storeTrue' });
+    parser.addArgument(['-a2', '--analysis2'], { help:"use analysis2", action:'storeTrue' });
     parser.addArgument(['-x', '--exclude'], { help:"do not instrument any scripts whose file path contains this substring" });
     parser.addArgument(['--only_include'], { help: "list of path prefixes specifying which sub-directories should be instrumented, separated by path.delimiter"});
     // TODO add back this option once we've fixed the relevant HTML parsing code

@@ -27,7 +27,64 @@ Optional arguments:
 
 ## instrument.js
 
-Utility to apply Jalangi instrumentation to files or a folder
+Utility to apply Jalangi instrumentation to files or a folder.
+
+    node src/js/commands/instrument.js -h
+    usage: instrument.js [-h] [-s] [-a2] [-x EXCLUDE]
+                     [--only_include ONLY_INCLUDE] [-i] [--analysis ANALYSIS]
+                     [--initParam INITPARAM] [-d] [--selenium]
+                     [--in_memory_trace] [--inbrowser] [--smemory] [-c]
+                     [--extra_app_scripts EXTRA_APP_SCRIPTS] [--no_html]
+                     --outputDir OUTPUTDIR
+                     inputFiles [inputFiles ...]
+
+
+Positional arguments:
+
+    inputFiles            either a list of JavaScript files to instrument, or a 
+                        single directory under which all JavaScript and HTML 
+                        files should be instrumented (modulo the --no_html 
+                        and --exclude flags)
+
+Optional arguments:
+
+    -h, --help            Show this help message and exit.
+    -s, --serialize       dump serialized ASTs along with code
+    -a2, --analysis2      use analysis2
+    -x EXCLUDE, --exclude EXCLUDE
+                        do not instrument any scripts whose file path 
+                        contains this substring
+    --only_include ONLY_INCLUDE
+                        list of path prefixes specifying which 
+                        sub-directories should be instrumented, separated by 
+                        path.delimiter
+    -i, --instrumentInline
+                        instrument inline scripts
+    --analysis ANALYSIS   Analysis script for 'inbrowser'/'record' mode. 
+                        Analysis must not use ConcolicValue
+    --initParam INITPARAM
+                        initialization parameter for analysis, specified as 
+                        key:value
+    -d, --direct_in_output
+                        Store instrumented app directly in output directory 
+                        (by default, creates a sub-directory of output 
+                        directory)
+    --selenium            Insert code so scripts can detect they are running 
+                        under Selenium. Also keeps Jalangi trace in memory
+    --in_memory_trace     Insert code to tell analysis to keep Jalangi trace in 
+                        memory instead of writing to WebSocket
+    --inbrowser           Insert code to tell Jalangi to run in 'inbrowser' 
+                        analysis mode
+    --smemory             Add support for shadow memory
+    -c, --copy_runtime    Copy Jalangi runtime files into instrumented app in 
+                        jalangi_rt sub-directory
+    --extra_app_scripts EXTRA_APP_SCRIPTS
+                        list of extra application scripts to be injected and 
+                        instrumented, separated by path.delimiter
+    --no_html             don't inject Jalangi runtime into HTML files
+    --outputDir OUTPUTDIR
+                        directory in which to place instrumented files
+                        Utility to apply Jalangi instrumentation to files or a folder
 
     node src/js/commands/instrument.js -h
     usage: instrument.js [-h] [-s] [-x EXCLUDE] [--only_include ONLY_INCLUDE] [-i]
@@ -37,49 +94,27 @@ Utility to apply Jalangi instrumentation to files or a folder
                      --outputDir OUTPUTDIR
                      inputFiles [inputFiles ...]
 
-Utility to apply Jalangi instrumentation to files or a folder.
+## analysis2.js
+
+Command-line utility to perform Jalangi's analysis2
+
+    node src/js/commands/analysis2.js -h
+    usage: analysis2.js [-h] [--analysis ANALYSIS] [--initParam INITPARAM] ...
+
 
 Positional arguments:
 
-    inputFiles            either a list of JavaScript files to instrument, or a 
-                          single directory under which all JavaScript and HTML 
-                          files should be instrumented (modulo the --no_html 
-                          and --exclude flags)
+    script_and_args       script to record and CLI arguments for that script
 
 Optional arguments:
-
+    
     -h, --help            Show this help message and exit.
-    -s, --serialize       dump serialized ASTs along with code
-    -x EXCLUDE, --exclude EXCLUDE
-                          do not instrument any scripts whose file path 
-                          contains this substring
-    --only_include ONLY_INCLUDE
-                          list of path prefixes specifying which 
-                          sub-directories should be instrumented, separated by 
-                          path.delimiter
-    -i, --instrumentInline
-                          instrument inline scripts
-    --analysis ANALYSIS   Analysis script for 'inbrowser'/'record' mode. 
-                          Analysis must not use ConcolicValue
-    -d, --direct_in_output
-                          Store instrumented app directly in output directory 
-                          (by default, creates a sub-directory of output 
-                          directory)
-    --selenium            Insert code so scripts can detect they are running 
-                          under Selenium. Also keeps Jalangi trace in memory
-    --in_memory_trace     Insert code to tell analysis to keep Jalangi trace in 
-                          memory instead of writing to WebSocket
-    --inbrowser           Insert code to tell Jalangi to run in 'inbrowser' 
-                          analysis mode
-    --smemory             Add support for shadow memory
-    -c, --copy_runtime    Copy Jalangi runtime files into instrumented app in 
-                          jalangi_rt sub-directory
-    --extra_app_scripts EXTRA_APP_SCRIPTS
-                          list of extra application scripts to be injected and 
-                          instrumented, separated by path.delimiter
-    --no_html             don't inject Jalangi runtime into HTML files
-    --outputDir OUTPUTDIR
-                          directory in which to place instrumented files
+    --analysis ANALYSIS   absolute path to analysis file to run
+    --initParam INITPARAM
+                        initialization parameter for analysis, specified as 
+                        key:value
+
+
 ## direct.js
 
 Command-line utility to perform Jalangi's direct analysis

@@ -25,6 +25,17 @@ var urlParser = require('url');
 /**
  * which source files are required for Jalangi to run in the browser?
  */
+var headerSources2 = ["src/js/Constants.js",
+    "src/js/Config.js",
+    "src/js/Globals.js",
+    "src/js/TraceWriter.js",
+    "src/js/iidToLocation.js",
+    "src/js/analysis2.js",
+    "node_modules/escodegen/escodegen.browser.js",
+    "node_modules/acorn/acorn.js",
+    "src/js/utils/astUtil.js",
+    "src/js/instrument/esnstrument.js"];
+
 var headerSources = ["src/js/Constants.js",
     "src/js/Config.js",
     "src/js/Globals.js",
@@ -39,11 +50,14 @@ var headerSources = ["src/js/Constants.js",
     "src/js/utils/astUtil.js",
     "src/js/instrument/esnstrument.js"];
 
-
 /**
  * concatenates required scripts for Jalangi to run in the browser into a single string
  */
 var headerCode = "";
+
+function setHeaders(flag) {
+    headerSources = headerSources2;
+}
 
 function headerCodeInit(root) {
     headerSources.forEach(function (src) {
@@ -99,6 +113,7 @@ function createFilenameForScript(url) {
     }
 }
 
+exports.setHeaders = setHeaders;
 exports.getHeaderCode = getHeaderCode;
 exports.getHeaderCodeAsScriptTags = getHeaderCodeAsScriptTags;
 exports.isInlineScript = isInlineScript;

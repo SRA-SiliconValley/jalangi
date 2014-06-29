@@ -6,7 +6,7 @@ def test(prefix, file, rest):
     sj.mkempty("inputs.js")
     sj.execute_np(sj.INSTRUMENTATION_SCRIPT+' '+prefix+file+'.js')
     normal = sj.execute_return_np(prefix+file+'.js '+rest, savestderr=True)
-    ana = sj.execute_return_np(sj.ANALYSIS2_SCRIPT+' --analysis ../src/js/analysis2CallbackTemplate.js '+prefix+file+'_jalangi_.js '+rest, savestderr=True)
+    ana = sj.execute_return_np(sj.ANALYSIS2_SCRIPT+'  --analysis ../src/js/analyses2/ChainedAnalyses2.js --analysis ../src/js/analysis2CallbackTemplate.js '+prefix+file+'_jalangi_.js '+rest, savestderr=True)
 
     if normal != ana:
         print "{} failed".format(file)

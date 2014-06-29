@@ -5,7 +5,7 @@ import sys
 sj.create_and_cd_jalangi_tmp()
 sj.execute(sj.INSTRUMENTATION_SCRIPT+' ../'+sys.argv[1]+'.js')
 normal = sj.execute_return('../'+sys.argv[1]+'.js', savestderr=True)
-ana = sj.execute_return(sj.ANALYSIS2_SCRIPT+' --analysis ../src/js/analysis2CallbackTemplate.js ../'+sys.argv[1]+'_jalangi_.js', savestderr=True)
+ana = sj.execute_return(sj.ANALYSIS2_SCRIPT+' --analysis ../src/js/analyses2/ChainedAnalyses2.js --analysis ../src/js/analysis2CallbackTemplate.js ../'+sys.argv[1]+'_jalangi_.js', savestderr=True)
 
 if normal != ana:
     print "{} failed".format(sys.argv[1])

@@ -102,6 +102,11 @@ Some automated tests can be run in the browser, using [Selenium](http://docs.sel
 
 You should see Chrome windows opening and closing as the tests are run.
     
+### What's new?
+
+Introducing analysis2.js.  analysis2.js is a new API for performing direct or in browser analysis.  It has a clean,
+efficient, and less error-prone API compared to analysis.js.  You can find more documentation in docs/analysis2.md.
+
 ### Other Scripts
 
 Run likely type inference analysis on the sunspider benchmarks located under tests/sunspider1/.

@@ -49,3 +49,12 @@ if (b11+"" !== "TRUE") {
 } else {
     console.log("Test 4 passed "+b11)
 }
+
+var b21 = b.not().and(c.not()).not();
+var b22 = b.or(c);
+var b23 = b.and(c);
+var b24 = c.not().and(b.not()).not();
+
+console.log(b21.isEqual(b22));
+console.log(b21.isEqual(b23));
+console.log(b21.isEqual(b24));

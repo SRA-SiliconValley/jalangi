@@ -614,6 +614,7 @@ module.exports = function (sandbox) {
             var len = pc.getPC().size(), i;
             for (i=0; i<len; i++)
                 if (STAT_FLAG) stats.addToCounter("DSE inputs");
+            pc.printLiteralToFormulas();
             stats.storeStats();
         }
 

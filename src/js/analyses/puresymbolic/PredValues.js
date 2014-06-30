@@ -23,6 +23,8 @@
 
     var BDD = require('./BDD');
     var Symbolic = require('./../concolic/Symbolic');
+    var stats = require('../../utils/StatCollector');
+    var STAT_FLAG = stats.STAT_FLAG;
 
     function isWithinTheory(val) {
         if (val === null) {

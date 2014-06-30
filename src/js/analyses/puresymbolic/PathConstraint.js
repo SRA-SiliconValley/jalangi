@@ -67,6 +67,14 @@
         return ret;
     }
 
+    function printLiteralToFormulas() {
+        var i, len = literalToFormulas.length;
+
+        for(i=0; i<len; i++) {
+            console.log(i+":"+literalToFormulas[i]);
+        }
+    }
+
     function getFormulaFromBDD(bdd) {
         if (STAT_FLAG) stats.resumeTimer("bdd");
         var ret = BDD.getFormula(bdd, literalToFormulas);
@@ -328,28 +336,36 @@
     }
 
 
-    function getSolutionAll(pred) {
+    function getSolutionAll(pred, bddand) {
         var i, len = pred.values.length, ret = new PredValues(), soln, tmp;
 
         for (i=0; i<len; i++) {
-            var c = pred.values[i].pred;
-            c = getFormulaFromBDD(c);
-            tmp = solver.generateInputs(c);
-            if (tmp) {
-                if (STAT_FLAG) stats.addToCounter("sat");
+            var c, tmp2;
+
+            if (pred.values[i].pred.isEqual(bddand)) {
+                ret.addValue(bddand, pred.values[i].value);
+            } else {
+                tmp2 = pred.values[i].pred.and(bddand);
+                if (!tmp2.isZero()) {
+                    c = getFormulaFromBDD(tmp2);
+                    tmp = solver.generateInputs(c);
+                    if (tmp) {
+                        if (STAT_FLAG) stats.addToCounter("sat");
 
 //                if (STAT_FLAG) stats.addToCounter("inputs");
-                ret.addValue(pred.values[i].pred, pred.values[i].value);
-                soln = tmp;
-            } else {
-                if (STAT_FLAG) stats.addToCounter("unsat");
+                        ret.addValue(tmp2, pred.values[i].value);
+                        soln = tmp;
+                    } else {
+                        if (STAT_FLAG) stats.addToCounter("unsat");
+                    }
+                }
             }
         }
         return {pc:ret, solution:soln};
     }
 
     function createBothConstraints(pc, val, makePredicate) {
-        var i, leni = val.values.length, c, pred1 = new PredValues(), pred2 = new PredValues(), tmp, soln1, soln2;
+        var i, leni = val.values.length, c, pred1 = new PredValues(), pred2 = new PredValues(), tmp, soln1, soln2, tmp2;
         for (i = 0; i < leni; ++i) {
             c = makePredicate(val.values[i].value);
             c = getBDDFromFormula(c);
@@ -358,12 +374,14 @@
             } else if (c.isZero()) {
                 pred2 = pred2.or(pc.and(val.values[i].pred));
             } else {
-                tmp = getSolutionAll(pc.and(val.values[i].pred.and(c)));
+                tmp2 = val.values[i].pred.and(c);
+                tmp = getSolutionAll(pc,tmp2);
                 if (!tmp.pc.isZero()) {
                     soln1 = tmp.solution;
                     pred1 = pred1.or(tmp.pc);
                 }
-                tmp = getSolutionAll(pc.and(val.values[i].pred.and(c.not())));
+                tmp2 = val.values[i].pred.and(c.not());
+                tmp = getSolutionAll(pc,tmp2);
                 if (!tmp.pc.isZero()) {
                     soln2 = tmp.solution;
                     pred2 = pred2.or(tmp.pc);
@@ -373,6 +391,58 @@
         return {truePc: pred1, falsePc: pred2, trueSolution: soln1, falseSolution:soln2};
     }
 
+
+//    function getSolutionAll(pred, bddAnd) {
+//        var i, len = pred.values.length, ret = new PredValues(), soln, tmp;
+//
+//        for (i=0; i<len; i++) {
+//            var c = pred.values[i].pred;
+////            if (c.isEqual(bddAnd)) {
+////                ret.addValue(c, pred.values[i].value);
+////            } else {
+//            c = c.and(bddAnd);
+//            if (!c.isZero()) {
+//                c = getFormulaFromBDD(c);
+//                tmp = solver.generateInputs(c);
+//                if (tmp) {
+//                    if (STAT_FLAG) stats.addToCounter("sat");
+//                    ret.addValue(pred.values[i].pred, pred.values[i].value);
+//                    soln = tmp;
+//                } else {
+//                    if (STAT_FLAG) stats.addToCounter("unsat");
+//                }
+//            }
+////            }
+//        }
+//        return {pc:ret, solution:soln};
+//    }
+//
+//    function createBothConstraints(pc, val, makePredicate) {
+//        var i, leni = val.values.length, c, pred1 = new PredValues(), pred2 = new PredValues(), tmp, soln1, soln2, tmp2;
+//        for (i = 0; i < leni; ++i) {
+//            c = makePredicate(val.values[i].value);
+//            c = getBDDFromFormula(c);
+//            if (c.isOne()) {
+//                pred1 = pred1.or(pc.and(val.values[i].pred));
+//            } else if (c.isZero()) {
+//                pred2 = pred2.or(pc.and(val.values[i].pred));
+//            } else {
+//                tmp2 = val.values[i].pred.and(c);
+//                tmp = getSolutionAll(pc, tmp2);
+//                if (!tmp.pc.isZero()) {
+//                    soln1 = tmp.solution;
+//                    pred1 = pred1.or(tmp.pc);
+//                }
+//                tmp2 = val.values[i].pred.and(c.not());
+//                tmp = getSolutionAll(pc, tmp2);
+//                if (!tmp.pc.isZero()) {
+//                    soln2 = tmp.solution;
+//                    pred2 = pred2.or(tmp.pc);
+//                }
+//            }
+//        }
+//        return {truePc: pred1, falsePc: pred2, trueSolution: soln1, falseSolution:soln2};
+//    }
 
     function branchBoth(iid, pc, val, lastVal, makePredicate) {
         var v, ret, tmp, trueBranch, falseBranch;
@@ -450,6 +520,8 @@
     sandbox.isRetracing = isRetracing;
     sandbox.getAggregatePC = getAggregatePC;
     sandbox.startCountingOps = isStartCountingOps;
+
+    sandbox.printLiteralToFormulas = printLiteralToFormulas;
 
 }(module.exports));
 

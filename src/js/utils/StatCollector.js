@@ -12,13 +12,14 @@
     StatCollector.resumeTimer = function (timerName) {
         var timer;
         if (!(timer = timers[timerName])) {
-            timer = timers[timerName] = {begin:-1, total:0};
+            timer = timers[timerName] = {begin:-1, total:0, count:0};
         }
         if (timer.begin >= 0) {
             console.log("Trying to resume active timer " + timerName);
             throw new Error("Trying to resume active timer " + timerName);
         }
         timer.begin = Date.now();
+        timer.count++;
     };
 
     StatCollector.suspendTimer = function (timerName) {
@@ -74,7 +75,7 @@
     StatCollector.printStats = function() {
         for(var timer in timers) {
             if (timers.hasOwnProperty(timer)) {
-                console.log("Time spent in "+timer+" = "+timers[timer].total+" ms");
+                console.log("Time spent in "+timer+" = "+timers[timer].total+" ms (count = "+timers[timer].count+")");
             }
         }
         for (var counter in counters) {

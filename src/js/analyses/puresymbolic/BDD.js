@@ -122,9 +122,16 @@
         return ret;
     };
 
-    Node.prototype.not = function(u) {
+    Node.prototype.not = function() {
         if (STAT_FLAG) stats.resumeTimer("bdd");
         var ret = BDD.not(this);
+        if (STAT_FLAG) stats.suspendTimer("bdd");
+        return ret;
+    };
+
+    Node.prototype.isEqual = function(u) {
+        if (STAT_FLAG) stats.resumeTimer("bdd");
+        var ret = BDD.isEqual(this,u);
         if (STAT_FLAG) stats.suspendTimer("bdd");
         return ret;
     };
@@ -266,6 +273,31 @@
             new SymbolicBool("&&",
                 t.not(),
                 BDD.getFormula(u.low, literalToFormulas)));
+    };
+
+    BDD.isEqual = function(u, v) {
+        G = new Graph();
+        return BDD.isEqualAux(u,v);
+    };
+
+    BDD.isEqualAux = function(u, v) {
+        var ret, tmp;
+        if ((tmp = G.get(u,v))!==null)
+            return tmp;
+        if ((u === BDD.one && v == BDD.one) || (u === BDD.zero && v == BDD.zero)) {
+            G.put(u,v,true);
+            return true;
+        } else if (u === BDD.one || v == BDD.zero || u === BDD.zero || v == BDD.one) {
+            G.put(u,v,false);
+            return false;
+        }
+        if (u.var !== v.var) {
+            G.put(u,v,false);
+            return false;
+        }
+        ret = BDD.isEqualAux(u.high, v.high) && BDD.isEqualAux(u.low, v.low);
+        G.put(u,v,ret);
+        return ret;
     };
 
     BDD.Node = Node;

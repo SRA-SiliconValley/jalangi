@@ -396,6 +396,7 @@ module.exports = function (sandbox) {
         if (pc.isRetracing()) {
             return lhs;
         }
+        if (STAT_FLAG) stats.addToCounter("multiex operations");
         ret = update(lhs, val);
         if (TRACE_WRITE) {
             console.log(pad + "Writing " + name + " with " + ret + " at " + getIIDInfo(iid));
@@ -430,6 +431,7 @@ module.exports = function (sandbox) {
         for (i = 0; i < len; ++i) {
             pred = pc.getPC().and(newValue.values[i].pred);
             if (!pred.isZero()) {
+                if (STAT_FLAG) stats.addToCounter("operations");
                 ret = PredValues.addValue(ret, pred, newValue.values[i].value);
             }
         }
@@ -455,7 +457,7 @@ module.exports = function (sandbox) {
         left = makePredValues(BDD.one, left);
         right = makePredValues(BDD.one, right);
 
-        if (STAT_FLAG && op !== undefined) stats.addToCounter("multiex operations");
+        if (STAT_FLAG) stats.addToCounter("multiex operations");
         var i, j, leni = left.values.length, lenj = right.values.length, pred, value, ret, newPC = new PredValues(), lenk, k;
         for (i = 0; i < leni; ++i) {
             for (j = 0; j < lenj; ++j) {
@@ -520,6 +522,7 @@ module.exports = function (sandbox) {
         left = makePredValues(BDD.one, left);
         right = makePredValues(BDD.one, right);
 
+        if (STAT_FLAG) stats.addToCounter("multiex operations");
         var i, j, leni = left.values.length, lenj = right.values.length, pred, newPC = new PredValues();
         for (i = 0; i < leni; ++i) {
             for (j = 0; j < lenj; ++j) {
@@ -760,6 +763,8 @@ module.exports = function (sandbox) {
         }
 
         left = B(iid, "===", switchLeft, left);
+        if (STAT_FLAG) stats.addToCounter("multiex operations");
+        if (STAT_FLAG) stats.addToCounter("operations", pc.getPC().size());
         var ret2 = pc.branchBoth(iid, pc.getPC(), left, switchLeft, makePredicate);
         if (TRACE_BRANCH) {
             console.log(pad + "Branching at " + getIIDInfo(iid) + " with result " + ret2);
@@ -778,6 +783,8 @@ module.exports = function (sandbox) {
 
         lastVal = left;
         left = makePredValues(BDD.one, left);
+        if (STAT_FLAG) stats.addToCounter("multiex operations");
+        if (STAT_FLAG) stats.addToCounter("operations", pc.getPC().size());
         var ret2 = pc.branchBoth(iid, pc.getPC(), left, lastVal, makePredicate);
         if (TRACE_BRANCH) {
             console.log(pad + "Branching at " + getIIDInfo(iid) + " with result " + ret2);

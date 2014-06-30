@@ -665,6 +665,7 @@ module.exports = function (sandbox) {
             return undefined;
         }
 
+        if (STAT_FLAG) stats.addToCounter("operations");
         offset = initUndefinedOffset(offset);
         base = initUndefinedForBaseOfG(base, offset);
 

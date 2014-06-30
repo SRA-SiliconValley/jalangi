@@ -200,8 +200,17 @@
             fs.writeFileSync(TAIL_FILE_NAME,JSON.stringify(iCount),"utf8");
         };
 
+        var formulaCache = [];
+
         this.generateInputs = function(formula) {
             var newInputs, count, MAX_COUNT = 100, negatedSolution = "TRUE", extra, allTrue;
+
+            var formulaStr = formula.toString();
+            var cache = formulaCache[formulaStr];
+            if (cache !== undefined) {
+                if (STAT_FLAG) stats.addToCounter("solver cache hit");
+                return cache;
+            }
 
             if (STAT_FLAG) stats.resumeTimer("solver");
             if (STAT_FLAG) stats.addToCounter("solver calls");
@@ -220,6 +229,7 @@
                                     console.log("Solved constraint after trial # "+count);
                                 }
                                 if (STAT_FLAG) stats.suspendTimer("solver");
+                                formulaCache[formulaStr] = newInputs;
                                 return newInputs;
                             } else {
                                 if (extra) {
@@ -230,12 +240,14 @@
                             }
                         } else {
                             if (STAT_FLAG) stats.suspendTimer("solver");
+                            formulaCache[formulaStr] = null;
                             return null;
                         }
                         count++;
                     }
             }
             if (STAT_FLAG) stats.suspendTimer("solver");
+            formulaCache[formulaStr] = null;
             return null;
         };
 

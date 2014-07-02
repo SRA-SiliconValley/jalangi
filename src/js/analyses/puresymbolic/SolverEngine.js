@@ -28,6 +28,7 @@
         var SOLUTION_FILE_NAME = "jalangi_solution";
         var INPUTS_FILE_NAME = "jalangi_inputs";
         var TAIL_FILE_NAME = "jalangi_tail";
+        var USE_CACHE = false;
 
         var SymbolicBool = require('../concolic/SymbolicBool');
         var stats = require('../../utils/StatCollector');
@@ -40,7 +41,7 @@
              });
 
              var run = libc.system;*/
-            es = require('execSync')
+            var es = require('execSync')
             es.exec(cmd);
         }
 
@@ -205,20 +206,22 @@
         this.generateInputs = function(formula) {
             var newInputs, count, MAX_COUNT = 100, negatedSolution = "TRUE", extra, allTrue;
 
-            var formulaStr = formula.toString();
-            var cache = formulaCache[formulaStr];
-            if (cache !== undefined) {
-                if (STAT_FLAG) stats.addToCounter("solver cache hit");
-                return cache;
+            if (USE_CACHE) {
+                var formulaStr = formula.toString();
+                var cache = formulaCache[formulaStr];
+                if (cache !== undefined) {
+                    if (STAT_FLAG) stats.addToCounter("solver cache hit");
+                    return cache;
+                }
             }
 
             if (STAT_FLAG) stats.resumeTimer("solver");
             if (STAT_FLAG) stats.addToCounter("solver calls");
             if (formula) {
                 //console.log("*****************  Solving "+formula);
-                    count = 0;
-                    extra = null;
-                    while(count < MAX_COUNT) {
+                count = 0;
+                extra = null;
+                while(count < MAX_COUNT) {
                         allTrue = generateFormula(formula, "integer", {}, extra);
                         newInputs = {};
                         if ((allTrue && (negatedSolution = "TRUE"))|| (negatedSolution = invokeSMTSolver(newInputs, "integer"))) {
@@ -229,7 +232,8 @@
                                     console.log("Solved constraint after trial # "+count);
                                 }
                                 if (STAT_FLAG) stats.suspendTimer("solver");
-                                formulaCache[formulaStr] = newInputs;
+                                if (USE_CACHE)
+                                    formulaCache[formulaStr] = newInputs;
                                 return newInputs;
                             } else {
                                 if (extra) {
@@ -239,15 +243,18 @@
                                 }
                             }
                         } else {
-                            if (STAT_FLAG) stats.suspendTimer("solver");
-                            formulaCache[formulaStr] = null;
+                            if (STAT_FLAG)
+                                stats.suspendTimer("solver");
+                            if (USE_CACHE)
+                                formulaCache[formulaStr] = null;
                             return null;
                         }
-                        count++;
-                    }
+                    count++;
+                }
             }
             if (STAT_FLAG) stats.suspendTimer("solver");
-            formulaCache[formulaStr] = null;
+            if (USE_CACHE)
+                formulaCache[formulaStr] = null;
             return null;
         };
 

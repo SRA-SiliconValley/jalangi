@@ -33,6 +33,7 @@
     var MAX_CALL_DEPTH = 10000;
     var stats = require('../../utils/StatCollector');
     var STAT_FLAG = stats.STAT_FLAG;
+    var USE_BDD_EQUALS = false;
 
 
     var literalToFormulas = [];
@@ -342,7 +343,7 @@
         for (i=0; i<len; i++) {
             var c, tmp2;
 
-            if (pred.values[i].pred.isEqual(bddand)) {
+            if (USE_BDD_EQUALS && pred.values[i].pred.isEqual(bddand)) {
                 ret.addValue(bddand, pred.values[i].value);
             } else {
                 tmp2 = pred.values[i].pred.and(bddand);

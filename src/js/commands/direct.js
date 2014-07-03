@@ -37,7 +37,7 @@ var args = parser.parseArgs();
 
 function runAnalysis(initParam) {
     if (args.script_and_args.length === 0) {
-        console.error("must provide script to record");
+        console.error("must provide script to execute");
         process.exit(1);
     }
     // we shift here so we can use the rest of the array later when

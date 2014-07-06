@@ -515,7 +515,7 @@ module.exports = function (sandbox) {
     }
 
     function P(iid, left, right, val) {
-        var ret;
+        var ret, ret2, value;
         if (pc.isRetracing()) {
             return;
         }
@@ -534,16 +534,18 @@ module.exports = function (sandbox) {
                     var offset = right.values[j].value;
                     pc.pushFrame(pred);
                     var oldValue = single.G(iid, base, offset);
-                    single.P(iid, base, offset, ret = update(oldValue, val));
+                    value = single.P(iid, base, offset, ret = update(oldValue, val));
                     if (TRACE_WRITE) {
                         console.log(pad + "Writing field " + offset + " with " + ret + " at " + getIIDInfo(iid));
                     }
+                    ret2 = PredValues.addValue(ret2, pc.getPC(), value);
                     newPC = newPC.or(pc.getPC());
                     pc.popFrame();
                 }
             }
         }
         pc.setPC(newPC);
+        return ret2;
     }
 
 

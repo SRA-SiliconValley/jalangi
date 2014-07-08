@@ -221,6 +221,7 @@ module.exports = function (sandbox) {
             f === J$.readInput) {
             return f;
         } else if (f === Math.abs ||
+            f === Object.prototype.hasOwnProperty ||
             f === Math.acos ||
             f === Math.asin ||
             f === Math.atan ||

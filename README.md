@@ -1,3 +1,28 @@
+MultiSE Branch
+==============
+
+This branch implements MultiSe.
+Dynamic symbolic execution (DSE) has been proposed recently to effectively
+generate test inputs for real-world programs.  Unfortunately,
+dynamic symbolic execution techniques do not scale well for large
+realistic programs, because often the number of feasible execution
+paths of a program increases exponentially with the increase in the
+length of an execution path.
+                       
+MultiSE is a new technique for merging states incrementally during symbolic execution, without
+using auxiliary variables. The key idea of MultiSE is based on an alternative 
+representation of the state, where we map each variable, including the program counter, to a set of guarded symbolic
+expressions called a value summary.  MultiSE has several advantages over conventional DSE and state merging techniques: 
+1)value summaries enable sharing of symbolic expressions and path
+constraints along multiple paths, 
+2) value-summaries avoid redundant
+execution, 3) MultiSE does not introduce auxiliary symbolic values, which
+enables it to make progress even when merging values not supported
+by the constraint solver, such as floating point or function values. 
+                       
+
+          Koushik Sen, George Necula, Liang Gong, and Wontae Choi.
+
 Jalangi
 =======
 ### Introduction

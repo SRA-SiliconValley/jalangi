@@ -21,7 +21,6 @@ enables it to make progress even when merging values not supported
 by the constraint solver, such as floating point or function values. 
                        
 
-_--Koushik Sen, George Necula, Liang Gong, and Wontae Choi_
 
 Jalangi
 =======

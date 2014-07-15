@@ -1,11 +1,10 @@
-
 (function (sandbox) {
     function ChainedAnalyses() {
 
         function clientAnalysisException(e) {
             console.error("analysis exception!!!");
             console.error(e.stack);
-            if (process && process.exit) {
+            if (typeof process !== 'undefined' && process.exit) {
                 process.exit(1);
             } else {
                 throw e;
@@ -17,22 +16,22 @@
             "functionEnter", "functionExit", "scriptEnter", "scriptExit",
             "binaryPre", "binary", "unaryPre", "unary", "conditional", "endExecution"];
 
-        this.addAnalysis = function(analysis) {
+        this.addAnalysis = function (analysis) {
             var self = this, tmp, length = funList.length;
 
-            for (var i=0 ;i<length; i++) {
+            for (var i = 0; i < length; i++) {
                 var field = funList[i];
-                if (tmp=analysis[field]) {
+                if (tmp = analysis[field]) {
                     var fun = self[field];
                     if (!fun) {
-                        fun = self[field] = function() {
+                        fun = self[field] = function () {
                             try {
                                 var ret1;
                                 var thisFun = arguments.callee;
                                 var len = thisFun.afs.length;
-                                var args = Array.prototype.slice.call(arguments,0);
-                                for(var i=0; i<len; i++) {
-                                    ret1 = thisFun.afs[i].apply(thisFun.afThis[i],args);
+                                var args = Array.prototype.slice.call(arguments, 0);
+                                for (var i = 0; i < len; i++) {
+                                    ret1 = thisFun.afs[i].apply(thisFun.afThis[i], args);
                                 }
                                 return ret1;
                             } catch (e) {
@@ -53,10 +52,10 @@
 
     var thisAnalysis = new ChainedAnalyses();
     Object.defineProperty(sandbox, 'analysis', {
-        get: function() {
+        get:function () {
             return thisAnalysis;
         },
-        set: function(a) {
+        set:function (a) {
             thisAnalysis.addAnalysis(a);
         }
     });

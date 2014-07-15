@@ -59,32 +59,18 @@ A Lubuntu virtual machine with pre-installed Jalangi (very old version) can be d
 
 ### Run Tests
 
+Check if record and replay executions produce same output on some unit tests located under tests/unit/.
+
+    ./node_modules/.bin/mocha --reporter spec node_test/unitTests.js
+
+The above runs Jalangi both with no analysis and with a trivial analysis that wraps all values.  To run the same
+tests over the sunspider benchmarks, use the following command:
+
+    ./node_modules/.bin/mocha --reporter spec node_test/sunspiderTests.js
+
 Run concolic testing tests.
 
     python ./scripts/sym.py
-
-Run no analysis and check if record and replay executions produce same output on some unit tests located under tests/unit/.
-
-    python ./scripts/units.py
-
-Run all value tracking analysis on some unit tests located under tests/unit/.
-
-    python ./scripts/unitsv.py
-
-Run no analysis and check if record and replay executions produce same
-output on the sunspider benchmarks located under
-tests/sunspider1/.
-
-    python scripts/testsp.py
-
-Run all value tracking analysis on the sunspider benchmarks located under
-tests/sunspider1/.
-
-    python scripts/testspv.py
-
-We also have test drivers implemented in JavaScript using [mocha](http://visionmedia.github.io/mocha/), located under `node_test`.  So, to run the basic unit tests, you can do:
-
-    ./node_modules/.bin/mocha --reporter spec node_test/unitTests.js
 
 To run the entire test suite, simply run:
 

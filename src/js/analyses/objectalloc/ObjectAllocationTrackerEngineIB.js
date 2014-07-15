@@ -22,18 +22,11 @@
         var smemory = sandbox.smemory;
         var iidToLocation = sandbox.iidToLocation;
         var Constants = sandbox.Constants;
+        var HOP = Constants.HOP;
         var Config = sandbox.Config;
 
         // iid or type could be object(iid) | array(iid) | function(iid)
         var iidToObjectInfo = {}; // type -> (field -> type -> iid -> true)
-
-        function HOP(obj, prop) {
-            return Object.prototype.hasOwnProperty.call(obj, prop);
-        };
-
-        function isArr(val) {
-            return Object.prototype.toString.call(val) === '[object Array]';
-        }
 
         var getSymbolic = this.getSymbolic = function (obj) {
             var sobj = smemory.getShadowObject(obj);
@@ -80,7 +73,7 @@
                 if (sobj.shadow === undefined) {
                     type = typeof obj;
                     if ((type === "object" || type === "function") && obj !== null && obj.name !== "eval") {
-                        if (isArr(obj)) {
+                        if (Array.isArray(obj)) {
                             type = "array";
                         }
                         s = type + "(" + creationLocation + ")";

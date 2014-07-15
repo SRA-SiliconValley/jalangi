@@ -72,23 +72,24 @@
         var smemory = sandbox.smemory;
         var iidToLocation = sandbox.iidToLocation;
         var Constants = sandbox.Constants;
-        var Config = sandbox.Config;
         var HOP = Constants.HOP;
         var executionIndex = new ExecutionIndex();
         var sort = Array.prototype.sort;
+        var objectCount = 1;
 
         var info = {};
 
         function printInfo(info, tab) {
             for (var iid in info) {
-                if (HOP(info, iid) && iid !== 'count' && iid !== 'total' && iid !== 'isFrame') {
+                if (HOP(info, iid) && iid !== 'count' && iid !== 'total' && iid !== 'isFrame' && iid !== 'lastObjectIdAllocated' &&
+                    iid !== 'nonEscaping' && iid !== 'oneActive' && iid !== 'accessedByParentOnly') {
                     console.log(tab+"accessed "+info[iid].count+" time(s) in function containing line "+iidToLocation(iid));
                     printInfo(info[iid], tab+"    ");
                 }
             }
         }
 
-        function addCount(index, i, isInit, isFrame) {
+        function addCount(index, i, isInit, isFrame, objectId) {
             var tmp = info;
             for (var j = index.length-1; j>=i; j--) {
                 var iid = index[j].iid;
@@ -100,6 +101,10 @@
             tmp.count++;
             if (isInit) {
                 tmp.total++;
+                tmp.lastObjectIdAllocated = objectId;
+                tmp.nonEscaping = true;
+                tmp.oneActive = true;
+                tmp.accessedByParentOnly = true;
             }
         }
 
@@ -135,22 +140,34 @@
                     sobj.creationIndex = executionIndex.executionIndexGetIndex();
                     sobj.i = sobj.creationIndex.length-1;
                     sobj.creationIndex[sobj.i].iid = (isFrame?"f":"o")+sobj.creationIndex[sobj.i].iid;
-                    addCount(sobj.creationIndex, sobj.i, true, isFrame);
+                    sobj.objectId = objectCount++;
+                    addCount(sobj.creationIndex, sobj.i, true, isFrame, sobj.objectId);
                 }
             }
         }
 
         function accessObject(obj) {
             var sobj = smemory.getShadowObject(obj);
+            var infoObj;
 
             if (sobj && sobj.creationIndex) {
                 executionIndex.executionIndexInc(0);
                 var accessIndex = executionIndex.executionIndexGetIndex();
                 var newi = indexOfDeviation(sobj.creationIndex, accessIndex);
+                infoObj = info[sobj.creationIndex[sobj.creationIndex.length-1].iid];
+                if (newi < sobj.i) {
+                    infoObj.nonEscaping = false;
+                }
+                if (infoObj.lastObjectIdAllocated !== sobj.objectId) {
+                    infoObj.oneActive = false;
+                }
                 if (newi < sobj.i) {
                     subtractCount(sobj.creationIndex, sobj.i);
                     addCount(sobj.creationIndex, newi);
                     sobj.i = newi;
+                }
+                if (newi !== sobj.creationIndex.length-1  && newi !== accessIndex.length-1) {
+                    infoObj.accessedByParentOnly = false;
                 }
             }
         }
@@ -249,7 +266,10 @@
                 if (HOP(tmp, x)) {
                     var iid = tmp[x].iid;
                     console.log((iid.substring(0,1)==="f"?"call frame":"object/function/array")+" allocated at "+iidToLocation(iid.substring(1))+
-                        " "+info[iid].total+" time(s) is accessed "+info[iid].count+" time(s) locally");
+                        " "+info[iid].total+" time(s) is accessed "+info[iid].count+" time(s) locally"+
+                        (info[iid].oneActive?" and has one at most one active object at a time":"")+
+                        ((info[iid].oneActive && info[iid].nonEscaping)?" and is stack allocatable":"")+
+                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping)?" and can use a global object":""));
                     printInfo(info[iid], "    ");
                 }
             }
@@ -297,3 +317,5 @@
     }
 
 }(J$));
+
+// test with python scripts/jalangi.py direct --analysis src/js/analyses/objectindex/ObjectIndex.js tests/unit/oindex1

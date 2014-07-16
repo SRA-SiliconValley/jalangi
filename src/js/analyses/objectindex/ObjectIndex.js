@@ -50,7 +50,7 @@
             for (i = 0; i < countersStack.length; i++) {
                 iid = countersStack[i].iid;
                 if (iid !== undefined) {
-                    ret.push({iid:iid,count:countersStack[i].count});
+                    ret.push({iid:iid, count:countersStack[i].count});
                 }
             }
             return ret;
@@ -81,19 +81,20 @@
 
         function printInfo(info, tab) {
             for (var iid in info) {
+                // TODO need to refactor the following check
                 if (HOP(info, iid) && iid !== 'count' && iid !== 'total' && iid !== 'isFrame' && iid !== 'lastObjectIdAllocated' &&
-                    iid !== 'nonEscaping' && iid !== 'oneActive' && iid !== 'accessedByParentOnly') {
-                    console.log(tab+"accessed "+info[iid].count+" time(s) in function containing line "+iidToLocation(iid));
-                    printInfo(info[iid], tab+"    ");
+                    iid !== 'nonEscaping' && iid !== 'oneActive' && iid !== 'accessedByParentOnly' && iid !== 'pointedBy' && iid !== 'isFrame') {
+                    console.log(tab + "accessed " + info[iid].count + " time(s) in function containing line " + iidToLocation(iid));
+                    printInfo(info[iid], tab + "    ");
                 }
             }
         }
 
         function addCount(index, i, isInit, isFrame, objectId) {
             var tmp = info;
-            for (var j = index.length-1; j>=i; j--) {
+            for (var j = index.length - 1; j >= i; j--) {
                 var iid = index[j].iid;
-                if(!tmp[iid]) {
+                if (!tmp[iid]) {
                     tmp[iid] = {count:0, total:0};
                 }
                 tmp = tmp[iid];
@@ -105,14 +106,16 @@
                 tmp.nonEscaping = true;
                 tmp.oneActive = true;
                 tmp.accessedByParentOnly = true;
+                tmp.pointedBy = false;// can also be another iid or true;
+                tmp.isFrame = !!isFrame;
             }
         }
 
         function subtractCount(index, i) {
             var tmp = info;
-            for (var j = index.length-1; j>=i; j--) {
+            for (var j = index.length - 1; j >= i; j--) {
                 var iid = index[j].iid;
-                if(!tmp[iid]) {
+                if (!tmp[iid]) {
                     tmp[iid] = {count:0};
                 }
                 tmp = tmp[iid];
@@ -122,7 +125,7 @@
 
         function indexOfDeviation(creationIndex, accessIndex) {
             var i, len = creationIndex.length;
-            for (i=0; i<len;i++) {
+            for (i = 0; i < len; i++) {
                 if (creationIndex[i].iid !== accessIndex[i].iid || creationIndex[i].count !== accessIndex[i].count) {
                     return i;
                 }
@@ -130,6 +133,52 @@
             return i;
         }
 
+        function hasSameContext(index1, index2) {
+            var i, len1 = index1.length, len2 = index2.length;
+            if (len1 !== len2) {
+                return false;
+            }
+            for (i = 0; i < len1; i++) {
+                if (index1[i].count !== index2[i].count || index1[i].iid !== index2[i].iid) {
+                    if (len1 - 1 === i && index1[i].count === index2[i].count) {
+                        return true;
+                    }
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+        function putField(base, val) {
+            var sobjBase = smemory.getShadowObject(base);
+            var sobjVal = smemory.getShadowObject(val);
+            var infoObj;
+
+            if (sobjBase && sobjBase.creationIndex && sobjVal && sobjVal.creationIndex) {
+                infoObj = info[getAllocIID(sobjVal.creationIndex)];
+                var baseIID = getAllocIID(sobjBase.creationIndex);
+                if (hasSameContext(sobjBase.creationIndex, sobjVal.creationIndex)) {
+                    if (infoObj.pointedBy === false) {
+                        infoObj.pointedBy = baseIID;
+                    } else if (infoObj.pointedBy !== true && infoObj.pointedBy !== baseIID) {
+                        infoObj.pointedBy = true;
+                    }
+                } else {
+                    infoObj.pointedBy = true;
+                }
+            }
+        }
+
+        function simulatePutField(val) {
+            if (typeof val === 'object') {
+                for (var offset in val) {
+                    if (HOP(val, offset)) {
+                        putField(val, val[offset]);
+                    }
+                }
+            }
+        }
 
         function annotateObject(iid, obj, isFrame) {
             var sobj = smemory.getShadowObject(obj);
@@ -138,12 +187,15 @@
                 executionIndex.executionIndexInc(iid);
                 if (sobj.creationIndex === undefined) {
                     sobj.creationIndex = executionIndex.executionIndexGetIndex();
-                    sobj.i = sobj.creationIndex.length-1;
-                    sobj.creationIndex[sobj.i].iid = (isFrame?"f":"o")+sobj.creationIndex[sobj.i].iid;
+                    sobj.i = sobj.creationIndex.length - 1;
                     sobj.objectId = objectCount++;
                     addCount(sobj.creationIndex, sobj.i, true, isFrame, sobj.objectId);
                 }
             }
+        }
+
+        function getAllocIID(creationIndex) {
+            return creationIndex[creationIndex.length - 1].iid;
         }
 
         function accessObject(obj) {
@@ -154,7 +206,7 @@
                 executionIndex.executionIndexInc(0);
                 var accessIndex = executionIndex.executionIndexGetIndex();
                 var newi = indexOfDeviation(sobj.creationIndex, accessIndex);
-                infoObj = info[sobj.creationIndex[sobj.creationIndex.length-1].iid];
+                infoObj = info[getAllocIID(sobj.creationIndex)];
                 if (newi < sobj.i) {
                     infoObj.nonEscaping = false;
                 }
@@ -166,7 +218,7 @@
                     addCount(sobj.creationIndex, newi);
                     sobj.i = newi;
                 }
-                if (newi !== sobj.creationIndex.length-1  && newi !== accessIndex.length-1) {
+                if (newi !== sobj.creationIndex.length - 1 && newi !== accessIndex.length - 1) {
                     infoObj.accessedByParentOnly = false;
                 }
             }
@@ -187,6 +239,7 @@
 //
         this.literal = function (iid, val) {
             annotateObject(iid, val, false);
+            simulatePutField(val);
             return val;
         };
 //
@@ -197,6 +250,7 @@
         this.invokeFun = function (iid, f, base, args, val, isConstructor) {
             if (isConstructor) {
                 annotateObject(iid, val, false);
+                simulatePutField(val);
             }
             accessObject(f);
             return val;
@@ -215,13 +269,16 @@
 //
         this.putField = function (iid, base, offset, val) {
             accessObject(base);
+            putField(base, val);
             return val;
         };
 //
 //        this.readPre = function (iid, name, val, isGlobal) {};
 //
         this.read = function (iid, name, val, isGlobal) {
-            accessObject(smemory.getFrame(name));
+            var tmp;
+            accessObject(tmp = smemory.getFrame(name));
+            putField(tmp, val);
             return val;
         };
 //
@@ -259,18 +316,19 @@
                     tmp.push({iid:iid, count:info[iid].total});
                 }
             }
-            sort.call(tmp, function(a,b) {
+            sort.call(tmp, function (a, b) {
                 return b.count - a.count;
             });
             for (var x in tmp) {
                 if (HOP(tmp, x)) {
                     var iid = tmp[x].iid;
-                    console.log((iid.substring(0,1)==="f"?"call frame":"object/function/array")+" allocated at "+iidToLocation(iid.substring(1))+
-                        " "+info[iid].total+" time(s) is accessed "+info[iid].count+" time(s) locally"+
-                        (info[iid].oneActive?" and has one at most one active object at a time":"")+
-                        ((info[iid].oneActive && info[iid].nonEscaping)?" and is stack allocatable":"")+
-                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping)?" and can use a global object":""));
-                    printInfo(info[iid], "    ");
+                    console.log((info[iid].isFrame ? "call frame" : "object/function/array") + " allocated at " + iidToLocation(iid) +
+                        " " + info[iid].total + " time(s) is accessed " + info[iid].count + " time(s) locally" +
+                        (info[iid].oneActive ? "\n    and has one at most one active object at a time" : "") +
+                        ((info[iid].oneActive && info[iid].nonEscaping) ? "\n    and does not escape its scope" : "") +
+                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
+                        ((typeof info[iid].pointedBy !== 'boolean') ? "\n    and is uniquely pointed by objects allocated at " + iidToLocation(info[iid].pointedBy) : ""));
+                    //printInfo(info[iid], "    ");
                 }
             }
 

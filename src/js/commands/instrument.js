@@ -121,8 +121,8 @@ function instrument(options, cb) {
             filename:origname,
             instFileName:instname,
             metadata:dumpSerializedASTs,
-            dirIIDFile: copyDir,
-            initIID: firstEntry
+            dirIIDFile:copyDir,
+            initIID:firstEntry
         };
         if (firstEntry) {
             firstEntry = false;
@@ -196,6 +196,7 @@ function instrument(options, cb) {
 
             return "<script>if (J$.analysis.init) { J$.analysis.init(" + JSON.stringify(initParamsObj) + "); }</script>";
         }
+
         if (instrumentInline) {
             this.push(proxy.rewriteHTML(this.data, "http://foo.com", rewriteInlineScript, instUtil.getHeaderCode(jalangiRoot)));
         } else {
@@ -295,8 +296,8 @@ function instrument(options, cb) {
             filename:this.origScriptName,
             instFileName:this.instScriptName,
             metadata:dumpSerializedASTs,
-            dirIIDFile: copyDir,
-            initIID: firstEntry
+            dirIIDFile:copyDir,
+            initIID:firstEntry
         };
         if (firstEntry) {
             firstEntry = false;
@@ -344,7 +345,7 @@ function instrument(options, cb) {
      * @returns {boolean}
      */
     function includedFile(fileName) {
-        var relativePath = fileName.substring(appDir.length+1);
+        var relativePath = fileName.substring(appDir.length + 1);
         var result = false;
         for (var i = 0; i < onlyIncludeList.length; i++) {
             var prefix = onlyIncludeList[i];
@@ -479,13 +480,13 @@ function instrument(options, cb) {
 if (require.main === module) { // main script
     var parser = new ArgumentParser({ addHelp:true, description:"Utility to apply Jalangi instrumentation to files or a folder."});
     parser.addArgument(['-s', '--serialize'], { help:"dump serialized ASTs along with code", action:'storeTrue' });
-    parser.addArgument(['-a2', '--analysis2'], { help:"use analysis2", action:'storeTrue' });
+    parser.addArgument(['--analysis2'], { help:"use analysis2", action:'storeTrue' });
     parser.addArgument(['-x', '--exclude'], { help:"do not instrument any scripts whose file path contains this substring" });
-    parser.addArgument(['--only_include'], { help: "list of path prefixes specifying which sub-directories should be instrumented, separated by path.delimiter"});
+    parser.addArgument(['--only_include'], { help:"list of path prefixes specifying which sub-directories should be instrumented, separated by path.delimiter"});
     // TODO add back this option once we've fixed the relevant HTML parsing code
     parser.addArgument(['-i', '--instrumentInline'], { help:"instrument inline scripts", action:'storeTrue'});
     parser.addArgument(['--analysis'], { help:"Analysis script for 'inbrowser'/'record' mode.  Analysis must not use ConcolicValue", action:"append" });
-    parser.addArgument(['--initParam'], { help: "initialization parameter for analysis, specified as key:value", action:'append'});
+    parser.addArgument(['--initParam'], { help:"initialization parameter for analysis, specified as key:value", action:'append'});
     parser.addArgument(['-d', '--direct_in_output'], { help:"Store instrumented app directly in output directory (by default, creates a sub-directory of output directory)", action:'storeTrue' });
     parser.addArgument(['--selenium'], { help:"Insert code so scripts can detect they are running under Selenium.  Also keeps Jalangi trace in memory", action:'storeTrue' });
     parser.addArgument(['--in_memory_trace'], { help:"Insert code to tell analysis to keep Jalangi trace in memory instead of writing to WebSocket", action:'storeTrue' });

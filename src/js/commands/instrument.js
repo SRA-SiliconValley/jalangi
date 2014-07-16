@@ -270,6 +270,22 @@ function instrument(options, cb) {
 
     var firstEntry = true;
 
+
+    function writeMetadataToFile(metadata, path) {
+        var fd = fs.openSync(path, 'w');
+        fs.writeSync(fd, "{\n");
+        Object.keys(metadata).forEach(function (iid, ind, arr) {
+            fs.writeSync(fd, "  \"" + iid + "\": ");
+            fs.writeSync(fd, JSON.stringify(metadata[iid],undefined,2));
+            if (ind < arr.length - 1) {
+                fs.writeSync(fd, ",");
+            }
+            fs.writeSync(fd, "\n");
+        });
+        fs.writeSync(fd, "}\n");
+        fs.closeSync(fd);
+    }
+
     InstrumentJSStream.prototype._flush = function (cb) {
         if (require.main === module || verbose) {
             console.log("instrumenting " + this.origScriptName);
@@ -300,7 +316,8 @@ function instrument(options, cb) {
         if (instResult) {
             if (dumpSerializedASTs) {
                 var metadata = instResult.iidMetadata;
-                fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(metadata, undefined, 2), "utf8");
+//                fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(metadata, undefined, 2), "utf8");
+                writeMetadataToFile(metadata, path.join(copyDir, this.instScriptName + ".ast.json"));
             }
             if (typeof instResult === 'string') {
                 // this can occur if it's a script we're not supposed to instrument

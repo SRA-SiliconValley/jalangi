@@ -55,6 +55,8 @@ function instrument(options, cb) {
     // parse out options
     //
 
+    var verbose = options.verbose;
+
     var instrumentInline = options.instrumentInline;
 
     var excludePattern = options.exclude;
@@ -270,7 +272,7 @@ function instrument(options, cb) {
     var firstEntry = true;
 
     InstrumentJSStream.prototype._flush = function (cb) {
-        if (require.main === module) {
+        if (require.main === module || verbose) {
             console.log("instrumenting " + this.origScriptName);
         }
         var options = {
@@ -477,6 +479,7 @@ if (require.main === module) { // main script
     parser.addArgument(['--extra_app_scripts'], { help:"list of extra application scripts to be injected and instrumented, separated by path.delimiter"});
     parser.addArgument(['--no_html'], { help:"don't inject Jalangi runtime into HTML files", action:'storeTrue'});
     parser.addArgument(['--outputDir'], { help:"directory in which to place instrumented files", required:true });
+    parser.addArgument(['--verbose'], { help: "print verbose output", action:'storeTrue'});
     parser.addArgument(['inputFiles'], { help:"either a list of JavaScript files to instrument, or a single directory under which all JavaScript and HTML files should be instrumented (modulo the --no_html and --exclude flags)", nargs:'+'});
 
     var args = parser.parseArgs();

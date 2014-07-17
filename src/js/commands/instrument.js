@@ -98,7 +98,7 @@ function instrument(options, cb) {
     var analyses = options.analysis;
 
     // initialization parameters for analysis
-    var initParams = options.initParam;
+    var initParams = options.initParam || {};
     /**
      * extra scripts to inject into the application and instrument
      * @type {Array.<String>}
@@ -235,7 +235,7 @@ function instrument(options, cb) {
                     headerLibs = "<script>" + smemoryOption + "</script>" + headerLibs;
                 }
 
-                if (analyses && initParams) {
+                if (analyses) {
                     // add initialization code at the end
                     headerLibs += genInitParamsCode();
                 }

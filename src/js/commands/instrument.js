@@ -186,14 +186,15 @@ function instrument(options, cb) {
 
         function genInitParamsCode() {
             var initParamsObj = {};
-            initParams.forEach(function (keyVal) {
-                var split = keyVal.split(':');
-                if (split.length !== 2) {
-                    throw new Error("invalid initParam " + keyVal);
-                }
-                initParamsObj[split[0]] = split[1];
-            });
-
+            if (initParams) {
+                initParams.forEach(function (keyVal) {
+                    var split = keyVal.split(':');
+                    if (split.length !== 2) {
+                        throw new Error("invalid initParam " + keyVal);
+                    }
+                    initParamsObj[split[0]] = split[1];
+                });
+            }
             return "<script>if (J$.analysis.init) { J$.analysis.init(" + JSON.stringify(initParamsObj) + "); }</script>";
         }
 

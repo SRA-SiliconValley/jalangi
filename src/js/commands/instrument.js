@@ -98,7 +98,7 @@ function instrument(options, cb) {
     var analyses = options.analysis;
 
     // initialization parameters for analysis
-    var initParams = options.initParam || {};
+    var initParams = options.initParam;
     /**
      * extra scripts to inject into the application and instrument
      * @type {Array.<String>}

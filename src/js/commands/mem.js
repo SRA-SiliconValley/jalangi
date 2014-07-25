@@ -16,7 +16,14 @@
 
 // Author: Koushik Sen
 
+if (typeof J$ === 'undefined') {
+    J$ = {};
+}
+
 (function (sandbox) {
+
+    require('../iidToLocation');
+    var iidToLocation = sandbox.iidToLocation;
 
     var hash = Object.create(null);
     var frame = Object.create(null);
@@ -93,8 +100,6 @@
 
     function ObjectIndex() {
 
-        var iidToLocation = sandbox.iidToLocation;
-        var HOP = Object.prototype.hasOwnProperty;
         var executionIndex = new ExecutionIndex();
         var sort = Array.prototype.sort;
         var objectCount = 1;
@@ -104,7 +109,7 @@
         function printInfo(info, tab) {
             for (var iid in info) {
                 // TODO need to refactor the following check
-                if (HOP(info, iid) && iid !== 'count' && iid !== 'total' && iid !== 'isFrame' && iid !== 'lastObjectIdAllocated' &&
+                if (info.hasOwnProperty(iid) && iid !== 'count' && iid !== 'total' && iid !== 'isFrame' && iid !== 'lastObjectIdAllocated' &&
                     iid !== 'nonEscaping' && iid !== 'oneActive' && iid !== 'accessedByParentOnly' && iid !== 'pointedBy' && iid !== 'isFrame') {
                     console.log(tab + "accessed " + info[iid].count + " time(s) in function containing line " + iidToLocation(iid));
                     printInfo(info[iid], tab + "    ");
@@ -177,13 +182,17 @@
             var sobjVal = smemory.getShadowObject(val);
             var infoObj;
 
-            if (sobjBase && sobjBase.creationIndex && sobjVal && sobjVal.creationIndex) {
+            if (sobjVal && sobjVal.creationIndex) {
                 infoObj = info[getAllocIID(sobjVal.creationIndex)];
-                var baseIID = getAllocIID(sobjBase.creationIndex);
-                if (hasSameContext(sobjBase.creationIndex, sobjVal.creationIndex)) {
-                    if (infoObj.pointedBy === false) {
-                        infoObj.pointedBy = baseIID;
-                    } else if (infoObj.pointedBy !== true && infoObj.pointedBy !== baseIID) {
+                if (sobjBase && sobjBase.creationIndex) {
+                    var baseIID = getAllocIID(sobjBase.creationIndex);
+                    if (hasSameContext(sobjBase.creationIndex, sobjVal.creationIndex)) {
+                        if (infoObj.pointedBy === false) {
+                            infoObj.pointedBy = baseIID;
+                        } else if (infoObj.pointedBy !== true && infoObj.pointedBy !== baseIID) {
+                            infoObj.pointedBy = true;
+                        }
+                    } else {
                         infoObj.pointedBy = true;
                     }
                 } else {
@@ -195,7 +204,7 @@
         function simulatePutField(val) {
             if (typeof val === 'object') {
                 for (var offset in val) {
-                    if (HOP(val, offset)) {
+                    if (val.hasOwnProperty(offset)) {
                         putField(val, val[offset]);
                     }
                 }
@@ -247,94 +256,23 @@
         }
 
 
-//        this.installAxiom = function (c) {};
-//
-//        this.makeConcolic = function (idx, val, getNextSymbol) {
-//            return val;
-//        };
-//
-//        this.makeConcolicPost = function () {};
-//
-//        this.declare = function (iid, name, val, isArgument) {};
-//
-//        this.literalPre = function (iid, val) {};
-//
-        this.literal = function (iid, val) {
+        this.createObject = function (iid, val) {
             annotateObject(iid, val, false);
-            simulatePutField(val);
-            return val;
         };
-//
-        this.invokeFunPre = function (iid, f, base, args, isConstructor) {
-            executionIndex.executionIndexInc(iid);
-        };
-//
-        this.invokeFun = function (iid, f, base, args, val, isConstructor) {
-            if (isConstructor) {
-                annotateObject(iid, val, false);
-                simulatePutField(val);
-            }
-            accessObject(f);
-            return val;
-        };
-//
-//        this.getFieldPre = function (iid, base, offset) {};
-//
-        this.getField = function (iid, base, offset, val) {
+
+        this.accessObject = function (base) {
             accessObject(base);
-            return val;
         };
-//
-//        this.putFieldPre = function (iid, base, offset, val) {
-//            return val;
-//        };
-//
-        this.putField = function (iid, base, offset, val) {
-//            accessObject(base);
+
+        this.putField = function (base, val) {
             putField(base, val);
-            return val;
         };
-//
-//        this.readPre = function (iid, name, val, isGlobal) {};
-//
-        this.read = function (iid, name, val, isGlobal) {
-            var tmp;
-            accessObject(tmp = smemory.getFrame(name));
-            putField(tmp, val);
-            return val;
-        };
-//
-//        this.writePre = function (iid, name, val, oldValue) {};
-//
-        this.write = function (iid, name, val, oldValue) {
-            accessObject(smemory.getFrame(name));
-            return val;
-        };
-//
-//        this.binaryPre = function (iid, op, left, right) {};
-//
-//        this.binary = function (iid, op, left, right, result_c) {
-//            return result_c;
-//        };
-//
-//        this.unaryPre = function (iid, op, left) {};
-//
-//        this.unary = function (iid, op, left, result_c) {
-//            return result_c;
-//        };
-//
-//        this.conditionalPre = function (iid, left) {};
-//
-//        this.conditional = function (iid, left, result_c) {
-//            return left;
-//        };
-//
-//        this.beginExecution = function (data) {};
-//
+
+
         this.endExecution = function () {
             var tmp = [];
             for (var iid in info) {
-                if (HOP(info, iid)) {
+                if (info.hasOwnProperty(iid)) {
                     tmp.push({iid:iid, count:info[iid].total});
                 }
             }
@@ -342,13 +280,13 @@
                 return b.count - a.count;
             });
             for (var x in tmp) {
-                if (HOP(tmp, x)) {
+                if (tmp.hasOwnProperty(x)) {
                     var iid = tmp[x].iid;
                     console.log((info[iid].isFrame ? "call frame" : "object/function/array") + " allocated at " + iidToLocation(iid) +
                         " " + info[iid].total + " time(s) is accessed " + info[iid].count + " time(s) locally" +
                         (info[iid].oneActive ? "\n    and has one at most one active object at a time" : "") +
-                        ((info[iid].oneActive && info[iid].nonEscaping) ? "\n    and does not escape its scope" : "") +
-                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
+                        (info[iid].nonEscaping ? "\n    and does not escape its scope" : "") +
+//                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
                         ((typeof info[iid].pointedBy !== 'boolean') ? "\n    and is uniquely pointed by objects allocated at " + iidToLocation(info[iid].pointedBy) : ""));
                     //printInfo(info[iid], "    ");
                 }
@@ -358,33 +296,14 @@
 //            console.log(JSON.stringify(info));
         };
 //
-        this.functionEnter = function (iid, fun, dis /* this */, args) {
+        this.functionEnter = function (iid) {
             executionIndex.executionIndexInc(iid);
             executionIndex.executionIndexCall();
-//            annotateObject(iid, smemory.getCurrentFrame(), true);
         };
-//
-        this.functionExit = function (iid) {
-            executionIndex.executionIndexReturn();
-            return false;
-            /* a return of false means that do not backtrack inside the function */
-        };
-//
-//        this.return_ = function (val) {
-//            return val;
-//        };
-//
-        this.scriptEnter = function (iid, fileName) {
-            executionIndex.executionIndexCall();
-        };
-//
-        this.scriptExit = function (iid) {
+
+        this.functionExit = function () {
             executionIndex.executionIndexReturn();
         };
-//
-//        this.instrumentCode = function(iid, code) {
-//            return code;
-//        };
     }
 
     var oindex = sandbox.analysis = new ObjectIndex();
@@ -400,21 +319,23 @@
 // DECLARE, // fields: iid, name, obj-id
                 break;
             case 1:
-                oindex.literal(record[1], record[2]);
+                oindex.createObject(record[1], record[2]);
 // CREATE_OBJ, // fields: iid, obj-id
                 break;
             case 2:
+//                oindex.createObject(record[1], record[3]);
 // CREATE_FUN, // fields: iid, function-enter-iid, obj-id.  NOTE: proto-obj-id is always obj-id + 1
                 break;
             case 3:
-                oindex.putField(record[1], record[2], record[3], record[4]);
+                oindex.putField(record[2], record[4]);
 // PUTFIELD, // fields: iid, base-obj-id, prop-name, val-obj-id
                 break;
             case 4:
+                oindex.putField(0, record[3]);
 // WRITE, // fields: iid, name, obj-id
                 break;
             case 5:
-                oindex.getField(record[3], record[1], "", 0);
+                oindex.accessObject(record[1]);
 // LAST_USE, // fields: obj-id, timestamp, iid
                 break;
             case 6:
@@ -456,12 +377,13 @@
 // DOM_ROOT, // fields: obj-id
                 break;
             case 18:
+                oindex.accessObject(record[2]);
 // UNREACHABLE // fields: iid, obj-id
                 break;
         }
     }
     oindex.endExecution();
 
-}(J$={}));
+}(J$));
 
-// test with python scripts/jalangi.py direct --analysis src/js/analyses/objectindex/ObjectIndex.js tests/unit/oindex1
+// node src/js/commands/mem.js tests/oindex-koushik/oindex1.trace

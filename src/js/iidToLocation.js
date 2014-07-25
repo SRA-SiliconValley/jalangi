@@ -22,7 +22,7 @@ if (typeof J$ === 'undefined') {
 
 (function (sandbox) {
     var Constants = sandbox.Constants;
-    var isBrowser = Constants.isBrowser;
+    var isBrowser = Constants?Constants.isBrowser:undefined;
     var isInit = false;
 
     sandbox.iidToLocation = function (iid) {

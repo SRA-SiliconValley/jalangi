@@ -282,7 +282,8 @@ if (typeof J$ === 'undefined') {
             for (var x in tmp) {
                 if (tmp.hasOwnProperty(x)) {
                     var iid = tmp[x].iid;
-                    console.log(info[iid].total + " "+(info[iid].isFrame ? "call frame(s)" : "object(s)/function(s)/array(s)") + " got allocated at " + iidToLocation(iid) +
+                    console.log(info[iid].total + " "+(info[iid].isFrame ? "call frame(s)" : "object(s)/function(s)/array(s)") +
+                        " got allocated at " + iidToLocation(iid) + " (iid="+iid+")"+
                         " of which " + info[iid].count + " object(s) did not escape to its caller" +
                         (info[iid].oneActive ? "\n    and has one at most one active object at a time" : "") +
                         (info[iid].nonEscaping ? "\n    and does not escape its caller" : "") +
@@ -311,8 +312,13 @@ if (typeof J$ === 'undefined') {
     var FileLineReader = require('../utils/FileLineReader');
     var args = process.argv.slice(2);
     var traceFh = new FileLineReader(args[0]);
+    var lineno= 0;
+
+    var cache = Object.create(null);
+
     printEscapeTree = args[1];
     while (traceFh.hasNextLine()) {
+        lineno++;
         var line = traceFh.nextLine();
         var record = JSON.parse(line);
         switch(record[0]) {
@@ -320,6 +326,10 @@ if (typeof J$ === 'undefined') {
 // DECLARE, // fields: iid, name, obj-id
                 break;
             case 1:
+//                if (record[1] === 13785) {
+//                    console.log("["+lineno+","+line+"]");
+//                    cache[record[2]] = true;
+//                }
                 oindex.createObject(record[1], record[2]);
 // CREATE_OBJ, // fields: iid, obj-id
                 break;
@@ -336,14 +346,19 @@ if (typeof J$ === 'undefined') {
 // WRITE, // fields: iid, name, obj-id
                 break;
             case 5:
-                oindex.accessObject(record[1]);
+//                if (cache[record[1]]){
+//                    console.log("["+lineno+","+line+"]");
+//                }
+                //oindex.accessObject(record[1]);
 // LAST_USE, // fields: obj-id, timestamp, iid
                 break;
             case 6:
+//                console.log("["+lineno+","+line+"]");
                 oindex.functionEnter(record[1]);
 // FUNCTION_ENTER, // fields: iid, function-object-id
                 break;
             case 7:
+//                console.log("["+lineno+","+line+"]");
                 oindex.functionExit();
 // FUNCTION_EXIT, // fields: iid
                 break;
@@ -378,6 +393,9 @@ if (typeof J$ === 'undefined') {
 // DOM_ROOT, // fields: obj-id
                 break;
             case 18:
+//                if (cache[record[2]]){
+//                    console.log("["+lineno+","+line+"]");
+//                }
                 oindex.accessObject(record[2]);
 // UNREACHABLE // fields: iid, obj-id
                 break;

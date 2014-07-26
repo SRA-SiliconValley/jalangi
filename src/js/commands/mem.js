@@ -111,7 +111,7 @@ if (typeof J$ === 'undefined') {
                 // TODO need to refactor the following check
                 if (info.hasOwnProperty(iid) && iid !== 'count' && iid !== 'total' && iid !== 'isFrame' && iid !== 'lastObjectIdAllocated' &&
                     iid !== 'nonEscaping' && iid !== 'oneActive' && iid !== 'accessedByParentOnly' && iid !== 'pointedBy' && iid !== 'isFrame') {
-                    console.log(tab + "accessed " + info[iid].count + " time(s) in function containing line " + iidToLocation(iid));
+                    console.log(tab + info[iid].count + " object(s) escaped to the function containing line " + iidToLocation(iid)+" and did not escape to its caller");
                     printInfo(info[iid], tab + "    ");
                 }
             }
@@ -282,13 +282,13 @@ if (typeof J$ === 'undefined') {
             for (var x in tmp) {
                 if (tmp.hasOwnProperty(x)) {
                     var iid = tmp[x].iid;
-                    console.log((info[iid].isFrame ? "call frame" : "object/function/array") + " allocated at " + iidToLocation(iid) +
-                        " " + info[iid].total + " time(s) is accessed " + info[iid].count + " time(s) locally" +
+                    console.log(info[iid].total + " "+(info[iid].isFrame ? "call frame(s)" : "object(s)/function(s)/array(s)") + " got allocated at " + iidToLocation(iid) +
+                        " of which " + info[iid].count + " object(s) did not escape to its caller" +
                         (info[iid].oneActive ? "\n    and has one at most one active object at a time" : "") +
-                        (info[iid].nonEscaping ? "\n    and does not escape its scope" : "") +
+                        (info[iid].nonEscaping ? "\n    and does not escape its caller" : "") +
 //                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
                         ((typeof info[iid].pointedBy !== 'boolean') ? "\n    and is uniquely pointed by objects allocated at " + iidToLocation(info[iid].pointedBy) : ""));
-                    //printInfo(info[iid], "    ");
+                    if (printEscapeTree) printInfo(info[iid], "    ");
                 }
             }
 
@@ -307,10 +307,11 @@ if (typeof J$ === 'undefined') {
     }
 
     var oindex = sandbox.analysis = new ObjectIndex();
-
+    var printEscapeTree;
     var FileLineReader = require('../utils/FileLineReader');
     var args = process.argv.slice(2);
     var traceFh = new FileLineReader(args[0]);
+    printEscapeTree = args[1];
     while (traceFh.hasNextLine()) {
         var line = traceFh.nextLine();
         var record = JSON.parse(line);

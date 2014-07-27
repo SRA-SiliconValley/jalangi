@@ -110,7 +110,8 @@ if (typeof J$ === 'undefined') {
             for (var iid in info) {
                 // TODO need to refactor the following check
                 if (info.hasOwnProperty(iid) && iid !== 'count' && iid !== 'total' && iid !== 'isFrame' && iid !== 'lastObjectIdAllocated' &&
-                    iid !== 'nonEscaping' && iid !== 'oneActive' && iid !== 'accessedByParentOnly' && iid !== 'pointedBy' && iid !== 'isFrame') {
+                    iid !== 'nonEscaping' && iid !== 'oneActive' && iid !== 'oneActiveUsage' &&
+                    iid !== 'accessedByParentOnly' && iid !== 'pointedBy' && iid !== 'isFrame') {
                     console.log(tab + info[iid].count + " object(s) escaped to the function containing line " + iidToLocation(iid)+" and did not escape to its caller");
                     printInfo(info[iid], tab + "    ");
                 }
@@ -132,6 +133,7 @@ if (typeof J$ === 'undefined') {
                 tmp.lastObjectIdAllocated = objectId;
                 tmp.nonEscaping = true;
                 tmp.oneActive = true;
+                tmp.oneActiveUsage = true;
                 tmp.accessedByParentOnly = true;
                 tmp.pointedBy = false;// can also be another iid or true;
                 tmp.isFrame = !!isFrame;
@@ -229,7 +231,7 @@ if (typeof J$ === 'undefined') {
             return creationIndex[creationIndex.length - 1].iid;
         }
 
-        function accessObject(obj) {
+        function accessObject(obj, unreachable) {
             var sobj = smemory.getShadowObject(obj);
             var infoObj;
 
@@ -242,6 +244,9 @@ if (typeof J$ === 'undefined') {
                     infoObj.nonEscaping = false;
                 }
                 if (infoObj.lastObjectIdAllocated !== sobj.objectId) {
+                    if (!unreachable) {
+                        infoObj.oneActiveUsage = false;
+                    }
                     infoObj.oneActive = false;
                 }
                 if (newi < sobj.i) {
@@ -260,8 +265,8 @@ if (typeof J$ === 'undefined') {
             annotateObject(iid, val, false);
         };
 
-        this.accessObject = function (base) {
-            accessObject(base);
+        this.accessObject = function (base, unreachable) {
+            accessObject(base, unreachable);
         };
 
         this.putField = function (base, val) {
@@ -286,6 +291,7 @@ if (typeof J$ === 'undefined') {
                         " got allocated at " + iidToLocation(iid) + " (iid="+iid+")"+
                         " of which " + info[iid].count + " object(s) did not escape to its caller" +
                         (info[iid].oneActive ? "\n    and has one at most one active object at a time" : "") +
+                        (info[iid].oneActiveUsage ? "\n    and has one at most one active object usage at a time" : "") +
                         (info[iid].nonEscaping ? "\n    and does not escape its caller" : "") +
 //                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
                         ((typeof info[iid].pointedBy !== 'boolean') ? "\n    and is uniquely pointed by objects allocated at " + iidToLocation(info[iid].pointedBy) : ""));
@@ -308,10 +314,22 @@ if (typeof J$ === 'undefined') {
     }
 
     var oindex = sandbox.analysis = new ObjectIndex();
-    var printEscapeTree;
+    var printEscapeTree, tmp, line, record, objIdToNewIID = Object.create(null);
+
     var FileLineReader = require('../utils/FileLineReader');
     var args = process.argv.slice(2);
     var traceFh = new FileLineReader(args[0]);
+    while (traceFh.hasNextLine()) {
+        line = traceFh.nextLine();
+        record = JSON.parse(line);
+        if (record[0] === 9) {
+            objIdToNewIID[record[1]] = record[2];
+        }
+    }
+    traceFh.close();
+
+
+    traceFh = new FileLineReader(args[0]);
     var lineno= 0;
 
     var cache = Object.create(null);
@@ -319,8 +337,8 @@ if (typeof J$ === 'undefined') {
     printEscapeTree = args[1];
     while (traceFh.hasNextLine()) {
         lineno++;
-        var line = traceFh.nextLine();
-        var record = JSON.parse(line);
+        line = traceFh.nextLine();
+        record = JSON.parse(line);
         switch(record[0]) {
             case 0:
 // DECLARE, // fields: iid, name, obj-id
@@ -330,6 +348,9 @@ if (typeof J$ === 'undefined') {
 //                    console.log("["+lineno+","+line+"]");
 //                    cache[record[2]] = true;
 //                }
+                if (tmp = objIdToNewIID[record[2]]) {
+                    record[1] = tmp;
+                }
                 oindex.createObject(record[1], record[2]);
 // CREATE_OBJ, // fields: iid, obj-id
                 break;
@@ -349,13 +370,13 @@ if (typeof J$ === 'undefined') {
 //                if (cache[record[1]]){
 //                    console.log("["+lineno+","+line+"]");
 //                }
-                //oindex.accessObject(record[1]);
-// LAST_USE, // fields: obj-id, timestamp, iid
+                oindex.accessObject(record[1], false);
+// LAST_USE, // fields: obj-id,  iid
                 break;
             case 6:
 //                console.log("["+lineno+","+line+"]");
                 oindex.functionEnter(record[1]);
-// FUNCTION_ENTER, // fields: iid, function-object-id
+// FUNCTION_ENTER, // fields: iid, function-object-id, call-site-id
                 break;
             case 7:
 //                console.log("["+lineno+","+line+"]");
@@ -396,11 +417,12 @@ if (typeof J$ === 'undefined') {
 //                if (cache[record[2]]){
 //                    console.log("["+lineno+","+line+"]");
 //                }
-                oindex.accessObject(record[2]);
+                oindex.accessObject(record[2], true);
 // UNREACHABLE // fields: iid, obj-id
                 break;
         }
     }
+    traceFh.close();
     oindex.endExecution();
 
 }(J$));

@@ -274,8 +274,11 @@ if (typeof J$ === 'undefined') {
         };
 
 
-        this.endExecution = function () {
+        this.endExecution = function (printEscapeTree) {
             var tmp = [];
+            var sitesToData = {};
+            var objectInfo = {objectInfo:sitesToData};
+
             for (var iid in info) {
                 if (info.hasOwnProperty(iid)) {
                     tmp.push({iid:iid, count:info[iid].total});
@@ -287,6 +290,18 @@ if (typeof J$ === 'undefined') {
             for (var x in tmp) {
                 if (tmp.hasOwnProperty(x)) {
                     var iid = tmp[x].iid;
+                    var data = {}, loc;
+                    sitesToData[loc = iidToLocation(iid)] = data;
+
+                    data.total = info[iid].total;
+                    data.countNonEscaping = info[iid].count;
+                    data.isOneActiveAtATime = info[iid].oneActive;
+                    data.isOneUsedAtATime = info[iid].oneActiveUsage;
+                    data.isNonEscaping = info[iid].nonEscaping;
+                    if (typeof info[iid].pointedBy !== 'boolean') {
+                        data.consistentlyPointedBy = iidToLocation(info[iid].pointedBy);
+                    }
+
                     console.log(info[iid].total + " "+(info[iid].isFrame ? "call frame(s)" : "object(s)/function(s)/array(s)") +
                         " got allocated at " + iidToLocation(iid) + " (iid="+iid+")"+
                         " of which " + info[iid].count + " object(s) did not escape to its caller" +
@@ -298,6 +313,9 @@ if (typeof J$ === 'undefined') {
                     if (printEscapeTree) printInfo(info[iid], "    ");
                 }
             }
+            require('fs').writeFileSync("mem_output.json",JSON.stringify(objectInfo, null, "    "),"utf8");
+
+
 
 //            printInfo(info, "");
 //            console.log(JSON.stringify(info));
@@ -313,117 +331,113 @@ if (typeof J$ === 'undefined') {
         };
     }
 
-    var oindex = sandbox.analysis = new ObjectIndex();
-    var printEscapeTree, tmp, line, record, objIdToNewIID = Object.create(null);
-
-    var FileLineReader = require('../utils/FileLineReader');
-    var args = process.argv.slice(2);
-    var traceFh = new FileLineReader(args[0]);
-    while (traceFh.hasNextLine()) {
-        line = traceFh.nextLine();
-        record = JSON.parse(line);
-        if (record[0] === 9) {
-            objIdToNewIID[record[1]] = record[2];
+    function getobjIdToNewIID(traceFile) {
+        var objIdToNewIID = {}, line, record;
+        var traceFh = new FileLineReader(traceFile);
+        while (traceFh.hasNextLine()) {
+            line = traceFh.nextLine();
+            record = JSON.parse(line);
+            if (record[0] === 9) {
+                objIdToNewIID[record[1]] = record[2];
+            }
         }
+        traceFh.close();
+        return objIdToNewIID;
     }
-    traceFh.close();
 
 
-    traceFh = new FileLineReader(args[0]);
-    var lineno= 0;
+    function processTrace(traceFile, objIdToNewIID, printEscapeTree) {
+        var oindex = new ObjectIndex();
+        var traceFh = new FileLineReader(traceFile);
+        var lineno = 0;
+        var tmp, line, record;
 
-    var cache = Object.create(null);
 
-    printEscapeTree = args[1];
-    while (traceFh.hasNextLine()) {
-        lineno++;
-        line = traceFh.nextLine();
-        record = JSON.parse(line);
-        switch(record[0]) {
-            case 0:
+        while (traceFh.hasNextLine()) {
+            lineno++;
+            line = traceFh.nextLine();
+            record = JSON.parse(line);
+            switch (record[0]) {
+                case 0:
 // DECLARE, // fields: iid, name, obj-id
-                break;
-            case 1:
-//                if (record[1] === 13785) {
-//                    console.log("["+lineno+","+line+"]");
-//                    cache[record[2]] = true;
-//                }
-                if (tmp = objIdToNewIID[record[2]]) {
-                    record[1] = tmp;
-                }
-                oindex.createObject(record[1], record[2]);
+                    break;
+                case 1:
+                    if (tmp = objIdToNewIID[record[2]]) {
+                        record[1] = tmp;
+                    }
+                    oindex.createObject(record[1], record[2]);
 // CREATE_OBJ, // fields: iid, obj-id
-                break;
-            case 2:
+                    break;
+                case 2:
 //                oindex.createObject(record[1], record[3]);
 // CREATE_FUN, // fields: iid, function-enter-iid, obj-id.  NOTE: proto-obj-id is always obj-id + 1
-                break;
-            case 3:
-                oindex.putField(record[2], record[4]);
+                    break;
+                case 3:
+                    oindex.putField(record[2], record[4]);
 // PUTFIELD, // fields: iid, base-obj-id, prop-name, val-obj-id
-                break;
-            case 4:
-                oindex.putField(0, record[3]);
+                    break;
+                case 4:
+                    oindex.putField(0, record[3]);
 // WRITE, // fields: iid, name, obj-id
-                break;
-            case 5:
-//                if (cache[record[1]]){
-//                    console.log("["+lineno+","+line+"]");
-//                }
-                oindex.accessObject(record[1], false);
+                    break;
+                case 5:
+                    oindex.accessObject(record[1], false);
 // LAST_USE, // fields: obj-id,  iid
-                break;
-            case 6:
-//                console.log("["+lineno+","+line+"]");
-                oindex.functionEnter(record[1]);
+                    break;
+                case 6:
+                    oindex.functionEnter(record[1]);
 // FUNCTION_ENTER, // fields: iid, function-object-id, call-site-id
-                break;
-            case 7:
-//                console.log("["+lineno+","+line+"]");
-                oindex.functionExit();
+                    break;
+                case 7:
+                    oindex.functionExit();
 // FUNCTION_EXIT, // fields: iid
-                break;
-            case 8:
+                    break;
+                case 8:
 // TOP_LEVEL_FLUSH,  // fields: iid
-                break;
-            case 9:
+                    break;
+                case 9:
 // UPDATE_IID, // fields: obj-id, new-iid
-                break;
-            case 10:
+                    break;
+                case 10:
 // DEBUG, // fields: call-iid, obj-id
-                break;
-            case 11:
+                    break;
+                case 11:
 // RETURN, // fields: obj-id
-                break;
-            case 12:
+                    break;
+                case 12:
 //  CREATE_DOM_NODE, // fields: iid (or -1 for unknown), obj-id
-                break;
-            case 13:
+                    break;
+                case 13:
 // ADD_DOM_CHILD, // fields: parent-obj-id, child-obj-id
-                break;
-            case 14:
+                    break;
+                case 14:
 // REMOVE_DOM_CHILD, // fields: parent-obj-id, child-obj-id
-                break;
-            case 15:
+                    break;
+                case 15:
 // ADD_TO_CHILD_SET, // fields: iid, parent-obj-id, name, child-obj-id
-                break;
-            case 16:
+                    break;
+                case 16:
 // REMOVE_FROM_CHILD_SET, // fields: iid, parent-obj-id, name, child-obj-id
-                break;
-            case 17:
+                    break;
+                case 17:
 // DOM_ROOT, // fields: obj-id
-                break;
-            case 18:
-//                if (cache[record[2]]){
-//                    console.log("["+lineno+","+line+"]");
-//                }
-                oindex.accessObject(record[2], true);
+                    break;
+                case 18:
+                    oindex.accessObject(record[2], true);
 // UNREACHABLE // fields: iid, obj-id
-                break;
+                    break;
+            }
         }
+        traceFh.close();
+        oindex.endExecution(printEscapeTree);
     }
-    traceFh.close();
-    oindex.endExecution();
+
+    var printEscapeTree, objIdToNewIID;
+    var FileLineReader = require('../utils/FileLineReader');
+    var args = process.argv.slice(2);
+    printEscapeTree = args[1];
+    objIdToNewIID = getobjIdToNewIID(args[0]);
+    processTrace(args[0], objIdToNewIID, printEscapeTree);
 
 }(J$));
 

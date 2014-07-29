@@ -380,7 +380,7 @@ if (typeof J$ === 'undefined') {
 // CREATE_OBJ, // fields: iid, obj-id
                     break;
                 case 2:
-                    oindex.createObject(record[1], record[3]);
+                    oindex.createObject(record[1], record[2]);
 // CREATE_FUN, // fields: iid, function-enter-iid, obj-id.  NOTE: proto-obj-id is always obj-id + 1
                     break;
                 case 3:

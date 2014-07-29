@@ -328,7 +328,7 @@
                         ((info[iid].oneActive && info[iid].nonEscaping) ? "\n    and does not escape its scope" : "") +
                         ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
                         ((typeof info[iid].pointedBy !== 'boolean') ? "\n    and is uniquely pointed by objects allocated at " + iidToLocation(info[iid].pointedBy) : ""));
-                    //printInfo(info[iid], "    ");
+                    printInfo(info[iid], "    ");
                 }
             }
 

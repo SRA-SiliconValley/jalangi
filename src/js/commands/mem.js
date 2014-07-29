@@ -105,39 +105,32 @@ if (typeof J$ === 'undefined') {
         var objectCount = 1;
 
         var info = {};
+        var odbase = {};
+
+        function stripBeginEnd(str) {
+            return str.substring(1,str.length-1)
+        }
 
         function printInfo(info, tab) {
             for (var iid in info) {
                 // TODO need to refactor the following check
-                if (info.hasOwnProperty(iid) && iid !== 'count' && iid !== 'total' && iid !== 'isFrame' && iid !== 'lastObjectIdAllocated' &&
-                    iid !== 'nonEscaping' && iid !== 'oneActive' && iid !== 'oneActiveUsage' &&
-                    iid !== 'accessedByParentOnly' && iid !== 'pointedBy' && iid !== 'isFrame') {
-                    console.log(tab + info[iid].count + " object(s) escaped to the function containing line " + iidToLocation(iid)+" and did not escape to its caller");
+                if (info.hasOwnProperty(iid) && iid !== 'count') {
+                    console.log(tab + info[iid].count + " object(s) escaped to the function containing line " + stripBeginEnd(iidToLocation(iid))+" and did not escape to its caller");
                     printInfo(info[iid], tab + "    ");
                 }
             }
         }
 
-        function addCount(index, i, isInit, isFrame, objectId) {
+        function addCount(index, i) {
             var tmp = info;
             for (var j = index.length - 1; j >= i; j--) {
                 var iid = index[j].iid;
                 if (!tmp[iid]) {
-                    tmp[iid] = {count:0, total:0};
+                    tmp[iid] = {count:0};
                 }
                 tmp = tmp[iid];
             }
             tmp.count++;
-            if (isInit) {
-                tmp.total++;
-                tmp.lastObjectIdAllocated = objectId;
-                tmp.nonEscaping = true;
-                tmp.oneActive = true;
-                tmp.oneActiveUsage = true;
-                tmp.accessedByParentOnly = true;
-                tmp.pointedBy = false;// can also be another iid or true;
-                tmp.isFrame = !!isFrame;
-            }
         }
 
         function subtractCount(index, i) {
@@ -185,7 +178,8 @@ if (typeof J$ === 'undefined') {
             var infoObj;
 
             if (sobjVal && sobjVal.creationIndex) {
-                infoObj = info[getAllocIID(sobjVal.creationIndex)];
+                var iid2 = getAllocIID(sobjVal.creationIndex);
+                infoObj = odbase[iid2];
                 if (sobjBase && sobjBase.creationIndex) {
                     var baseIID = getAllocIID(sobjBase.creationIndex);
                     if (hasSameContext(sobjBase.creationIndex, sobjVal.creationIndex)) {
@@ -203,14 +197,22 @@ if (typeof J$ === 'undefined') {
             }
         }
 
-        function simulatePutField(val) {
-            if (typeof val === 'object') {
-                for (var offset in val) {
-                    if (val.hasOwnProperty(offset)) {
-                        putField(val, val[offset]);
-                    }
+
+        function addToODBase(iid, objectId, isFrame) {
+            var tmp;
+                tmp = odbase[iid];
+                if (!tmp) {
+                    tmp = odbase[iid] = {};
+                    tmp.total = 0;
+                    tmp.nonEscaping = true;
+                    tmp.oneActive = true;
+                    tmp.oneActiveUsage = true;
+                    tmp.accessedByParentOnly = true;
+                    tmp.pointedBy = false;// can also be another iid or true;
+                    tmp.isFrame = !!isFrame;
                 }
-            }
+                tmp.total++;
+                tmp.lastObjectIdAllocated = objectId;
         }
 
         function annotateObject(iid, obj, isFrame) {
@@ -220,9 +222,10 @@ if (typeof J$ === 'undefined') {
                 executionIndex.executionIndexInc(iid);
                 if (sobj.creationIndex === undefined) {
                     sobj.creationIndex = executionIndex.executionIndexGetIndex();
-                    sobj.i = sobj.creationIndex.length - 1;
+                    sobj.escapeIndex = sobj.creationIndex.length - 1;
                     sobj.objectId = objectCount++;
-                    addCount(sobj.creationIndex, sobj.i, true, isFrame, sobj.objectId);
+                    addCount(sobj.creationIndex, sobj.escapeIndex);
+                    addToODBase(getAllocIID(sobj.creationIndex), sobj.objectId, isFrame);
                 }
             }
         }
@@ -239,8 +242,8 @@ if (typeof J$ === 'undefined') {
                 executionIndex.executionIndexInc(0);
                 var accessIndex = executionIndex.executionIndexGetIndex();
                 var newi = indexOfDeviation(sobj.creationIndex, accessIndex);
-                infoObj = info[getAllocIID(sobj.creationIndex)];
-                if (newi < sobj.i) {
+                infoObj = odbase[getAllocIID(sobj.creationIndex)];
+                if (newi < sobj.escapeIndex) {
                     infoObj.nonEscaping = false;
                 }
                 if (infoObj.lastObjectIdAllocated !== sobj.objectId) {
@@ -249,10 +252,10 @@ if (typeof J$ === 'undefined') {
                     }
                     infoObj.oneActive = false;
                 }
-                if (newi < sobj.i) {
-                    subtractCount(sobj.creationIndex, sobj.i);
+                if (newi < sobj.escapeIndex) {
+                    subtractCount(sobj.creationIndex, sobj.escapeIndex);
                     addCount(sobj.creationIndex, newi);
-                    sobj.i = newi;
+                    sobj.escapeIndex = newi;
                 }
                 if (newi !== sobj.creationIndex.length - 1 && newi !== accessIndex.length - 1) {
                     infoObj.accessedByParentOnly = false;
@@ -279,9 +282,9 @@ if (typeof J$ === 'undefined') {
             var sitesToData = {};
             var objectInfo = {objectInfo:sitesToData};
 
-            for (var iid in info) {
-                if (info.hasOwnProperty(iid)) {
-                    tmp.push({iid:iid, count:info[iid].total});
+            for (var iid in odbase) {
+                if (odbase.hasOwnProperty(iid)) {
+                    tmp.push({iid:iid, count:odbase[iid].total});
                 }
             }
             sort.call(tmp, function (a, b) {
@@ -291,25 +294,26 @@ if (typeof J$ === 'undefined') {
                 if (tmp.hasOwnProperty(x)) {
                     var iid = tmp[x].iid;
                     var data = {}, loc;
-                    sitesToData[loc = iidToLocation(iid)] = data;
+                    sitesToData[loc = stripBeginEnd(iidToLocation(iid))] = data;
 
-                    data.total = info[iid].total;
                     data.countNonEscaping = info[iid].count;
-                    data.isOneActiveAtATime = info[iid].oneActive;
-                    data.isOneUsedAtATime = info[iid].oneActiveUsage;
-                    data.isNonEscaping = info[iid].nonEscaping;
-                    if (typeof info[iid].pointedBy !== 'boolean') {
-                        data.consistentlyPointedBy = iidToLocation(info[iid].pointedBy);
+                    data.total = odbase[iid].total;
+                    data.isOneActiveAtATime = odbase[iid].oneActive;
+                    data.isOneUsedAtATime = odbase[iid].oneActiveUsage;
+                    data.isNonEscaping = odbase[iid].nonEscaping;
+                    data.isFrame = odbase[iid].isFrame;
+                    if (typeof odbase[iid].pointedBy !== 'boolean') {
+                        data.consistentlyPointedBy = stripBeginEnd(iidToLocation(odbase[iid].pointedBy));
                     }
 
-                    console.log(info[iid].total + " "+(info[iid].isFrame ? "call frame(s)" : "object(s)/function(s)/array(s)") +
-                        " got allocated at " + iidToLocation(iid) + " (iid="+iid+")"+
-                        " of which " + info[iid].count + " object(s) did not escape to its caller" +
-                        (info[iid].oneActive ? "\n    and has one at most one active object at a time" : "") +
-                        (info[iid].oneActiveUsage ? "\n    and has one at most one active object usage at a time" : "") +
-                        (info[iid].nonEscaping ? "\n    and does not escape its caller" : "") +
+                    console.log(data.total + " "+(data.isFrame ? "call frame(s)" : "object(s)/function(s)/array(s)") +
+                        " got allocated at " + stripBeginEnd(iidToLocation(iid)) + " (iid="+iid+")"+
+                        " of which " + data.countNonEscaping + " object(s) did not escape to its caller" +
+                        (data.isOneActiveAtATime ? "\n    and has one at most one active object at a time" : "") +
+                        (data.isOneUsedAtATime ? "\n    and has one at most one active object usage at a time" : "") +
+                        (data.isNonEscaping ? "\n    and does not escape its caller" : "") +
 //                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
-                        ((typeof info[iid].pointedBy !== 'boolean') ? "\n    and is uniquely pointed by objects allocated at " + iidToLocation(info[iid].pointedBy) : ""));
+                        (data.consistentlyPointedBy ? "\n    and is uniquely pointed by objects allocated at " + stripBeginEnd(iidToLocation(data.consistentlyPointedBy)) : ""));
                     if (printEscapeTree) printInfo(info[iid], "    ");
                 }
             }
@@ -369,7 +373,7 @@ if (typeof J$ === 'undefined') {
 // CREATE_OBJ, // fields: iid, obj-id
                     break;
                 case 2:
-//                oindex.createObject(record[1], record[3]);
+                    oindex.createObject(record[1], record[3]);
 // CREATE_FUN, // fields: iid, function-enter-iid, obj-id.  NOTE: proto-obj-id is always obj-id + 1
                     break;
                 case 3:

@@ -46,6 +46,10 @@ if (typeof J$ === 'undefined') {
 
         getCurrentFrame: function () {
             return frame;
+        },
+
+        remove: function(iid) {
+            delete hash[iid];
         }
      };
 
@@ -261,6 +265,9 @@ if (typeof J$ === 'undefined') {
                     infoObj.accessedByParentOnly = false;
                 }
             }
+            if (unreachable) {
+                smemory.remove(obj);
+            }
         }
 
 
@@ -313,7 +320,7 @@ if (typeof J$ === 'undefined') {
                         (data.isOneUsedAtATime ? "\n    and has one at most one active object usage at a time" : "") +
                         (data.isNonEscaping ? "\n    and does not escape its caller" : "") +
 //                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
-                        (data.consistentlyPointedBy ? "\n    and is uniquely pointed by objects allocated at " + stripBeginEnd(iidToLocation(data.consistentlyPointedBy)) : ""));
+                        (data.consistentlyPointedBy ? "\n    and is uniquely pointed by objects allocated at " + data.consistentlyPointedBy : ""));
                     if (printEscapeTree) printInfo(info[iid], "    ");
                 }
             }

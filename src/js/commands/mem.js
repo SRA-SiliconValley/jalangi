@@ -214,6 +214,7 @@ if (typeof J$ === 'undefined') {
                     tmp.accessedByParentOnly = true;
                     tmp.pointedBy = false;// can also be another iid or true;
                     tmp.isFrame = !!isFrame;
+                    tmp.unused = true;
                 }
                 tmp.total++;
                 tmp.lastObjectIdAllocated = objectId;
@@ -228,6 +229,7 @@ if (typeof J$ === 'undefined') {
                     sobj.creationIndex = executionIndex.executionIndexGetIndex();
                     sobj.escapeIndex = sobj.creationIndex.length - 1;
                     sobj.objectId = objectCount++;
+                    sobj.unused = true;
                     addCount(sobj.creationIndex, sobj.escapeIndex);
                     addToODBase(getAllocIID(sobj.creationIndex), sobj.objectId, isFrame);
                 }
@@ -264,12 +266,27 @@ if (typeof J$ === 'undefined') {
                 if (newi !== sobj.creationIndex.length - 1 && newi !== accessIndex.length - 1) {
                     infoObj.accessedByParentOnly = false;
                 }
+                if (!unreachable) {
+                    sobj.unused = false;
+                } else {
+                    infoObj.unused = infoObj.unused && sobj.unused;
+                }
             }
             if (unreachable) {
                 smemory.remove(obj);
             }
         }
 
+        function exitConstructor(obj) {
+            var sobj = smemory.getShadowObject(obj);
+            if (sobj && sobj.creationIndex) {
+                sobj.unused = true;
+            }
+        }
+
+        this.exitConstructor = function(obj) {
+            exitConstructor(obj);
+        };
 
         this.createObject = function (iid, val) {
             annotateObject(iid, val, false);
@@ -309,6 +326,7 @@ if (typeof J$ === 'undefined') {
                     data.isOneUsedAtATime = odbase[iid].oneActiveUsage;
                     data.isNonEscaping = odbase[iid].nonEscaping;
                     data.isFrame = odbase[iid].isFrame;
+                    data.isUnused = odbase[iid].unused;
                     if (typeof odbase[iid].pointedBy !== 'boolean') {
                         data.consistentlyPointedBy = stripBeginEnd(iidToLocation(odbase[iid].pointedBy));
                     }
@@ -316,9 +334,10 @@ if (typeof J$ === 'undefined') {
                     console.log(data.total + " "+(data.isFrame ? "call frame(s)" : "object(s)/function(s)/array(s)") +
                         " got allocated at " + stripBeginEnd(iidToLocation(iid)) + " (iid="+iid+")"+
                         " of which " + data.countNonEscaping + " object(s) did not escape to its caller" +
-                        (data.isOneActiveAtATime ? "\n    and has one at most one active object at a time" : "") +
-                        (data.isOneUsedAtATime ? "\n    and has one at most one active object usage at a time" : "") +
+                        (data.isOneActiveAtATime ? "\n    and has at most one active object at a time" : "") +
+                        (data.isOneUsedAtATime ? "\n    and has at most one active object usage at a time" : "") +
                         (data.isNonEscaping ? "\n    and does not escape its caller" : "") +
+                        (data.isUnused ? "\n    and seems to be unused" : "") +
 //                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
                         (data.consistentlyPointedBy ? "\n    and is uniquely pointed by objects allocated at " + data.consistentlyPointedBy : ""));
                     if (printEscapeTree) printInfo(info[iid], "    ");
@@ -332,8 +351,8 @@ if (typeof J$ === 'undefined') {
 //            console.log(JSON.stringify(info));
         };
 //
-        this.functionEnter = function (iid) {
-            executionIndex.executionIndexInc(iid);
+        this.functionEnter = function (iid, ciid) {
+            executionIndex.executionIndexInc(ciid);
             executionIndex.executionIndexCall();
         };
 
@@ -356,6 +375,11 @@ if (typeof J$ === 'undefined') {
         return objIdToNewIID;
     }
 
+/*
+ private static enum TraceEntry {
+ }
+
+*/
 
     function processTrace(traceFile, objIdToNewIID, printEscapeTree) {
         var oindex = new ObjectIndex();
@@ -381,7 +405,7 @@ if (typeof J$ === 'undefined') {
                     break;
                 case 2:
                     oindex.createObject(record[1], record[2]);
-// CREATE_FUN, // fields: iid, function-enter-iid, obj-id.  NOTE: proto-obj-id is always obj-id + 1
+// CREATE_FUN, // fields: iid, obj-id.  NOTE: proto-obj-id is always obj-id + 1
                     break;
                 case 3:
                     oindex.putField(record[2], record[4]);
@@ -393,20 +417,21 @@ if (typeof J$ === 'undefined') {
                     break;
                 case 5:
                     oindex.accessObject(record[1], false);
-// LAST_USE, // fields: obj-id,  iid
+// LAST_USE, // fields: obj-id, iid
                     break;
                 case 6:
-                    oindex.functionEnter(record[1]);
-// FUNCTION_ENTER, // fields: iid, function-object-id, call-site-id
+                    oindex.functionEnter(record[1], record[3]);
+// FUNCTION_ENTER, // fields: iid, function-object-id, call-site-iid (or -1 if not present)
                     break;
                 case 7:
                     oindex.functionExit();
 // FUNCTION_EXIT, // fields: iid
                     break;
                 case 8:
-// TOP_LEVEL_FLUSH,  // fields: iid
+// TOP_LEVEL_FLUSH, // fields: iid
                     break;
                 case 9:
+                    oindex.exitConstructor(record[1]);
 // UPDATE_IID, // fields: obj-id, new-iid
                     break;
                 case 10:
@@ -428,7 +453,7 @@ if (typeof J$ === 'undefined') {
 // ADD_TO_CHILD_SET, // fields: iid, parent-obj-id, name, child-obj-id
                     break;
                 case 16:
-// REMOVE_FROM_CHILD_SET, // fields: iid, parent-obj-id, name, child-obj-id
+// REMOVE_DOM_CHILD, // fields: parent-obj-id, child-obj-id
                     break;
                 case 17:
 // DOM_ROOT, // fields: obj-id

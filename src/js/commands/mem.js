@@ -230,6 +230,7 @@ if (typeof J$ === 'undefined') {
                     sobj.escapeIndex = sobj.creationIndex.length - 1;
                     sobj.objectId = objectCount++;
                     sobj.unused = true;
+                    sobj.escapes = false;
                     addCount(sobj.creationIndex, sobj.escapeIndex);
                     addToODBase(getAllocIID(sobj.creationIndex), sobj.objectId, isFrame);
                 }
@@ -250,6 +251,13 @@ if (typeof J$ === 'undefined') {
                 var newi = indexOfDeviation(sobj.creationIndex, accessIndex);
                 infoObj = odbase[getAllocIID(sobj.creationIndex)];
                 if (newi < sobj.escapeIndex) {
+                    if (unreachable) {
+                        if (infoObj.notUsedAfterEscape === undefined) {
+                            infoObj.notUsedAfterEscape = true;
+                        }
+                        infoObj.notUsedAfterEscape = infoObj.notUsedAfterEscape && !sobj.escapes;
+                    }
+                    sobj.escapes = true;
                     infoObj.nonEscaping = false;
                 }
                 if (infoObj.lastObjectIdAllocated !== sobj.objectId) {
@@ -327,6 +335,7 @@ if (typeof J$ === 'undefined') {
                     data.isNonEscaping = odbase[iid].nonEscaping;
                     data.isFrame = odbase[iid].isFrame;
                     data.isUnused = odbase[iid].unused;
+                    data.notUsedAfterEscape = odbase[iid].notUsedAfterEscape;
                     if (typeof odbase[iid].pointedBy !== 'boolean') {
                         data.consistentlyPointedBy = stripBeginEnd(iidToLocation(odbase[iid].pointedBy));
                     }
@@ -338,6 +347,7 @@ if (typeof J$ === 'undefined') {
                         (data.isOneUsedAtATime ? "\n    and has at most one active object usage at a time" : "") +
                         (data.isNonEscaping ? "\n    and does not escape its caller" : "") +
                         (data.isUnused ? "\n    and seems to be unused" : "") +
+                        (data.notUsedAfterEscape ? "\n    and seems to be unused after escape" : "") +
 //                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
                         (data.consistentlyPointedBy ? "\n    and is uniquely pointed by objects allocated at " + data.consistentlyPointedBy : ""));
                     if (printEscapeTree) printInfo(info[iid], "    ");

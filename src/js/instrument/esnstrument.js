@@ -1230,7 +1230,11 @@
             if (node.operator === "void") {
                 return node;
             } else if (node.operator === "delete") {
-                ret = wrapBinaryOp(node, node.argument.object, getPropertyAsAst(node.argument), node.operator);
+                if (node.argument.object) {
+                    ret = wrapBinaryOp(node, node.argument.object, getPropertyAsAst(node.argument), node.operator);
+                } else {
+                    return node;
+                }
             } else {
                 ret = wrapUnaryOp(node, node.argument, node.operator);
             }

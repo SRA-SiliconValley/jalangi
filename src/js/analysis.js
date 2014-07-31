@@ -889,6 +889,12 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
                             result_c = rrEngine.RR_L(iid, result_c, N_LOG_RETURN);
                         }
                         break;
+                    case "delete":
+                        result_c = delete left_c[right_c];
+                        if (rrEngine) {
+                            result_c = rrEngine.RR_L(iid, result_c, N_LOG_RETURN);
+                        }
+                        break;
                     case "in":
                         result_c = left_c in right_c;
                         if (rrEngine) {

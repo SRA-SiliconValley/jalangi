@@ -444,6 +444,9 @@ if (typeof J$ === 'undefined') {
                 case "^":
                     result = left ^ right;
                     break;
+                case "delete":
+                    result = delete left[right];
+                    break;
                 case "instanceof":
                     result = left instanceof right;
                     break;

@@ -49,3 +49,4 @@ c
 date_to_number
 array_push_pop
 instanceof
+delete1

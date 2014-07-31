@@ -1227,8 +1227,10 @@
         },
         'UnaryExpression':function (node) {
             var ret;
-            if (node.operator === "delete" || node.operator === "void") {
+            if (node.operator === "void") {
                 return node;
+            } else if (node.operator === "delete") {
+                ret = wrapBinaryOp(node, node.argument.object, getPropertyAsAst(node.argument), node.operator);
             } else {
                 ret = wrapUnaryOp(node, node.argument, node.operator);
             }

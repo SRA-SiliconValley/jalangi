@@ -359,9 +359,9 @@ if (typeof J$ === 'undefined') {
                     var data = {}, loc;
                     sitesToData[loc = stripBeginEnd(iidToLocation(iid))] = data;
 
-                    data.countNonEscaping = info[iid].count;
                     data.total = odbase[iid].total;
-                    data.isOneActiveAtATime = odbase[iid].oneActive;
+                    data.countEscaping = data.total - info[iid].count;
+                    data.isOneAliveAtATime = odbase[iid].oneActive;
                     data.isOneUsedAtATime = odbase[iid].oneActiveUsage;
                     data.isNonEscaping = odbase[iid].nonEscaping;
                     data.isFrame = odbase[iid].isFrame;
@@ -374,9 +374,9 @@ if (typeof J$ === 'undefined') {
 
                     console.log(data.total + " "+(data.isFrame ? "call frame(s)" : "object(s)/function(s)/array(s)") +
                         " got allocated at " + stripBeginEnd(iidToLocation(iid)) + " (iid="+iid+")"+
-                        " of which " + data.countNonEscaping + " object(s) did not escape to its caller" +
-                        (data.isOneActiveAtATime ? "\n    at most one active object at a time" : "") +
-                        (data.isOneUsedAtATime ? "\n    at most one active object usage at a time" : "") +
+                        " of which " + data.countEscaping + " object(s) escape to its caller" +
+                        (data.isOneAliveAtATime ? "\n    at most one alive object at a time" : "") +
+                        (data.isOneUsedAtATime ? "\n    at most one used object at a time" : "") +
                         (data.isNonEscaping ? "\n    does not escape its caller" : "") +
                         (data.isUnused ? "\n    unused throughout its lifetime" : "") +
                         (data.notUsedAfterEscape ? "\n    unused after escape" : "") +

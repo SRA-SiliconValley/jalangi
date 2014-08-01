@@ -215,9 +215,13 @@ if (typeof J$ === 'undefined') {
                     tmp.pointedBy = false;// can also be another iid or true;
                     tmp.isFrame = !!isFrame;
                     tmp.unused = true;
+                    tmp.leakCount = 0;
+                    tmp.maxActiveCount = 0;
+                    tmp.totalActiveCount = 0;
                 }
                 tmp.total++;
                 tmp.lastObjectIdAllocated = objectId;
+                tmp.totalActiveCount++;
         }
 
         function annotateObject(iid, obj, isFrame) {
@@ -279,6 +283,9 @@ if (typeof J$ === 'undefined') {
                 } else {
                     infoObj.unused = infoObj.unused && sobj.unused;
                 }
+                if (unreachable) {
+                    infoObj.totalActiveCount--;
+                }
             }
             if (unreachable) {
                 smemory.remove(obj);
@@ -291,6 +298,30 @@ if (typeof J$ === 'undefined') {
                 sobj.unused = true;
             }
         }
+
+        var callStackDepth = 0;
+        this.functionEnter = function (iid, ciid) {
+            callStackDepth++;
+            executionIndex.executionIndexInc(ciid);
+            executionIndex.executionIndexCall();
+        };
+
+        this.functionExit = function () {
+            executionIndex.executionIndexReturn();
+            callStackDepth--;
+            if (callStackDepth === 0) {
+                for (var iid in odbase) {
+                    if (odbase.hasOwnProperty(iid)) {
+                        var tmp = odbase[iid];
+                        if (tmp.maxActiveCount < tmp.totalActiveCount) {
+                            tmp.leakCount ++;
+                            tmp.maxActiveCount = tmp.totalActiveCount;
+                        }
+                    }
+                }
+
+            }
+        };
 
         this.exitConstructor = function(obj) {
             exitConstructor(obj);
@@ -336,6 +367,7 @@ if (typeof J$ === 'undefined') {
                     data.isFrame = odbase[iid].isFrame;
                     data.isUnused = odbase[iid].unused;
                     data.notUsedAfterEscape = odbase[iid].notUsedAfterEscape;
+                    data.isLeaking = (odbase[iid].leakCount > 2);
                     if (typeof odbase[iid].pointedBy !== 'boolean') {
                         data.consistentlyPointedBy = stripBeginEnd(iidToLocation(odbase[iid].pointedBy));
                     }
@@ -343,13 +375,14 @@ if (typeof J$ === 'undefined') {
                     console.log(data.total + " "+(data.isFrame ? "call frame(s)" : "object(s)/function(s)/array(s)") +
                         " got allocated at " + stripBeginEnd(iidToLocation(iid)) + " (iid="+iid+")"+
                         " of which " + data.countNonEscaping + " object(s) did not escape to its caller" +
-                        (data.isOneActiveAtATime ? "\n    and has at most one active object at a time" : "") +
-                        (data.isOneUsedAtATime ? "\n    and has at most one active object usage at a time" : "") +
-                        (data.isNonEscaping ? "\n    and does not escape its caller" : "") +
-                        (data.isUnused ? "\n    and seems to be unused" : "") +
-                        (data.notUsedAfterEscape ? "\n    and seems to be unused after escape" : "") +
+                        (data.isOneActiveAtATime ? "\n    at most one active object at a time" : "") +
+                        (data.isOneUsedAtATime ? "\n    at most one active object usage at a time" : "") +
+                        (data.isNonEscaping ? "\n    does not escape its caller" : "") +
+                        (data.isUnused ? "\n    unused throughout its lifetime" : "") +
+                        (data.notUsedAfterEscape ? "\n    unused after escape" : "") +
+                        (data.isLeaking ? "\n    leaking" : "") +
 //                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
-                        (data.consistentlyPointedBy ? "\n    and is uniquely pointed by objects allocated at " + data.consistentlyPointedBy : ""));
+                        (data.consistentlyPointedBy ? "\n    uniquely pointed by objects allocated at " + data.consistentlyPointedBy : ""));
                     if (printEscapeTree) printInfo(info[iid], "    ");
                 }
             }
@@ -361,14 +394,6 @@ if (typeof J$ === 'undefined') {
 //            console.log(JSON.stringify(info));
         };
 //
-        this.functionEnter = function (iid, ciid) {
-            executionIndex.executionIndexInc(ciid);
-            executionIndex.executionIndexCall();
-        };
-
-        this.functionExit = function () {
-            executionIndex.executionIndexReturn();
-        };
     }
 
     function getobjIdToNewIID(traceFile) {

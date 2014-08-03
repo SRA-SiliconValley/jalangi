@@ -247,13 +247,13 @@ if (typeof J$ === 'undefined') {
 
         function accessObject(obj, unreachable) {
             var sobj = smemory.getShadowObject(obj);
-            var infoObj;
+            var infoObj, iid3;
 
             if (sobj && sobj.creationIndex) {
                 executionIndex.executionIndexInc(0);
                 var accessIndex = executionIndex.executionIndexGetIndex();
                 var newi = indexOfDeviation(sobj.creationIndex, accessIndex);
-                infoObj = odbase[getAllocIID(sobj.creationIndex)];
+                infoObj = odbase[iid3=getAllocIID(sobj.creationIndex)];
                 if (newi < sobj.escapeIndex) {
                     if (unreachable) {
                         if (infoObj.notUsedAfterEscape === undefined) {
@@ -300,7 +300,7 @@ if (typeof J$ === 'undefined') {
         }
 
         var callStackDepth = 0;
-        this.functionEnter = function (iid, ciid) {
+        this.functionEnter = function (ciid) {
             callStackDepth++;
             executionIndex.executionIndexInc(ciid);
             executionIndex.executionIndexCall();
@@ -308,6 +308,26 @@ if (typeof J$ === 'undefined') {
 
         this.functionExit = function () {
             executionIndex.executionIndexReturn();
+            callStackDepth--;
+            if (callStackDepth === 0) {
+                for (var iid in odbase) {
+                    if (odbase.hasOwnProperty(iid)) {
+                        var tmp = odbase[iid];
+                        if (tmp.maxActiveCount < tmp.totalActiveCount) {
+                            tmp.leakCount ++;
+                            tmp.maxActiveCount = tmp.totalActiveCount;
+                        }
+                    }
+                }
+
+            }
+        };
+
+        this.scriptEnter = function () {
+            callStackDepth++;
+        };
+
+        this.scriptExit = function () {
             callStackDepth--;
             if (callStackDepth === 0) {
                 for (var iid in odbase) {
@@ -367,7 +387,7 @@ if (typeof J$ === 'undefined') {
                     data.isFrame = odbase[iid].isFrame;
                     data.isUnused = odbase[iid].unused;
                     data.notUsedAfterEscape = odbase[iid].notUsedAfterEscape;
-                    data.isLeaking = (odbase[iid].leakCount > 2);
+                    data.isLeaking = (odbase[iid].leakCount > 3);
                     if (typeof odbase[iid].pointedBy !== 'boolean') {
                         data.consistentlyPointedBy = stripBeginEnd(iidToLocation(odbase[iid].pointedBy));
                     }
@@ -455,7 +475,7 @@ if (typeof J$ === 'undefined') {
 // LAST_USE, // fields: obj-id, iid
                     break;
                 case 6:
-                    oindex.functionEnter(record[1], record[3]);
+                    oindex.functionEnter(record[3]);
 // FUNCTION_ENTER, // fields: iid, function-object-id, call-site-iid (or -1 if not present)
                     break;
                 case 7:
@@ -476,26 +496,25 @@ if (typeof J$ === 'undefined') {
 // RETURN, // fields: obj-id
                     break;
                 case 12:
-//  CREATE_DOM_NODE, // fields: iid (or -1 for unknown), obj-id
-                    break;
-                case 13:
 // ADD_DOM_CHILD, // fields: parent-obj-id, child-obj-id
                     break;
+                case 13:
+// REMOVE_DOM_CHILD, // fields: parent-obj-id, child-obj-id
+                    break;
                 case 14:
-// REMOVE_DOM_CHILD, // fields: parent-obj-id, child-obj-id
-                    break;
-                case 15:
-// ADD_TO_CHILD_SET, // fields: iid, parent-obj-id, name, child-obj-id
-                    break;
-                case 16:
-// REMOVE_DOM_CHILD, // fields: parent-obj-id, child-obj-id
-                    break;
-                case 17:
 // DOM_ROOT, // fields: obj-id
                     break;
-                case 18:
+                case 15:
                     oindex.accessObject(record[2], true);
 // UNREACHABLE // fields: iid, obj-id
+                    break;
+                case 16:
+                    oindex.functionEnter(record[1]);
+// SCRIPT_ENTER // fields: iid, filename
+                    break;
+                case 17:
+                    oindex.functionExit();
+// SCRIPT_EXIT // fields: iid
                     break;
             }
         }

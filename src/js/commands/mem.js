@@ -216,12 +216,15 @@ if (typeof J$ === 'undefined') {
                     tmp.isFrame = !!isFrame;
                     tmp.unused = true;
                     tmp.leakCount = 0;
-                    tmp.maxActiveCount = 0;
-                    tmp.totalActiveCount = 0;
+                    tmp.maxAliveCount = 0;
+                    tmp.currentAliveCount = 0;
+                    tmp.cumulativeAliveCount = 0;
+                    tmp.isIncreasing = undefined;
+                    tmp.emptyStackCount = 0;
                 }
                 tmp.total++;
                 tmp.lastObjectIdAllocated = objectId;
-                tmp.totalActiveCount++;
+                tmp.currentAliveCount++;
         }
 
         function annotateObject(iid, obj, isFrame) {
@@ -284,7 +287,7 @@ if (typeof J$ === 'undefined') {
                     infoObj.unused = infoObj.unused && sobj.unused;
                 }
                 if (unreachable) {
-                    infoObj.totalActiveCount--;
+                    infoObj.currentAliveCount--;
                 }
             }
             if (unreachable) {
@@ -313,9 +316,25 @@ if (typeof J$ === 'undefined') {
                 for (var iid in odbase) {
                     if (odbase.hasOwnProperty(iid)) {
                         var tmp = odbase[iid];
-                        if (tmp.maxActiveCount < tmp.totalActiveCount) {
+                        var average = (tmp.cumulativeAliveCount/tmp.emptyStackCount);
+                        if (tmp.isIncreasing === undefined  && tmp.emptyStackCount > 0) {
+                            if (tmp.currentAliveCount > average) {
+                                tmp.isIncreasing = 1;
+                            } else if (tmp.currentAliveCount < average) {
+                                tmp.isIncreasing = 0;
+                            }
+                        } else if (tmp.isIncreasing > 0) {
+                            if (tmp.currentAliveCount < average) {
+                                tmp.isIncreasing = 0;
+                            } else if (tmp.currentAliveCount > average) {
+                                tmp.isIncreasing++;
+                            }
+                        }
+                        tmp.cumulativeAliveCount += tmp.currentAliveCount;
+                        tmp.emptyStackCount++;
+                        if (tmp.maxAliveCount < tmp.currentAliveCount) {
                             tmp.leakCount ++;
-                            tmp.maxActiveCount = tmp.totalActiveCount;
+                            tmp.maxAliveCount = tmp.currentAliveCount;
                         }
                     }
                 }
@@ -323,25 +342,25 @@ if (typeof J$ === 'undefined') {
             }
         };
 
-        this.scriptEnter = function () {
-            callStackDepth++;
-        };
-
-        this.scriptExit = function () {
-            callStackDepth--;
-            if (callStackDepth === 0) {
-                for (var iid in odbase) {
-                    if (odbase.hasOwnProperty(iid)) {
-                        var tmp = odbase[iid];
-                        if (tmp.maxActiveCount < tmp.totalActiveCount) {
-                            tmp.leakCount ++;
-                            tmp.maxActiveCount = tmp.totalActiveCount;
-                        }
-                    }
-                }
-
-            }
-        };
+//        this.scriptEnter = function () {
+//            callStackDepth++;
+//        };
+//
+//        this.scriptExit = function () {
+//            callStackDepth--;
+//            if (callStackDepth === 0) {
+//                for (var iid in odbase) {
+//                    if (odbase.hasOwnProperty(iid)) {
+//                        var tmp = odbase[iid];
+//                        if (tmp.maxAliveCount < tmp.currentAliveCount) {
+//                            tmp.leakCount ++;
+//                            tmp.maxAliveCount = tmp.currentAliveCount;
+//                        }
+//                    }
+//                }
+//
+//            }
+//        };
 
         this.exitConstructor = function(obj) {
             exitConstructor(obj);
@@ -387,7 +406,7 @@ if (typeof J$ === 'undefined') {
                     data.isFrame = odbase[iid].isFrame;
                     data.isUnused = odbase[iid].unused;
                     data.notUsedAfterEscape = odbase[iid].notUsedAfterEscape;
-                    data.isLeaking = (odbase[iid].leakCount > 3);
+                    data.isLeaking = odbase[iid].isIncreasing;
                     if (typeof odbase[iid].pointedBy !== 'boolean') {
                         data.consistentlyPointedBy = stripBeginEnd(iidToLocation(odbase[iid].pointedBy));
                     }
@@ -400,7 +419,7 @@ if (typeof J$ === 'undefined') {
                         (data.isNonEscaping ? "\n    does not escape its caller" : "") +
                         (data.isUnused ? "\n    unused throughout its lifetime" : "") +
                         (data.notUsedAfterEscape ? "\n    unused after escape" : "") +
-                        (data.isLeaking ? "\n    leaking" : "") +
+                        (data.isLeaking ? ("\n    leaking ("+data.isLeaking+")") : "") +
 //                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
                         (data.consistentlyPointedBy ? "\n    uniquely pointed by objects allocated at " + data.consistentlyPointedBy : ""));
                     if (printEscapeTree) printInfo(info[iid], "    ");

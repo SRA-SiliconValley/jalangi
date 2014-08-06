@@ -221,6 +221,10 @@ if (typeof J$ === 'undefined') {
                     tmp.cumulativeAliveCount = 0;
                     tmp.isIncreasing = undefined;
                     tmp.emptyStackCount = 0;
+                    tmp.xsquaresum = 0;
+                    tmp.ysum = 0;
+                    tmp.xysum = 0;
+
                 }
                 tmp.total++;
                 tmp.lastObjectIdAllocated = objectId;
@@ -316,6 +320,10 @@ if (typeof J$ === 'undefined') {
                 for (var iid in odbase) {
                     if (odbase.hasOwnProperty(iid)) {
                         var tmp = odbase[iid];
+//                        if (iid == 15801) {
+//                            console.log(tmp.currentAliveCount);
+//                        }
+//
                         var average = (tmp.cumulativeAliveCount/tmp.emptyStackCount);
                         if (tmp.isIncreasing === undefined  && tmp.emptyStackCount > 0) {
                             if (tmp.currentAliveCount > average) {
@@ -332,6 +340,10 @@ if (typeof J$ === 'undefined') {
                         }
                         tmp.cumulativeAliveCount += tmp.currentAliveCount;
                         tmp.emptyStackCount++;
+                        tmp.ysum += tmp.emptyStackCount;
+                        tmp.xysum += (tmp.emptyStackCount*tmp.currentAliveCount);
+                        tmp.xsquaresum += (tmp.currentAliveCount * tmp.cumulativeAliveCount);
+
                         if (tmp.maxAliveCount < tmp.currentAliveCount) {
                             tmp.leakCount ++;
                             tmp.maxAliveCount = tmp.currentAliveCount;
@@ -397,16 +409,23 @@ if (typeof J$ === 'undefined') {
                     var iid = tmp[x].iid;
                     var data = {}, loc;
                     sitesToData[loc = stripBeginEnd(iidToLocation(iid))] = data;
-
-                    data.total = odbase[iid].total;
+                    var odbasei = odbase[iid];
+                    data.total = odbasei.total;
                     data.countEscaping = data.total - info[iid].count;
-                    data.isOneAliveAtATime = odbase[iid].oneActive;
-                    data.isOneUsedAtATime = odbase[iid].oneActiveUsage;
-                    data.isNonEscaping = odbase[iid].nonEscaping;
-                    data.isFrame = odbase[iid].isFrame;
-                    data.isUnused = odbase[iid].unused;
-                    data.notUsedAfterEscape = odbase[iid].notUsedAfterEscape;
-                    data.isLeaking = odbase[iid].isIncreasing;
+                    data.isOneAliveAtATime = odbasei.oneActive;
+                    data.isOneUsedAtATime = odbasei.oneActiveUsage;
+                    data.isNonEscaping = odbasei.nonEscaping;
+                    data.isFrame = odbasei.isFrame;
+                    data.isUnused = odbasei.unused;
+                    data.notUsedAfterEscape = odbasei.notUsedAfterEscape;
+
+//                    console.log(odbasei.xysum+" "+odbasei.xsquaresum+" "+odbasei.ysum+" "+odbasei.cumulativeAliveCount+" "+odbasei.emptyStackCount);
+
+                    data.gradient = (odbasei.xysum -(odbasei.cumulativeAliveCount*odbasei.ysum/odbasei.emptyStackCount))/(odbasei.xsquaresum-(odbasei.cumulativeAliveCount*odbasei.cumulativeAliveCount)/odbasei.emptyStackCount);
+                    if (isNaN(data.gradient)) {
+                        data.gradient = 0;
+                    }
+                    data.isLeaking = data.gradient > 0;
                     if (typeof odbase[iid].pointedBy !== 'boolean') {
                         data.consistentlyPointedBy = stripBeginEnd(iidToLocation(odbase[iid].pointedBy));
                     }
@@ -420,6 +439,7 @@ if (typeof J$ === 'undefined') {
                         (data.isUnused ? "\n    unused throughout its lifetime" : "") +
                         (data.notUsedAfterEscape ? "\n    unused after escape" : "") +
                         (data.isLeaking ? ("\n    leaking ("+data.isLeaking+")") : "") +
+                        "\n    gradient is ("+data.gradient+")" +
 //                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
                         (data.consistentlyPointedBy ? "\n    uniquely pointed by objects allocated at " + data.consistentlyPointedBy : ""));
                     if (printEscapeTree) printInfo(info[iid], "    ");

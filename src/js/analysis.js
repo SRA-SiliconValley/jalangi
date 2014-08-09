@@ -294,8 +294,8 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
             }
 
             function callAsConstructor(Constructor, args) {
-                if (isNative(Constructor)) {
-//                if (true) {
+//                if (isNative(Constructor)) {
+                if (true) {
                     var ret = callAsNativeConstructor(Constructor, args);
                     return ret;
                 } else {

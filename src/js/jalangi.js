@@ -124,10 +124,6 @@ function instrumentDir(options) {
     if (!options.outputDir) {
         options.outputDir = temp.mkdirSync();
     }
-    if (options.analysis2 && options.analysis) {
-        // always have ChainedAnalyses2 as the first analysis
-        options.analysis.unshift(path.resolve(__dirname, './analyses2/ChainedAnalyses2.js'));
-    }
     var deferred = Q.defer();
     instDir.instrument(options, function (err) {
         if (err) {
@@ -241,9 +237,6 @@ function direct2(script, clientAnalyses, initParam) {
     if (!clientAnalyses) {
         throw new Error("must provide an analysis to run");
     }
-    // always run src/js/analyses2/ChainedAnalyses2.js
-    cliArgs.push('--analysis');
-    cliArgs.push(path.resolve(__dirname, './analyses2/ChainedAnalyses2.js'));
     clientAnalyses.forEach(function (analysis) {
         cliArgs.push('--analysis');
         cliArgs.push(analysis);

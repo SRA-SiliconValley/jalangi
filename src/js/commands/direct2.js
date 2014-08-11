@@ -69,9 +69,10 @@ function runAnalysis(initParam) {
         if (process.send && args.analysis) {
             // we assume send is synchronous
             process.send({result:result});
+            // without this call, child process just sits around without exiting
+            process.disconnect();
         }
     }
-    process.exit();
 }
 
 if (process.send) {

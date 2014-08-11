@@ -76,7 +76,7 @@ if (typeof J$ === 'undefined') {
 
     function callAsConstructor(Constructor, args) {
         var ret;
-        if (isNative(Constructor)) {
+        if (true) {
             ret = callAsNativeConstructor(Constructor, args);
             return ret;
         } else {

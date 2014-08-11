@@ -99,7 +99,7 @@ DIRECT_SCRIPT = JALANGI_HOME + "/src/js/commands/direct.js"
 
 SYMBOLIC_SCRIPT = JALANGI_HOME + "/src/js/commands/symbolic.js"
 
-ANALYSIS2_SCRIPT = JALANGI_HOME + "/src/js/commands/analysis2.js"
+ANALYSIS2_SCRIPT = JALANGI_HOME + "/src/js/commands/direct2.js"
 
 def create_and_cd_jalangi_tmp():
     try:

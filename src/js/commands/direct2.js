@@ -49,7 +49,7 @@ function runAnalysis(initParam) {
         require('./../../../'+src);
     });
 
-    J$.initParams = initParam;
+    J$.initParams = initParam || {};
     if (args.analysis) {
         args.analysis.forEach(function (src) {
             require(path.resolve(src));
@@ -71,7 +71,7 @@ function runAnalysis(initParam) {
             process.send({result:result});
         }
     }
-//    process.exit();
+    process.exit();
 }
 
 if (process.send) {

@@ -56,8 +56,10 @@ var headerSources = ["src/js/Constants.js",
 var headerCode = "";
 
 function setHeaders(flag) {
-    if (flag)
+    if (flag) {
         headerSources = headerSources2;
+        exports.headerSources = headerSources;
+    }
 }
 
 function headerCodeInit(root) {

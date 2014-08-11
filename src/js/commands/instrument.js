@@ -179,6 +179,9 @@ function instrument(options, cb) {
             instUtil.headerSources.forEach(addScript);
             result += "<script src=\"jalangi_sourcemap.js\"></script>";
             if (analyses) {
+                if (analysis2) {
+                    result += genInitParamsCode();
+                }
                 analyses.forEach(addScript);
             }
             return result;
@@ -195,7 +198,11 @@ function instrument(options, cb) {
                     initParamsObj[split[0]] = split[1];
                 });
             }
-            return "<script>if (J$.analysis.init) { J$.analysis.init(" + JSON.stringify(initParamsObj) + "); }</script>";
+            if (analysis2) {
+                return "<script>J$.initParams = " + JSON.stringify(initParamsObj) + ";</script>";
+            } else {
+                return "<script>if (J$.analysis.init) { J$.analysis.init(" + JSON.stringify(initParamsObj) + "); }</script>";
+            }
         }
 
         if (instrumentInline) {
@@ -221,6 +228,9 @@ function instrument(options, cb) {
 
                     headerLibs = instUtil.getHeaderCodeAsScriptTags(jalangiRoot);
                     headerLibs += "<script src=\"jalangi_sourcemap.js\"></script>";
+                    if (analysis2) {
+                        headerLibs = headerLibs + genInitParamsCode();
+                    }
                     headerLibs = headerLibs + tmp3;
                 }
                 if (selenium) {
@@ -236,7 +246,7 @@ function instrument(options, cb) {
                     headerLibs = "<script>" + smemoryOption + "</script>" + headerLibs;
                 }
 
-                if (analyses) {
+                if (analyses && !analysis2) {
                     // add initialization code at the end
                     headerLibs += genInitParamsCode();
                 }

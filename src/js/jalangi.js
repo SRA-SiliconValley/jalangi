@@ -124,6 +124,10 @@ function instrumentDir(options) {
     if (!options.outputDir) {
         options.outputDir = temp.mkdirSync();
     }
+    if (options.analysis2 && options.analysis) {
+        // always have ChainedAnalyses2 as the first analysis
+        options.analysis.unshift(path.resolve(__dirname, './analyses2/ChainedAnalyses2.js'));
+    }
     var deferred = Q.defer();
     instDir.instrument(options, function (err) {
         if (err) {

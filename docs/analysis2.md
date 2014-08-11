@@ -70,7 +70,7 @@ API compared to analysis.js.  An analysis in analysis2.js can be written using t
 An analysis can be performed on a JavaScript file by issuing the following commands:
 
     node src/js/instrument/esnstrument.js tests/octane/deltablue.js
-	node src/js/commands/analysis2.js --analysis src/js/analyses2/ChainedAnalyses2.js --analysis src/js/analyses2/dlint/Utils.js --analysis src/js/analyses2/dlint/CheckNaN.js --analysis src/js/analyses2/dlint/FunCalledWithMoreArguments.js --analysis src/js/analyses2/dlint/CompareFunctionWithPrimitives.js --analysis src/js/analyses2/dlint/ShadowProtoProperty.js --analysis src/js/analyses2/dlint/ConcatUndefinedToString.js --analysis src/js/analyses2/dlint/UndefinedOffset.js tests/octane/deltablue_jalangi_.js
+	node src/js/commands/direct2.js --analysis src/js/analyses2/ChainedAnalyses2.js --analysis src/js/analyses2/dlint/Utils.js --analysis src/js/analyses2/dlint/CheckNaN.js --analysis src/js/analyses2/dlint/FunCalledWithMoreArguments.js --analysis src/js/analyses2/dlint/CompareFunctionWithPrimitives.js --analysis src/js/analyses2/dlint/ShadowProtoProperty.js --analysis src/js/analyses2/dlint/ConcatUndefinedToString.js --analysis src/js/analyses2/dlint/UndefinedOffset.js tests/octane/deltablue_jalangi_.js
 	    
 An analysis can be performed on an web app using the Chrome browser by issuing the following commands:
 

@@ -88,7 +88,6 @@ if (typeof J$ === 'undefined') {
         }
     }
 
-
     function invokeEval(base, f, args) {
         return f(sandbox.instrumentCode(args[0], {wrapProgram:false, isEval:true}).code);
     }
@@ -602,6 +601,7 @@ if (typeof J$ === 'undefined') {
     sandbox.endExecution = endExecution;
 
     sandbox.getConcrete = function(v){return v;};
+    // TODO why is this exposed here? --MS
     sandbox.callFunction = callFun;
     sandbox.EVAL_ORG = EVAL_ORG;
 })(J$);

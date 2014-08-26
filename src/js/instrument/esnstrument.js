@@ -1620,7 +1620,8 @@
     function instrumentCode(code, options, iid) {
         var tryCatchAtTop = options.wrapProgram,
             isEval = options.isEval,
-            metadata = options.metadata;
+            evalCallback = isEval && sandbox.analysis && sandbox.analysis.instEvalCode,
+            metadata = options.metadata || evalCallback;
 
         if (typeof  code === "string") {
             if (iid && sandbox.analysis && sandbox.analysis.instrumentCode) {
@@ -1639,7 +1640,11 @@
 
                 var ret = newCode + "\n" + noInstr + "\n";
                 if (metadata) {
-                    return { code:ret, iidMetadata:getMetadata(newAst), topLevelExprs:topLevelExprs };
+                    var iidMetadata = getMetadata(newAst);
+                    if (evalCallback) {
+                        sandbox.analysis.instEvalCode(iid || -1, iidMetadata);
+                    }
+                    return { code:ret, iidMetadata:iidMetadata, topLevelExprs:topLevelExprs };
                 } else {
                     return {code:ret, topLevelExprs:topLevelExprs };
                 }

@@ -163,10 +163,11 @@ function serialize(root) {
         if (node.callee.object) {
             var callee = node.callee;
             // we can replace calls to J$ functions with a SymbolicReference iff they have an IID as their first
-            // argument.  'instrumentCode' and 'getConcrete' do not take an IID.
+            // argument.  'instrumentCode', 'getConcrete', and 'I' do not take an IID.
             // TODO are we missing other cases?
             if (callee.object.name === 'J$' && callee.property.name !== "instrumentCode" &&
-                callee.property.name !== "getConcrete" && node.arguments[0]) {
+                callee.property.name !== "getConcrete" &&
+                callee.property.name !== "I" && node.arguments[0]) {
                 return true;
             }
         }

@@ -20,9 +20,9 @@
 /*global astUtil acorn escodegen J$ */
 (function (sandbox) {
     if (typeof acorn === 'undefined') {
-        acorn = require("acorn");
-        escodegen = require('escodegen');
-        astUtil = require("./../utils/astUtil");
+        var acorn = require("acorn");
+        var escodegen = require('escodegen');
+        var astUtil = require("./../utils/astUtil");
     }
 
     var FILESUFFIX1 = "_jalangi_";

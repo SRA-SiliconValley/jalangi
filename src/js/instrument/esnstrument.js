@@ -18,11 +18,13 @@
 
 /*jslint node: true browser: true */
 /*global astUtil acorn escodegen J$ */
+
+var acorn, escodegen, astUtil;
 (function (sandbox) {
     if (typeof acorn === 'undefined') {
-        var acorn = require("acorn");
-        var escodegen = require('escodegen');
-        var astUtil = require("./../utils/astUtil");
+        acorn = require("acorn");
+        escodegen = require('escodegen');
+        astUtil = require("./../utils/astUtil");
     }
 
     var FILESUFFIX1 = "_jalangi_";

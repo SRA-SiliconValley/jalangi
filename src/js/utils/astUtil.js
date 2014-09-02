@@ -74,7 +74,7 @@
      *   }
      * }
      * The value returned by the visitorPost method for a node will replace the node in the AST.
-     * @param visitorPre an object defining visitor me5thods to be executed before a node's children
+     * @param visitorPre an object defining visitor methods to be executed before a node's children
      * have been visited.  Structure should be similar to visitorPost (see above).  The return value
      * of visitorPre functions is ignored.
      * @param context the context of the surrounding AST; see the CONTEXT object above
@@ -144,14 +144,17 @@
      * include SymbolicReference nodes that reference other nodes by iid, in order to save space in the map.
      */
     function serialize(root) {
+        // Stores a pointer to the most-recently encountered node representing a function or a
+        // top-level script.  We need this stored pointer since a function expression or declaration
+        // has no associated IID, but we'd like to have the ASTs as entries in the table.  Instead,
+        // we associate the AST with the IID for the corresponding function-enter or script-enter IID.
+        // We don't need a stack here since we only use this pointer at the next function-enter or script-enter,
+        // and there cannot be a nested function declaration in-between.
         var parentFunOrScript = root;
-        var parentReplacement;
         var iidToAstTable = {};
 
         function handleFun(node) {
             parentFunOrScript = node;
-            parentReplacement = {type:"SymbolicReference", value:null};
-            return parentReplacement;
         }
 
         var visitorPre = {
@@ -187,8 +190,8 @@
             'CallExpression':function (node) {
                 try {
                     if (node.callee.object && node.callee.object.name === 'J$' && (node.callee.property.name === 'Se' || node.callee.property.name === 'Fe')) {
+                        // associate IID with the AST of the containing function / script
                         setSerializedAST(node.arguments[0].value, parentFunOrScript);
-                        parentReplacement.value = node.arguments[0].value;
                         return node;
                     } else if (canMakeSymbolic(node)) {
                         setSerializedAST(node.arguments[0].value, node);

@@ -23,6 +23,7 @@
 var esnstrument = require('./instrument/esnstrument');
 var instDir = require('./commands/instrument');
 var procUtil = require('./utils/procUtil');
+var astUtil = require('./utils/astUtil');
 var fs = require('fs');
 var path = require('path');
 var fork = require('child_process').fork;
@@ -38,6 +39,22 @@ function getInstOutputFile(filePath) {
     }
 }
 
+function genMetadata(instAST) {
+    var topLevelExprs = astUtil.computeTopLevelExpressions(instAST);
+    var serialized = astUtil.serialize(instAST);
+    if (topLevelExprs) {
+        // update serialized AST table to include top-level expr info
+        topLevelExprs.forEach(function (iid) {
+            var entry = serialized[iid];
+            if (!entry) {
+                entry = {};
+                serialized[iid] = entry;
+            }
+            entry.topLevelExpr = true;
+        });
+    }
+    return serialized;
+}
 /**
  * write IID metadata to file.  We write the output line by line,
  * as calling JSON.stringify on the entire metadata object can
@@ -46,7 +63,8 @@ function getInstOutputFile(filePath) {
  * @param metadata {Object} the metadata
  * @param filename {string} output filename
  */
-function writeMetadataToFile(metadata, filename) {
+function writeMetadataToFile(instAST, filename) {
+    var metadata = genMetadata(instAST);
     var fd = fs.openSync(filename, 'w');
     fs.writeSync(fd, "{\n");
     var iids = Object.keys(metadata);
@@ -102,10 +120,9 @@ function instrument(inputFileName, options) {
     var instCode = instResult.code;
     fs.writeFileSync(outputFileName, instCode);
     if (options.serialize) {
-        var metadata = instResult.iidMetadata;
         // TODO choose a better file name here
         iidMetadataFile = outputFileName + ".ast.json";
-        writeMetadataToFile(metadata, iidMetadataFile);
+        writeMetadataToFile(instResult.instAST, iidMetadataFile);
     }
     return {
         outputFile: outputFileName,

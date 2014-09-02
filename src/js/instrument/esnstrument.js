@@ -1505,22 +1505,6 @@ var acorn, escodegen, astUtil;
         return name.replace(/.js$/, FILESUFFIX1 + ".js");
     }
 
-    function getMetadata(newAst, topLevelExprs) {
-        var serialized = astUtil.serialize(newAst);
-        if (topLevelExprs) {
-            // update serialized AST table to include top-level expr info
-            topLevelExprs.forEach(function (iid) {
-                var entry = serialized[iid];
-                if (!entry) {
-                    entry = {};
-                    serialized[iid] = entry;
-                }
-                entry.topLevelExpr = true;
-            });
-        }
-        return serialized;
-    }
-
     /**
      * Instruments the provided code.
      *

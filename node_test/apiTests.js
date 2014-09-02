@@ -36,5 +36,9 @@ describe('instrument tests', function () {
             console.log(err.stderr);
             done();
         }).done();
-    })
+    });
+    it('should generate metadata', function () {
+        var testFile = "tests/unit/instrument-test.js";
+        var instResult = jalangi.instrument(testFile, {iidMap: true, relative: true, serialize: true});
+    });
 });

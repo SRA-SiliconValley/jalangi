@@ -1271,83 +1271,6 @@ var acorn, escodegen, astUtil;
         "ForStatement":funCond
     };
 
-    var exprDepth = 0;
-    var exprDepthStack = [];
-    var topLevelExprs;
-    var visitorIdentifyTopLevelExprPre = {
-        "CallExpression":function (node) {
-            if (node.callee.type === 'MemberExpression' &&
-                node.callee.object.type === 'Identifier' &&
-                node.callee.object.name === astUtil.JALANGI_VAR) {
-                var funName = node.callee.property.name;
-                if ((exprDepth === 0 &&
-                    (funName === 'A' ||
-                        funName === 'P' ||
-                        funName === 'G' ||
-                        funName === 'R' ||
-                        funName === 'W' ||
-                        funName === 'H' ||
-                        funName === 'T' ||
-                        funName === 'Rt' ||
-                        funName === 'B' ||
-                        funName === 'U' ||
-                        funName === 'C' ||
-                        funName === 'C1' ||
-                        funName === 'C2'
-                        )) ||
-                    (exprDepth === 1 &&
-                        (funName === 'F' ||
-                            funName === 'M'))) {
-                    topLevelExprs.push(node.arguments[0].value);
-                }
-                exprDepth++;
-            } else if (node.callee.type === 'CallExpression' &&
-                node.callee.callee.type === 'MemberExpression' &&
-                node.callee.callee.object.type === 'Identifier' &&
-                node.callee.callee.object.name === astUtil.JALANGI_VAR &&
-                (node.callee.callee.property.name === 'F' ||
-                    node.callee.callee.property.name === 'M')) {
-                exprDepth++;
-            }
-        },
-        "FunctionExpression":function (node, context) {
-            exprDepthStack.push(exprDepth);
-            exprDepth = 0;
-        },
-        "FunctionDeclaration":function (node) {
-            exprDepthStack.push(exprDepth);
-            exprDepth = 0;
-        }
-
-    };
-
-    var visitorIdentifyTopLevelExprPost = {
-        "CallExpression":function (node) {
-            if (node.callee.type === 'MemberExpression' &&
-                node.callee.object.type === 'Identifier' &&
-                node.callee.object.name === astUtil.JALANGI_VAR) {
-                exprDepth--;
-            } else if (node.callee.type === 'CallExpression' &&
-                node.callee.callee.type === 'MemberExpression' &&
-                node.callee.callee.object.type === 'Identifier' &&
-                node.callee.callee.object.name === astUtil.JALANGI_VAR &&
-                (node.callee.callee.property.name === 'F' ||
-                    node.callee.callee.property.name === 'M')) {
-                exprDepth--;
-            }
-            return node;
-        },
-        "FunctionExpression":function (node, context) {
-            exprDepth = exprDepthStack.pop();
-            return node;
-        },
-        "FunctionDeclaration":function (node) {
-            exprDepth = exprDepthStack.pop();
-            return node;
-        }
-    };
-
-
     function addScopes(ast) {
 
         function Scope(parent) {
@@ -1582,7 +1505,7 @@ var acorn, escodegen, astUtil;
         return name.replace(/.js$/, FILESUFFIX1 + ".js");
     }
 
-    function getMetadata(newAst) {
+    function getMetadata(newAst, topLevelExprs) {
         var serialized = astUtil.serialize(newAst);
         if (topLevelExprs) {
             // update serialized AST table to include top-level expr info
@@ -1602,29 +1525,19 @@ var acorn, escodegen, astUtil;
      * Instruments the provided code.
      *
      * @param {string} code The code to instrument
-     * @param {{wrapProgram: boolean, filename: string, instFileName: string, serialize: boolean }} options
+     * @param {{wrapProgram: boolean, isEval: boolean }} options
      *    Options for code generation:
      *      'wrapProgram': Should the instrumented code be wrapped with prefix code to load libraries,
      * code to indicate script entry and exit, etc.? should be false for code being eval'd
-     *      'filename': What is the "original" filename of the instrumented code?
-     *                 optional.  if the IID map file is open, it will be updated during
-     *                 instrumentation with source locations pointing to this filename
-     'instFileName': What should the filename for the instrumented code be?
-     *                 If not provided, and the filename parameter is provided, defaults to
-     *                 filename_jalangi_.js.  We need this filename because it gets written
-     *                 into the trace produced by the instrumented code during record
-     'metadata': Should metadata about IIDs be provided (currently serialized ASTs and top-level expressions)?
-     * @return {{code:string, iidMetadata?: object, topLevelExprs?: object}} an object whose 'code' property is the instrumented code string,
-     * and whose 'serializedAST' property has a JSON representation of the serialized AST, of the serialize
-     * parameter was true
+     *      'isEval': is the code being instrumented for an eval?
+     * @return {{code:string, instAST: object}} an object whose 'code' property is the instrumented code string,
+     * and whose 'instAST' property is the AST for the instrumented code
      *
      */
     function instrumentCode(code, options, iid) {
         var tryCatchAtTop = options.wrapProgram,
             isEval = options.isEval,
-            evalCallback = isEval && sandbox.analysis && sandbox.analysis.instEvalCode,
-            metadata = options.metadata || evalCallback;
-
+            evalCallback = isEval && sandbox.analysis && sandbox.analysis.instEvalCode;
         if (typeof  code === "string") {
             if (iid && sandbox.analysis && sandbox.analysis.instrumentCode) {
                 code = sandbox.analysis.instrumentCode(iid, code);
@@ -1633,23 +1546,17 @@ var acorn, escodegen, astUtil;
                 // this is a call in eval
                 initializeIIDCounters(isEval);
                 wrapProgramNode = tryCatchAtTop;
-                topLevelExprs = [];
-                var newAst = transformString(code, [visitorRRPost, visitorOps, visitorIdentifyTopLevelExprPost], [visitorRRPre, undefined, visitorIdentifyTopLevelExprPre]);
+                var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
                 // post-process AST to hoist function declarations (required for Firefox)
                 var hoistedFcts = [];
                 newAst = hoistFunctionDeclaration(newAst, hoistedFcts);
                 var newCode = escodegen.generate(newAst);
 
                 var ret = newCode + "\n" + noInstr + "\n";
-                if (metadata) {
-                    var iidMetadata = getMetadata(newAst);
-                    if (evalCallback) {
-                        sandbox.analysis.instEvalCode(iid || -1, iidMetadata);
-                    }
-                    return { code:ret, iidMetadata:iidMetadata, topLevelExprs:topLevelExprs };
-                } else {
-                    return {code:ret, topLevelExprs:topLevelExprs };
+                if (evalCallback) {
+                    sandbox.analysis.instEvalCode(iid || -1, newAst);
                 }
+                return { code: ret, instAST: newAst };
             } else {
                 return {code:code };
             }

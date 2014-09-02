@@ -29,19 +29,13 @@ var assert = require("assert"),
     temp = require('temp');
 
 
-function collectTopLevel(instResult) {
-    var result = [];
-    Object.keys(instResult).forEach(function (iid) {
-        if (instResult[iid].topLevelExpr) {
-            result.push(iid);
-        }
-    });
-    return result;
+function collectTopLevel(instAST) {
+    return astUtil.computeTopLevelExpressions(instAST);
 }
 
 function checkCode(code, expectedTopLevel) {
     var instResult = esnstrument.instrumentCodeDeprecated(code, {wrapProgram: false, metadata: true, dirIIDFile: temp.dir, initIID: true });
-    var topLevelResult = collectTopLevel(instResult.iidMetadata);
+    var topLevelResult = collectTopLevel(instResult.instAST);
     assert.deepEqual(topLevelResult, expectedTopLevel);
 }
 
@@ -77,7 +71,7 @@ describe('topLevelExprs', function () {
         checkCode("function foo() { fizz(); x = 3+5+baz().f; }", [17,65]);
     });
     it('should handle function declared in object literal', function() {
-        checkCode("var x = { foo: function() { fizz(); x = 3+5+baz().f; } };",  [17,65,105]);
+        checkCode("var x = { foo: function() { fizz(); x = 3+5+baz().f; } };",  [105,17,65]);
     });
     it('should handle function called with object literal', function() {
         checkCode("var x = function() {}; x({'0': 1, '1' : 2});",  [33,73]);

@@ -78,7 +78,7 @@
      * have been visited.  Structure should be similar to visitorPost (see above).  The return value
      * of visitorPre functions is ignored.
      * @param context the context of the surrounding AST; see the CONTEXT object above
-     * @param {boolean} noIgnore if true, no sub-ast will be ignored.  Otherwise, sub-ASTs will be ignored
+     * @param {boolean?} noIgnore if true, no sub-ast will be ignored.  Otherwise, sub-ASTs will be ignored
      * if ignoreAST() returns true.
      */
     function transformAst(object, visitorPost, visitorPre, context, noIgnore) {
@@ -232,6 +232,91 @@
         });
     }
 
+    /**
+     * given an instrumented AST, returns an array of IIDs corresponding to "top-level expressions,"
+     * i.e., expressions that are not nested within another
+     * @param ast
+     */
+    function computeTopLevelExpressions(ast) {
+        var exprDepth = 0;
+        var exprDepthStack = [];
+        var topLevelExprs = [];
+        var visitorIdentifyTopLevelExprPre = {
+            "CallExpression":function (node) {
+                if (node.callee.type === 'MemberExpression' &&
+                    node.callee.object.type === 'Identifier' &&
+                    node.callee.object.name === JALANGI_VAR) {
+                    var funName = node.callee.property.name;
+                    if ((exprDepth === 0 &&
+                        (funName === 'A' ||
+                            funName === 'P' ||
+                            funName === 'G' ||
+                            funName === 'R' ||
+                            funName === 'W' ||
+                            funName === 'H' ||
+                            funName === 'T' ||
+                            funName === 'Rt' ||
+                            funName === 'B' ||
+                            funName === 'U' ||
+                            funName === 'C' ||
+                            funName === 'C1' ||
+                            funName === 'C2'
+                            )) ||
+                        (exprDepth === 1 &&
+                            (funName === 'F' ||
+                                funName === 'M'))) {
+                        topLevelExprs.push(node.arguments[0].value);
+                    }
+                    exprDepth++;
+                } else if (node.callee.type === 'CallExpression' &&
+                    node.callee.callee.type === 'MemberExpression' &&
+                    node.callee.callee.object.type === 'Identifier' &&
+                    node.callee.callee.object.name === JALANGI_VAR &&
+                    (node.callee.callee.property.name === 'F' ||
+                        node.callee.callee.property.name === 'M')) {
+                    exprDepth++;
+                }
+            },
+            "FunctionExpression":function (node, context) {
+                exprDepthStack.push(exprDepth);
+                exprDepth = 0;
+            },
+            "FunctionDeclaration":function (node) {
+                exprDepthStack.push(exprDepth);
+                exprDepth = 0;
+            }
+
+        };
+
+        var visitorIdentifyTopLevelExprPost = {
+            "CallExpression":function (node) {
+                if (node.callee.type === 'MemberExpression' &&
+                    node.callee.object.type === 'Identifier' &&
+                    node.callee.object.name === JALANGI_VAR) {
+                    exprDepth--;
+                } else if (node.callee.type === 'CallExpression' &&
+                    node.callee.callee.type === 'MemberExpression' &&
+                    node.callee.callee.object.type === 'Identifier' &&
+                    node.callee.callee.object.name === JALANGI_VAR &&
+                    (node.callee.callee.property.name === 'F' ||
+                        node.callee.callee.property.name === 'M')) {
+                    exprDepth--;
+                }
+                return node;
+            },
+            "FunctionExpression":function (node, context) {
+                exprDepth = exprDepthStack.pop();
+                return node;
+            },
+            "FunctionDeclaration":function (node) {
+                exprDepth = exprDepthStack.pop();
+                return node;
+            }
+        };
+        transformAst(ast, visitorIdentifyTopLevelExprPost, visitorIdentifyTopLevelExprPre, CONTEXT.RHS);
+        return topLevelExprs;
+    }
+
     // handle node.js and browser
     // TODO use browserify
     var exportObj;
@@ -248,5 +333,6 @@
     exportObj.JALANGI_VAR = JALANGI_VAR;
     exportObj.CONTEXT = CONTEXT;
     exportObj.transformAst = transformAst;
+    exportObj.computeTopLevelExpressions = computeTopLevelExpressions;
 })();
 

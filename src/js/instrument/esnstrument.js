@@ -1518,10 +1518,10 @@ var acorn, escodegen, astUtil;
     function instrumentCode(code, options, iid) {
         var tryCatchAtTop = options.wrapProgram,
             isEval = options.isEval,
-            evalCallback = isEval && sandbox.analysis && sandbox.analysis.instEvalCode;
+            instCodeCallback = isEval && sandbox.analysis && sandbox.analysis.instrumentCode;
         if (typeof  code === "string") {
-            if (iid && sandbox.analysis && sandbox.analysis.instrumentCode) {
-                code = sandbox.analysis.instrumentCode(iid, code);
+            if (iid && sandbox.analysis && sandbox.analysis.instrumentCodePre) {
+                code = sandbox.analysis.instrumentCodePre(iid, code);
             }
             if (code.indexOf(noInstr) < 0 && !(isEval && sandbox.noInstrEval)) {
                 // this is a call in eval
@@ -1534,8 +1534,8 @@ var acorn, escodegen, astUtil;
                 var newCode = escodegen.generate(newAst);
 
                 var ret = newCode + "\n" + noInstr + "\n";
-                if (evalCallback) {
-                    sandbox.analysis.instEvalCode(iid || -1, newAst);
+                if (instCodeCallback) {
+                    sandbox.analysis.instrumentCode(iid || -1, newAst);
                 }
                 return { code: ret, instAST: newAst };
             } else {

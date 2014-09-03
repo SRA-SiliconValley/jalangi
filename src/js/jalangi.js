@@ -132,14 +132,19 @@ function instrument(inputFileName, options) {
 }
 
 /**
- * instruments a code string, returning the instrumented code and the instrumented AST
+ * instruments a code string, returning the instrumented code and the instrumented AST.
+ *
+ * An inputFileName can be passed in the options object.  This name will be associated
+ * with the original code in the source map.
  * @param code
+ * @param {dirIIDFile?: string, outputFile?: string, inputFileName?:string} options
  */
 function instrumentString(code, options) {
     var dirIIDFile = options.dirIIDFile ? options.dirIIDFile : temp.dir;
     var outputFileName = getInstOutputFile(options.outputFile);
     var instCodeOptions = {
         wrapProgram: true,
+        filename: options.inputFileName,
         instFileName: outputFileName,
         initIID: true,
         dirIIDFile: dirIIDFile

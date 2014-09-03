@@ -132,6 +132,22 @@ function instrument(inputFileName, options) {
 }
 
 /**
+ * instruments a code string, returning the instrumented code and the instrumented AST
+ * @param code
+ */
+function instrumentString(code, options) {
+    var dirIIDFile = options.dirIIDFile ? options.dirIIDFile : temp.dir;
+    var outputFileName = getInstOutputFile(options.outputFile);
+    var instCodeOptions = {
+        wrapProgram: true,
+        instFileName: outputFileName,
+        initIID: true,
+        dirIIDFile: dirIIDFile
+    };
+    return esnstrument.instrumentCodeDeprecated(code,instCodeOptions);
+}
+
+/**
  * instruments a directory.  see src/js/commands/instrument.js for details.
  * creates a temporary output directory if none specified.
  * @param options instrument options.  see src/js/commands/instrument.js
@@ -267,6 +283,7 @@ function direct2(script, clientAnalyses, initParam) {
 
 exports.instrument = instrument;
 exports.instrumentDir = instrumentDir;
+exports.instrumentString = instrumentString;
 exports.record = record;
 exports.replay = replay;
 exports.direct = direct;

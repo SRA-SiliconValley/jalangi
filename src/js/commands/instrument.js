@@ -55,6 +55,9 @@ function instrument(options, cb) {
     // parse out options
     //
 
+    if (options.serialize) {
+        throw new Error("serialize is no longer a valid option");
+    }
     var verbose = options.verbose;
 
     var instrumentInline = options.instrumentInline;
@@ -67,7 +70,10 @@ function instrument(options, cb) {
         onlyIncludeList = options.only_include.split(path.delimiter);
     }
 
-    var dumpSerializedASTs = options.serialize;
+    // a callback function to be invoked for every instrumented script
+    // it gets passed the instrumented code and the corresponding AST,
+    // and can return new instrumented code
+    var instCallback = options.instCallback;
 
     var jalangiRoot = getJalangiRoot();
 
@@ -120,7 +126,6 @@ function instrument(options, cb) {
             wrapProgram:true,
             filename:origname,
             instFileName:instname,
-            metadata:dumpSerializedASTs,
             dirIIDFile:copyDir,
             initIID:firstEntry
         };
@@ -133,9 +138,6 @@ function instrument(options, cb) {
         // TODO make this async?
         fs.writeFileSync(path.join(copyDir, origname), src);
         fs.writeFileSync(path.join(copyDir, instname), instrumentedCode);
-        if (dumpSerializedASTs) {
-            fs.writeFileSync(path.join(copyDir, instname + ".ast.json"), JSON.stringify(instResult.serializedAST, undefined, 2), "utf8");
-        }
         return instrumentedCode;
     }
 
@@ -306,7 +308,6 @@ function instrument(options, cb) {
             wrapProgram:true,
             filename:this.origScriptName,
             instFileName:this.instScriptName,
-            metadata:dumpSerializedASTs,
             dirIIDFile:copyDir,
             initIID:firstEntry
         };
@@ -317,6 +318,9 @@ function instrument(options, cb) {
         var instResult;
         try {
             instResult = esnstrument.instrumentCodeDeprecated(this.data, options);
+            if (typeof instResult !== 'string' && instCallback) {
+                instResult.code = instCallback(instResult);
+            }
         } catch (e) {
             if (e instanceof SyntaxError) {
                 // just output the same file
@@ -326,11 +330,6 @@ function instrument(options, cb) {
             }
         }
         if (instResult) {
-            if (dumpSerializedASTs) {
-                var metadata = instResult.iidMetadata;
-//                fs.writeFileSync(path.join(copyDir, this.instScriptName + ".ast.json"), JSON.stringify(metadata, undefined, 2), "utf8");
-                writeMetadataToFile(metadata, path.join(copyDir, this.instScriptName + ".ast.json"));
-            }
             if (typeof instResult === 'string') {
                 // this can occur if it's a script we're not supposed to instrument
                 this.push(instResult);
@@ -490,7 +489,6 @@ function instrument(options, cb) {
 
 if (require.main === module) { // main script
     var parser = new ArgumentParser({ addHelp:true, description:"Utility to apply Jalangi instrumentation to files or a folder."});
-    parser.addArgument(['-s', '--serialize'], { help:"dump serialized ASTs along with code", action:'storeTrue' });
     parser.addArgument(['--analysis2'], { help:"use analysis2", action:'storeTrue' });
     parser.addArgument(['-x', '--exclude'], { help:"do not instrument any scripts whose file path contains this substring" });
     parser.addArgument(['--only_include'], { help:"list of path prefixes specifying which sub-directories should be instrumented, separated by path.delimiter"});

@@ -305,7 +305,7 @@ var acorn, escodegen, astUtil;
      * @param {string} outputDir an optional output directory for the sourcemap file
      */
 
-    function writeIIDMapFile(outputDir, initIIDs, isAppend, topLevelExprs) {
+    function writeIIDMapFile(outputDir, initIIDs, isAppend) {
         var traceWfh, fs = require('fs'), path = require('path');
         var smapFile = path.join(outputDir, SMAP_FILE_NAME);
         if (initIIDs) {
@@ -319,7 +319,7 @@ var acorn, escodegen, astUtil;
             fh = fs.openSync(instCodeFileName, 'w');
         }
 
-        writeLineToIIDMap(fs, traceWfh, fh, "(function (sandbox) {\n if (!sandbox.iids) {sandbox.iids = []; sandbox.orig2Inst = {}; sandbox.topLevelExprs = []; }\n");
+        writeLineToIIDMap(fs, traceWfh, fh, "(function (sandbox) {\n if (!sandbox.iids) {sandbox.iids = []; sandbox.orig2Inst = {}; }\n");
         writeLineToIIDMap(fs, traceWfh, fh, "var iids = sandbox.iids; var orig2Inst = sandbox.orig2Inst;\n");
         writeLineToIIDMap(fs, traceWfh, fh, "var fn = \"" + curFileName + "\";\n");
         // write all the data
@@ -330,9 +330,6 @@ var acorn, escodegen, astUtil;
         Object.keys(orig2Inst).forEach(function (filename) {
             writeLineToIIDMap(fs, traceWfh, fh, "orig2Inst[\"" + filename + "\"] = \"" + orig2Inst[filename] + "\";\n");
         });
-        if (topLevelExprs) {
-            writeLineToIIDMap(fs, traceWfh, fh, "sandbox.topLevelExprs = sandbox.topLevelExprs.concat(" + JSON.stringify(topLevelExprs) + ");\n");
-        }
         writeLineToIIDMap(fs, traceWfh, fh, "}(typeof " + astUtil.JALANGI_VAR + " === 'undefined'? " + astUtil.JALANGI_VAR + " = {}:" + astUtil.JALANGI_VAR + "));\n");
         fs.closeSync(traceWfh);
         if (isAppend) {
@@ -1567,7 +1564,7 @@ var acorn, escodegen, astUtil;
         var codeAndMData = instrumentCode(code, {wrapProgram:wrapProgram, isEval:false, metadata:args.metadata});
 
         storeInitialIID(args.dirIIDFile);
-        writeIIDMapFile(args.dirIIDFile, args.initIID, args.inlineIID, codeAndMData.topLevelExprs);
+        writeIIDMapFile(args.dirIIDFile, args.initIID, args.inlineIID);
         return codeAndMData;
     }
 

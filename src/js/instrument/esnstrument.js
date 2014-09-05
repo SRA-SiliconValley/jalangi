@@ -175,31 +175,7 @@ var acorn, escodegen, astUtil;
         return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
     }
 
-    /**
-     * rather than just calling JSON.stringify() on the metadata,
-     * we write it out line-by-line to avoid having to construct the full
-     * string in memory (which can fail for large inputs)
-     * @param filename
-     * @param metadata
-     */
-    function writeMetadata(filename, metadata) {
-        var fs = require('fs');
-        var fd = fs.openSync(filename, 'w');
-        fs.writeSync(fd, "{\n");
-        Object.keys(metadata).forEach(function (iid, ind, array) {
-            var str = JSON.stringify(iid) + ":";
-            str += JSON.stringify(metadata[iid], undefined, 2);
-            if (ind < array.length - 1) {
-                str += ",\n";
-            }
-            fs.writeSync(fd, str);
-        });
-        fs.writeSync(fd, "}\n");
-        fs.closeSync(fd);
-    }
-
-
-    function saveCode(code, metadata, isAppend, noInstrEval) {
+    function saveCode(code, isAppend, noInstrEval) {
         var fs = require('fs');
         var path = require('path');
         var n_code = astUtil.JALANGI_VAR + ".noInstrEval = " + noInstrEval + ";\n" + code + "\n";
@@ -208,9 +184,6 @@ var acorn, escodegen, astUtil;
         } else {
             fs.writeFileSync(instCodeFileName, n_code, "utf8");
 
-        }
-        if (metadata) {
-            writeMetadata(instCodeFileName + ".ast.json", metadata);
         }
     }
 
@@ -1561,7 +1534,7 @@ var acorn, escodegen, astUtil;
         loadInitialIID(args.dirIIDFile, args.initIID);
 
         var wrapProgram = HOP(args, 'wrapProgram') ? args.wrapProgram : true;
-        var codeAndMData = instrumentCode(code, {wrapProgram:wrapProgram, isEval:false, metadata:args.metadata});
+        var codeAndMData = instrumentCode(code, {wrapProgram:wrapProgram, isEval:false });
 
         storeInitialIID(args.dirIIDFile);
         writeIIDMapFile(args.dirIIDFile, args.initIID, args.inlineIID);
@@ -1574,7 +1547,6 @@ var acorn, escodegen, astUtil;
             addHelp:true,
             description:"Command-line utility to perform instrumentation"
         });
-        parser.addArgument(['--metadata'], { help:"Collect metadata", action:'storeTrue'});
         parser.addArgument(['--initIID'], { help:"Initialize IIDs to 0", action:'storeTrue'});
         parser.addArgument(['--noInstrEval'], { help:"Do not instrument strings passed to evals", action:'storeTrue'});
         parser.addArgument(['--inlineIID'], { help:"Inline IIDs in the instrumented file", action:'storeTrue'});
@@ -1596,7 +1568,7 @@ var acorn, escodegen, astUtil;
         args.instFileName = args.out ? args.out : makeInstCodeFileName(fname);
 
         var codeAndMData = instrumentAux(getCode(fname), args);
-        saveCode(codeAndMData.code, codeAndMData.iidMetadata, args.inlineIID, args.noInstrEval);
+        saveCode(codeAndMData.code, args.inlineIID, args.noInstrEval);
     }
 
 

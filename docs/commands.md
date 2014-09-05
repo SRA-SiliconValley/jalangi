@@ -3,7 +3,7 @@
 Command-line utility to perform instrumentation
 
     node src/js/instrument/esnstrument.js -h
-    usage: esnstrument.js [-h] [--metadata] [--initIID] [--noInstrEval]
+    usage: esnstrument.js [-h] [--initIID] [--noInstrEval]
                       [--inlineIID] [--dirIIDFile DIRIIDFILE] [--out OUT]
                       file
 
@@ -14,7 +14,6 @@ Positional arguments:
 Optional arguments:
 
     -h, --help            Show this help message and exit.
-    --metadata            Collect metadata
     --initIID             Initialize IIDs to 0
     --noInstrEval         Do not instrument strings passed to evals
     --inlineIID           Inline IIDs in the instrumented file
@@ -30,7 +29,7 @@ Optional arguments:
 Utility to apply Jalangi instrumentation to files or a folder.
 
     node src/js/commands/instrument.js -h
-    usage: instrument.js [-h] [-s] [-a2] [-x EXCLUDE]
+    usage: instrument.js [-h] [-a2] [-x EXCLUDE]
                      [--only_include ONLY_INCLUDE] [-i] [--analysis ANALYSIS]
                      [--initParam INITPARAM] [-d] [--selenium]
                      [--in_memory_trace] [--inbrowser] [--smemory] [-c]
@@ -49,7 +48,6 @@ Positional arguments:
 Optional arguments:
 
     -h, --help            Show this help message and exit.
-    -s, --serialize       dump serialized ASTs along with code
     -a2, --analysis2      use analysis2
     -x EXCLUDE, --exclude EXCLUDE
                         do not instrument any scripts whose file path 
@@ -94,11 +92,11 @@ Optional arguments:
                      --outputDir OUTPUTDIR
                      inputFiles [inputFiles ...]
 
-## analysis2.js
+## direct2.js
 
 Command-line utility to perform Jalangi's analysis2
 
-    node src/js/commands/analysis2.js -h
+    node src/js/commands/direct2.js -h
     usage: analysis2.js [-h] [--analysis ANALYSIS] [--initParam INITPARAM] ...
 
 

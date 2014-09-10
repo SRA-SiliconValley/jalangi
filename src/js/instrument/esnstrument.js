@@ -1510,7 +1510,7 @@ var acorn, escodegen, astUtil;
                 if (instCodeCallback) {
                     sandbox.analysis.instrumentCode(iid || -1, newAst);
                 }
-                return { code: ret, instAST: newAst };
+                return { code: ret, instAST: newAst, iidSourceInfo: iidSourceInfo };
             } else {
                 return {code:code };
             }

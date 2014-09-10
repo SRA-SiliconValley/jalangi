@@ -132,8 +132,10 @@ function instrument(inputFileName, options) {
 }
 
 /**
- * instruments a code string, returning the instrumented code and the instrumented AST.
- *
+ * instruments a code string, returning an object with the following fields:
+ * - code: the instrumented code string
+ * - instAST: AST for the instrumented code
+ * - iidSourceInfo: map from IIDs to source information (filename, start line, start column array tuples)
  * An inputFileName can be passed in the options object.  This name will be associated
  * with the original code in the source map.
  * @param code

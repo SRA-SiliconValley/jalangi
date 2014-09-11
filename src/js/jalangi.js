@@ -148,7 +148,7 @@ function instrumentString(code, options) {
         wrapProgram: true,
         filename: options.inputFileName,
         instFileName: outputFileName,
-        initIID: true,
+        initIID: options.initIID,
         dirIIDFile: dirIIDFile
     };
     return esnstrument.instrumentCodeDeprecated(code,instCodeOptions);

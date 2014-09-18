@@ -85,11 +85,12 @@
         var key, child, type, ret, newContext;
 
         type = object.type;
-        if (visitorPre && HOP(visitorPre, type))
+        if (visitorPre && HOP(visitorPre, type)) {
             visitorPre[type](object, context);
+        }
 
         for (key in object) {
-            if (object.hasOwnProperty(key)) {
+//            if (object.hasOwnProperty(key)) {
                 child = object[key];
                 if (typeof child === 'object' && child !== null && key !== "scope" && (noIgnore || !ignoreSubAst(object))) {
                     if ((type === 'AssignmentExpression' && key === 'left') ||
@@ -128,13 +129,14 @@
                     object[key] = transformAst(child, visitorPost, visitorPre, newContext, noIgnore);
 
                 }
-            }
+//            }
         }
 
-        if (visitorPost && HOP(visitorPost, type))
+        if (visitorPost && HOP(visitorPost, type)) {
             ret = visitorPost[type](object, context);
-        else
+        } else {
             ret = object;
+        }
         return ret;
 
     }

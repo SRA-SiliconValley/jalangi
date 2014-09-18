@@ -19,6 +19,8 @@
 /*jslint node: true browser: true */
 /*global astUtil acorn escodegen J$ */
 
+//var StatCollector = require('../utils/StatCollector');
+
 var acorn, escodegen, astUtil;
 (function (sandbox) {
     if (typeof acorn === 'undefined') {
@@ -378,9 +380,13 @@ var acorn, escodegen, astUtil;
                 return node;
             }
         };
+//        StatCollector.resumeTimer("internalParse");
         var ast = acorn.parse(code);
+//        StatCollector.suspendTimer("internalParse");
+//        StatCollector.resumeTimer("replace");
         var newAst = astUtil.transformAst(ast, visitorReplaceInExpr, undefined, undefined, true);
         //console.log(newAst);
+//        StatCollector.suspendTimer("replace");
         return newAst.body;
     }
 
@@ -1452,10 +1458,13 @@ var acorn, escodegen, astUtil;
     // END of Liang Gong's AST post-processor
 
     function transformString(code, visitorsPost, visitorsPre) {
+//         StatCollector.resumeTimer("parse");
 //        console.time("parse")
 //        var newAst = esprima.parse(code, {loc:true, range:true});
         var newAst = acorn.parse(code, { locations:true });
 //        console.timeEnd("parse")
+//        StatCollector.suspendTimer("parse");
+//        StatCollector.resumeTimer("transform");
 //        console.time("transform")
         addScopes(newAst);
         var len = visitorsPost.length;
@@ -1463,6 +1472,7 @@ var acorn, escodegen, astUtil;
             newAst = astUtil.transformAst(newAst, visitorsPost[i], visitorsPre[i], astUtil.CONTEXT.RHS);
         }
 //        console.timeEnd("transform")
+//        StatCollector.suspendTimer("transform");
 //        console.log(JSON.stringify(newAst,null,"  "));
         return newAst;
     }
@@ -1504,7 +1514,12 @@ var acorn, escodegen, astUtil;
                 // post-process AST to hoist function declarations (required for Firefox)
                 var hoistedFcts = [];
                 newAst = hoistFunctionDeclaration(newAst, hoistedFcts);
+//                StatCollector.resumeTimer("generate");
+//                console.time("generate")
                 var newCode = escodegen.generate(newAst);
+//                console.timeEnd("generate")
+//                StatCollector.suspendTimer("generate");
+
 
                 var ret = newCode + "\n" + noInstr + "\n";
                 if (instCodeCallback) {
@@ -1568,7 +1583,10 @@ var acorn, escodegen, astUtil;
         args.instFileName = args.out ? args.out : makeInstCodeFileName(fname);
 
         var codeAndMData = instrumentAux(getCode(fname), args);
+//        console.time("save")
         saveCode(codeAndMData.code, args.inlineIID, args.noInstrEval);
+//        StatCollector.printStats();
+//        console.timeEnd("save")
     }
 
 

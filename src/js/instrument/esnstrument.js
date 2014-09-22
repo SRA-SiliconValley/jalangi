@@ -27,8 +27,10 @@ var acorn, escodegen, astUtil;
         acorn = require("acorn");
         escodegen = require('escodegen');
         astUtil = require("./../utils/astUtil");
+        require("../Config");
     }
 
+    var Config = sandbox.Config;
     var FILESUFFIX1 = "_jalangi_";
     var COVERAGE_FILE_NAME = "jalangi_coverage.json";
     var SMAP_FILE_NAME = "jalangi_sourcemap.js";
@@ -411,31 +413,39 @@ var acorn, escodegen, astUtil;
     }
 
     function wrapPutField(node, base, offset, rvalue) {
-        printIidToLoc(node);
-        var ret = replaceInExpr(
-            logPutFieldFunName +
-                "(" + RP + "1, " + RP + "2, " + RP + "3, " + RP + "4)",
-            getIid(),
-            base,
-            offset,
-            rvalue
-        );
-        transferLoc(ret, node);
-        return ret;
+        if (!Config.INSTR_PUTFIELD || Config.INSTR_PUTFIELD(node.computed ? null : offset.value, node)) {
+            printIidToLoc(node);
+            var ret = replaceInExpr(
+                    logPutFieldFunName +
+                    "(" + RP + "1, " + RP + "2, " + RP + "3, " + RP + "4)",
+                getIid(),
+                base,
+                offset,
+                rvalue
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
     }
 
     function wrapModAssign(node, base, offset, op, rvalue) {
-        printIidToLoc(node);
-        var ret = replaceInExpr(
-            logAssignFunName + "(" + RP + "1," + RP + "2," + RP + "3," + RP + "4)(" + RP + "5)",
-            getIid(),
-            base,
-            offset,
-            createLiteralAst(op),
-            rvalue
-        );
-        transferLoc(ret, node);
-        return ret;
+        if (!Config.INSTR_PROPERTY_BINARY_ASSIGNMENT || Config.INSTR_PROPERTY_BINARY_ASSIGNMENT(op, node.computed ? null : offset.value, node)) {
+            printIidToLoc(node);
+            var ret = replaceInExpr(
+                    logAssignFunName + "(" + RP + "1," + RP + "2," + RP + "3," + RP + "4)(" + RP + "5)",
+                getIid(),
+                base,
+                offset,
+                createLiteralAst(op),
+                rvalue
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
     }
 
     function wrapMethodCall(node, base, offset, isCtor) {
@@ -463,27 +473,35 @@ var acorn, escodegen, astUtil;
     }
 
     function wrapGetField(node, base, offset) {
-        printIidToLoc(node);
-        var ret = replaceInExpr(
-            logGetFieldFunName + "(" + RP + "1, " + RP + "2, " + RP + "3)",
-            getIid(),
-            base,
-            offset
-        );
-        transferLoc(ret, node);
-        return ret;
+        if (!Config.INSTR_GETFIELD || Config.INSTR_GETFIELD(node.computed ? null : offset.value, node)) {
+            printIidToLoc(node);
+            var ret = replaceInExpr(
+                    logGetFieldFunName + "(" + RP + "1, " + RP + "2, " + RP + "3)",
+                getIid(),
+                base,
+                offset
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
     }
 
     function wrapRead(node, name, val, isReUseIid, isGlobal, isPseudoGlobal) {
-        printIidToLoc(node);
-        var ret = replaceInExpr(
-            logReadFunName + "(" + RP + "1, " + RP + "2, " + RP + "3," + (isGlobal ? "true" : "false") + "," + (isPseudoGlobal ? "true" : "false") + ")",
-            isReUseIid ? getPrevIidNoInc() : getIid(),
-            name,
-            val
-        );
-        transferLoc(ret, node);
-        return ret;
+        if (!Config.INSTR_READ || Config.INSTR_READ(name, node)) {
+            printIidToLoc(node);
+            var ret = replaceInExpr(
+                    logReadFunName + "(" + RP + "1, " + RP + "2, " + RP + "3," + (isGlobal ? "true" : "false") + "," + (isPseudoGlobal ? "true" : "false") + ")",
+                isReUseIid ? getPrevIidNoInc() : getIid(),
+                name,
+                val
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
     }
 
 //    function wrapReadWithUndefinedCheck(node, name) {
@@ -520,34 +538,42 @@ var acorn, escodegen, astUtil;
     }
 
     function wrapWrite(node, name, val, lhs, isGlobal, isPseudoGlobal) {
-        printIidToLoc(node);
-        var ret = replaceInExpr(
-            logWriteFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + RP + "4," + (isGlobal ? "true" : "false") + "," + (isPseudoGlobal ? "true" : "false") + ")",
-            getIid(),
-            name,
-            val,
-            lhs
-        );
-        transferLoc(ret, node);
-        return ret;
+        if (!Config.INSTR_WRITE || Config.INSTR_WRITE(name, node)) {
+            printIidToLoc(node);
+            var ret = replaceInExpr(
+                    logWriteFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + RP + "4," + (isGlobal ? "true" : "false") + "," + (isPseudoGlobal ? "true" : "false") + ")",
+                getIid(),
+                name,
+                val,
+                lhs
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
     }
 
     function wrapWriteWithUndefinedCheck(node, name, val, lhs) {
-        printIidToLoc(node);
+        if (!Config.INSTR_WRITE || Config.INSTR_WRITE(name, node)) {
+            printIidToLoc(node);
 //        var ret2 = replaceInExpr(
 //            "("+logIFunName+"(typeof ("+name+") === 'undefined'? "+RP+"2 : "+RP+"3))",
 //            createIdentifierAst(name),
 //            wrapRead(node, createLiteralAst(name),createIdentifierAst("undefined")),
 //            wrapRead(node, createLiteralAst(name),createIdentifierAst(name), true)
 //        );
-        var ret = replaceInExpr(
-            logWriteFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + logIFunName + "(typeof(" + lhs.name + ")==='undefined'?undefined:" + lhs.name + "), true, true)",
-            getIid(),
-            name,
-            val
-        );
-        transferLoc(ret, node);
-        return ret;
+            var ret = replaceInExpr(
+                    logWriteFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + logIFunName + "(typeof(" + lhs.name + ")==='undefined'?undefined:" + lhs.name + "), true, true)",
+                getIid(),
+                name,
+                val
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
     }
 
     function wrapRHSOfModStore(node, left, right, op) {
@@ -582,17 +608,51 @@ var acorn, escodegen, astUtil;
         return false;
     }
 
+    var dummyFun = function () {
+    };
+    var dummyObject = {};
+    var dummyArray = [];
+
+    function getLiteralValue(funId, node) {
+        if (node.name === "undefined") {
+            return undefined;
+        } else if (node.name === "NaN") {
+            return NaN;
+        } else if (node.name === "Infinity") {
+            return Infinity;
+        }
+        switch (funId) {
+            case N_LOG_NUMBER_LIT:
+            case N_LOG_STRING_LIT:
+            case N_LOG_NULL_LIT:
+            case N_LOG_REGEXP_LIT:
+            case N_LOG_BOOLEAN_LIT:
+                return node.value;
+            case N_LOG_ARRAY_LIT:
+                return dummyArray;
+            case N_LOG_FUNCTION_LIT:
+                return dummyFun;
+            case N_LOG_OBJECT_LIT:
+                return dummyObject;
+        }
+        throw new Error(funId + " not known");
+    }
+
     function wrapLiteral(node, ast, funId) {
-        printIidToLoc(node);
-        var hasGetterSetter = ifObjectExpressionHasGetterSetter(node);
-        var ret = replaceInExpr(
-            logLitFunName + "(" + RP + "1, " + RP + "2, " + RP + "3," + hasGetterSetter + ")",
-            getIid(),
-            ast,
-            createLiteralAst(funId)
-        );
-        transferLoc(ret, node);
-        return ret;
+        if (!Config.INSTR_LITERAL || Config.INSTR_LITERAL(getLiteralValue(funId, node), node)) {
+            printIidToLoc(node);
+            var hasGetterSetter = ifObjectExpressionHasGetterSetter(node);
+            var ret = replaceInExpr(
+                    logLitFunName + "(" + RP + "1, " + RP + "2, " + RP + "3," + hasGetterSetter + ")",
+                getIid(),
+                ast,
+                createLiteralAst(funId)
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
     }
 
     function wrapReturn(node, expr) {
@@ -633,74 +693,98 @@ var acorn, escodegen, astUtil;
     }
 
     function wrapUnaryOp(node, argument, operator) {
-        printOpIidToLoc(node);
-        var ret = replaceInExpr(
-            logUnaryOpFunName + "(" + RP + "1," + RP + "2," + RP + "3)",
-            getOpIid(),
-            createLiteralAst(operator),
-            argument
-        );
-        transferLoc(ret, node);
-        return ret;
+        if (!Config.INSTR_UNARY || Config.INSTR_UNARY(operator, node)) {
+            printOpIidToLoc(node);
+            var ret = replaceInExpr(
+                    logUnaryOpFunName + "(" + RP + "1," + RP + "2," + RP + "3)",
+                getOpIid(),
+                createLiteralAst(operator),
+                argument
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
     }
 
     function wrapBinaryOp(node, left, right, operator) {
-        printOpIidToLoc(node);
-        var ret = replaceInExpr(
-            logBinaryOpFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + RP + "4)",
-            getOpIid(),
-            createLiteralAst(operator),
-            left,
-            right
-        );
-        transferLoc(ret, node);
-        return ret;
+        if (!Config.INSTR_BINARY || Config.INSTR_BINARY(operator, operator)) {
+            printOpIidToLoc(node);
+            var ret = replaceInExpr(
+                    logBinaryOpFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + RP + "4)",
+                getOpIid(),
+                createLiteralAst(operator),
+                left,
+                right
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
     }
 
     function wrapLogicalAnd(node, left, right) {
-        printCondIidToLoc(node);
-        var ret = replaceInExpr(
-            logConditionalFunName + "(" + RP + "1, " + RP + "2)?" + RP + "3:" + logLastFunName + "()",
-            getCondIid(),
-            left,
-            right
-        );
-        transferLoc(ret, node);
-        return ret;
+        if (!Config.INSTR_CONDITIONAL || Config.INSTR_CONDITIONAL("&&", node)) {
+            printCondIidToLoc(node);
+            var ret = replaceInExpr(
+                    logConditionalFunName + "(" + RP + "1, " + RP + "2)?" + RP + "3:" + logLastFunName + "()",
+                getCondIid(),
+                left,
+                right
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
     }
 
     function wrapLogicalOr(node, left, right) {
-        printCondIidToLoc(node);
-        var ret = replaceInExpr(
-            logConditionalFunName + "(" + RP + "1, " + RP + "2)?" + logLastFunName + "():" + RP + "3",
-            getCondIid(),
-            left,
-            right
-        );
-        transferLoc(ret, node);
-        return ret;
+        if (!Config.INSTR_CONDITIONAL || Config.INSTR_CONDITIONAL("||", node)) {
+            printCondIidToLoc(node);
+            var ret = replaceInExpr(
+                    logConditionalFunName + "(" + RP + "1, " + RP + "2)?" + logLastFunName + "():" + RP + "3",
+                getCondIid(),
+                left,
+                right
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
     }
 
     function wrapSwitchDiscriminant(node, discriminant) {
-        printCondIidToLoc(node);
-        var ret = replaceInExpr(
-            logSwitchLeftFunName + "(" + RP + "1, " + RP + "2)",
-            getCondIid(),
-            discriminant
-        );
-        transferLoc(ret, node);
-        return ret;
+        if (!Config.INSTR_CONDITIONAL || Config.INSTR_CONDITIONAL("switch", node)) {
+            printCondIidToLoc(node);
+            var ret = replaceInExpr(
+                    logSwitchLeftFunName + "(" + RP + "1, " + RP + "2)",
+                getCondIid(),
+                discriminant
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
     }
 
     function wrapSwitchTest(node, test) {
-        printCondIidToLoc(node);
-        var ret = replaceInExpr(
-            logSwitchRightFunName + "(" + RP + "1, " + RP + "2)",
-            getCondIid(),
-            test
-        );
-        transferLoc(ret, node);
-        return ret;
+        if (!Config.INSTR_CONDITIONAL || Config.INSTR_CONDITIONAL("switch", node)) {
+            printCondIidToLoc(node);
+            var ret = replaceInExpr(
+                    logSwitchRightFunName + "(" + RP + "1, " + RP + "2)",
+                getCondIid(),
+                test
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
     }
 
     function wrapConditional(node, test) {
@@ -708,27 +792,32 @@ var acorn, escodegen, astUtil;
             return node;
         } // to handle for(;;) ;
 
-        printCondIidToLoc(node);
-        var ret = replaceInExpr(
-            logConditionalFunName + "(" + RP + "1, " + RP + "2)",
-            getCondIid(),
-            test
-        );
-        transferLoc(ret, node);
-        return ret;
+        if (!Config.INSTR_CONDITIONAL || Config.INSTR_CONDITIONAL("other", node)) {
+            printCondIidToLoc(node);
+            var ret = replaceInExpr(
+                    logConditionalFunName + "(" + RP + "1, " + RP + "2)",
+                getCondIid(),
+                test
+            );
+            transferLoc(ret, node);
+            return ret;
+        } else {
+            return node;
+        }
+
     }
 
-    function createCallWriteAsStatement(node, name, val) {
-        printIidToLoc(node);
-        var ret = replaceInStatement(
-            logWriteFunName + "(" + RP + "1, " + RP + "2, " + RP + "3)",
-            getIid(),
-            name,
-            val
-        );
-        transferLoc(ret[0].expression, node);
-        return ret;
-    }
+//    function createCallWriteAsStatement(node, name, val) {
+//        printIidToLoc(node);
+//        var ret = replaceInStatement(
+//            logWriteFunName + "(" + RP + "1, " + RP + "2, " + RP + "3)",
+//            getIid(),
+//            name,
+//            val
+//        );
+//        transferLoc(ret[0].expression, node);
+//        return ret;
+//    }
 
     function createCallInitAsStatement(node, name, val, isArgumentSync, lhs) {
         printIidToLoc(node);

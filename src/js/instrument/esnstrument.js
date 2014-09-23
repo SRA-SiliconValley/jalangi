@@ -846,7 +846,8 @@ var acorn, escodegen, astUtil;
     function createCallAsFunEnterStatement(node) {
         printIidToLoc(node);
         var ret = replaceInStatement(
-            logFunctionEnterFunName + "(" + RP + "1,arguments.callee, this, arguments)",
+//                logFunctionEnterFunName + "(" + RP + "1,arguments.callee, this, arguments)",
+                logFunctionEnterFunName + "(" + RP + "1, this)",
             getIid()
         );
         transferLoc(ret[0].expression, node);
@@ -919,12 +920,12 @@ var acorn, escodegen, astUtil;
     function syncDefuns(node, scope, isScript) {
         var ret = [], ident;
         if (!isScript) {
-            ident = createIdentifierAst("arguments");
-            ret = ret.concat(createCallInitAsStatement(node,
-                createLiteralAst("arguments"),
-                ident,
-                true,
-                ident));
+//            ident = createIdentifierAst("arguments");
+//            ret = ret.concat(createCallInitAsStatement(node,
+//                createLiteralAst("arguments"),
+//                ident,
+//                true,
+//                ident));
         }
         if (scope) {
             for (var name in scope.vars) {
@@ -1272,9 +1273,9 @@ var acorn, escodegen, astUtil;
     var visitorOps = {
         "Program":function (node) {
             if (wrapProgramNode) {
-                var body = wrapScriptBodyWithTryCatch(node, node.body);
+//                var body = wrapScriptBodyWithTryCatch(node, node.body);
 //                var ret = prependScriptBody(node, body);
-                node.body = body;
+//                node.body = body;
 
             }
             return node;
@@ -1322,11 +1323,11 @@ var acorn, escodegen, astUtil;
             return node;
         },
         "FunctionExpression":function (node) {
-            node.body.body = wrapFunBodyWithTryCatch(node, node.body.body);
+            //node.body.body = wrapFunBodyWithTryCatch(node, node.body.body);
             return node;
         },
         "FunctionDeclaration":function (node) {
-            node.body.body = wrapFunBodyWithTryCatch(node, node.body.body);
+//            node.body.body = wrapFunBodyWithTryCatch(node, node.body.body);
             return node;
         },
         "ConditionalExpression":funCond,

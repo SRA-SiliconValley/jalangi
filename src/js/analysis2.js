@@ -299,12 +299,12 @@ if (typeof J$ === 'undefined') {
     }
 
     // Function enter
-    function Fe(iid, f, dis /* this */, args) {
+    function Fe(iid, dis /* this */) {
         argIndex = 0;
         returnStack.push(undefined);
         exceptionVal = undefined;
         if (sandbox.analysis && sandbox.analysis.functionEnter) {
-            sandbox.analysis.functionEnter(iid, f, dis, args);
+            sandbox.analysis.functionEnter(iid, dis);
         }
     }
 

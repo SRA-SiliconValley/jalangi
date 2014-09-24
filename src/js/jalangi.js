@@ -24,6 +24,7 @@ var esnstrument = require('./instrument/esnstrument');
 var instDir = require('./commands/instrument');
 var procUtil = require('./utils/procUtil');
 var astUtil = require('./utils/astUtil');
+require('./Config');
 var fs = require('fs');
 var path = require('path');
 var fork = require('child_process').fork;
@@ -132,12 +133,51 @@ function instrument(inputFileName, options) {
 }
 
 /**
+ * setup the global Config object based on the given instrumentation handler object
+ * @param instHandler
+ */
+function setupConfig(instHandler) {
+    var conf = J$.Config;
+    conf.INSTR_READ = instHandler.instrRead;
+    conf.INSTR_WRITE = instHandler.instrWrite;
+    conf.INSTR_GETFIELD = instHandler.instrGetfield;
+    conf.INSTR_PUTFIELD = instHandler.instrPutfield;
+    conf.INSTR_BINARY = instHandler.instrBinary;
+    conf.INSTR_PROPERTY_BINARY_ASSIGNMENT = instHandler.instrPropBinaryAssignment;
+    conf.INSTR_UNARY = instHandler.instrUnary;
+    conf.INSTR_LITERAL = instHandler.instrLiteral;
+    conf.INSTR_CONDITIONAL = instHandler.instrConditional;
+}
+
+/**
+ * clear any configured instrumentation control functions from the global Config object
+ */
+function clearConfig() {
+    var conf = J$.Config;
+    conf.INSTR_READ = null;
+    conf.INSTR_WRITE = null;
+    conf.INSTR_GETFIELD = null;
+    conf.INSTR_PUTFIELD = null;
+    conf.INSTR_BINARY = null;
+    conf.INSTR_PROPERTY_BINARY_ASSIGNMENT = null;
+    conf.INSTR_UNARY = null;
+    conf.INSTR_LITERAL = null;
+    conf.INSTR_CONDITIONAL = null;
+}
+
+/**
  * instruments a code string, returning an object with the following fields:
  * - code: the instrumented code string
  * - instAST: AST for the instrumented code
  * - iidSourceInfo: map from IIDs to source information (filename, start line, start column array tuples)
  * An inputFileName can be passed in the options object.  This name will be associated
  * with the original code in the source map.
+ *
+ * An instrumentation handler object can be passed in options.instHandler, for controlling which
+ * constructs get instrumented.  Possible properties are instrRead, isntrWrite, instrGetfield,
+ * instrPutfield, isntrBinary, instrPropBinaryAssignment, instrUnary, instrLiteral, and instrConditional,
+ * corresponding to the similarly-named properties documented in Config.js.
+ *
  * @param code
  * @param {dirIIDFile?: string, outputFile?: string, inputFileName?:string} options
  */
@@ -151,7 +191,12 @@ function instrumentString(code, options) {
         initIID: options.initIID,
         dirIIDFile: dirIIDFile
     };
-    return esnstrument.instrumentCodeDeprecated(code,instCodeOptions);
+    if (options.instHandler) {
+        setupConfig(options.instHandler);
+    }
+    var result = esnstrument.instrumentCodeDeprecated(code,instCodeOptions);
+    clearConfig();
+    return result;
 }
 
 /**
@@ -164,8 +209,12 @@ function instrumentDir(options) {
     if (!options.outputDir) {
         options.outputDir = temp.mkdirSync();
     }
+    if (options.instHandler) {
+        setupConfig(options.instHandler);
+    }
     var deferred = Q.defer();
     instDir.instrument(options, function (err) {
+        clearConfig();
         if (err) {
             deferred.reject(err);
         } else {

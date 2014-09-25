@@ -500,7 +500,7 @@ var acorn, escodegen, astUtil;
             transferLoc(ret, node);
             return ret;
         } else {
-            return node;
+            return val;
         }
     }
 

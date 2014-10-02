@@ -302,7 +302,7 @@ var acorn, escodegen, astUtil;
         // write all the data
         Object.keys(iidSourceInfo).forEach(function (iid) {
             var sourceInfo = iidSourceInfo[iid];
-            writeLineToIIDMap(fs, traceWfh, fh, "iids[" + iid + "] = [fn," + sourceInfo[1] + "," + sourceInfo[2] + "];\n");
+            writeLineToIIDMap(fs, traceWfh, fh, "iids[" + iid + "] = [fn," + sourceInfo[1] + "," + sourceInfo[2] + "," + sourceInfo[3] + "," + sourceInfo[4] + "];\n");
         });
         Object.keys(orig2Inst).forEach(function (filename) {
             writeLineToIIDMap(fs, traceWfh, fh, "orig2Inst[\"" + filename + "\"] = \"" + orig2Inst[filename] + "\";\n");
@@ -334,7 +334,7 @@ var acorn, escodegen, astUtil;
 
     function printLineInfoAux(i, ast) {
         if (ast && ast.loc) {
-            iidSourceInfo[i] = [curFileName, ast.loc.start.line, ast.loc.start.column + 1];
+            iidSourceInfo[i] = [curFileName, ast.loc.start.line, ast.loc.start.column + 1, ast.loc.end.line, ast.loc.end.column + 1];
             //writeLineToIIDMap('iids[' + i + '] = [filename,' + (ast.loc.start.line) + "," + (ast.loc.start.column + 1) + "];\n");
         }
 //        else {
@@ -450,14 +450,14 @@ var acorn, escodegen, astUtil;
 
     function wrapMethodCall(node, base, offset, isCtor) {
         printIidToLoc(node);
-        printSpecialIidToLoc(node);
+        printSpecialIidToLoc(node.callee);
         var ret = replaceInExpr(
             logMethodCallFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + (isCtor ? "true" : "false") + ")",
             getIid(),
             base,
             offset
         );
-        transferLoc(ret, node);
+        transferLoc(ret, node.callee);
         return ret;
     }
 
@@ -468,7 +468,7 @@ var acorn, escodegen, astUtil;
             getIid(),
             ast
         );
-        transferLoc(ret, node);
+        transferLoc(ret, node.callee);
         return ret;
     }
 
@@ -992,17 +992,18 @@ var acorn, escodegen, astUtil;
         return ast.computed ? ast.property : createLiteralAst(ast.property.name);
     }
 
-    function instrumentCall(ast, isCtor) {
+    function instrumentCall(callAst, isCtor) {
+        var ast = callAst.callee;
         var ret;
         if (ast.type === 'MemberExpression') {
-            ret = wrapMethodCall(ast, ast.object,
+            ret = wrapMethodCall(callAst, ast.object,
                 getPropertyAsAst(ast),
                 isCtor);
             return ret;
         } else if (ast.type === 'Identifier' && ast.name === "eval") {
             return ast;
         } else {
-            ret = wrapFunCall(ast, ast, isCtor);
+            ret = wrapFunCall(callAst, ast, isCtor);
             return ret;
         }
     }
@@ -1164,7 +1165,7 @@ var acorn, escodegen, astUtil;
         "NewExpression":function (node) {
             var ret = {
                 type:'CallExpression',
-                callee:instrumentCall(node.callee, true),
+                callee:instrumentCall(node, true),
                 'arguments':node.arguments
             };
             transferLoc(ret, node);
@@ -1174,7 +1175,7 @@ var acorn, escodegen, astUtil;
         },
         "CallExpression":function (node) {
             var isEval = node.callee.type === 'Identifier' && node.callee.name === "eval";
-            var callee = instrumentCall(node.callee, false);
+            var callee = instrumentCall(node, false);
             node.callee = callee;
             if (isEval) {
                 node.arguments = MAP(node.arguments, wrapEvalArg);

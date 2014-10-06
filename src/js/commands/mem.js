@@ -455,25 +455,73 @@ if (typeof J$ === 'undefined') {
 //
     }
 
+    /*
+     private static enum TraceEntry {
+     }
+
+     */
+    var enumid = 0;
+
+    var EVENT_IDS = {
+        DECLARE: enumid++, // fields: iid, name, obj-id
+        CREATE_OBJ: enumid++, // fields: iid, obj-id
+        CREATE_FUN: enumid++, // fields: iid, function-enter-iid, obj-id.  NOTE: proto-obj-id is always obj-id + 1
+        PUTFIELD: enumid++, // fields: iid, base-obj-id, prop-name, val-obj-id
+        WRITE: enumid++, // fields: iid, name, obj-id
+        LAST_USE: enumid++, // fields: obj-id, timestamp, iid
+        FUNCTION_ENTER: enumid++, // fields: iid, function-object-id, call-site-iid.
+        FUNCTION_EXIT: enumid++, // fields: iid
+        TOP_LEVEL_FLUSH: enumid++, // fields: iid
+        UPDATE_IID: enumid++, // fields: obj-id, new-iid
+        DEBUG: enumid++, // fields: call-iid, obj-id
+        RETURN: enumid++, // fields: obj-id
+        CREATE_DOM_NODE: enumid++, // fields: iid, obj-id
+        ADD_DOM_CHILD: enumid++, // fields: parent-obj-id, child-obj-id
+        REMOVE_DOM_CHILD: enumid++, // fields: parent-obj-id, child-obj-id
+        ADD_TO_CHILD_SET: enumid++, // fields: iid, parent-obj-id, name, child-obj-id
+        REMOVE_FROM_CHILD_SET: enumid++, // fields: iid, parent-obj-id, name, child-obj-id
+        DOM_ROOT: enumid++, // fields: obj-id
+        CALL: enumid++, // fields: iid, function-obj-id, function-enter-iid.
+        SCRIPT_ENTER: enumid++, // fields: iid, filename
+        SCRIPT_EXIT: enumid++, // fields: iid
+        FREE_VARS: enumid++, // fields: iid, array-of-names or ANY
+        SOURCE_MAPPING: enumid++, // fields: iid, filename, startLine, startColumn
+        UNREACHABLE: enumid++ // fields: iid, obj-id, timestamp
+    };
+
+
+    var timestamp = 0;
+    var last_use = {};
+    var unreachable = {};
+
     function getobjIdToNewIID(traceFile) {
         var objIdToNewIID = {}, line, record;
         var traceFh = new FileLineReader(traceFile);
         while (traceFh.hasNextLine()) {
             line = traceFh.nextLine();
             record = JSON.parse(line);
-            if (record[0] === 9) {
+            if (record[0] === EVENT_IDS.UPDATE_IID) {
                 objIdToNewIID[record[1]] = record[2];
             }
+            if (record[0] === EVENT_IDS.LAST_USE) {
+                if (!last_use[record[2]]) {
+                    last_use[record[2]] = [];
+                }
+                last_use[record[2]].push(record);
+            }
+            if (record[0] === EVENT_IDS.UNREACHABLE) {
+                if (!unreachable[record[3]]) {
+                    unreachable[record[3]] = [];
+                }
+                unreachable[record[3]].push(record);
+            }
         }
+        console.log(JSON.stringify(last_use));
+        console.log(JSON.stringify(unreachable));
         traceFh.close();
         return objIdToNewIID;
     }
 
-/*
- private static enum TraceEntry {
- }
-
-*/
 
     function processTrace(traceFile, objIdToNewIID, printEscapeTree) {
         var oindex = new ObjectIndex();
@@ -482,79 +530,116 @@ if (typeof J$ === 'undefined') {
         var tmp, line, record;
 
 
+        timestamp = 0;
         while (traceFh.hasNextLine()) {
             lineno++;
             line = traceFh.nextLine();
             record = JSON.parse(line);
             switch (record[0]) {
-                case 0:
+                case EVENT_IDS.DECLARE:
 // DECLARE, // fields: iid, name, obj-id
                     break;
-                case 1:
+                case EVENT_IDS.CREATE_OBJ:
                     if (tmp = objIdToNewIID[record[2]]) {
                         record[1] = tmp;
                     }
                     oindex.createObject(record[1], record[2]);
 // CREATE_OBJ, // fields: iid, obj-id
                     break;
-                case 2:
-                    oindex.createObject(record[1], record[2]);
-// CREATE_FUN, // fields: iid, obj-id.  NOTE: proto-obj-id is always obj-id + 1
+                case EVENT_IDS.CREATE_FUN:
+                    oindex.createObject(record[1], record[3]);
+// CREATE_FUN, // fields: iid, function-enter-iid, obj-id.  NOTE: proto-obj-id is always obj-id + 1
                     break;
-                case 3:
+                case EVENT_IDS.PUTFIELD:
                     oindex.putField(record[2], record[4]);
 // PUTFIELD, // fields: iid, base-obj-id, prop-name, val-obj-id
                     break;
-                case 4:
+                case EVENT_IDS.WRITE:
                     oindex.putField(0, record[3]);
 // WRITE, // fields: iid, name, obj-id
                     break;
-                case 5:
-                    oindex.accessObject(record[1], false);
-// LAST_USE, // fields: obj-id, iid
-                    break;
-                case 6:
+//                case EVENT_IDS.LAST_USE:
+//                    oindex.accessObject(record[1], false);
+//// LAST_USE, // fields: obj-id, timestamp, iid
+//                    break;
+                case EVENT_IDS.FUNCTION_ENTER:
                     oindex.functionEnter(record[3]);
 // FUNCTION_ENTER, // fields: iid, function-object-id, call-site-iid (or -1 if not present)
                     break;
-                case 7:
+                case EVENT_IDS.FUNCTION_EXIT:
                     oindex.functionExit();
 // FUNCTION_EXIT, // fields: iid
                     break;
-                case 8:
+                case EVENT_IDS.TOP_LEVEL_FLUSH:
 // TOP_LEVEL_FLUSH, // fields: iid
                     break;
-                case 9:
+                case EVENT_IDS.UPDATE_IID:
                     oindex.exitConstructor(record[1]);
 // UPDATE_IID, // fields: obj-id, new-iid
                     break;
-                case 10:
+                case EVENT_IDS.DEBUG:
 // DEBUG, // fields: call-iid, obj-id
                     break;
-                case 11:
+                case EVENT_IDS.RETURN:
 // RETURN, // fields: obj-id
                     break;
-                case 12:
+                case EVENT_IDS.CREATE_DOM_NODE:
+                    if (tmp = objIdToNewIID[record[2]]) {
+                        record[1] = tmp;
+                    }
+                    oindex.createObject(record[1], record[2]);
+                    break;
+// CREATE_DOM_NODE, // fields: iid, obj-id
+                case EVENT_IDS.ADD_DOM_CHILD:
 // ADD_DOM_CHILD, // fields: parent-obj-id, child-obj-id
                     break;
-                case 13:
+                case EVENT_IDS.REMOVE_DOM_CHILD:
 // REMOVE_DOM_CHILD, // fields: parent-obj-id, child-obj-id
                     break;
-                case 14:
+                case EVENT_IDS.ADD_TO_CHILD_SET:
+                    break;
+// ADD_TO_CHILD_SET, // fields: iid, parent-obj-id, name, child-obj-id
+                case EVENT_IDS.REMOVE_FROM_CHILD_SET:
+                    break;
+// REMOVE_FROM_CHILD_SET, // fields: iid, parent-obj-id, name, child-obj-id
+                case EVENT_IDS.DOM_ROOT:
 // DOM_ROOT, // fields: obj-id
                     break;
-                case 15:
-                    oindex.accessObject(record[2], true);
-// UNREACHABLE // fields: iid, obj-id
+                case EVENT_IDS.CALL:
                     break;
-                case 16:
+// CALL, // fields: iid, function-obj-id, function-enter-iid.
+                case EVENT_IDS.SCRIPT_ENTER:
                     oindex.functionEnter(record[1]);
 // SCRIPT_ENTER // fields: iid, filename
                     break;
-                case 17:
+                case EVENT_IDS.SCRIPT_EXIT:
                     oindex.functionExit();
 // SCRIPT_EXIT // fields: iid
                     break;
+                case EVENT_IDS.FREE_VARS:
+// FREE_VARS, // fields: iid, array-of-names or ANY
+                    break;
+                case EVENT_IDS.SOURCE_MAPPING:
+                    break;
+// SOURCE_MAPPING, // fields: iid, filename, startLine, startColumn
+//                case EVENT_IDS.UNREACHABLE:
+//                    oindex.accessObject(record[2], true);
+//// UNREACHABLE // fields: iid, obj-id, timestamp
+//                    break;
+            }
+            var tmp2, i;
+            if (tmp2 = last_use[timestamp]) {
+                for (i = 0; i < tmp2.length; i++) {
+                    oindex.accessObject(tmp2[i][1], false);
+                }
+            }
+            if (tmp2 = unreachable[timestamp]) {
+                for (i = 0; i < tmp2.length; i++) {
+                    oindex.accessObject(tmp2[i][2], true);
+                }
+            }
+            if (record[0] !== EVENT_IDS.UNREACHABLE && record[0] !== EVENT_IDS.LAST_USE) {
+                timestamp = timestamp + 1;
             }
         }
         traceFh.close();

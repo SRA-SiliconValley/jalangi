@@ -40,7 +40,7 @@ if (typeof J$ === 'undefined') {
         if (sandbox.iids) {
             if ((ret = sandbox.iids[iid])) {
 
-                return "("+ret[0].replace("_orig_.js", ".js")+":"+ret[1]+":"+ret[2]+":"+ret[3]+":"+ret[4]+")";
+                return "("+ret[0]/*.replace("_orig_.js", ".js")*/+":"+ret[1]+":"+ret[2]+":"+ret[3]+":"+ret[4]+")";
             }
         }
         return iid+"";

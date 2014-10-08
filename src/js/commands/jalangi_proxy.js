@@ -88,16 +88,15 @@ function initOutputDir() {
 	mkdirp.sync(scriptDirToTry);
 	console.log("writing output to " + scriptDirToTry);
 	outputDir = scriptDirToTry;
-	// write an empty 'inputs.js' file here, to make replay happy
-	// TODO make this filename more robust against name collisions
 }
 /**
  * start the instrumenting proxy.  This will instrument
  * JS code using esnstrument, and also inject the relevant
  * Jalangi scripts at the top of the file.
  */
-function startJalangiProxy() {
-	proxy.start({ headerCode: instUtil.getHeaderCode(), rewriter: rewriter, port: 8501 });
+function startJalangiProxy(port) {
+	proxy.start({ headerCode: instUtil.getHeaderCode(), rewriter: rewriter, port: port });
+    console.log("Jalangi proxy server running on port " + port);
 }
 
 var parser = new ArgumentParser({ addHelp: true, description: "Jalangi instrumenting proxy server"});
@@ -112,7 +111,7 @@ if (args.ignoreInline) {
 	ignoreInline = args.ignoreInline;
 }
 initOutputDir();
-startJalangiProxy();
+startJalangiProxy(8501);
 
 // TODO add command-line option to not launch websocket proxy
 jalangi_ws.start({ outputDir: outputDir });

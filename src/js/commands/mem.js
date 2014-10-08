@@ -219,6 +219,10 @@ if (typeof J$ === 'undefined') {
                     tmp.maxAliveCount = 0;
                     tmp.currentAliveCount = 0;
                     tmp.cumulativeAliveCount = 0;
+
+                    tmp.currentNonStaleCount = 0;
+                    tmp.cumulativeNonStaleCount = 0;
+
                     tmp.isIncreasing = undefined;
                     tmp.emptyStackCount = 0;
                     tmp.xsquaresum = 0;
@@ -418,6 +422,7 @@ if (typeof J$ === 'undefined') {
                     data.isFrame = odbasei.isFrame;
                     data.isUnused = odbasei.unused;
                     data.notUsedAfterEscape = odbasei.notUsedAfterEscape;
+                    data.maxAliveCount = odbasei.maxAliveCount;
 
 //                    console.log(odbasei.xysum+" "+odbasei.xsquaresum+" "+odbasei.ysum+" "+odbasei.cumulativeAliveCount+" "+odbasei.emptyStackCount);
 
@@ -439,6 +444,7 @@ if (typeof J$ === 'undefined') {
                         (data.isUnused ? "\n    unused throughout its lifetime" : "") +
                         (data.notUsedAfterEscape ? "\n    unused after escape" : "") +
                         (data.isLeaking ? ("\n    leaking ("+data.isLeaking+")") : "") +
+                        (data.maxAliveCount > 0 ? ("\n    max alive count when call stack is empty "+data.maxAliveCount) : "") +
                         "\n    gradient is ("+data.gradient+")" +
 //                        ((info[iid].oneActive && info[iid].accessedByParentOnly && !info[iid].nonEscaping) ? "\n    and is used by its parents only" : "") +
                         (data.consistentlyPointedBy ? "\n    uniquely pointed by objects allocated at " + data.consistentlyPointedBy : ""));
@@ -516,8 +522,8 @@ if (typeof J$ === 'undefined') {
                 unreachable[record[3]].push(record);
             }
         }
-        console.log(JSON.stringify(last_use));
-        console.log(JSON.stringify(unreachable));
+        //console.log(JSON.stringify(last_use));
+        //console.log(JSON.stringify(unreachable));
         traceFh.close();
         return objIdToNewIID;
     }
@@ -638,7 +644,7 @@ if (typeof J$ === 'undefined') {
                     oindex.accessObject(tmp2[i][2], true);
                 }
             }
-            if (record[0] !== EVENT_IDS.UNREACHABLE && record[0] !== EVENT_IDS.LAST_USE) {
+            if (record[0] !== EVENT_IDS.UNREACHABLE) {
                 timestamp = timestamp + 1;
             }
         }
@@ -650,8 +656,12 @@ if (typeof J$ === 'undefined') {
     var FileLineReader = require('../utils/FileLineReader');
     var args = process.argv.slice(2);
     printEscapeTree = args[1];
-    objIdToNewIID = getobjIdToNewIID(args[0]);
-    processTrace(args[0], objIdToNewIID, printEscapeTree);
+    var path = require('path');
+    var dirname = path.dirname(args[0]);
+    var filename = path.basename(args[0]);
+    process.chdir(dirname);
+    objIdToNewIID = getobjIdToNewIID(filename);
+    processTrace(filename, objIdToNewIID, printEscapeTree);
 
 }(J$));
 

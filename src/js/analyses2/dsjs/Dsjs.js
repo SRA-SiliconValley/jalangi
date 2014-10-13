@@ -4,6 +4,7 @@
     var SPECIAL_PROP = Constants.SPECIAL_PROP + "M";
     var objectId = 1;
     var HOP = Constants.HOP;
+    var hasGetterSetter = Constants.hasGetterSetter;
 
     function isArr(obj) {
         return Array.isArray(obj) || (obj && obj.constructor && (obj instanceof Uint8Array || obj instanceof Uint16Array ||
@@ -72,6 +73,35 @@
         }
     }
 
+    function updateSObjObjectNonUniformity(sobj, elem) {
+        if (sobj && sobj.isDynamic) {
+            if (!sobj.typeInitialized) {
+                sobj.type = typeof elem;
+                sobj.typeInitialized = true;
+                sobj.isUniform = true;
+            } else if (sobj.isUniform) {
+                sobj.isUniform = (sobj.type == (typeof elem));
+                if (!sobj.isUniform) {
+                    inc(info, "objectNonUniformHash");
+                }
+            }
+        }
+    }
+
+    function checkObjectUniformity(sobj, obj, elem) {
+        if (!sobj.isDynamic) {
+            sobj.isDynamic = true;
+            inc(info, "objectHash");
+            for (var p in obj) {
+                if (!hasGetterSetter(obj, p, true))
+                    updateSObjObjectNonUniformity(sobj, obj[p]);
+            }
+        }
+        if (sobj.isDynamic) {
+            updateSObjObjectNonUniformity(sobj, elem);
+        }
+    }
+
     function checkArrayUniformity(val) {
         if (isArr(val)) {
             inc(info,"arrayTotal");
@@ -83,6 +113,32 @@
         }
     }
 
+    function getCreateObjectInfo(obj, isPrototype) {
+        if (!isArr(obj) && typeof obj === "object") {
+            var sobj = getShadowObject(obj);
+            if (sobj) {
+                if (sobj.isUsedInForIn === undefined) {
+                    inc(info, "objectTotal");
+                    sobj.isUsedInForIn = false;
+                    sobj.isPrototype = isPrototype;
+                }
+            }
+        }
+        return sobj;
+    }
+
+    function forInUse(obj) {
+        var sobj = getCreateObjectInfo(obj, false);
+        if (sobj && !sobj.isUsedInForIn) {
+            sobj.isUsedInForIn = true;
+            inc(info, "objectUsedInForIn");
+        }
+    }
+
+    var isCallingConstructor = false;
+    var constructorFun;
+    var thisStack = [];
+    var currThis;
 
     function MyAnalysis () {
         this.invokeFunPre = function(iid, f, base, args, isConstructor, isMethod){
@@ -124,59 +180,106 @@
                     inc(info, "Array.prototype.unshift");
                     break;
             }
+
+            isCallingConstructor = isConstructor;
+            constructorFun = f;
+
             return {f:f,base:base,args:args,skip:false};
         };
 
         this.invokeFun = function(iid, f, base, args, result, isConstructor, isMethod){
             if (isConstructor) {
                 checkArrayUniformity(result);
+                getCreateObjectInfo(result, false);
             }
             return {result:result};
         };
 
         this.literal = function(iid, val, hasGetterSetter) {
             checkArrayUniformity(val);
+            getCreateObjectInfo(val, false);
             return {result:val};
         };
 
-        this.forinObject = function(iid, val){return {result:val};};
+        this.forinObject = function (iid, val) {
+            forInUse(val);
+            return {result: val};
+        };
 
         this.declare = function (iid, name, val, isArgument, argumentIndex){return {result:val};};
 
         this.getFieldPre = function(iid, base, offset){return {base:base,offset:offset,skip:false};};
 
-        this.getField = function(iid, base, offset, val){return {result:val};};
+        this.getField = function (iid, base, offset, val) {
+            if (typeof base === 'function' && offset === "prototype") {
+                getCreateObjectInfo(val, true);
+            }
+            if (!isArr(base) && typeof base === 'object') {
+                inc(info, "objectPropRead");
+                if (!HOP(base, offset)) {
+                    if (typeof val === "function") {
+                        inc(info, "objectSuperFunPropRead");
+                    } else {
+                        inc(info, "objectSuperOtherPropRead");
+                    }
+                }
+            }
+            return {result: val};
+        };
 
         this.putFieldPre = function(iid, base, offset, val){
+            var sobj;
             if (isArr(base)) {
-                inc(info,"arrayWrite");
-                if (isNormalNumber(offset)) {
-                    if (offset <0 || offset >= base.length) {
-                        inc(info,"arrayOutOfBoundNumberIndexWrite");
+                inc(info, "arrayPropWrite");
+                if (isNormalNumber(offset) || offset === 'length') {
+                    if (offset === 'length') {
+                        inc(info, "arrayLengthWrite");
+                    } else if (offset < 0 || offset >= base.length) {
+                        inc(info, "arrayOutOfBoundNumberPropWrite");
                     }
                 } else {
-                    inc(info,"arrayNonNumberIndexWrite");
+                    //console.log(offset);
+                    inc(info, "arrayNonNumberPropWrite");
+                }
+                sobj = getShadowObject(base);
+                updateSObjArrayNonUniformity(sobj, val);
+            } else if (typeof base === "object") {
+                inc(info, "objectPropWrite");
+                if (!HOP(base, offset) && base !== currThis) {
+                    sobj = getCreateObjectInfo(base, false);
+                    if (!sobj || !sobj.isPrototype) {
+                        inc(info, "objectNewPropWrite");
+                        if (sobj) {
+                            checkObjectUniformity(sobj, base, val);
+                        }
+                    }
                 }
             }
             return {base:base,offset:offset,val:val,skip:false};
         };
 
-        this.putField = function(iid, base, offset, val){
-            if (isArr(base)) {
-                var sobj = getShadowObject(base);
-                updateSObjArrayNonUniformity(sobj, val);
-            }
-
-            return {result:val};
+        this.putField = function (iid, base, offset, val) {
+            return {result: val};
         };
 
         this.read = function(iid, name, val, isGlobal, isPseudoGlobal){return {result:val};};
 
         this.write = function(iid, name, val, lhs, isGlobal, isPseudoGlobal) {return {result:val};};
 
-        this.functionEnter = function (iid, f, dis, args){};
+        this.functionEnter = function (iid, f, dis, args) {
+            if (isCallingConstructor && f === constructorFun) {
+                currThis = dis;
+            } else {
+                currThis = undefined;
+            }
+            thisStack.push(currThis);
+        };
 
-        this.functionExit = function(iid, returnVal, exceptionVal){return {returnVal:returnVal,exceptionVal:exceptionVal,isBacktrack:false};};
+        this.functionExit = function (iid, returnVal, exceptionVal) {
+            thisStack.pop();
+            currThis = thisStack[thisStack.length - 1];
+            return {returnVal: returnVal, exceptionVal: exceptionVal, isBacktrack: false};
+        };
 
         this.scriptEnter = function(iid, val){};
 
@@ -193,7 +296,7 @@
         this.conditional = function(iid, result){return {result:result};};
 
         this.endExecution = function() {
-            console.log(JSON.stringify(info));
+            console.log(JSON.stringify(info, null, 4));
         };
     }
     sandbox.analysis = new MyAnalysis();

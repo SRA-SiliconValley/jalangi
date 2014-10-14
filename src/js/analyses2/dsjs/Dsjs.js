@@ -22,7 +22,7 @@
         return false;
     }
 
-    function createShadowObject(val) {
+    function createShadowObject(iid, val) {
         var type = typeof val;
         if ((type === 'object' || type === 'function') && val !== null && !HOP(val, SPECIAL_PROP)) {
             if (Object && Object.defineProperty && typeof Object.defineProperty === 'function') {
@@ -35,6 +35,7 @@
                 val[SPECIAL_PROP] = Object.create(null);
                 val[SPECIAL_PROP][SPECIAL_PROP] = objectId;
                 objectId = objectId + 2;
+                val[SPECIAL_PROP].iid = iid;
             } catch (e) {
                 // cannot attach special field in some DOM Objects.  So ignore them.
             }
@@ -42,9 +43,9 @@
 
     }
 
-    function getShadowObject(val) {
+    function getShadowObject(iid, val) {
         var value;
-        createShadowObject(val);
+        createShadowObject(iid, val);
         var type = typeof val;
         if ((type === 'object' || type === 'function') && val !== null && HOP(val, SPECIAL_PROP)) {
             value = val[SPECIAL_PROP];
@@ -56,11 +57,24 @@
 
     var info = {};
 
-    function inc (hash, property) {
+    function incOld(hash, property) {
         hash[property] = (hash[property]|0) + 1;
     }
 
-    function updateSObjArrayNonUniformity(sobj, elem) {
+    function inc(hash) {
+        var i, len = arguments.length, map = hash, info, key;
+        for (i = 1; i < len; i++) {
+            key = arguments[i];
+            if (!(info = map[key])) {
+                info = map[key] = {count: 0, details: {}};
+            }
+            info.count++;
+            map = info.details;
+        }
+    }
+
+
+    function updateSObjArrayNonUniformity(iid, sobj, elem) {
         if (!sobj.typeInitialized) {
             sobj.type = typeof elem;
             sobj.typeInitialized = true;
@@ -68,12 +82,12 @@
         } else if (sobj.isUniform) {
             sobj.isUniform = (sobj.type == (typeof elem));
             if (!sobj.isUniform) {
-                inc(info,"arrayNonUniform");
+                inc(info, "arrayNonUniform", "IID" + sobj.iid, "IID" + iid);
             }
         }
     }
 
-    function updateSObjObjectNonUniformity(sobj, elem) {
+    function updateSObjObjectNonUniformity(iid, sobj, elem) {
         if (sobj && sobj.isDynamic) {
             if (!sobj.typeInitialized) {
                 sobj.type = typeof elem;
@@ -82,40 +96,40 @@
             } else if (sobj.isUniform) {
                 sobj.isUniform = (sobj.type == (typeof elem));
                 if (!sobj.isUniform) {
-                    inc(info, "objectNonUniformHash");
+                    inc(info, "objectNonUniformHash", "IID" + sobj.iid, "IID" + iid);
                 }
             }
         }
     }
 
-    function checkObjectUniformity(sobj, obj, elem) {
+    function checkObjectUniformity(iid, sobj, obj, elem) {
         if (!sobj.isDynamic) {
             sobj.isDynamic = true;
-            inc(info, "objectHash");
+            inc(info, "objectHash", "IID" + sobj.iid, "IID" + iid);
             for (var p in obj) {
                 if (!hasGetterSetter(obj, p, true))
-                    updateSObjObjectNonUniformity(sobj, obj[p]);
+                    updateSObjObjectNonUniformity(iid, sobj, obj[p]);
             }
         }
         if (sobj.isDynamic) {
-            updateSObjObjectNonUniformity(sobj, elem);
+            updateSObjObjectNonUniformity(iid, sobj, elem);
         }
     }
 
-    function checkArrayUniformity(val) {
+    function checkArrayUniformity(iid, val) {
         if (isArr(val)) {
             inc(info,"arrayTotal");
-            var sobj = getShadowObject(val);
+            var sobj = getShadowObject(iid, val);
             var i;
             for (i=0; i<val.length; i++) {
-                updateSObjArrayNonUniformity(sobj, val[i]);
+                updateSObjArrayNonUniformity(iid, sobj, val[i]);
             }
         }
     }
 
-    function getCreateObjectInfo(obj, isPrototype) {
+    function getCreateObjectInfo(iid, obj, isPrototype) {
         if (!isArr(obj) && typeof obj === "object") {
-            var sobj = getShadowObject(obj);
+            var sobj = getShadowObject(iid, obj);
             if (sobj) {
                 if (sobj.isUsedInForIn === undefined) {
                     inc(info, "objectTotal");
@@ -127,11 +141,11 @@
         return sobj;
     }
 
-    function forInUse(obj) {
-        var sobj = getCreateObjectInfo(obj, false);
+    function forInUse(iid, obj) {
+        var sobj = getCreateObjectInfo(iid, obj, false);
         if (sobj && !sobj.isUsedInForIn) {
             sobj.isUsedInForIn = true;
-            inc(info, "objectUsedInForIn");
+            inc(info, "objectUsedInForIn", "IID" + sobj.iid, "IID" + iid);
         }
     }
 
@@ -189,20 +203,20 @@
 
         this.invokeFun = function(iid, f, base, args, result, isConstructor, isMethod){
             if (isConstructor) {
-                checkArrayUniformity(result);
-                getCreateObjectInfo(result, false);
+                checkArrayUniformity(iid, result);
+                getCreateObjectInfo(iid, result, false);
             }
             return {result:result};
         };
 
         this.literal = function(iid, val, hasGetterSetter) {
-            checkArrayUniformity(val);
-            getCreateObjectInfo(val, false);
+            checkArrayUniformity(iid, val);
+            getCreateObjectInfo(iid, val, false);
             return {result:val};
         };
 
         this.forinObject = function (iid, val) {
-            forInUse(val);
+            forInUse(iid, val);
             return {result: val};
         };
 
@@ -212,7 +226,7 @@
 
         this.getField = function (iid, base, offset, val) {
             if (typeof base === 'function' && offset === "prototype") {
-                getCreateObjectInfo(val, true);
+                getCreateObjectInfo(iid, val, true);
             }
             if (!isArr(base) && typeof base === 'object') {
                 inc(info, "objectPropRead");
@@ -220,7 +234,7 @@
                     if (typeof val === "function") {
                         inc(info, "objectSuperFunPropRead");
                     } else {
-                        inc(info, "objectSuperOtherPropRead");
+                        inc(info, "objectSuperOtherPropRead", "IID" + iid, offset);
                     }
                 }
             }
@@ -235,22 +249,26 @@
                     if (offset === 'length') {
                         inc(info, "arrayLengthWrite");
                     } else if (offset < 0 || offset >= base.length) {
-                        inc(info, "arrayOutOfBoundNumberPropWrite");
+                        if (offset === base.length) {
+                            inc(info, "arrayAppendPropWrite", "IID" + iid);
+                        } else {
+                            inc(info, "arrayOutOfBoundNumberPropWrite", "IID" + iid);
+                        }
                     }
                 } else {
                     //console.log(offset);
-                    inc(info, "arrayNonNumberPropWrite");
+                    inc(info, "arrayNonNumberPropWrite", "IID" + iid, offset);
                 }
-                sobj = getShadowObject(base);
-                updateSObjArrayNonUniformity(sobj, val);
+                sobj = getShadowObject(iid, base);
+                updateSObjArrayNonUniformity(iid, sobj, val);
             } else if (typeof base === "object") {
                 inc(info, "objectPropWrite");
                 if (!HOP(base, offset) && base !== currThis) {
-                    sobj = getCreateObjectInfo(base, false);
+                    sobj = getCreateObjectInfo(iid, base, false);
                     if (!sobj || !sobj.isPrototype) {
-                        inc(info, "objectNewPropWrite");
+                        inc(info, "objectAddPropWrite", "IID" + iid, offset);
                         if (sobj) {
-                            checkObjectUniformity(sobj, base, val);
+                            checkObjectUniformity(iid, sobj, base, val);
                         }
                     }
                 }

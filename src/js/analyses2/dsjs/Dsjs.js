@@ -1,5 +1,6 @@
 (function (sandbox) {
     var Constants = sandbox.Constants;
+    var iidToLocation = sandbox.iidToLocation;
 
     var SPECIAL_PROP = Constants.SPECIAL_PROP + "M";
     var objectId = 1;
@@ -66,9 +67,12 @@
         for (i = 1; i < len; i++) {
             key = arguments[i];
             if (!(info = map[key])) {
-                info = map[key] = {count: 0, details: {}};
+                info = map[key] = {count: 0};
             }
             info.count++;
+            if (i < len - 1 && !HOP(info, "details")) {
+                info.details = {};
+            }
             map = info.details;
         }
     }
@@ -82,7 +86,7 @@
         } else if (sobj.isUniform) {
             sobj.isUniform = (sobj.type == (typeof elem));
             if (!sobj.isUniform) {
-                inc(info, "arrayNonUniform", "IID" + sobj.iid, "IID" + iid);
+                inc(info, "arrayNonUniform", "IID:" + sobj.iid, "IID:" + iid);
             }
         }
     }
@@ -96,7 +100,7 @@
             } else if (sobj.isUniform) {
                 sobj.isUniform = (sobj.type == (typeof elem));
                 if (!sobj.isUniform) {
-                    inc(info, "objectNonUniformHash", "IID" + sobj.iid, "IID" + iid);
+                    inc(info, "objectNonUniformHash", "IID:" + sobj.iid, "IID:" + iid);
                 }
             }
         }
@@ -105,7 +109,7 @@
     function checkObjectUniformity(iid, sobj, obj, elem) {
         if (!sobj.isDynamic) {
             sobj.isDynamic = true;
-            inc(info, "objectHash", "IID" + sobj.iid, "IID" + iid);
+            inc(info, "objectHash", "IID:" + sobj.iid, "IID:" + iid);
             for (var p in obj) {
                 if (!hasGetterSetter(obj, p, true))
                     updateSObjObjectNonUniformity(iid, sobj, obj[p]);
@@ -145,7 +149,7 @@
         var sobj = getCreateObjectInfo(iid, obj, false);
         if (sobj && !sobj.isUsedInForIn) {
             sobj.isUsedInForIn = true;
-            inc(info, "objectUsedInForIn", "IID" + sobj.iid, "IID" + iid);
+            inc(info, "objectUsedInForIn", "IID:" + sobj.iid, "IID:" + iid);
         }
     }
 
@@ -155,7 +159,7 @@
     var currThis;
 
     function MyAnalysis () {
-        this.invokeFunPre = function(iid, f, base, args, isConstructor, isMethod){
+        this.invokeFunPre = function (iid, f, base, args, isConstructor, isMethod) {
             switch (f) {
                 case Array.prototype.concat:
                     inc(info, "Array.prototype.concat");
@@ -198,21 +202,21 @@
             isCallingConstructor = isConstructor;
             constructorFun = f;
 
-            return {f:f,base:base,args:args,skip:false};
+            return {f: f, base: base, args: args, skip: false};
         };
 
-        this.invokeFun = function(iid, f, base, args, result, isConstructor, isMethod){
+        this.invokeFun = function (iid, f, base, args, result, isConstructor, isMethod) {
             if (isConstructor) {
                 checkArrayUniformity(iid, result);
                 getCreateObjectInfo(iid, result, false);
             }
-            return {result:result};
+            return {result: result};
         };
 
-        this.literal = function(iid, val, hasGetterSetter) {
+        this.literal = function (iid, val, hasGetterSetter) {
             checkArrayUniformity(iid, val);
             getCreateObjectInfo(iid, val, false);
-            return {result:val};
+            return {result: val};
         };
 
         this.forinObject = function (iid, val) {
@@ -220,9 +224,13 @@
             return {result: val};
         };
 
-        this.declare = function (iid, name, val, isArgument, argumentIndex){return {result:val};};
+        this.declare = function (iid, name, val, isArgument, argumentIndex) {
+            return {result: val};
+        };
 
-        this.getFieldPre = function(iid, base, offset){return {base:base,offset:offset,skip:false};};
+        this.getFieldPre = function (iid, base, offset) {
+            return {base: base, offset: offset, skip: false};
+        };
 
         this.getField = function (iid, base, offset, val) {
             if (typeof base === 'function' && offset === "prototype") {
@@ -234,14 +242,14 @@
                     if (typeof val === "function") {
                         inc(info, "objectSuperFunPropRead");
                     } else {
-                        inc(info, "objectSuperOtherPropRead", "IID" + iid, offset);
+                        inc(info, "objectSuperOtherPropRead", "IID:" + iid, offset);
                     }
                 }
             }
             return {result: val};
         };
 
-        this.putFieldPre = function(iid, base, offset, val){
+        this.putFieldPre = function (iid, base, offset, val) {
             var sobj;
             if (isArr(base)) {
                 inc(info, "arrayPropWrite");
@@ -250,14 +258,14 @@
                         inc(info, "arrayLengthWrite");
                     } else if (offset < 0 || offset >= base.length) {
                         if (offset === base.length) {
-                            inc(info, "arrayAppendPropWrite", "IID" + iid);
+                            inc(info, "arrayAppendPropWrite", "IID:" + iid);
                         } else {
-                            inc(info, "arrayOutOfBoundNumberPropWrite", "IID" + iid);
+                            inc(info, "arrayOutOfBoundNumberPropWrite", "IID:" + iid);
                         }
                     }
                 } else {
                     //console.log(offset);
-                    inc(info, "arrayNonNumberPropWrite", "IID" + iid, offset);
+                    inc(info, "arrayNonNumberPropWrite", "IID:" + iid, offset);
                 }
                 sobj = getShadowObject(iid, base);
                 updateSObjArrayNonUniformity(iid, sobj, val);
@@ -266,23 +274,27 @@
                 if (!HOP(base, offset) && base !== currThis) {
                     sobj = getCreateObjectInfo(iid, base, false);
                     if (!sobj || !sobj.isPrototype) {
-                        inc(info, "objectAddPropWrite", "IID" + iid, offset);
+                        inc(info, "objectAddPropWrite", "IID:" + iid, offset);
                         if (sobj) {
                             checkObjectUniformity(iid, sobj, base, val);
                         }
                     }
                 }
             }
-            return {base:base,offset:offset,val:val,skip:false};
+            return {base: base, offset: offset, val: val, skip: false};
         };
 
         this.putField = function (iid, base, offset, val) {
             return {result: val};
         };
 
-        this.read = function(iid, name, val, isGlobal, isPseudoGlobal){return {result:val};};
+        this.read = function (iid, name, val, isGlobal, isPseudoGlobal) {
+            return {result: val};
+        };
 
-        this.write = function(iid, name, val, lhs, isGlobal, isPseudoGlobal) {return {result:val};};
+        this.write = function (iid, name, val, lhs, isGlobal, isPseudoGlobal) {
+            return {result: val};
+        };
 
         this.functionEnter = function (iid, f, dis, args) {
             if (isCallingConstructor && f === constructorFun) {
@@ -299,22 +311,73 @@
             return {returnVal: returnVal, exceptionVal: exceptionVal, isBacktrack: false};
         };
 
-        this.scriptEnter = function(iid, val){};
+        this.scriptEnter = function (iid, val) {
+        };
 
-        this.scriptExit = function(iid, exceptionVal){return {exceptionVal:exceptionVal,isBacktrack:false};};
+        this.scriptExit = function (iid, exceptionVal) {
+            return {exceptionVal: exceptionVal, isBacktrack: false};
+        };
 
-        this.binaryPre = function(iid, op, left, right){return {op:op,left:left,right:right,skip:false};};
+        this.binaryPre = function (iid, op, left, right) {
+            return {op: op, left: left, right: right, skip: false};
+        };
 
-        this.binary = function(iid, op, left, right, result){return {result:result};};
+        this.binary = function (iid, op, left, right, result) {
+            return {result: result};
+        };
 
-        this.unaryPre = function(iid, op, left) {return {op:op,left:left,skip:false};};
+        this.unaryPre = function (iid, op, left) {
+            return {op: op, left: left, skip: false};
+        };
 
-        this.unary = function(iid, op, left, result){return {result:result};};
+        this.unary = function (iid, op, left, result) {
+            return {result: result};
+        };
 
-        this.conditional = function(iid, result){return {result:result};};
+        this.conditional = function (iid, result) {
+            return {result: result};
+        };
+
+        function createTree(input, name, c) {
+            var output = {"name": name, "count": c}, tmp, children = [], idx;
+            if (input) {
+                for (var key in input) {
+                    if (HOP(input, key)) {
+                        tmp = input[key];
+                        var count = tmp.count;
+                        var child = tmp.details;
+                        var txt;
+                        if ((idx = key.indexOf("IID:")) === 0) {
+                            txt = "at " + iidToLocation(key.substring(idx + 4));
+                        } else {
+                            txt = key
+                        }
+                        child = createTree(child, txt + " " + count + " times", count);
+                        children.push(child);
+                    }
+                }
+            }
+            children.sort(function (a, b) {
+                if (b.count > a.count)
+                    return 1;
+                else if (b.count < a.count)
+                    return -1;
+                else
+                    return 0;
+
+            });
+            if (children.length > 0) {
+                output.children = children;
+            } else {
+                output.size = 2000;
+            }
+            return output;
+        }
 
         this.endExecution = function() {
-            console.log(JSON.stringify(info, null, 4));
+//            console.log(JSON.stringify(info, null, 4));
+            require('fs').writeFileSync("../data.json", JSON.stringify(createTree(info, "Statistics"), null, 4), "utf8");
+            require('fs').writeFileSync("../info.json", JSON.stringify(info, null, 4), "utf8");
         };
     }
     sandbox.analysis = new MyAnalysis();

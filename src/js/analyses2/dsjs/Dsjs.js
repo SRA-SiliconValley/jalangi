@@ -1,3 +1,6 @@
+// run the following in the JALANGI_HOME directory
+// python scripts/dsjs.py tests/octane/richards; open jalangi_tmp/index.html
+
 (function (sandbox) {
     var Constants = sandbox.Constants;
     var iidToLocation = sandbox.iidToLocation;
@@ -6,6 +9,7 @@
     var objectId = 1;
     var HOP = Constants.HOP;
     var hasGetterSetter = Constants.hasGetterSetter;
+    var scriptName;
 
     function isArr(obj) {
         return Array.isArray(obj) || (obj && obj.constructor && (obj instanceof Uint8Array || obj instanceof Uint16Array ||
@@ -86,7 +90,7 @@
         } else if (sobj.isUniform) {
             sobj.isUniform = (sobj.type == (typeof elem));
             if (!sobj.isUniform) {
-                inc(info, "arrayNonUniform", "IID:" + sobj.iid, "IID:" + iid);
+                inc(info, "# of instructions at which an array becomes nonuniform", "times allocated at IID:" + sobj.iid, "times get nonuniform at IID:" + iid);
             }
         }
     }
@@ -100,7 +104,7 @@
             } else if (sobj.isUniform) {
                 sobj.isUniform = (sobj.type == (typeof elem));
                 if (!sobj.isUniform) {
-                    inc(info, "objectNonUniformHash", "IID:" + sobj.iid, "IID:" + iid);
+                    inc(info, "# of instructions at which object hashes become nonuniform", "times allocated at IID:" + sobj.iid, "times get nonuniform at IID:" + iid);
                 }
             }
         }
@@ -109,7 +113,7 @@
     function checkObjectUniformity(iid, sobj, obj, elem) {
         if (!sobj.isDynamic) {
             sobj.isDynamic = true;
-            inc(info, "objectHash", "IID:" + sobj.iid, "IID:" + iid);
+            inc(info, "# of instructions at which an object become an hashtable", "times allocated at IID:" + sobj.iid, "times become hash at IID:" + iid);
             for (var p in obj) {
                 if (!hasGetterSetter(obj, p, true))
                     updateSObjObjectNonUniformity(iid, sobj, obj[p]);
@@ -122,7 +126,7 @@
 
     function checkArrayUniformity(iid, val) {
         if (isArr(val)) {
-            inc(info,"arrayTotal");
+            inc(info, "# of arrays allocated");
             var sobj = getShadowObject(iid, val);
             var i;
             for (i=0; i<val.length; i++) {
@@ -136,7 +140,7 @@
             var sobj = getShadowObject(iid, obj);
             if (sobj) {
                 if (sobj.isUsedInForIn === undefined) {
-                    inc(info, "objectTotal");
+                    inc(info, "# of objects allocated (excluding arrays and functions)");
                     sobj.isUsedInForIn = false;
                     sobj.isPrototype = isPrototype;
                 }
@@ -149,7 +153,7 @@
         var sobj = getCreateObjectInfo(iid, obj, false);
         if (sobj && !sobj.isUsedInForIn) {
             sobj.isUsedInForIn = true;
-            inc(info, "objectUsedInForIn", "IID:" + sobj.iid, "IID:" + iid);
+            inc(info, "# of instructions where for-in is called on an object", "times allocated at IID:" + sobj.iid, "times called for-in at IID:" + iid);
         }
     }
 
@@ -162,40 +166,40 @@
         this.invokeFunPre = function (iid, f, base, args, isConstructor, isMethod) {
             switch (f) {
                 case Array.prototype.concat:
-                    inc(info, "Array.prototype.concat");
+                    inc(info, "times Array.prototype.concat called");
                     break;
                 case Array.prototype.indexOf:
-                    inc(info, "Array.prototype.indexOf");
+                    inc(info, "times Array.prototype.indexOf called");
                     break;
                 case Array.prototype.join:
-                    inc(info, "Array.prototype.join");
+                    inc(info, "times Array.prototype.join called");
                     break;
                 case Array.prototype.lastIndexOf:
-                    inc(info, "Array.prototype.lastIndexOf");
+                    inc(info, "times Array.prototype.lastIndexOf called");
                     break;
                 case Array.prototype.pop:
-                    inc(info, "Array.prototype.pop");
+                    inc(info, "times Array.prototype.pop called");
                     break;
                 case Array.prototype.push:
-                    inc(info, "Array.prototype.push");
+                    inc(info, "times Array.prototype.push called");
                     break;
                 case Array.prototype.reverse:
-                    inc(info, "Array.prototype.reverse");
+                    inc(info, "times Array.prototype.reverse called");
                     break;
                 case Array.prototype.shift:
-                    inc(info, "Array.prototype.shift");
+                    inc(info, "times Array.prototype.shift called");
                     break;
                 case Array.prototype.slice:
-                    inc(info, "Array.prototype.slice");
+                    inc(info, "times Array.prototype.slice called");
                     break;
                 case Array.prototype.sort:
-                    inc(info, "Array.prototype.sort");
+                    inc(info, "times Array.prototype.sort called");
                     break;
                 case Array.prototype.splice:
-                    inc(info, "Array.prototype.splice");
+                    inc(info, "times Array.prototype.splice called");
                     break;
                 case Array.prototype.unshift:
-                    inc(info, "Array.prototype.unshift");
+                    inc(info, "times Array.prototype.unshift called");
                     break;
             }
 
@@ -237,12 +241,12 @@
                 getCreateObjectInfo(iid, val, true);
             }
             if (!isArr(base) && typeof base === 'object') {
-                inc(info, "objectPropRead");
+                inc(info, "# of instructions where an object property is read");
                 if (!HOP(base, offset)) {
                     if (typeof val === "function") {
-                        inc(info, "objectSuperFunPropRead");
+                        inc(info, "# of instructions where an object property of type function is read from a prototype");
                     } else {
-                        inc(info, "objectSuperOtherPropRead", "IID:" + iid, offset);
+                        inc(info, "# of instructions where an object property of type non-function is read from a prototype", "times read at IID:" + iid, "times read property named " + offset);
                     }
                 }
             }
@@ -252,29 +256,29 @@
         this.putFieldPre = function (iid, base, offset, val) {
             var sobj;
             if (isArr(base)) {
-                inc(info, "arrayPropWrite");
+                inc(info, "# of instructions where an array property (including integer index) is written");
                 if (isNormalNumber(offset) || offset === 'length') {
                     if (offset === 'length') {
-                        inc(info, "arrayLengthWrite");
+                        inc(info, "# of instructions where the length property of an array is written");
                     } else if (offset < 0 || offset >= base.length) {
                         if (offset === base.length) {
-                            inc(info, "arrayAppendPropWrite", "IID:" + iid);
+                            inc(info, "# of instructions where an element is appended to an array", "times appended at IID:" + iid);
                         } else {
-                            inc(info, "arrayOutOfBoundNumberPropWrite", "IID:" + iid);
+                            inc(info, "# of instructions where an out of bound (excluding array.length index) array element is written", "time written at IID:" + iid);
                         }
                     }
                 } else {
                     //console.log(offset);
-                    inc(info, "arrayNonNumberPropWrite", "IID:" + iid, offset);
+                    inc(info, "# of instructions where a non-number property (excluding length) is written", "times written at IID:" + iid, "times written property named " + offset);
                 }
                 sobj = getShadowObject(iid, base);
                 updateSObjArrayNonUniformity(iid, sobj, val);
             } else if (typeof base === "object") {
-                inc(info, "objectPropWrite");
+                inc(info, "# of instructions where an object property is written");
                 if (!HOP(base, offset) && base !== currThis) {
                     sobj = getCreateObjectInfo(iid, base, false);
                     if (!sobj || !sobj.isPrototype) {
-                        inc(info, "objectAddPropWrite", "IID:" + iid, offset);
+                        inc(info, "# of instructions where an object property is added outside a literal or constructor", "times added at IID:" + iid, "times added property named " + offset);
                         if (sobj) {
                             checkObjectUniformity(iid, sobj, base, val);
                         }
@@ -312,6 +316,9 @@
         };
 
         this.scriptEnter = function (iid, val) {
+            if (!scriptName) {
+                scriptName = val;
+            }
         };
 
         this.scriptExit = function (iid, exceptionVal) {
@@ -347,12 +354,12 @@
                         var count = tmp.count;
                         var child = tmp.details;
                         var txt;
-                        if ((idx = key.indexOf("IID:")) === 0) {
-                            txt = "at " + iidToLocation(key.substring(idx + 4));
+                        if ((idx = key.indexOf("IID:")) >= 0) {
+                            txt = key.substring(0, idx) + iidToLocation(key.substring(idx + 4));
                         } else {
                             txt = key
                         }
-                        child = createTree(child, txt + " " + count + " times", count);
+                        child = createTree(child, txt + " = " + count, count);
                         children.push(child);
                     }
                 }
@@ -376,8 +383,11 @@
 
         this.endExecution = function() {
 //            console.log(JSON.stringify(info, null, 4));
-            require('fs').writeFileSync("../data.json", JSON.stringify(createTree(info, "Statistics"), null, 4), "utf8");
-            require('fs').writeFileSync("../info.json", JSON.stringify(info, null, 4), "utf8");
+            var fs = require('fs'), path = require('path');
+            var contents = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf8');
+            fs.writeFileSync('index.html', contents, 'utf8');
+            fs.appendFileSync("index.html", "<script>\n var flare = " + JSON.stringify(createTree(info, "Statistics for " + scriptName), null, 4) + ";\n flare.x0 =0; flare.y0=0; update(root=flare);\n</script>", "utf8");
+            //require('fs').writeFileSync("../info.json", JSON.stringify(info, null, 4), "utf8");
         };
     }
     sandbox.analysis = new MyAnalysis();

@@ -168,7 +168,7 @@ if (typeof J$ === 'undefined') {
 
     function H(iid, val) {
         var aret;
-        if (sandbox.analysis && sandbox.analysis.hash) {
+        if (sandbox.analysis && sandbox.analysis.forinObject) {
             aret = sandbox.analysis.forinObject(iid, val);
             if (aret) {
                 val = aret.result;

@@ -78,7 +78,7 @@ describe('instrument dir tests', function () {
             assert(!err, err);
             assert(fs.existsSync(path.join(options.outputDir, "app1", inst.JALANGI_RUNTIME_DIR, "date-conversion.js")));
             var html = String(fs.readFileSync(path.join(options.outputDir, "app1", "index.html")));
-            assert(html.indexOf("<script src=\"" + inst.JALANGI_RUNTIME_DIR + "/date-conversion.js\">") !== -1);
+            assert(html.indexOf("<script src=\"/" + inst.JALANGI_RUNTIME_DIR + "/date-conversion.js\">") !== -1);
             done();
         });
     });

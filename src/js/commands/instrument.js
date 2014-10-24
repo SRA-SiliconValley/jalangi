@@ -175,7 +175,7 @@ function instrument(options, cb) {
         function getContainedRuntimeScriptTags() {
             var result = "";
             var addScript = function (file) {
-                var fileName = path.join(jalangiRuntimeDir, path.basename(file));
+                var fileName = "/" + jalangiRuntimeDir + "/" + path.basename(file);
                 result += "<script src=\"" + fileName + "\"></script>";
             };
             instUtil.headerSources.forEach(addScript);

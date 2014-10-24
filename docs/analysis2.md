@@ -61,6 +61,14 @@ API compared to analysis.js.  An analysis in analysis2.js can be written using t
 
         this.conditional = function(iid, result){return {result:result};};
 
+        // If analyzing a node.js program using direct2.js, and the
+        // analysis needs to perform some asynchronous initialization
+        // before the program starts, it can implement the onReady
+        // function, which will be passed a callback function cb to be
+        // invoked to start execution of the analyzed program.
+        // Note that this will *not* work for in-browser analysis
+        this.onReady = function(cb) {};
+
         this.endExecution = function() {};
      }
      sandbox.analysis = new MyAnalysis();

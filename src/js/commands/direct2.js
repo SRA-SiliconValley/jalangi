@@ -56,22 +56,29 @@ function runAnalysis(initParam) {
         });
     }
 
-
-    // hack process.argv for the child script
-    script = path.resolve(script);
-    var newArgs = [process.argv[0], script];
-    newArgs = newArgs.concat(args.script_and_args);
-    process.argv = newArgs;
-    try {
-        require(script);
-    } finally {
-        var result = J$.endExecution();
-        if (process.send && args.analysis) {
-            // we assume send is synchronous
-            process.send({result:result});
-            // without this call, child process just sits around without exiting
-            process.disconnect();
+    function startProgram() {
+        // hack process.argv for the child script
+        script = path.resolve(script);
+        var newArgs = [process.argv[0], script];
+        newArgs = newArgs.concat(args.script_and_args);
+        process.argv = newArgs;
+        try {
+            require(script);
+        } finally {
+            var result = J$.endExecution();
+            if (process.send && args.analysis) {
+                // we assume send is synchronous
+                process.send({result:result});
+                // without this call, child process just sits around without exiting
+                process.disconnect();
+            }
         }
+    }
+
+    if (J$.analysis.onReady) {
+        J$.analysis.onReady(startProgram);
+    } else {
+        startProgram();
     }
 }
 

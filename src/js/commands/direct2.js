@@ -75,7 +75,7 @@ function runAnalysis(initParam) {
         }
     }
 
-    if (J$.analysis.onReady) {
+    if (J$.analysis && J$.analysis.onReady) {
         J$.analysis.onReady(startProgram);
     } else {
         startProgram();

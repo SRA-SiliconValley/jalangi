@@ -1035,8 +1035,7 @@ var acorn, escodegen, astUtil;
                 ret = wrapLiteral(ast, ast, N_LOG_NUMBER_LIT);
                 return ret;
             }
-            if (ast.name === astUtil.JALANGI_VAR ||
-                ast.name === "eval") {
+            if (ast.name === astUtil.JALANGI_VAR) {
                 return ast;
             } else if (scope.hasVar(ast.name)) {
                 ret = wrapRead(ast, createLiteralAst(ast.name), ast, false, false, scope.isGlobal(ast.name));

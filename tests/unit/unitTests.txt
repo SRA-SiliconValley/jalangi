@@ -51,3 +51,4 @@ array_push_pop
 instanceof
 delete1
 issue78
+issue78b

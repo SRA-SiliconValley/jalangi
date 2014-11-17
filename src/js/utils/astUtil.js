@@ -123,8 +123,10 @@
                         newContext = CONTEXT.GETTER;
                     } else if (object.key && key === 'value' && object.kind === 'set') {
                         newContext = CONTEXT.SETTER;
+                    } else if (type === 'CallExpression' && key === 'callee' && child.type === 'Identifier' && child.name === 'eval') {
+                        newContext = CONTEXT.IGNORE;
                     } else {
-                        newContext = CONTEXT.RHS;
+                            newContext = CONTEXT.RHS;
                     }
                     object[key] = transformAst(child, visitorPost, visitorPre, newContext, noIgnore);
 

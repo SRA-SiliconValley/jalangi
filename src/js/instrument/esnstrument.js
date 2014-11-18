@@ -1387,7 +1387,7 @@ var acorn, escodegen, astUtil;
         Scope.prototype.isGlobal = function (name) {
             var s = this;
             while (s !== null) {
-                if (HOP(s.vars, name) && s.parent !== null) {
+                if (HOP(s.vars, name) && (s.parent !== null || s.vars[name] === 'catch')) {
                     return false;
                 }
                 s = s.parent;

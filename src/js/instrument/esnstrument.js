@@ -819,13 +819,13 @@ var acorn, escodegen, astUtil;
 //        return ret;
 //    }
 
-    function createCallInitAsStatement(node, name, val, isArgumentSync, lhs) {
+    function createCallInitAsStatement(node, name, val, isArgumentSync, lhs, isCatchParam) {
         printIidToLoc(node);
         var ret;
 
         if (isArgumentSync)
             ret = replaceInStatement(
-                RP + "1 = " + logInitFunName + "(" + RP + "2, " + RP + "3, " + RP + "4, " + isArgumentSync + ", false)",
+                RP + "1 = " + logInitFunName + "(" + RP + "2, " + RP + "3, " + RP + "4, " + isArgumentSync + ", false,"+isCatchParam+")",
                 lhs,
                 getIid(),
                 name,
@@ -833,7 +833,7 @@ var acorn, escodegen, astUtil;
             );
         else
             ret = replaceInStatement(
-                logInitFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + isArgumentSync + ", false)",
+                logInitFunName + "(" + RP + "1, " + RP + "2, " + RP + "3, " + isArgumentSync + ", false,"+isCatchParam+")",
                 getIid(),
                 name,
                 val
@@ -867,11 +867,19 @@ var acorn, escodegen, astUtil;
     function wrapForInBody(node, body, name) {
         printIidToLoc(node);
         var ret = replaceInStatement(
-            "function n() { " + logInitFunName + "(" + RP + "1, '" + name + "'," + name + ",false, true);\n {" + RP + "2}}", getIid(), [body]);
+            "function n() { " + logInitFunName + "(" + RP + "1, '" + name + "'," + name + ",false, true, false);\n {" + RP + "2}}", getIid(), [body]);
 
         ret = ret[0].body;
         transferLoc(ret, node);
         return ret;
+    }
+
+    function wrapCatchClause(node, body, name) {
+        var ret;
+        body.unshift(createCallInitAsStatement(node,
+            createLiteralAst(name),
+            createIdentifierAst(name),
+            false, undefined, true)[0]);
     }
 
     function wrapScriptBodyWithTryCatch(node, body) {
@@ -924,7 +932,7 @@ var acorn, escodegen, astUtil;
                 createLiteralAst("arguments"),
                 ident,
                 true,
-                ident));
+                ident, false));
         }
         if (scope) {
             for (var name in scope.vars) {
@@ -936,7 +944,7 @@ var acorn, escodegen, astUtil;
                             createLiteralAst(name),
                             wrapLiteral(ident, ident, N_LOG_FUNCTION_LIT),
                             true,
-                            ident));
+                            ident, false));
                     }
                     if (scope.vars[name] === "arg") {
                         ident = createIdentifierAst(name);
@@ -944,13 +952,13 @@ var acorn, escodegen, astUtil;
                             createLiteralAst(name),
                             ident,
                             true,
-                            ident));
+                            ident, false));
                     }
                     if (scope.vars[name] === "var") {
                         ret = ret.concat(createCallInitAsStatement(node,
                             createLiteralAst(name),
                             createIdentifierAst(name),
-                            false));
+                            false, undefined, false));
                     }
                 }
             }
@@ -1253,6 +1261,12 @@ var acorn, escodegen, astUtil;
                 name = node.left.name;
             }
             node.body = wrapForInBody(node, node.body, name);
+            return node;
+        },
+        "CatchClause":function (node) {
+            var name;
+            name = node.param.name;
+            wrapCatchClause(node, node.body.body, name);
             return node;
         },
         "ReturnStatement":function (node) {

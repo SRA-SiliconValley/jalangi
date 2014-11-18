@@ -29,7 +29,7 @@ API compared to analysis.js.  An analysis in analysis2.js can be written using t
 
         this.forinObject = function(iid, val){return {result:val};};
 
-        this.declare = function (iid, name, val, isArgument, argumentIndex){return {result:val};};
+        this.declare = function (iid, name, val, isArgument, argumentIndex, isCatchParam){return {result:val};};
 
         this.getFieldPre = function(iid, base, offset){return {base:base,offset:offset,skip:false};};
 

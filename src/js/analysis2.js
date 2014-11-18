@@ -179,18 +179,19 @@ if (typeof J$ === 'undefined') {
 
     // variable read
     // variable declaration (Init)
-    function N(iid, name, val, isArgument, isLocalSync) {
+    function N(iid, name, val, isArgument, isLocalSync, isCatchParam) {
         // isLocalSync is only true when we sync variables inside a for-in loop
         var aret;
 
+        isCatchParam = !! isCatchParam;
         if (isArgument) {
             argIndex++;
         }
         if (!isLocalSync && sandbox.analysis && sandbox.analysis.declare) {
             if (isArgument && argIndex > 1) {
-                sandbox.analysis.declare(iid, name, val, isArgument, argIndex - 2);
+                sandbox.analysis.declare(iid, name, val, isArgument, argIndex - 2, isCatchParam);
             } else {
-                sandbox.analysis.declare(iid, name, val, isArgument, -1);
+                sandbox.analysis.declare(iid, name, val, isArgument, -1, isCatchParam);
             }
             if (aret) {
                 val = aret.result;

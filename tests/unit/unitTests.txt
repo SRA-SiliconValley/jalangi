@@ -52,3 +52,5 @@ instanceof
 delete1
 issue78
 issue78b
+catch1
+scope

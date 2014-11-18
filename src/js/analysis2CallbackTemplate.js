@@ -43,7 +43,7 @@
 
         this.forinObject = function(iid, val){return {result:val};};
 
-        this.declare = function (iid, name, val, isArgument, argumentIndex){return {result:val};};
+        this.declare = function (iid, name, val, isArgument, argumentIndex, isCatchParam){return {result:val};};
 
         this.getFieldPre = function(iid, base, offset){return {base:base,offset:offset,skip:false};};
 

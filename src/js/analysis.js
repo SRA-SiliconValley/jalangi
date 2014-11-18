@@ -759,23 +759,24 @@ window = {String:String, Array:Array, Error:Error, Number:Number, Date:Date, Boo
             }
 
             // variable declaration (Init)
-            function N(iid, name, val, isArgumentSync, isLocalSync) {
+            function N(iid, name, val, isArgumentSync, isLocalSync, isCatchParam) {
                 // isLocalSync is only true when we sync variables inside a for-in loop
+                isCatchParam = !!isCatchParam
                 if (isArgumentSync) {
                     argIndex++;
                 }
                 if (rrEngine) {
                     val = rrEngine.RR_N(iid, name, val, isArgumentSync);
                 }
-                if (!isLocalSync && smemory) {
+                if (!isLocalSync && !isCatchParam && smemory) {
                     smemory.initialize(name);
                 }
                 if (!isLocalSync && sandbox.analysis && sandbox.analysis.declare) {
                     try {
                         if (isArgumentSync && argIndex > 1) {
-                            sandbox.analysis.declare(iid, name, val, isArgumentSync, argIndex - 2);
+                            sandbox.analysis.declare(iid, name, val, isArgumentSync, argIndex - 2, isCatchParam);
                         } else {
-                            sandbox.analysis.declare(iid, name, val, isArgumentSync);
+                            sandbox.analysis.declare(iid, name, val, isArgumentSync, -1, isCatchParam);
                         }
                     } catch (e) {
                         clientAnalysisException(e);

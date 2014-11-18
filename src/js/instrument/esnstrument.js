@@ -1118,7 +1118,8 @@ var acorn, escodegen, astUtil;
     var visitorRRPre = {
         'Program':setScope,
         'FunctionDeclaration':setScope,
-        'FunctionExpression':setScope
+        'FunctionExpression':setScope,
+        'CatchClause':setScope
     };
 
     var visitorRRPost = {
@@ -1267,6 +1268,7 @@ var acorn, escodegen, astUtil;
             var name;
             name = node.param.name;
             wrapCatchClause(node, node.body.body, name);
+            scope = scope.parent;
             return node;
         },
         "ReturnStatement":function (node) {
@@ -1352,18 +1354,26 @@ var acorn, escodegen, astUtil;
 
     function addScopes(ast) {
 
-        function Scope(parent) {
+        function Scope(parent, isCatch) {
             this.vars = {};
             this.funLocs = {};
             this.hasEval = false;
             this.hasArguments = false;
             this.parent = parent;
+            this.isCatch = isCatch;
         }
 
         Scope.prototype.addVar = function (name, type, loc) {
-            this.vars[name] = type;
+            var tmpScope = this;
+            if (this.isCatch && type!== 'catch') {
+                tmpScope = this.parent;
+            }
+
+            if (tmpScope.vars[name] !== 'arg') {
+                tmpScope.vars[name] = type;
+            }
             if (type === 'defun') {
-                this.funLocs[name] = loc;
+                tmpScope.funLocs[name] = loc;
             }
         };
 
@@ -1387,7 +1397,7 @@ var acorn, escodegen, astUtil;
         Scope.prototype.isGlobal = function (name) {
             var s = this;
             while (s !== null) {
-                if (HOP(s.vars, name) && (s.parent !== null || s.vars[name] === 'catch')) {
+                if (HOP(s.vars, name) && s.parent !== null) {
                     return false;
                 }
                 s = s.parent;
@@ -1456,6 +1466,9 @@ var acorn, escodegen, astUtil;
         }
 
         function handleCatch(node) {
+            var oldScope = currentScope;
+            currentScope = new Scope(currentScope, true);
+            node.scope = currentScope;
             currentScope.addVar(node.param.name, "catch");
         }
 
@@ -1476,6 +1489,7 @@ var acorn, escodegen, astUtil;
             'Program':popScope,
             'FunctionDeclaration':popScope,
             'FunctionExpression':popScope,
+            'CatchClause':popScope,
             'Identifier':function (node, context) {         // rename arguments to J$_arguments
                 if (context === astUtil.CONTEXT.RHS && node.name === fromName && currentScope.hasOwnVar(toName)) {
                     node.name = toName;

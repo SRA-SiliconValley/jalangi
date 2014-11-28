@@ -14,7 +14,7 @@
         var funList = ["invokeFunPre", "invokeFun", "literal", "forinObject", "declare",
             "getFieldPre", "getField", "putFieldPre", "putField", "read", "write",
             "functionEnter", "functionExit", "scriptEnter", "scriptExit",
-            "binaryPre", "binary", "unaryPre", "unary", "conditional", "endExecution"];
+            "binaryPre", "binary", "unaryPre", "unary", "conditional", "instrumentCode", "endExecution"];
 
         this.addAnalysis = function (analysis) {
             var self = this, tmp, length = funList.length;

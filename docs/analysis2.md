@@ -61,6 +61,10 @@ API compared to analysis.js.  An analysis in analysis2.js can be written using t
 
         this.conditional = function(iid, result){return {result:result};};
 
+        this.instrumentCodePre = function (iid, code){return code;};
+        
+        this.instrumentCode = function (iid, ast){};
+
         // If analyzing a node.js program using direct2.js, and the
         // analysis needs to perform some asynchronous initialization
         // before the program starts, it can implement the onReady

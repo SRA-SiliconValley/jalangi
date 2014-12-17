@@ -13,7 +13,7 @@
         "amdefine":"*",
         "argparse": "*",
         "mkdirp": "*",
-        "ncp": "*",
+        "ncp": "0.6.0",
         "rewriting-proxy": "*",
         "mocha": "*",
         "q": "*",

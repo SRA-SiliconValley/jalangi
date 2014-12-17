@@ -1,30 +1,30 @@
 {
-    "name":"jalangi",
-    "version":"0.1.0",
-    "description":"dynamic analysis framework for JavaScript",
-    "dependencies":{
-        "acorn": "*",
-        "cover":"*",
-        "websocket":"*",
-        "source-map":"*",
-        "estraverse":"*",
-        "escodegen":"*",
-        "execSync":"*",
-        "amdefine":"*",
-        "argparse": "*",
-        "mkdirp": "*",
-        "ncp": "0.6.0",
-        "rewriting-proxy": "*",
-        "mocha": "*",
-        "q": "*",
-        "temp": "*"
-    },
-    "scripts": {
-      "test": "(cat node_test/testSuite.txt | sed 's/^/node_test\\//' | xargs ./node_modules/.bin/mocha --reporter spec) && python scripts/runalltests.py"
-    },
-    "license":"Apache",
-    "repository" : {
-      "type" : "git",
-      "url" : "https://github.com/SRA-SiliconValley/jalangi.git"
-    }
+  "name":"jalangi",
+  "version":"0.1.0",
+  "description":"dynamic analysis framework for JavaScript",
+  "dependencies":{
+    "acorn": "0.10.0",
+    "amdefine": "0.1.0",
+    "argparse": "0.1.16",
+    "cover": "0.2.9",
+    "escodegen": "1.4.2",
+    "estraverse": "1.9.0",
+    "execSync": "1.0.2",
+    "mkdirp": "0.5.0",
+    "mocha": "2.0.1",
+    "ncp": "0.6.0",
+    "q": "1.1.2",
+    "rewriting-proxy": "0.4.0",
+    "source-map": "0.1.40",
+    "temp": "0.8.1",
+    "websocket": "1.0.14"
+  },
+  "scripts": {
+    "test": "(cat node_test/testSuite.txt | sed 's/^/node_test\\//' | xargs ./node_modules/.bin/mocha --reporter spec) && python scripts/runalltests.py"
+  },
+  "license":"Apache",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/SRA-SiliconValley/jalangi.git"
+  }
 }

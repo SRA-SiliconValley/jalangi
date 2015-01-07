@@ -1621,7 +1621,10 @@ var acorn, escodegen, astUtil;
             instCodeCallback = isEval && sandbox.analysis && sandbox.analysis.instrumentCode;
         if (typeof  code === "string") {
             if (iid && sandbox.analysis && sandbox.analysis.instrumentCodePre) {
-                code = sandbox.analysis.instrumentCodePre(iid, code);
+                var instCodePreResult = sandbox.analysis.instrumentCodePre(iid, code);
+                if (instCodePreResult) {
+                    code = instCodePreResult;
+                }
             }
             if (code.indexOf(noInstr) < 0 && !(isEval && sandbox.noInstrEval)) {
                 // this is a call in eval

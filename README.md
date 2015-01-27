@@ -1,5 +1,9 @@
 Jalangi
 =======
+
+__We encourage you to switch to Jalangi2 available at https://github.com/Samsung/jalangi2.  Jalangi2 is a framework for writing dynamic analyses for JavaScript.
+Jalangi2 does not support the record/replay feature of Jalangi1. Jalangi1 is still available from this website, but we no longer plan to develop it.__
+
 ### Introduction
 
 Jalangi is a framework for writing heavy-weight dynamic analyses for JavaScript.  Jalangi provides two modes for dynamic program analysis: an **online** mode (a.k.a direct or inbrowser analysis mode)and an **offilne** mode (a.k.a record-replay analysis mode).  In both modes, Jalangi instruments the program-under-analysis to insert callbacks to methods defined in Jalangi.  An analysis writer implements these methods to perform custom dynamic program analysis.  In the online mode, Jalangi performs analysis during the execution of the program.  An analysis in online mode can use shadow memory to attach meta information with every memory location. The offilne mode of Jalangi incorporates two key techniques: 1) selective record-replay, a technique which enables to record and to faithfully replay a user-selected part of the program, and 2) shadow values and shadow execution, which enables easy implementation of heavy-weight dynamic analyses.  Shadow values allow an analysis to attach meta information with every value.  In the distribution you will find several analyses:

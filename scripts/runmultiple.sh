@@ -11,9 +11,7 @@ mv result.txt result.bak.txt;
 # arg2 -> location
 runexp() {
     echo '[*]'"$1" >> result.txt
-	echo '[*]single2' >> result.txt
 
-	echo '[*]multiple' >> result.txt
 	# run multiex on dataset
 	python scripts/jalangi.py symbolic -a src/js/analyses/puresymbolic/Multiple -i 1 "$2"
 	# get collected statistics

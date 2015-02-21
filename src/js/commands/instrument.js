@@ -145,7 +145,7 @@ function instrument(options, cb) {
      * shared between HTMLRewriteStream and InstrumentJSStream
      */
     function accumulateData(chunk, enc, cb) {
-        this.data += chunk;
+        this.data = this.data == null ? chunk : Buffer.concat([this.data,chunk]);
         cb();
     }
 
@@ -153,7 +153,7 @@ function instrument(options, cb) {
 
     function HTMLRewriteStream(options, filename) {
         Transform.call(this, options);
-        this.data = "";
+        this.data = null;
         this.filename = filename;
     }
 
@@ -208,10 +208,11 @@ function instrument(options, cb) {
         }
 
         if (instrumentInline) {
-            this.push(proxy.rewriteHTML(this.data, "http://foo.com", rewriteInlineScript, instUtil.getHeaderCode(jalangiRoot)));
+            this.push(proxy.rewriteHTML(String(this.data), "http://foo.com", rewriteInlineScript, instUtil.getHeaderCode(jalangiRoot)));
         } else {
             // just inject our header code
-            var headIndex = this.data.indexOf("<head>");
+            var dataStr = String(this.data);
+            var headIndex = dataStr.indexOf("<head>");
             if (headIndex === -1) {
                 console.error("WARNING: could not find <head> element in HTML file " + this.filename);
                 this.push(this.data);
@@ -260,7 +261,7 @@ function instrument(options, cb) {
                         headerLibs += "<script src=\"" + scriptSrc + "\"></script>";
                     });
                 }
-                var newHTML = this.data.slice(0, headIndex + 6) + headerLibs + this.data.slice(headIndex + 6);
+                var newHTML = dataStr.slice(0, headIndex + 6) + headerLibs + dataStr.slice(headIndex + 6);
                 this.push(newHTML);
             }
         }
@@ -275,7 +276,7 @@ function instrument(options, cb) {
         Transform.call(this, options);
         this.origScriptName = origScriptName;
         this.instScriptName = instScriptName;
-        this.data = "";
+        this.data = null;
     }
 
     util.inherits(InstrumentJSStream, Transform);
@@ -317,13 +318,14 @@ function instrument(options, cb) {
 
         var instResult;
         try {
-            instResult = esnstrument.instrumentCodeDeprecated(this.data, options);
+            instResult = esnstrument.instrumentCodeDeprecated(String(this.data), options);
             if (typeof instResult !== 'string' && instCallback) {
                 instResult.code = instCallback(instResult);
             }
         } catch (e) {
             if (e instanceof SyntaxError) {
                 // just output the same file
+                console.log("WARNING: syntax error when instrumenting " + this.origScriptName);
                 this.push(this.data);
             } else {
                 throw e;

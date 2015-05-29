@@ -42,7 +42,7 @@ function getJalangiRoot() {
     return path.join(__dirname, '../../..');
 }
 /**
- * Instruments all .js files found under dir, and re-writes index.html
+ * Instruments all .js files found under dir, and re-writes HTML
  * so that inline scripts are instrumented.  Output is written as a full
  * copy of dir, within outputDir
  */
@@ -69,6 +69,8 @@ function instrument(options, cb) {
     if (options.only_include) {
         onlyIncludeList = options.only_include.split(path.delimiter);
     }
+
+    var mainHTML = options.main_html;
 
     // a callback function to be invoked for every instrumented script
     // it gets passed the instrumented code and the corresponding AST,
@@ -358,6 +360,9 @@ function instrument(options, cb) {
      */
     function includedFile(fileName) {
         var relativePath = fileName.substring(appDir.length + 1);
+        if (path.extname(fileName) === '.html' && mainHTML) {
+            return relativePath === mainHTML;
+        }
         var result = false;
         for (var i = 0; i < onlyIncludeList.length; i++) {
             var prefix = onlyIncludeList[i];
@@ -372,7 +377,7 @@ function instrument(options, cb) {
     function transform(readStream, writeStream, file) {
         var extension = path.extname(file.name);
         if (extension === '.html') {
-            if (options.no_html || (onlyIncludeList && !includedFile(file.name))) {
+            if (options.no_html || ((onlyIncludeList || mainHTML) && !includedFile(file.name))) {
                 readStream.pipe(writeStream);
             } else {
                 rewriteHtml(readStream, writeStream, file.name);
@@ -506,6 +511,7 @@ if (require.main === module) { // main script
     parser.addArgument(['-c', '--copy_runtime'], { help:"Copy Jalangi runtime files into instrumented app in jalangi_rt sub-directory", action:'storeTrue'});
     parser.addArgument(['--extra_app_scripts'], { help:"list of extra application scripts to be injected and instrumented, separated by path.delimiter"});
     parser.addArgument(['--no_html'], { help:"don't inject Jalangi runtime into HTML files", action:'storeTrue'});
+    parser.addArgument(['--main_html'], { help:"the main HTML file to instrument.  if this option is passed, no HTML files other than the main one will be instrumented"});
     parser.addArgument(['--outputDir'], { help:"directory in which to place instrumented files", required:true });
     parser.addArgument(['--verbose'], { help: "print verbose output", action:'storeTrue'});
     parser.addArgument(['inputFiles'], { help:"either a list of JavaScript files to instrument, or a single directory under which all JavaScript and HTML files should be instrumented (modulo the --no_html and --exclude flags)", nargs:'+'});

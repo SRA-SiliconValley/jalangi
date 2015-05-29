@@ -125,4 +125,21 @@ describe('instrument dir tests', function () {
             done();
         });
     });
+    it('should handle main_html option', function (done) {
+        var options = {
+            inputFiles: ["tests/html/unitApps/app1"],
+            outputDir: temp.mkdirSync(),
+            // the exact script doesn't matter
+            analysis: ["tests/unit/date-conversion.js"],
+            main_html: "other.html"
+        };
+        inst.instrument(options, function (err) {
+            assert(!err, err);
+            var indexHTML = String(fs.readFileSync(path.join(options.outputDir, "app1", "index.html")));
+            assert(indexHTML === "<html>\n<head></head>\n<body></body>\n</html>\n");
+            var otherHTML = String(fs.readFileSync(path.join(options.outputDir, "app1", "other.html")));
+            assert(otherHTML.indexOf('<script>if (J$.analysis.init) { J$.analysis.init({}); }</script>') !== -1);
+            done();
+        });
+    });
 });

@@ -6,6 +6,7 @@ thirdparty/
 *~
 jalangi_coverage
 jalangi_sourcemap.js
+jalangi_sourcemap.json
 jalangi_sym_test_results
 jalangi_test_results
 jalangi_tmp/
@@ -13,3 +14,4 @@ jalangi_trace*
 .DS_Store
 .idea
 jout/production/jalangijava/*.class
+src/nbproject

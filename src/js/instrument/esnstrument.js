@@ -91,7 +91,6 @@ var acorn, escodegen, astUtil;
 
     var instrumentCodeFunName = astUtil.JALANGI_VAR + ".instrumentCode";
 
-
     var Syntax = {
         AssignmentExpression:'AssignmentExpression',
         ArrayExpression:'ArrayExpression',
